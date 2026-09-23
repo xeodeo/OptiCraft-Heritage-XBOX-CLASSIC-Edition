@@ -394,3 +394,6 @@ ninja.exe
 extracted_assets/
 extracted_assets_vanilla/
 *.pak
+# Xbox bring-up outputs (link XDK library code; never commit)
+xbox-spike/**/out/
+*.xbe
