@@ -18,4 +18,5 @@ protected:
 
 private:
     LegacyOptionCheckbox *invertMouseCheckbox;
+    LegacyOptionCheckbox *dolbyCheckbox;  // Xbox only
 };

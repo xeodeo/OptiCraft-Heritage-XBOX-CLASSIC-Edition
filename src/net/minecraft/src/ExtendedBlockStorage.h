@@ -97,7 +97,7 @@ private:
 	// readers moved here.
 	static int_t normalizeStoredBlockId(int_t blockId)
 	{
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 		if (blockId < 0 || blockId >= 256)
 			return 0;
 #endif

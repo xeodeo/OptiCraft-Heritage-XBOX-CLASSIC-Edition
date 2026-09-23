@@ -4,12 +4,12 @@
 #include <stdexcept>
 #include "platform/RenderAPI.h"
 
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 std::vector<int_t> GLAllocation::displayLists;
 #endif
 std::vector<int_t> GLAllocation::textureNames;
 
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 int_t GLAllocation::generateDisplayLists(int_t count)
 {
     if (count <= 0)
@@ -44,7 +44,7 @@ void GLAllocation::generateTextureNames(std::vector<int_t> &names)
 void GLAllocation::deleteTexturesAndDisplayLists()
 {
     renderResetResources();
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
     for (int_t i = 0; i < static_cast<int_t>(displayLists.size()); i += 2)
         renderDeleteDisplayLists(displayLists[i], displayLists[i + 1]);
     displayLists.clear();

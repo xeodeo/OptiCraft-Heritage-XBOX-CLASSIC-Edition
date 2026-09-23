@@ -12,7 +12,7 @@ public:
 
 	void initGui() override;
 	void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
-	bool suppressesPlatformPointerInput() const override { return PLATFORM_PS2 || PLATFORM_WII; }
+	bool suppressesPlatformPointerInput() const override { return PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX; }
 
 protected:
 	void keyTyped(char_t c, int_t key) override;

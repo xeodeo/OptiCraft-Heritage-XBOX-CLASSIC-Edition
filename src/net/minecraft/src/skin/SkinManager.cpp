@@ -1,6 +1,9 @@
 #include "SkinManager.h"
+#include "net/minecraft/src/GameResources.h"
 
 #include <algorithm>
+#include <istream>
+#include <memory>
 
 namespace
 {
@@ -250,11 +253,22 @@ void SkinManager::setSelectedIndex(int index)
         s_selectedId = skin->id;
 }
 
+namespace
+{
+bool skinTextureAvailable(const std::string& path)
+{
+    const std::unique_ptr<std::istream> stream = GameResources::open(path);
+    return stream != nullptr && stream->good();
+}
+}
+
 std::string SkinManager::getActiveSkinTexture()
 {
     init();
     const SkinEntry* skin = getSkinById(s_selectedId);
-    if (skin != nullptr)
+    // The skin images are packed into the data by scripts/update_skins_assets.py;
+    // a data set without them would leave the player with no texture at all.
+    if (skin != nullptr && skinTextureAvailable(skin->modelPath))
         return skin->modelPath;
     return getDefaultSkinTexture();
 }

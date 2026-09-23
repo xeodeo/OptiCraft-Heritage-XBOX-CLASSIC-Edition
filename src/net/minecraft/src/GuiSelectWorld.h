@@ -44,6 +44,8 @@ private:
 
 protected:
 	std::vector<SaveFormatComparator *> saveList;
+	// Asks "delete this world?"; on yes deleteWorld() removes it and reloads.
+	void promptDeleteWorld(int_t index);
 
 private:
 	GuiWorldSlot *worldSlotContainer;

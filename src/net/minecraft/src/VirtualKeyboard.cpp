@@ -1,13 +1,14 @@
 #include "VirtualKeyboard.h"
 #include "java/String.h"
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 
 #include "platform/ConsoleInputClock.h"
 #include "GuiTextField.h"
 #include "FontRenderer.h"
 #include "lwjgl/Keyboard.h"
 #include "platform/Input.h"
+#include "platform/Log.h"
 
 
 namespace
@@ -64,6 +65,16 @@ void VirtualKeyboard::notifyFocus(GuiTextField* field, bool focused)
 		focusedField = nullptr;
 	}
 	platformSetTextInputExclusive(focusedField != nullptr);
+	MC_LOG_INFO("gui", "keyboard focus field=%p focused=%d -> active=%d\n", (void*)field, focused ? 1 : 0,
+	            focusedField != nullptr ? 1 : 0);
+}
+
+void VirtualKeyboard::releaseFocus()
+{
+	if (focusedField != nullptr)
+		focusedField->setFocused(false);  // calls back into notifyFocus(field, false)
+	focusedField = nullptr;
+	platformSetTextInputExclusive(false);
 }
 
 void VirtualKeyboard::tick()
@@ -81,7 +92,7 @@ void VirtualKeyboard::tick()
 	lastHeld = held;
 
 	const int now = nowMs();
-#if defined(PS2_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
 	// Text input owns the face buttons and D-pad, while the otherwise-unused
 	// right stick moves the keyboard panel. Work in scaled GUI coordinates so
 	// speed remains consistent across video modes and GUI scales.
@@ -213,6 +224,9 @@ void VirtualKeyboard::render(FontRenderer* font, int_t screenWidth, int_t screen
 	if (!isActive() || font == nullptr)
 		return;
 
+	if (lastScreenWidth != screenWidth || lastScreenHeight != screenHeight || !panelPositionInitialized)
+		MC_LOG_INFO("gui", "keyboard render screen=%dx%d panel=%d,%d init=%d\n", (int)screenWidth, (int)screenHeight,
+		            (int)panelX, (int)panelY, panelPositionInitialized ? 1 : 0);
 	lastScreenWidth = screenWidth;
 	lastScreenHeight = screenHeight;
 	const int keyW = 22, keyH = 18, gap = 3;

@@ -12,10 +12,10 @@
 #include "pc/lwjgl/Mouse.h"
 #include "platform/PlatformTuning.h"
 #include "platform/Input.h"
-#if !PLATFORM_PS2 && !PLATFORM_WII
+#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
 #include "SDL_clipboard.h"
 #endif
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 #include "VirtualKeyboard.h"
 #include "ContainerSlotNavigator.h"
 #endif
@@ -37,11 +37,11 @@ namespace
 // permanently switched off.
 bool menuPointerInputSuppressed(Minecraft *mc)
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	if (mc != nullptr && mc->currentScreen != nullptr && mc->currentScreen->suppressesPlatformPointerInput())
 		return true;
 #endif
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_XBOX
 	return mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI &&
 	       (mc->currentScreen == nullptr || !mc->currentScreen->allowsPlatformPointerInput());
 #elif PLATFORM_WII
@@ -55,11 +55,11 @@ bool menuPointerInputSuppressed(Minecraft *mc)
 
 bool menuCursorSuppressed(Minecraft *mc)
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	if (mc != nullptr && mc->currentScreen != nullptr && mc->currentScreen->suppressesPlatformPointerInput())
 		return true;
 #endif
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_XBOX
 	if (!platformMenuCursorVisible())
 		return true;
 	if (mc == nullptr || mc->gameSettings == nullptr || !mc->gameSettings->legacyUI)
@@ -192,7 +192,7 @@ void GuiScreen::keyTyped(char_t c, int_t key)
 jstring GuiScreen::getClipboardString()
 {
 	// SDL clipboard
-#if !PLATFORM_PS2 && !PLATFORM_WII
+#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
 	char *text = SDL_GetClipboardText();
 	if (text)
 	{
@@ -206,7 +206,7 @@ jstring GuiScreen::getClipboardString()
 
 void GuiScreen::setClipboardString(const std::string &text)
 {
-#if !PLATFORM_PS2 && !PLATFORM_WII
+#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
 	SDL_SetClipboardText(text.c_str());
 #else
 	(void)text;
@@ -301,7 +301,7 @@ void GuiScreen::initGui()
 void GuiScreen::handleInput()
 {
 	handleSpecializedMenuInput();
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	// Console GUI helpers consume the platform snapshot here, after the native
 	// backend has published this frame's controller state and before queued
 	// mouse/keyboard events are dispatched to the screen. Keeping this routing
@@ -310,7 +310,7 @@ void GuiScreen::handleInput()
 	VirtualKeyboard::instance().tick();
 	if (!platformTextInputExclusive())
 		ContainerSlotNavigator::instance().tick();
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	handleConsoleJavaUiNavigation();
 #endif
 #endif
@@ -374,7 +374,7 @@ bool GuiScreen::isJavaUiKeyboardNavigationEnabled() const
 		return false;
 	if (platformPadRebindExclusive() || platformContainerNavigationActive())
 		return false;
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	if (platformTextInputExclusive())
 		return false;
 #endif
@@ -515,7 +515,7 @@ bool GuiScreen::handleJavaUiNavigationKey(int_t key)
 
 void GuiScreen::moveMenuCursorToKeyboardSelection()
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	if (mc == nullptr || keyboardSelectedControlIndex < 0 ||
 		keyboardSelectedControlIndex >= static_cast<int_t>(controlList.size()) || width <= 0 || height <= 0)
 		return;
@@ -543,7 +543,7 @@ void GuiScreen::clearKeyboardSelectionFromPointer()
 	}
 }
 
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 void GuiScreen::handleConsoleJavaUiNavigation()
 {
 	if (!isJavaUiKeyboardNavigationEnabled())
@@ -580,10 +580,25 @@ void GuiScreen::handleConsoleJavaUiNavigation()
 		moveKeyboardSelection(-1);
 	else if ((pad.pressed & PLATFORM_TEXT_DOWN) != 0)
 		moveKeyboardSelection(1);
+#if PLATFORM_XBOX
+	// Left/right adjust a slider; on anything else they step between buttons,
+	// so side-by-side choices (GuiYesNo's Yes/Cancel) are reachable.
+	else if ((pad.pressed & PLATFORM_TEXT_LEFT) != 0)
+	{
+		if (!adjustKeyboardSelection(-1))
+			moveKeyboardSelection(-1);
+	}
+	else if ((pad.pressed & PLATFORM_TEXT_RIGHT) != 0)
+	{
+		if (!adjustKeyboardSelection(1))
+			moveKeyboardSelection(1);
+	}
+#else
 	else if ((pad.pressed & PLATFORM_TEXT_LEFT) != 0)
 		adjustKeyboardSelection(-1);
 	else if ((pad.pressed & PLATFORM_TEXT_RIGHT) != 0)
 		adjustKeyboardSelection(1);
+#endif
 
 	if (menuPointerInputSuppressed(mc) && (pad.pressed & PLATFORM_TEXT_TYPE) != 0)
 		activateKeyboardSelection();

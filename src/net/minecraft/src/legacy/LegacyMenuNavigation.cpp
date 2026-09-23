@@ -63,7 +63,7 @@ int_t legacyNextSelectableButton(const std::vector<GuiButton *> &buttons, int_t 
 
 int_t legacyHoveredSelectableButton(const std::vector<GuiButton *> &buttons, int_t mouseX, int_t mouseY)
 {
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_XBOX
     (void)buttons;
     (void)mouseX;
     (void)mouseY;

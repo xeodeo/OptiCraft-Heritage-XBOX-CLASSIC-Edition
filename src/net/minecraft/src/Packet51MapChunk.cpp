@@ -50,7 +50,7 @@ void Packet51MapChunk::readPacketData(std::istream &is)
     if (!is)
         throw std::runtime_error("Truncated compressed map chunk");
 
-#if !defined(WII_PLATFORM) && !defined(PS2_PLATFORM)
+#if !defined(WII_PLATFORM) && !defined(PS2_PLATFORM) && !defined(XBOX_PLATFORM)
     if (!ensureDecompressed())
         throw std::runtime_error("Invalid compressed map chunk data");
 #endif
@@ -81,7 +81,7 @@ bool Packet51MapChunk::ensureDecompressed()
     // Java allocates the worst-case 12288 bytes for every primary section and
     // leaves any unused Add-array tail zero-filled. Keep that full allocation;
     // Chunk::func_48494_a consumes only the bytes selected by yChMax.
-#if !defined(WII_PLATFORM) && !defined(PS2_PLATFORM)
+#if !defined(WII_PLATFORM) && !defined(PS2_PLATFORM) && !defined(XBOX_PLATFORM)
     std::vector<byte_t>().swap(compressedChunk);
 #endif
     return true;

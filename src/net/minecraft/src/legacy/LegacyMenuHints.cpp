@@ -16,7 +16,7 @@ void drawLegacyMenuHints(FontRenderer *font, int_t screenWidth, int_t screenHeig
     const std::string navigate = "[D-Pad] " + uiText("Navigate");
     const std::string select = "[X] " + uiText("Select");
     const std::string back = "[O] " + uiText("Back");
-#elif PLATFORM_WII
+#elif PLATFORM_WII || PLATFORM_XBOX
     const std::string navigate = "[D-Pad] " + uiText("Navigate");
     const std::string select = "[A] " + uiText("Select");
     const std::string back = "[B] " + uiText("Back");

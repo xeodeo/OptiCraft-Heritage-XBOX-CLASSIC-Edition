@@ -4,6 +4,13 @@
 #include <cstdarg>
 #include <cstring>
 
+#if PLATFORM_XBOX
+// src/xbox/system/XboxLogRing.cpp: in-memory log readable through the xemu gdbstub.
+extern "C" void xboxLogRingAppend(const char* line);
+// src/xbox/system/XboxNetLog.cpp: optional UDP copy to a PC (XBOX_NETLOG_HOST).
+extern "C" void xboxNetLogSend(const char* line);
+#endif
+
 #if PLATFORM_WII
 extern "C" void wiiPlatformLogWrite(const char* line);
 #endif
@@ -275,6 +282,9 @@ void McLog::write(Level level, const char* category, const char* fmt, ...)
 
 #if PLATFORM_WII
     wiiPlatformLogWrite(line);
+#elif PLATFORM_XBOX
+    xboxLogRingAppend(line);
+    xboxNetLogSend(line);
 #else
     if (shouldWriteConsole(level, safeCategory))
     {

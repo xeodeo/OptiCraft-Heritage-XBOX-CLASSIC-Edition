@@ -56,7 +56,7 @@ private:
     // Disabled Player 2 button
     GuiButton *buttonPlayer2Skin;
 
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_XBOX
     bool ps2ActionReleaseLatch;
     bool stickNavLatched;
     int dpadRepeatTimer;

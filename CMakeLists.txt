@@ -47,6 +47,13 @@ if(NINTENDO_WII OR (DEFINED PLATFORM AND PLATFORM STREQUAL "WII"))
     return()
 endif()
 
+# Original Xbox build. cmake/xbox_toolchain.cmake (wired in by the xbox-*
+# presets) defines XBOX; same shape as the console branches above.
+if(XBOX OR (DEFINED PLATFORM AND PLATFORM STREQUAL "XBOX"))
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/xbox.cmake)
+    return()
+endif()
+
 enable_testing()
 
 function(opticraft_add_optional_test target test_source)

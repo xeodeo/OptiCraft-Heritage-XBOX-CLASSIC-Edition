@@ -31,10 +31,10 @@ GuiIngameMenu::GuiIngameMenu()
 	, updateCounter(0)
 	, selectedControlIndex(-1)
 	, hoveredControlIndex(-1)
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	, legacyPauseOpenedAtMillis(System::currentTimeMillis())
 #endif
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_XBOX
 	, ps2PauseStartReleaseLatch(true)
 	, ps2PauseActionReleaseLatch(true)
 #endif
@@ -188,7 +188,7 @@ void GuiIngameMenu::closeLegacyPause()
 
 void GuiIngameMenu::handleSpecializedMenuInput()
 {
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_XBOX
 	const bool legacyPause = mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI;
 	if (!legacyPause)
 		return;

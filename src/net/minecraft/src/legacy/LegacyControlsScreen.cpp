@@ -20,6 +20,10 @@
 #include "wii/input/WiiPadKeyCodes.h"
 #endif
 
+#if PLATFORM_XBOX
+#include "xbox/input/XboxPadKeyCodes.h"
+#endif
+
 namespace
 {
 constexpr int_t BUTTON_ROW_BASE = 7000;
@@ -35,6 +39,8 @@ bool reservedCaptureKey(int_t key)
 #elif PLATFORM_WII
     return key == WII_KEY_GC_B || key == WII_KEY_WM_B || key == WII_KEY_CC_B ||
         key == lwjgl::Keyboard::KEY_ESCAPE;
+#elif PLATFORM_XBOX
+    return key == XBOX_KEY_B || key == lwjgl::Keyboard::KEY_ESCAPE;
 #else
     return key == lwjgl::Keyboard::KEY_ESCAPE;
 #endif
@@ -42,7 +48,7 @@ bool reservedCaptureKey(int_t key)
 
 std::string capturePrompt()
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
     return uiText("Press a button...");
 #else
     return uiText("Press a key...");
@@ -224,7 +230,7 @@ void LegacyControlsScreen::keyTyped(char_t c, int_t key)
         if (reservedCaptureKey(key))
         {
             cancelCapture();
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
             // The reserved Back button is also a menu-navigation edge. Consume
             // the same latched press so it cannot immediately close Controls.
             (void)platformTextInputSnapshot(platformMenuPad());

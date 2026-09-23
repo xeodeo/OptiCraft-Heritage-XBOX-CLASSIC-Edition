@@ -188,7 +188,7 @@ public:
 	static StepSound *soundClothFootstep;
 	static StepSound *soundSandFootstep;
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 	static constexpr int_t BLOCK_REGISTRY_SIZE = 256;
 #else
 	static constexpr int_t BLOCK_REGISTRY_SIZE = 4096;

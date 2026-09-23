@@ -110,7 +110,7 @@ private:
 	void markRenderersForNewPosition(int_t i, int_t j, int_t k);
 #if PLATFORM_CENTER_VERTICAL_RENDERERS
 	void remapCenteredVerticalRendererSlots(int_t newStartSection);
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	int_t chooseConsoleVerticalStartSection(int_t playerBlockY) const;
 #endif
 #endif
@@ -135,7 +135,7 @@ private:
 	bool trimPs2MeshCache(EntityLiving *viewer);
 	bool evictStreamingBuildForUrgent(EntityLiving *viewer);
 #endif
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	void checkOcclusionQueryResult(int_t i, int_t j, double playerX, double playerY, double playerZ);
 #endif
 	int_t renderSortedRenderers(int_t i, int_t j, int_t k, double d);
@@ -160,15 +160,15 @@ private:
 	// mapping is slot = section - verticalStartSection, not section % renderChunksTall.
 	// markRenderersInRange must use this so block edits dirty the right renderer.
 	int_t verticalStartSection = 0;
-#if (PLATFORM_PS2 || PLATFORM_WII) && PLATFORM_CENTER_VERTICAL_RENDERERS
+#if (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX) && PLATFORM_CENTER_VERTICAL_RENDERERS
 	bool verticalWindowInitialized = false;
 #endif
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	int_t glRenderListBase = 0;
 #endif
 	Minecraft *mc = nullptr;
 	RenderBlocks *globalRenderBlocks = nullptr;
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	std::vector<int_t> glOcclusionQueryBase;
 	bool occlusionEnabled = false;
 #endif
@@ -193,7 +193,7 @@ private:
 	int_t countEntitiesTotal = 0;
 	int_t countEntitiesRendered = 0;
 	int_t countEntitiesHidden = 0;
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	std::vector<int_t> occlusionResult;
 #endif
 	int_t renderersLoaded = 0;

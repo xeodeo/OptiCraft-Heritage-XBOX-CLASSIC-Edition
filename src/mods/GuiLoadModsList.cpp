@@ -12,7 +12,7 @@
 #include "ps2/storage/assets/Ps2Assets.h"
 #endif
 
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 #include "platform/Input.h"
 #endif
 
@@ -298,7 +298,7 @@ void GuiLoadModsList::updateScreen()
 
 void GuiLoadModsList::handleSpecializedMenuInput()
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     if ((pad.pressed & (PLATFORM_TEXT_BACK | PLATFORM_TEXT_CLOSE)) != 0)
     {

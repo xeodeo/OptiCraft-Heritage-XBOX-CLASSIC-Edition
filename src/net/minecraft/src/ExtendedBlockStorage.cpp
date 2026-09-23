@@ -12,7 +12,7 @@ namespace
 		(int_t)(sizeof(Block::blocksList) / sizeof(Block::blocksList[0]));
 }
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 // The inline normalizeStoredBlockId() in the header hardcodes this bound.
 static_assert(Block::BLOCK_REGISTRY_SIZE == 256,
               "ExtendedBlockStorage::normalizeStoredBlockId assumes a 256-entry console registry");

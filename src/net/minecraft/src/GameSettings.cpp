@@ -100,6 +100,7 @@ void GameSettings::setDefaults()
 	soundVolume = 1.0f;
 	mouseSensitivity = 0.5f;
 	invertMouse = false;
+	dolbyDigital = false;
 	renderDistance = 0;
 	particleSetting = 0;
 	fovSetting = 0.0f;

@@ -140,6 +140,31 @@
       "cacheVariables": {
         "WII_BRINGUP": "ON"
       }
+    },
+    {
+      "name": "xbox-release",
+      "displayName": "Xbox Release (x86 / Pentium III)",
+      "description": "Original Xbox full-game build: VS2022 cl.exe (C++17) + XDK 5849 linker/imagebld. Set XBOX_XDK_ROOT to the XDK 'xbox' directory.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/xbox-release",
+      "toolchainFile": "${sourceDir}/cmake/xbox_toolchain.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "PLATFORM": "XBOX",
+        "XBOX_BRINGUP": "OFF",
+        "XBOX_ENABLE_SOUND": "OFF",
+        "CMAKE_MAKE_PROGRAM": "${sourceDir}/ninja.exe"
+      }
+    },
+    {
+      "name": "xbox-bringup",
+      "displayName": "Xbox Bring-up (x86 / Pentium III)",
+      "description": "Minimal hybrid-toolchain smoke test: C++17 runtime, SEH/C++ exceptions, RTTI, threads, thread_local, D3D8.",
+      "inherits": "xbox-release",
+      "binaryDir": "${sourceDir}/build/xbox-bringup",
+      "cacheVariables": {
+        "XBOX_BRINGUP": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -202,6 +227,14 @@
       "displayName": "Build Wii Bring-up",
       "configurePreset": "wii-bringup",
       "jobs": 0
+    },
+    {
+      "name": "xbox-release",
+      "configurePreset": "xbox-release"
+    },
+    {
+      "name": "xbox-bringup",
+      "configurePreset": "xbox-bringup"
     }
   ]
 }

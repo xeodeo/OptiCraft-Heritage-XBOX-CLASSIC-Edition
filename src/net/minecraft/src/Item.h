@@ -79,7 +79,7 @@ public:
     static void initItems();
     static void cleanup();
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
     static constexpr int ITEM_LIST_SIZE = 4096;
 #else
     static constexpr int ITEM_LIST_SIZE = 32000;

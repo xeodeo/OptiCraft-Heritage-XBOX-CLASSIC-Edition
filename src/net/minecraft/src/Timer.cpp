@@ -71,7 +71,7 @@ void Timer::updateTimer()
 	{
 		elapsedTicks = 1;
 	}
-#elif defined(WII_PLATFORM)
+#elif defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 	// Bound catch-up work so one slow chunk or mesh frame cannot queue enough
 	// simulation work to cause a self-sustaining sequence of long frames.
 	if (elapsedTicks > 2)

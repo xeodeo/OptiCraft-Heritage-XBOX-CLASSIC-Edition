@@ -2,7 +2,7 @@
 
 #include "java/Type.h"
 
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
 #include "SDL_events.h"
 #endif
 
@@ -13,7 +13,7 @@ namespace Mouse
 namespace detail
 {
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 // Consoles have no SDL event pump; the platform's input poll feeds events here.
 //   PS2 — right stick drives a simulated cursor.
 //   Wii — the Wiimote IR pointer drives it directly, with the Classic/GC right

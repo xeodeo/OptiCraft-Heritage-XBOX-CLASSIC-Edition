@@ -27,7 +27,7 @@ void GuiScreenAddServer::updateScreen()
 
 void GuiScreenAddServer::initGui()
 {
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
     lwjgl::Keyboard::enableRepeatEvents(true);
 #endif
     StringTranslate *translate = StringTranslate::getInstance();
@@ -54,7 +54,7 @@ void GuiScreenAddServer::initGui()
 
 void GuiScreenAddServer::onGuiClosed()
 {
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
     lwjgl::Keyboard::enableRepeatEvents(false);
 #endif
     if (serverName != nullptr) serverName->setFocused(false);
@@ -90,7 +90,7 @@ void GuiScreenAddServer::actionPerformed(GuiButton *button)
 
 void GuiScreenAddServer::keyTyped(char_t c, int_t key)
 {
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
     if (c == '\r' || key == lwjgl::Keyboard::KEY_RETURN)
     {
         if (serverName != nullptr && serverName->getFocused())
@@ -125,7 +125,7 @@ void GuiScreenAddServer::keyTyped(char_t c, int_t key)
         if (serverName != nullptr) serverName->textboxKeyTyped(c, key);
         if (serverAddress != nullptr) serverAddress->textboxKeyTyped(c, key);
     }
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
     if ((c == '\r' || key == 28) && !controlList.empty())
         actionPerformed(buttonAdd);
 #endif

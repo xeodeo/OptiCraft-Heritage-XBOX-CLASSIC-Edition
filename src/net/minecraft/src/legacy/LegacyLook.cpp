@@ -1,7 +1,12 @@
 #include "LegacyLook.h"
 
+#include "platform/PlatformConfig.h"
+
 #include <algorithm>
 #include <cmath>
+#if PLATFORM_XBOX
+#include "java/Math.h"
+#endif
 
 namespace
 {
@@ -18,7 +23,12 @@ struct LegacyGammaLut
         {
             const float_t input = static_cast<float_t>(i) /
                 static_cast<float_t>(LEGACY_GAMMA_LUT_SIZE - 1);
+#if PLATFORM_XBOX
+            // The UCRT pow helper uses SSE2, which the Xbox CPU lacks.
+            values[i] = static_cast<float_t>(JavaMath::pow(input, LEGACY_LOOK_GAMMA_EXPONENT));
+#else
             values[i] = std::pow(input, LEGACY_LOOK_GAMMA_EXPONENT);
+#endif
             bytes[i] = static_cast<unsigned char>(values[i] * 255.0f + 0.5f);
         }
     }
@@ -35,7 +45,7 @@ const LegacyGammaLut &legacyGammaLut()
 
 bool legacyLookDefaultEnabled()
 {
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
     return true;
 #else
     return false;

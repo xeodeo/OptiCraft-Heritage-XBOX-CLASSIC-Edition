@@ -345,7 +345,7 @@ void renderScaleDouble(double x, double y, double z);
 void renderFrustum(double left, double right, double bottom, double top, double nearValue, double farValue);
 void renderOrtho(double left, double right, double bottom, double top, double nearValue, double farValue);
 
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 // Desktop-only retained-mode compatibility used by the original 1.2.5 GL renderer.
 int renderGenerateDisplayLists(int count);
 void renderDeleteDisplayLists(int first, int count);

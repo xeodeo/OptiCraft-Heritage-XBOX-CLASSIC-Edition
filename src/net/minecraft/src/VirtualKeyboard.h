@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 
 #include "Gui.h"
 #include "java/Type.h"
@@ -22,6 +22,11 @@ public:
 	// is focused; focusing a different field resets the selection.
 	void notifyFocus(GuiTextField* field, bool focused);
 	bool isActive() const { return focusedField != nullptr; }
+	// Unfocuses the field that owns the keyboard, if any. Called when the
+	// screen changes: screens are freed late (Minecraft::purgeOwnedGuiScreens),
+	// so a field left focused would otherwise keep the pad exclusive -- and
+	// every later menu unable to navigate -- after its screen is gone.
+	void releaseFocus();
 
 	// Per-frame while active: read the pad and inject input events.
 	void tick();

@@ -10,7 +10,7 @@
 #include "EntityPlayerSP.h"
 #include "GuiPlayerInfo.h"
 #include "NetClientHandler.h"
-#if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
 #include "NetworkManager.h"
 #endif
 #include "EntityClientPlayerMP.h"
@@ -326,7 +326,7 @@ void GuiIngame::renderDebugOverlay(FontRenderer *fontRenderer, int_t screenWidth
 	drawString(fontRenderer, "y: " + std::to_string(mc->thePlayer->posY), 2, 72, 0xe0e0e0);
 	drawString(fontRenderer, "z: " + std::to_string(mc->thePlayer->posZ), 2, 80, 0xe0e0e0);
 	drawString(fontRenderer, "f: " + std::to_string(MathHelper::floor_float((mc->thePlayer->rotationYaw * 4.0f) / 360.0f + 0.5f) & 3), 2, 88, 0xe0e0e0);
-#if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
 	drawString(fontRenderer, platformInputDebugLine(), 2, 96, 0xe0e0e0);
 	WorldClient *multiplayerWorld = dynamic_cast<WorldClient *>(mc->theWorld);
 	if (multiplayerWorld != nullptr)

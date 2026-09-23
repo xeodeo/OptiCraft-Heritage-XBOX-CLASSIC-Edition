@@ -17,7 +17,7 @@ extern "C" {
 #ifndef __LITTLE_ENDIAN
 /* Sometimes it's necessary to define __LITTLE_ENDIAN explicitly
    but these catch some common cases. */
-#if defined(i386) || defined(i486) || defined(__i386__) || defined(__x86_64__) || \
+#if defined(i386) || defined(i486) || defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64) || \
 	defined(intel) || defined(x86) || defined(i86pc) || \
 	defined(__alpha) || defined(__osf__) || defined(__MIPSEL__) || defined(__MIPSEL) || defined(__mipsel__) || defined(_MIPSEL)
 #define __LITTLE_ENDIAN

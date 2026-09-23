@@ -63,7 +63,7 @@ void LegacyVideoOptions::initGui()
     controlList.push_back(smoothLightingCheckbox);
     controlList.push_back(viewBobbingCheckbox);
 
-#if !(PLATFORM_PS2 || PLATFORM_WII)
+#if !(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
     cloudsCheckbox = new LegacyOptionCheckbox(BUTTON_CLOUDS, x, legacyLayout.rowY(row++), w, h,
         uiText("Render Clouds"), legacyCloudsChecked(settings->ofClouds));
     fogCheckbox = new LegacyOptionCheckbox(BUTTON_FOG, x, legacyLayout.rowY(row++), w, h,

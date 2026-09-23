@@ -1,7 +1,7 @@
 #include "net/minecraft/src/UiStrings.h"
 #include "GuiEditSign.h"
 #include "GuiButton.h"
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 #include "GuiTextField.h"
 #endif
 #include "TileEntitySign.h"
@@ -19,7 +19,7 @@
 GuiEditSign::GuiEditSign(TileEntitySign *sign)
 	: screenTitle(uiText("Edit sign message:"))
 	, entitySign(sign)
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 	, textInput(nullptr)
 #endif
 	, updateCounter(0)
@@ -27,7 +27,7 @@ GuiEditSign::GuiEditSign(TileEntitySign *sign)
 {
 }
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 GuiEditSign::~GuiEditSign()
 {
 	if (textInput != nullptr)
@@ -42,7 +42,7 @@ void GuiEditSign::initGui()
 	lwjgl::Keyboard::enableRepeatEvents(true);
 	controlList.push_back(new GuiButton(0, width / 2 - 100, height / 4 + 120, uiText("Done")));
 	entitySign->setEditable(false);
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 	if (textInput != nullptr)
 		textInput->setFocused(false);
 	delete textInput;
@@ -56,7 +56,7 @@ void GuiEditSign::initGui()
 void GuiEditSign::onGuiClosed()
 {
 	lwjgl::Keyboard::enableRepeatEvents(false);
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 	if (textInput != nullptr)
 		textInput->setFocused(false);
 #endif
@@ -98,7 +98,7 @@ void GuiEditSign::keyTyped(char_t c, int_t key)
 	if (String::indexOfUtf16Unit(ChatAllowedCharacters::allowedCharacters(), c) >= 0 && String::utf16Length(entitySign->signText[editLine]) < 15)
 		String::appendUtf16Unit(entitySign->signText[editLine], c);
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 	if (textInput != nullptr)
 		textInput->setText(entitySign->signText[editLine]);
 #endif

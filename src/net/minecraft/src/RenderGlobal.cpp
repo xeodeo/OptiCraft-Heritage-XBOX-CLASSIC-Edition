@@ -65,7 +65,7 @@
 #include "Frustrum.h"
 #include "GameSettings.h"
 #include "legacy/LegacyLook.h"
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 #include "GLAllocation.h"
 #endif
 #include "GuiIngame.h"
@@ -126,7 +126,7 @@ RenderGlobal::RenderGlobal(Minecraft *minecraft, RenderEngine *renderengine)
 #endif
 	tileEntities = std::vector<TileEntity *>();
 	worldRenderersToUpdate = std::vector<WorldRenderer *>();
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	occlusionEnabled = false;
 #endif
 	cloudOffsetX = 0;
@@ -135,7 +135,7 @@ RenderGlobal::RenderGlobal(Minecraft *minecraft, RenderEngine *renderengine)
 #if PLATFORM_PS2
 	MC_LOG_INFO("ps2", "RenderGlobal: constructor buffers ready\n");
 #endif
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	occlusionResult = std::vector<int_t>(64);
 #endif
 	renderBatchRenderers = std::vector<WorldRenderer *>();
@@ -150,7 +150,7 @@ RenderGlobal::RenderGlobal(Minecraft *minecraft, RenderEngine *renderengine)
 	mc = minecraft;
 	renderEngine = renderengine;
 
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	occlusionEnabled = !PLATFORM_PC_LEGACY && renderSupportsFeature(RenderFeature::OcclusionQuery);
 	// Desktop 1.2.5 retains three GL lists per WorldRenderer (two terrain passes
 	// plus the occlusion box). Legacy PC uses a fixed low-end grid, so reserve only
@@ -422,7 +422,7 @@ void RenderGlobal::loadRenderers()
 	Block::leaves->setGraphicsLevel(Config::isTreesFancy());
 	renderDistance = mc->gameSettings->renderDistance;
 	worldRenderersToUpdate.clear();
-#if (PLATFORM_PS2 || PLATFORM_WII) && PLATFORM_CENTER_VERTICAL_RENDERERS
+#if (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX) && PLATFORM_CENTER_VERTICAL_RENDERERS
 	verticalWindowInitialized = false;
 #endif
 #if !defined(PS2_PLATFORM)
@@ -485,7 +485,7 @@ void RenderGlobal::loadRenderers()
 	worldRenderers = new WorldRenderer *[totalRenderers]();
 	sortedWorldRenderers = new WorldRenderer *[totalRenderers]();
 
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	int_t k = 0;
 #endif
 	int_t l = 0;
@@ -504,14 +504,14 @@ void RenderGlobal::loadRenderers()
 			for (int_t l1 = 0; l1 < renderChunksDeep; l1++)
 			{
 				int_t index = (l1 * renderChunksTall + k1) * renderChunksWide + j1;
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 				const int_t rendererListId = glRenderListBase + k;
 #else
 				const int_t rendererListId = 0;
 #endif
 				worldRenderers[index] = new WorldRenderer(worldObj, &tileEntities, j1 * 16, k1 * 16, l1 * 16, 16, rendererListId);
 
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 				if (occlusionEnabled)
 					worldRenderers[index]->glOcclusionQuery = glOcclusionQueryBase[l];
 				worldRenderers[index]->isWaitingOnOcclusionQuery = false;
@@ -522,7 +522,7 @@ void RenderGlobal::loadRenderers()
 				worldRenderers[index]->markDirty();
 				sortedWorldRenderers[index] = worldRenderers[index];
 				enqueueRendererUpdate(worldRenderers[index]);
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 				k += 3;
 #endif
 			}
@@ -559,7 +559,7 @@ void RenderGlobal::setAllRenderersVisible()
 		if (renderer != nullptr)
 		{
 			renderer->isVisible = true;
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 			renderer->isWaitingOnOcclusionQuery = false;
 #endif
 		}
@@ -591,7 +591,7 @@ void RenderGlobal::renderEntities(Vec3D *vec3d, ICamera *icamera, float f)
 	TileEntityRenderer::staticPlayerY = entityliving->lastTickPosY + (entityliving->posY - entityliving->lastTickPosY) * (double)f;
 	TileEntityRenderer::staticPlayerZ = entityliving->lastTickPosZ + (entityliving->posZ - entityliving->lastTickPosZ) * (double)f;
 
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	// Vanilla 1.2.5 keeps the lightmap active for the complete entity pass.
 	// Entity meshes use the current secondary texture coordinate rather than
 	// carrying a lightmap UV per vertex, so the stage must be active before
@@ -795,7 +795,7 @@ void RenderGlobal::renderEntities(Vec3D *vec3d, ICamera *icamera, float f)
 	platformProfileRenderPhaseEnd(cycTileDraw, PlatformRenderPhase::TileEntityDraw);
 #endif
 
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	if (mc != nullptr && mc->entityRenderer != nullptr)
 		mc->entityRenderer->disableLightmap(static_cast<double>(f));
 #endif
@@ -832,7 +832,7 @@ jstring RenderGlobal::getDebugInfoEntities()
 }
 
 #if PLATFORM_CENTER_VERTICAL_RENDERERS
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 int_t RenderGlobal::chooseConsoleVerticalStartSection(int_t playerBlockY) const
 {
 	const int_t maxStartSection = std::max(0, WorldHeight::SECTION_COUNT - renderChunksTall);
@@ -901,7 +901,7 @@ void RenderGlobal::remapCenteredVerticalRendererSlots(int_t newStartSection)
 		}
 	}
 
-#if (PLATFORM_PS2 || PLATFORM_WII) && MC_LOG_LEVEL > 2
+#if (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX) && MC_LOG_LEVEL > 2
 	MC_LOG_DEBUG("render", "vertical shift reused=%d recycled=%d start=%d->%d\n",
 		(int)reused, (int)recycled, (int)verticalStartSection, (int)newStartSection);
 #endif
@@ -929,7 +929,7 @@ void RenderGlobal::markRenderersForNewPosition(int_t i, int_t j, int_t k)
 	// Console windows favour terrain below the player and move only when the
 	// player reaches a guard edge, avoiding section-boundary oscillation.
 	int_t startSection = 0;
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	startSection = chooseConsoleVerticalStartSection(j + 8);
 	if (verticalWindowInitialized)
 		remapCenteredVerticalRendererSlots(startSection);
@@ -943,7 +943,7 @@ void RenderGlobal::markRenderersForNewPosition(int_t i, int_t j, int_t k)
 	remapCenteredVerticalRendererSlots(startSection);
 #endif
 	verticalStartSection = startSection;
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	verticalWindowInitialized = true;
 #endif
 #endif
@@ -1213,7 +1213,7 @@ int_t RenderGlobal::sortAndRender(EntityLiving *entityliving, int_t i, double d)
 		updatePs2SectionVisibility(entityliving);
 #endif
 
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	const bool useOcclusion = occlusionEnabled
 		&& mc != nullptr
 		&& mc->gameSettings != nullptr
@@ -1373,7 +1373,7 @@ int_t RenderGlobal::sortAndRender(EntityLiving *entityliving, int_t i, double d)
 	return k;
 }
 
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 void RenderGlobal::checkOcclusionQueryResult(int_t i, int_t j, double playerX, double playerY, double playerZ)
 {
 	for (int_t k = i; k < j; k++)
@@ -1410,7 +1410,7 @@ int_t RenderGlobal::renderSortedRenderers(int_t i, int_t j, int_t k, double d)
 #endif
 	renderBatchRenderers.clear();
 
-#if PLATFORM_PC
+#if PLATFORM_PC || defined(XBOX_PLATFORM)
 	const bool useOcclusion = occlusionEnabled
 		&& mc != nullptr
 		&& mc->gameSettings != nullptr

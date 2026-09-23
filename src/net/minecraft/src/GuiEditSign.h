@@ -4,7 +4,7 @@
 #include <string>
 
 class TileEntitySign;
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 class GuiTextField;
 #endif
 
@@ -13,7 +13,7 @@ class GuiEditSign : public GuiScreen
 {
 public:
 	GuiEditSign(TileEntitySign *sign);
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 	~GuiEditSign() override;
 #endif
 
@@ -33,7 +33,7 @@ protected:
 
 private:
 	TileEntitySign *entitySign;
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 	GuiTextField *textInput;
 #endif
 	int_t updateCounter;

@@ -181,7 +181,7 @@ void GuiBetaOptions::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 	drawString(fontRenderer, uiText("Player name"), width / 2 - 100, height / 2 - 32, 0xa0a0a0);
 #ifdef WII_PLATFORM
 	drawCenteredString(fontRenderer, "D-pad: move / Nunchuk: camera", width / 2, height / 2 - 50, 0xa0a0a0);
-#elif defined(PS2_PLATFORM)
+#elif defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
 	drawCenteredString(fontRenderer, "Left stick: move / Right stick: camera", width / 2, height / 2 - 50, 0xa0a0a0);
 #endif
 	if (nameField != nullptr)

@@ -3,7 +3,7 @@
 
 #include <fstream>
 #include <algorithm>
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
 #include <filesystem>
 #endif
 
@@ -41,7 +41,7 @@ std::istream* TexturePackBase::getResourceAsStream(const std::string &s)
 std::vector<std::string> TexturePackBase::listResources(const std::string &prefix, const std::string &suffix)
 {
 	std::vector<std::string> result;
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
 	namespace fs = std::filesystem;
 	std::string normalizedPrefix = prefix;
 	while (!normalizedPrefix.empty() && normalizedPrefix.front() == '/')

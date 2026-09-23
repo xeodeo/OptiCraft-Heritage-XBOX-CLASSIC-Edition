@@ -1,11 +1,13 @@
 #pragma once
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 
 #if defined(PS2_PLATFORM)
 #include "platform/time.h"
-#else
+#elif defined(WII_PLATFORM)
 #include <ogc/lwp_watchdog.h>
+#elif defined(XBOX_PLATFORM)
+extern "C" unsigned long __stdcall GetTickCount(void);
 #endif
 
 // Millisecond clock for the console input helpers -- the on-screen keyboard and
@@ -21,8 +23,10 @@ inline int consoleInputNowMs()
 {
 #if defined(PS2_PLATFORM)
 	return (int)(getTimeS() * 1000.0f);
-#else
+#elif defined(WII_PLATFORM)
 	return (int)ticks_to_millisecs(gettime());
+#elif defined(XBOX_PLATFORM)
+	return (int)GetTickCount();
 #endif
 }
 

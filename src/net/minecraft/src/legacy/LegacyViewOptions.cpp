@@ -8,6 +8,8 @@
 #include "net/minecraft/src/GameSettings.h"
 #include "net/minecraft/src/GuiButton.h"
 #include "net/minecraft/src/Minecraft.h"
+#include "net/minecraft/src/SoundManager.h"
+#include "platform/PlatformConfig.h"
 #include "net/minecraft/src/StringTranslate.h"
 #include "net/minecraft/src/World.h"
 #include "net/minecraft/src/WorldInfo.h"
@@ -23,6 +25,7 @@ enum LegacyViewButtonId
     BUTTON_DIFFICULTY = 403,
     BUTTON_MUSIC = 404,
     BUTTON_SOUND = 405,
+    BUTTON_DOLBY = 406,
     BUTTON_DONE = 499
 };
 
@@ -30,13 +33,19 @@ enum LegacyViewButtonId
 
 LegacyViewOptions::LegacyViewOptions(GuiScreen *parent, GameSettings *settingsValue,
     LegacyOptionsBackgroundMode backgroundModeValue)
-    : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), invertMouseCheckbox(nullptr)
+    : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), invertMouseCheckbox(nullptr),
+      dolbyCheckbox(nullptr)
 {
 }
 
 void LegacyViewOptions::initGui()
 {
-    configureLegacyLayout(7, true, LegacyOptionsLayoutPreset::Compact);
+#if PLATFORM_XBOX
+    const int_t rows = 8;
+#else
+    const int_t rows = 7;
+#endif
+    configureLegacyLayout(rows, true, LegacyOptionsLayoutPreset::Compact);
     const int_t x = legacyLayout.contentX;
     const int_t w = legacyLayout.contentWidth;
     const int_t h = legacyLayout.rowHeight;
@@ -67,7 +76,13 @@ void LegacyViewOptions::initGui()
     controlList.push_back(new LegacyOptionSlider(BUTTON_SOUND, x, legacyLayout.rowY(5), w, h,
         settings, EnumOptions::SOUND));
 
-    controlList.push_back(new LegacyGuiButton(BUTTON_DONE, x, legacyLayout.rowY(6), w, h, uiText("Done")));
+#if PLATFORM_XBOX
+    // Plain stereo by default; Dolby Digital only when the TV/receiver takes it.
+    dolbyCheckbox = new LegacyOptionCheckbox(BUTTON_DOLBY, x, legacyLayout.rowY(6), w, h,
+        uiText("Dolby Digital"), settings->dolbyDigital);
+    controlList.push_back(dolbyCheckbox);
+#endif
+    controlList.push_back(new LegacyGuiButton(BUTTON_DONE, x, legacyLayout.rowY(rows - 1), w, h, uiText("Done")));
 }
 
 void LegacyViewOptions::actionPerformed(GuiButton *button)
@@ -85,6 +100,15 @@ void LegacyViewOptions::actionPerformed(GuiButton *button)
         settings->setOptionValue(EnumOptions::DIFFICULTY, 1);
         button->displayString = settings->getKeyBinding(EnumOptions::DIFFICULTY);
         return;
+#if PLATFORM_XBOX
+    case BUTTON_DOLBY:
+        settings->dolbyDigital = !settings->dolbyDigital;
+        dolbyCheckbox->setChecked(settings->dolbyDigital);
+        settings->saveOptions();
+        if (mc != nullptr && mc->sndManager != nullptr)
+            mc->sndManager->onSoundOptionsChanged();   // re-creates DirectSound with the new output
+        return;
+#endif
     case BUTTON_DONE:
         returnToParent();
         return;

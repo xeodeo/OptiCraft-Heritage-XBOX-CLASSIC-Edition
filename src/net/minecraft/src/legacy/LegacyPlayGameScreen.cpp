@@ -317,9 +317,9 @@ void LegacyPlayGameScreen::updateScreen()
     GuiSelectWorld::updateScreen();
     if (tutorialMessageTicks > 0)
         --tutorialMessageTicks;
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_XBOX
     if ((pad.pressed & (PLATFORM_TEXT_CLOSE | PLATFORM_TEXT_SHIFT)) != 0)
     {
         if (mc->sndManager != nullptr)
@@ -332,14 +332,21 @@ void LegacyPlayGameScreen::updateScreen()
         moveSelection(-1);
     else if ((pad.pressed & PLATFORM_TEXT_DOWN) != 0)
         moveSelection(1);
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_XBOX
     if ((pad.pressed & PLATFORM_TEXT_TYPE) != 0)
         activateSelection();
 #elif PLATFORM_WII
     if (!platformMenuPointerActive() && (pad.pressed & PLATFORM_TEXT_TYPE) != 0)
         activateSelection();
+#elif PLATFORM_XBOX
+    if ((pad.pressed & PLATFORM_TEXT_TYPE) != 0)
+        activateSelection();
 #endif
-#if PLATFORM_WII
+#if PLATFORM_XBOX
+    // X deletes the highlighted world after a confirmation (B/Y go back).
+    if ((pad.pressed & PLATFORM_TEXT_BACK) != 0)
+        requestDeleteSelectedWorld();
+#elif PLATFORM_WII
     if ((pad.pressed & PLATFORM_TEXT_BACK) != 0)
     {
         mc->sndManager->playSoundFX("random.back", 1.0f, 1.0f);
@@ -347,6 +354,26 @@ void LegacyPlayGameScreen::updateScreen()
     }
 #endif
 #endif
+}
+
+int_t LegacyPlayGameScreen::selectedWorldIndex() const
+{
+    const int_t control = hoveredControlIndex >= 0 ? hoveredControlIndex : selectedControlIndex;
+    if (control < 0 || control >= static_cast<int_t>(controlList.size()) || controlList[control] == nullptr)
+        return -1;
+    const int_t index = controlList[control]->id - BUTTON_WORLD_BASE;
+    return (index >= 0 && index < static_cast<int_t>(saveList.size())) ? index : -1;
+}
+
+void LegacyPlayGameScreen::requestDeleteSelectedWorld()
+{
+    const int_t index = selectedWorldIndex();
+    if (index < 0)
+        return;
+    // Same confirmation as the desktop world list; GuiSelectWorld::deleteWorld
+    // removes the save, reloads the list and returns to this screen.
+    mc->sndManager->playSoundFX("random.action", 1.0f, 1.0f);
+    promptDeleteWorld(index);
 }
 
 void LegacyPlayGameScreen::actionPerformed(GuiButton *button)
@@ -464,6 +491,14 @@ void LegacyPlayGameScreen::drawScrollIndicators()
 void LegacyPlayGameScreen::drawMenuControlHints()
 {
     drawLegacyMenuHints(fontRenderer, width, height, true);
+#if PLATFORM_XBOX
+    if (selectedWorldIndex() >= 0)
+    {
+        const std::string hint = "[X] " + uiText("Delete");
+        fontRenderer->drawStringWithShadow(hint, width - LEGACY_HINT_MARGIN - fontRenderer->getStringWidth(hint),
+            legacyHintRowY(height) - 12, 0xf0f0f0);
+    }
+#endif
 }
 
 void LegacyPlayGameScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)

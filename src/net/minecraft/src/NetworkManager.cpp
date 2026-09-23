@@ -10,6 +10,8 @@
 #elif defined(PS2_PLATFORM)
 #include <delaythread.h>
 #include "ps2/system/Ps2ThreadPriority.h"
+#elif defined(XBOX_PLATFORM)
+#include "platform/PlatformCompat.h"
 #endif
 
 #include "NetHandler.h"
@@ -47,7 +49,7 @@ NetworkManager::NetworkManager(const std::string &host, int_t port, const std::s
 	if (socketInputStream == nullptr || socketOutputStream == nullptr)
 		throw std::runtime_error("Could not create network streams");
 	socketOutputStream->exceptions(std::ios::badbit | std::ios::failbit);
-#if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
 #ifdef PS2_PLATFORM
 	constexpr int kNetworkThreadPriority = Ps2ThreadPriority::kNetwork;
 #else
@@ -88,7 +90,7 @@ NetworkManager::NetworkManager(const std::string &host, int_t port, const std::s
 NetworkManager::~NetworkManager()
 {
 	networkShutdown("disconnect.closed", std::vector<std::string>());
-#if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
 	if (platformReadThread.joinable() && !platformReadThread.isCurrent()) platformReadThread.join();
 	if (platformWriteThread.joinable() && !platformWriteThread.isCurrent()) platformWriteThread.join();
 #else
@@ -174,7 +176,7 @@ bool NetworkManager::sendPacket()
 
 void NetworkManager::wakeThreads()
 {
-#if !defined(WII_PLATFORM) && !defined(PS2_PLATFORM)
+#if !defined(WII_PLATFORM) && !defined(PS2_PLATFORM) && !defined(XBOX_PLATFORM)
 	threadSleepCondition.notify_all();
 #endif
 }
@@ -415,7 +417,7 @@ void NetworkManager::closeConnection()
 	if (networkSocket != nullptr)
 		networkSocket->interruptRead();
 
-#if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
 	// The writer closes the connection after the queued disconnect packet has
 	// been flushed. interruptRead() only shuts down the receive side here.
 #else
@@ -438,7 +440,7 @@ void NetworkManager::closeConnection()
 #endif
 }
 
-#if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
 void *NetworkManager::platformReadThreadEntry(void *argument)
 {
 	try { static_cast<NetworkManager *>(argument)->readThreadRun(); }
@@ -527,6 +529,8 @@ void NetworkManager::sleepThread()
 	// PS2 libstdc++ does not provide a dependable std::thread/condition_variable
 	// backend. Use the EE kernel scheduler directly.
 	DelayThread(2000);
+#elif defined(XBOX_PLATFORM)
+	PlatformCompat::delay(2);
 #else
 	std::unique_lock<std::mutex> lock(threadSleepLock);
 	threadSleepCondition.wait_for(lock, std::chrono::milliseconds(2));
@@ -566,7 +570,7 @@ void NetworkManager::handleNetworkException(NetworkManager *networkmanager, std:
 
 std::thread *NetworkManager::getReadThread(NetworkManager *networkmanager)
 {
-#if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
 	(void)networkmanager;
 	return nullptr;
 #else
@@ -576,7 +580,7 @@ std::thread *NetworkManager::getReadThread(NetworkManager *networkmanager)
 
 std::thread *NetworkManager::getWriteThread(NetworkManager *networkmanager)
 {
-#if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
 	(void)networkmanager;
 	return nullptr;
 #else

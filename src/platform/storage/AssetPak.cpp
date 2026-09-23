@@ -9,7 +9,7 @@
 #include <cstring>
 #include <streambuf>
 
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 #include <malloc.h>
 #endif
 
@@ -33,7 +33,8 @@ unsigned char *allocateAligned(std::size_t bytes)
 {
 #if PLATFORM_PS2 || PLATFORM_WII
     // Same alignment the loose-file loaders hand out: PS2 DMA sources and the
-    // Wii cache line both want 64.
+    // Wii cache line both want 64. The Xbox needs neither, and plain malloc
+    // also matches the std::free() that releases these buffers.
     return static_cast<unsigned char *>(memalign(64, bytes));
 #else
     return static_cast<unsigned char *>(std::malloc(bytes));

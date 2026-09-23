@@ -114,7 +114,7 @@ void GuiDeadzoneSettings::drawStickPreview(int_t centerX, int_t centerY, float s
 	if (connected)
 	{
 		const int_t markerX = centerX + (int_t)(stickX * PREVIEW_RADIUS);
-#if defined(PS2_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
 		const int_t markerY = centerY + (int_t)(stickY * PREVIEW_RADIUS);
 #else
 		const int_t markerY = centerY - (int_t)(stickY * PREVIEW_RADIUS);

@@ -2257,7 +2257,10 @@ void EntityRenderer::updateFogColor(float partialTicks)
     EntityLiving *entityliving = mc->renderViewEntity;
 
     float fogDistanceFactor = 1.0f / (float)(4 - mc->gameSettings->renderDistance);
-#if PLATFORM_FLOAT_VERTEX_MATH
+#if PLATFORM_XBOX
+    // The UCRT pow helper uses SSE2, which the Xbox CPU lacks.
+    fogDistanceFactor = 1.0f - (float)JavaMath::pow(fogDistanceFactor, 0.25);
+#elif PLATFORM_FLOAT_VERTEX_MATH
     fogDistanceFactor = 1.0f - std::pow(fogDistanceFactor, 0.25f);
 #else
     fogDistanceFactor = 1.0f - (float)pow(fogDistanceFactor, 0.25);

@@ -10,7 +10,7 @@
 
 namespace
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 LegacyUiTexture g_selectionCursor("/cursor.png");
 #endif
 }
@@ -18,7 +18,7 @@ LegacyUiTexture g_selectionCursor("/cursor.png");
 void legacyDrawSelectionCursorCentered(Minecraft *mc, int_t centerX, int_t centerY,
     int_t size, float_t zLevel)
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
     if (mc == nullptr || mc->renderEngine == nullptr || size <= 0)
         return;
 
@@ -40,7 +40,7 @@ void legacyDrawSelectionCursorCentered(Minecraft *mc, int_t centerX, int_t cente
 void legacyDrawSelectionCursor(Minecraft *mc, int_t controlX, int_t controlY,
     int_t controlHeight, float_t zLevel)
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
     const int_t size = std::max<int_t>(10, std::min<int_t>(PLATFORM_CURSOR_SIZE, controlHeight));
     legacyDrawSelectionCursorCentered(mc, controlX - 4, controlY + controlHeight / 2,
         size, zLevel);

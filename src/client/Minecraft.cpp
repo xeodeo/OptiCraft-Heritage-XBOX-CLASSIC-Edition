@@ -21,7 +21,7 @@
 #include <memory>
 #include <unordered_set>
 #include <typeinfo>
-#if defined(_WIN32) && !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if defined(_WIN32) && !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
 #include <windows.h>
 #endif
 #include "platform/RenderAPI.h"
@@ -82,6 +82,7 @@
 #include "net/minecraft/src/StringTranslate.h"
 #include "net/minecraft/src/GuiContainerCreative.h"
 #include "net/minecraft/src/GuiMainMenu.h"
+#include "net/minecraft/src/VirtualKeyboard.h"
 #include "net/minecraft/src/GuiSleepMP.h"
 #include "net/minecraft/src/GuiUnused.h"
 #include "net/minecraft/src/IChunkProvider.h"
@@ -119,7 +120,7 @@
 
 namespace
 {
-#if defined(_WIN32) && !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if defined(_WIN32) && !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
     bool validateProcessHeap(const char *stage)
     {
         const char *label = stage != nullptr ? stage : "<unknown>";
@@ -1248,6 +1249,9 @@ void Minecraft::displayGuiScreen(GuiScreen *guiscreen)
         return;
     if (currentScreen != nullptr)
         currentScreen->onGuiClosed();
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+    VirtualKeyboard::instance().releaseFocus();
+#endif
 #if PLATFORM_SYNC_STATS_ON_GUI_CHANGE
     if (dynamic_cast<GuiMainMenu *>(guiscreen) != nullptr)
         statFileWriter->prepareStatsForSync();
@@ -1263,6 +1267,7 @@ void Minecraft::displayGuiScreen(GuiScreen *guiscreen)
         ingameGUI->clearChatMessages();
 
     currentScreen = guiscreen;
+    MC_LOG_INFO("gui", "screen -> %s\n", guiscreen != nullptr ? typeid(*guiscreen).name() : "(none)");
     if (guiscreen != nullptr)
     {
         // Track every screen we create. Java relied on GC; in C++ a screen and its
@@ -2482,7 +2487,7 @@ void Minecraft::preloadWorld(const std::string &s)
 
     configureChunkProviderCache(ichunkprovider, chunkcoordinates.x >> 4, chunkcoordinates.z >> 4, gameSettings->renderDistance);
 
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PC_LEGACY
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PC_LEGACY
     // Gameplay generation can be deferred on low-end profiles, but this loading
     // screen is intentionally synchronous. Reuse the spawn-generation bypass so
     // console requests cannot return temporary blank chunks and Legacy PC keeps
@@ -2535,7 +2540,7 @@ void Minecraft::preloadWorld(const std::string &s)
         platformMemoryCheckpoint("preloadWorld resident region end");
     }
 
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PC_LEGACY
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PC_LEGACY
     theWorld->findingSpawnPoint = previousFindingSpawnPoint;
 #endif
 

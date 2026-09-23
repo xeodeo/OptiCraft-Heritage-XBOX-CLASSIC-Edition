@@ -29,6 +29,8 @@ private:
     void activateSelection();
     void selectControl(int_t index);
     void moveSelection(int_t direction);
+    int_t selectedWorldIndex() const;
+    void requestDeleteSelectedWorld();
     int_t maxVisibleWorlds() const;
     int_t maxPage() const;
 

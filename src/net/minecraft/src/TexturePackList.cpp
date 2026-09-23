@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include <cctype>
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
 #include <filesystem>
 #endif
 #include <iostream>
@@ -13,7 +13,7 @@
 #include "GameSettings.h"
 #include "java/String.h"
 
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
 namespace fs = std::filesystem;
 #endif
 
@@ -23,7 +23,7 @@ TexturePackList::TexturePackList(Minecraft *minecraft, const std::string &file) 
 	selectedTexturePack(nullptr)
 {
 	texturePackDir = file + "/texturepacks";
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
 	if (!fs::exists(texturePackDir))
 	{
 		fs::create_directories(texturePackDir);
@@ -71,7 +71,7 @@ void TexturePackList::updateAvailableTexturePacks()
 	selectedTexturePack = nullptr;
 	arraylist.push_back(defaultTexturePack);
 
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
 	if (fs::exists(texturePackDir) && fs::is_directory(texturePackDir))
 	{
 		for (const auto &entry : fs::directory_iterator(texturePackDir))

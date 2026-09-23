@@ -54,7 +54,7 @@
 
 namespace
 {
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 	constexpr float kSprintExhaustionMultiplier = 4.0f;
 	constexpr float kSprintJumpExhaustion = 0.35f;
 #else

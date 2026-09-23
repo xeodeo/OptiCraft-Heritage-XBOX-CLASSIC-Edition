@@ -73,6 +73,9 @@ public:
 	float soundVolume;
 	float mouseSensitivity;
 	bool invertMouse;
+	// Xbox: encode the sound mix as Dolby Digital (AC-3) instead of plain
+	// stereo. Off by default; not every TV/receiver decodes AC-3.
+	bool dolbyDigital;
 	int_t renderDistance;
 	bool viewBobbing;
 	bool anaglyph;

@@ -5,7 +5,7 @@
 #include "java/Type.h"
 #include "java/String.h"
 
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
 #include "SDL_events.h"
 #endif
 
@@ -16,7 +16,7 @@ namespace Keyboard
 namespace detail
 {
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 // Consoles have no SDL event pump. The platform's input poll feeds key events
 // straight into these instead:
 //   PS2 — pad poll plus the on-screen virtual keyboard.

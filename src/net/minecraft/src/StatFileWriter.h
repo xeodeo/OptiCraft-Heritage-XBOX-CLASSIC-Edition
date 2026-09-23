@@ -45,7 +45,7 @@ private:
 	bool hasUnsentStats;
 	StatsSyncher *statsSyncher;
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 	// Local flat-file persistence, used instead of StatsSyncher's networked
 	// JSON+checksum path (see the platform branch in StatFileWriter.cpp).
 	void loadLocalStats();

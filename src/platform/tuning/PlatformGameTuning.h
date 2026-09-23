@@ -454,7 +454,9 @@
 // varies by more than an order of magnitude with what just streamed in.
 #  define PLATFORM_LIGHTING_BUDGET_US                   (PLATFORM_PC_LEGACY ? PC_LEGACY_LIGHTING_BUDGET_US : 0)
 #  define PLATFORM_LIGHTING_MERGE_SCAN                   (PLATFORM_PC_LEGACY ? PC_LEGACY_LIGHTING_MERGE_SCAN : 5)
-#  define PLATFORM_LIGHTING_QUEUE_HARD_CAP               1000000
+// The Xbox has 64 MB: an unbounded queue doubles its vector until one
+// contiguous allocation fails mid-generation (bad_alloc -> back to menu).
+#  define PLATFORM_LIGHTING_QUEUE_HARD_CAP               (PLATFORM_XBOX ? 16384 : 1000000)
 #  define PLATFORM_FAST_LIGHTING_CHUNK_ACCESS              (PLATFORM_PC_LEGACY ? PC_LEGACY_FAST_LIGHTING_CHUNK_ACCESS : 0)
 #  define PLATFORM_FLOAT_TERRAIN_NOISE                    (PLATFORM_CONSOLE_LOW || (PLATFORM_PC_LEGACY ? PC_LEGACY_FLOAT_TERRAIN_NOISE : 0))
 #  define PLATFORM_FLOAT_BIOME_NOISE                   (PLATFORM_PC_LEGACY ? PC_LEGACY_FLOAT_BIOME_NOISE : 0)
