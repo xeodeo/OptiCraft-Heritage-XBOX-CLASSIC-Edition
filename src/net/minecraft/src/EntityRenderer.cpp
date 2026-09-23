@@ -1581,6 +1581,9 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
             platformProfileRenderPhaseEnd(cycBuild, PlatformRenderPhase::Build);
 #endif
 #else
+#if PLATFORM_PROFILE_RENDER_PHASES
+            const std::uint32_t cycBuild = platformProfileRenderPhaseBegin();
+#endif
             int64_t timeLeft;
             do
             {
@@ -1593,6 +1596,9 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
                     std::chrono::steady_clock::now().time_since_epoch()).count();
             }
             while (timeLeft >= 0 && timeLeft <= 1000000000LL);  // 0x3b9aca00
+#if PLATFORM_PROFILE_RENDER_PHASES
+            platformProfileRenderPhaseEnd(cycBuild, PlatformRenderPhase::Build);
+#endif
 #endif
         }
         

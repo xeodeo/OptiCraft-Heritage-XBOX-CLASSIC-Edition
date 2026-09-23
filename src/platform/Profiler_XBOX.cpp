@@ -23,10 +23,6 @@ long long s_chunkLoadNs = 0;
 long long s_unloadSaveNs = 0;
 int s_meshCount = 0;
 int s_generateCount = 0;
-
-const char* const kPhaseNames[kRenderPhases] = {
-    "sky", "frustum", "build", "opaque", "entities", "transl", "hand", "hud",
-    "entDraw", "tileEnt", "hudItems", "hudText", "hudHints", "p13", "p14", "p15"};
 }
 
 std::uint32_t platformProfileRenderPhaseBegin()
@@ -71,10 +67,10 @@ void xboxProfileReport(unsigned int frames, unsigned long elapsedMs, double pres
     const int ticks = xboxClientProfileTake(client);
     const double perFrame = 1.0 / static_cast<double>(frames);
     const double toMs = perFrame / kCyclesPerMs;
-    MC_LOG_INFO("xbox.perf", "fps=%.1f frame=%.1fms present=%.1fms | sky=%.1f build=%.1f opaque=%.1f ent=%.1f transl=%.1f hand=%.1f hud=%.1f\n",
+    MC_LOG_INFO("xbox.perf", "fps=%.1f frame=%.1fms present=%.1fms | sky=%.1f frustum=%.1f build=%.1f opaque=%.1f ent=%.1f transl=%.1f hand=%.1f hud=%.1f\n",
                 frames * 1000.0 / static_cast<double>(elapsedMs),
                 static_cast<double>(elapsedMs) * perFrame, presentMs * perFrame,
-                s_renderCycles[0] * toMs, s_renderCycles[2] * toMs, s_renderCycles[3] * toMs,
+                s_renderCycles[0] * toMs, s_renderCycles[1] * toMs, s_renderCycles[2] * toMs, s_renderCycles[3] * toMs,
                 s_renderCycles[4] * toMs, s_renderCycles[5] * toMs, s_renderCycles[6] * toMs,
                 s_renderCycles[7] * toMs);
     MC_LOG_INFO("xbox.perf", "loop per frame: ticks=%.1fms (%.1f tps) lighting=%.1fms render=%.1fms display=%.1fms\n",

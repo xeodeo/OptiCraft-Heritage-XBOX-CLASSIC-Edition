@@ -205,6 +205,18 @@ int_t Config::getRenderDistanceFine()
 		: 128;
 }
 
+int_t Config::getRendererGridRadiusChunks()
+{
+	int_t j = 2 * getRenderDistanceFine();
+	if (isLoadChunksFar() && j < 512)
+		j = 512;
+	j += getPreloadedChunks() * 2 * 16;
+	const int_t limit = getRenderDistanceFine() > 256 ? 1024 : 400;
+	if (j > limit)
+		j = limit;
+	return (j / 16 + 1) / 2;
+}
+
 int_t Config::getIconWidthTerrain() { return iconWidthTerrain; }
 int_t Config::getIconWidthItems() { return iconWidthItems; }
 void Config::setIconWidthTerrain(int_t width) { iconWidthTerrain = limit(width, 1, getMaxDynamicTileWidth()); }

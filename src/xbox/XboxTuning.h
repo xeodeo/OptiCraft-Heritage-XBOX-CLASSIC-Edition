@@ -40,6 +40,15 @@
 #undef  PLATFORM_MIN_UNUSED_TICKS_BEFORE_UNLOAD
 #define PLATFORM_MIN_UNUSED_TICKS_BEFORE_UNLOAD  20
 
+// Bounded, reused pathfinder (PlatformConfig.h), with the low-end PC limits:
+// the desktop defaults are "unlimited", which the bounded pathfinder turns
+// into an impossible preallocation (std::length_error at the first mob).
+#undef  PLATFORM_PATHFIND_MAX_NODES
+#define PLATFORM_PATHFIND_MAX_NODES              300
+#undef  PLATFORM_PATHFIND_BUDGET_PER_TICK
+#define PLATFORM_PATHFIND_BUDGET_PER_TICK        3
+#undef  PLATFORM_REUSE_PATHFINDER
+#define PLATFORM_REUSE_PATHFINDER                1
 // Mob cap.
 #undef  PLATFORM_MAX_LIVE_MOBS
 #define PLATFORM_MAX_LIVE_MOBS                   40

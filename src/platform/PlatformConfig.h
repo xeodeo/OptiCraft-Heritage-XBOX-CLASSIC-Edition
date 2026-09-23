@@ -165,11 +165,11 @@
 #  define PLATFORM_SINGLE_LOCAL_PLAYER PLATFORM_PS2
 #endif
 
-// Not on the Xbox: its bounded/reused pathfinder faulted in Path::sortForward
-// (null heap slot) a few seconds into a world; the vanilla pathfinder is fine
-// on the Pentium III.
+// The Xbox takes it too. It was switched off there once while chasing a
+// Path::sortForward fault; the real cause was fdlibm reading doubles with the
+// wrong word order under MSVC x86 (NaN distances), fixed in fdlibm.h.
 #ifndef PLATFORM_BOUNDED_PATHFIND
-#  define PLATFORM_BOUNDED_PATHFIND (PLATFORM_CONSOLE_LOW || PLATFORM_WII || PLATFORM_PC_LEGACY)
+#  define PLATFORM_BOUNDED_PATHFIND (PLATFORM_CONSOLE_LOW || PLATFORM_WII || PLATFORM_PC_LEGACY || PLATFORM_XBOX)
 #endif
 
 #ifndef PLATFORM_HAS_VIRTUAL_KEYBOARD

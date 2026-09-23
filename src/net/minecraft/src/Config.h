@@ -64,6 +64,9 @@ public:
 	static bool isCustomFonts();
 	static int_t getMaxRenderDistanceFine();
 	static int_t getRenderDistanceFine();
+	// Radius, in chunk columns, of the world renderer grid built from the
+	// current render distance (same arithmetic as RenderGlobal::loadRenderers).
+	static int_t getRendererGridRadiusChunks();
 	static int_t getIconWidthTerrain();
 	static int_t getIconWidthItems();
 	static void setIconWidthTerrain(int_t width);

@@ -1,5 +1,6 @@
 #include "platform/Log.h"
 #include "ChunkProvider.h"
+#include "Config.h"
 
 #include <cstdio>
 #include <algorithm>
@@ -258,6 +259,15 @@ void ChunkProvider::setChunkLoadRadius(int_t radius)
 		ChunkMemoryPolicy::retentionPolicy(saveHandler != nullptr && saveHandler->isReadOnly());
 	chunkLoadRadius = policy.loadRadius;
 	chunkUnloadRadius = policy.unloadRadius;
+#if PLATFORM_XBOX
+	// Keep resident only what the renderer can reach plus one column of
+	// neighbours for meshing, capped by the tuning radius. At a short render
+	// distance this holds 7x7 columns instead of 11x11 (several MB of the
+	// 64 MB); farther distances keep the full radius, so nothing is lost on
+	// screen. Evicted columns are saved to T: and reloaded when revisited.
+	chunkLoadRadius = std::min<int_t>(policy.loadRadius, Config::getRendererGridRadiusChunks() + 1);
+	chunkUnloadRadius = std::min<int_t>(policy.unloadRadius, chunkLoadRadius + 1);
+#endif
 #elif PLATFORM_PC_LEGACY
 	(void)radius;
 	chunkLoadRadius = PLATFORM_CHUNK_CACHE_RADIUS;
