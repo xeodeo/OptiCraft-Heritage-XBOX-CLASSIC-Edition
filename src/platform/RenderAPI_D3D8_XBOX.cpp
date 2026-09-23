@@ -312,7 +312,12 @@ struct Texture
     int height = 0;
     int storageWidth = 0;    // power-of-two size of the swizzled D3D texture
     int storageHeight = 0;
-    std::vector<DWORD> pixels;  // level 0, linear A8R8G8B8, image size
+    // Level 0, linear A8R8G8B8, image size. Only kept while needed: until the
+    // D3D texture exists, for non-power-of-two images (every upload resamples
+    // it), and for dynamic textures that receive sub-image updates (animated
+    // terrain/items tiles). Static power-of-two textures drop it after upload.
+    std::vector<DWORD> pixels;
+    bool dynamic = false;
     bool dirty = false;         // pixels not yet in the D3D texture
     bool blur = false;
     bool clamp = false;
@@ -341,6 +346,16 @@ bool ensureD3DTexture(Texture& t)
     IDirect3DDevice8* d = g_pD3DDevice;
     if (!d || t.storageWidth <= 0 || t.storageHeight <= 0) return false;
     return SUCCEEDED(d->CreateTexture(t.storageWidth, t.storageHeight, 1, 0, D3DFMT_A8R8G8B8, 0, &t.d3d));
+}
+
+void convertRgba(const unsigned char* src, DWORD* dst, int count)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        dst[i] = (static_cast<DWORD>(src[3]) << 24) | (static_cast<DWORD>(src[0]) << 16) |
+                 (static_cast<DWORD>(src[1]) << 8) | static_cast<DWORD>(src[2]);
+        src += 4;
+    }
 }
 
 void swizzleUpload(Texture& t)
@@ -380,6 +395,22 @@ void swizzleUpload(Texture& t)
     _mm_empty();
     t.d3d->UnlockRect(0);
     t.dirty = false;
+    if (!t.dynamic && t.storageWidth == t.width && t.storageHeight == t.height)
+        std::vector<DWORD>().swap(t.pixels);   // the GPU copy is the only one needed
+}
+
+// Brings back the CPU copy of a power-of-two texture from its swizzled D3D
+// texture, the first time it receives a sub-image update.
+bool restorePixels(Texture& t)
+{
+    if (!t.d3d || t.storageWidth != t.width || t.storageHeight != t.height) return false;
+    t.pixels.assign(static_cast<size_t>(t.width) * t.height, 0);
+    D3DLOCKED_RECT locked;
+    if (FAILED(t.d3d->LockRect(0, &locked, NULL, 0))) return false;
+    XGUnswizzleRect(locked.pBits, t.storageWidth, t.storageHeight, NULL, t.pixels.data(), t.width * 4, NULL, 4);
+    _mm_empty();   // see swizzleUpload
+    t.d3d->UnlockRect(0);
+    return true;
 }
 
 void ensureStorage(Texture& t, int width, int height)
@@ -400,15 +431,6 @@ void ensureStorage(Texture& t, int width, int height)
         ensureD3DTexture(t);
 }
 
-void convertRgba(const unsigned char* src, DWORD* dst, int count)
-{
-    for (int i = 0; i < count; ++i)
-    {
-        dst[i] = (static_cast<DWORD>(src[3]) << 24) | (static_cast<DWORD>(src[0]) << 16) |
-                 (static_cast<DWORD>(src[1]) << 8) | static_cast<DWORD>(src[2]);
-        src += 4;
-    }
-}
 
 void applyTextureStage()
 {
@@ -743,7 +765,12 @@ bool allocateVertexRange(UINT bytes, int* pool, UINT* offset)
 {
     bytes = roundToGranule(bytes);
     if (bytes > kVertexPoolBytes) return false;
+    // Best fit over every pool (ties go to the lower pool): keeps large holes
+    // for large meshes and lets the last pools drain so they can be released.
     int emptySlot = -1;
+    int bestPool = -1;
+    UINT bestOffset = 0;
+    UINT bestSize = 0xFFFFFFFFu;
     for (size_t p = 0; p < s_vertexPools.size(); ++p)
     {
         if (s_vertexPools[p].vb == nullptr)
@@ -751,18 +778,26 @@ bool allocateVertexRange(UINT bytes, int* pool, UINT* offset)
             if (emptySlot < 0) emptySlot = static_cast<int>(p);
             continue;
         }
-        std::map<UINT, UINT>& ranges = s_vertexPools[p].freeRanges;
-        for (auto it = ranges.begin(); it != ranges.end(); ++it)
+        for (const auto& range : s_vertexPools[p].freeRanges)
         {
-            if (it->second < bytes) continue;
-            *pool = static_cast<int>(p);
-            *offset = it->first;
-            const UINT rest = it->second - bytes;
-            const UINT restOffset = it->first + bytes;
-            ranges.erase(it);
-            if (rest > 0) ranges[restOffset] = rest;
-            return true;
+            if (range.second >= bytes && range.second < bestSize)
+            {
+                bestPool = static_cast<int>(p);
+                bestOffset = range.first;
+                bestSize = range.second;
+                if (bestSize == bytes) break;
+            }
         }
+        if (bestSize == bytes) break;
+    }
+    if (bestPool >= 0)
+    {
+        std::map<UINT, UINT>& ranges = s_vertexPools[static_cast<size_t>(bestPool)].freeRanges;
+        ranges.erase(bestOffset);
+        if (bestSize > bytes) ranges[bestOffset + bytes] = bestSize - bytes;
+        *pool = bestPool;
+        *offset = bestOffset;
+        return true;
     }
     IDirect3DDevice8* d = g_pD3DDevice;
     VertexPool fresh;
@@ -1200,6 +1235,8 @@ void renderTextureImageRgba(int level, int width, int height, const void* pixels
     if (level != 0 || target <= 0) return;  // one level: no mipmaps yet
     Texture& t = s_textures[target];
     ensureStorage(t, width, height);
+    if (t.pixels.size() != static_cast<size_t>(width) * height)
+        t.pixels.assign(static_cast<size_t>(width) * height, 0);   // CPU copy was dropped
     if (pixels)
         convertRgba(static_cast<const unsigned char*>(pixels), t.pixels.data(), width * height);
     swizzleUpload(t);
@@ -1210,9 +1247,12 @@ void renderTextureSubImageRgba(int level, int x, int y, int width, int height, c
     const int target = uploadTarget();
     if (level != 0 || target <= 0 || !pixels) return;
     auto it = s_textures.find(target);
-    if (it == s_textures.end() || it->second.pixels.empty()) return;
+    if (it == s_textures.end()) return;
     Texture& t = it->second;
     const unsigned char* src = static_cast<const unsigned char*>(pixels);
+    if (t.pixels.empty() && !restorePixels(t))
+        return;
+    t.dynamic = true;   // keeps its CPU copy from now on
     for (int row = 0; row < height; ++row)
     {
         const int ty = y + row;
