@@ -7,11 +7,13 @@
 #include "net/minecraft/src/Entity.h"
 #include <cstdio>
 #include <float.h>
+#include <intrin.h>
 #include <mmintrin.h>
 #include "platform/Log.h"
 #include "platform/Diagnostics.h"
 
 void xboxRenderMemoryStats(long* listKB, long* lists, long* textureKB, long* textures);
+void xboxProfileReport(unsigned int frames, unsigned long elapsedMs, double presentMs);
 
 namespace lwjgl {
 namespace Display {
@@ -62,9 +64,31 @@ void processMessages()
 }
 
 void swapBuffers() {
+#if MC_LOG_LEVEL > 0
+    // Frame-time report (Profiler_XBOX.cpp): Present() time says how long the
+    // CPU waited for the GPU / vsync; the rest of the frame is CPU work.
+    static unsigned int s_perfFrames = 0;
+    static DWORD s_perfStart = 0;
+    static unsigned long long s_presentCycles = 0;
+    const unsigned long long presentStart = __rdtsc();
+#endif
     if (g_pD3DDevice) {
         g_pD3DDevice->Present(NULL, NULL, NULL, NULL);
     }
+#if MC_LOG_LEVEL > 0
+    s_presentCycles += __rdtsc() - presentStart;
+    ++s_perfFrames;
+    const DWORD now = GetTickCount();
+    if (s_perfStart == 0)
+        s_perfStart = now;
+    if (now - s_perfStart >= 5000)
+    {
+        xboxProfileReport(s_perfFrames, now - s_perfStart, static_cast<double>(s_presentCycles) / 733333.0);
+        s_perfFrames = 0;
+        s_perfStart = now;
+        s_presentCycles = 0;
+    }
+#endif
     // Keep the main thread's x87 unit in the state the game's double math
     // needs, whatever the XDK libraries did during the frame: empty MMX state
     // and 53-bit precision.

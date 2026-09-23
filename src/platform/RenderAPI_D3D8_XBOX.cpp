@@ -130,6 +130,65 @@ RenderFogMode s_fogMode = RenderFogMode::Exp;
 bool s_cullEnabled = false;
 RenderFace s_cullFace = RenderFace::Back;
 
+// Redundant-state filter. The game sets the same states over and over (every
+// draw re-applies the texture stage); each Set* call costs CPU time in the
+// D3D runtime and push-buffer space, so only changes reach the device.
+DWORD s_rsValue[D3DRS_MAX];
+bool s_rsKnown[D3DRS_MAX] = {};
+DWORD s_tssValue[D3DTSS_MAXSTAGES][D3DTSS_MAX];
+bool s_tssKnown[D3DTSS_MAXSTAGES][D3DTSS_MAX] = {};
+IDirect3DBaseTexture8* s_stageTexture[D3DTSS_MAXSTAGES] = {};
+bool s_stageTextureKnown[D3DTSS_MAXSTAGES] = {};
+DWORD s_vertexShader = 0;
+bool s_vertexShaderKnown = false;
+
+void setRs(IDirect3DDevice8* d, D3DRENDERSTATETYPE state, DWORD value)
+{
+    const unsigned index = static_cast<unsigned>(state);
+    if (index < D3DRS_MAX)
+    {
+        if (s_rsKnown[index] && s_rsValue[index] == value)
+            return;
+        s_rsKnown[index] = true;
+        s_rsValue[index] = value;
+    }
+    d->SetRenderState(state, value);
+}
+
+void setTss(IDirect3DDevice8* d, DWORD stage, D3DTEXTURESTAGESTATETYPE type, DWORD value)
+{
+    const unsigned index = static_cast<unsigned>(type);
+    if (stage < D3DTSS_MAXSTAGES && index < D3DTSS_MAX)
+    {
+        if (s_tssKnown[stage][index] && s_tssValue[stage][index] == value)
+            return;
+        s_tssKnown[stage][index] = true;
+        s_tssValue[stage][index] = value;
+    }
+    d->SetTextureStageState(stage, type, value);
+}
+
+void setTex(IDirect3DDevice8* d, DWORD stage, IDirect3DBaseTexture8* texture)
+{
+    if (stage < D3DTSS_MAXSTAGES)
+    {
+        if (s_stageTextureKnown[stage] && s_stageTexture[stage] == texture)
+            return;
+        s_stageTextureKnown[stage] = true;
+        s_stageTexture[stage] = texture;
+    }
+    d->SetTexture(stage, texture);
+}
+
+void setVs(IDirect3DDevice8* d, DWORD shader)
+{
+    if (s_vertexShaderKnown && s_vertexShader == shader)
+        return;
+    s_vertexShaderKnown = true;
+    s_vertexShader = shader;
+    d->SetVertexShader(shader);
+}
+
 IDirect3DDevice8* device()
 {
     IDirect3DDevice8* d = g_pD3DDevice;
@@ -138,23 +197,23 @@ IDirect3DDevice8* device()
         s_defaultsApplied = true;
         // GL defaults. D3D8 starts with lighting ON, which would black out
         // every FVF vertex without normals.
-        d->SetRenderState(D3DRS_LIGHTING, FALSE);
-        d->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-        d->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
-        d->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
-        d->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESS);
-        d->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-        d->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-        d->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ZERO);
-        d->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
-        d->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_ALWAYS);
-        d->SetRenderState(D3DRS_ALPHAREF, 0);
-        d->SetRenderState(D3DRS_FOGENABLE, FALSE);
-        d->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
+        setRs(d, D3DRS_LIGHTING, FALSE);
+        setRs(d, D3DRS_CULLMODE, D3DCULL_NONE);
+        setRs(d, D3DRS_ZENABLE, D3DZB_FALSE);
+        setRs(d, D3DRS_ZWRITEENABLE, TRUE);
+        setRs(d, D3DRS_ZFUNC, D3DCMP_LESS);
+        setRs(d, D3DRS_ALPHABLENDENABLE, FALSE);
+        setRs(d, D3DRS_SRCBLEND, D3DBLEND_ONE);
+        setRs(d, D3DRS_DESTBLEND, D3DBLEND_ZERO);
+        setRs(d, D3DRS_ALPHATESTENABLE, FALSE);
+        setRs(d, D3DRS_ALPHAFUNC, D3DCMP_ALWAYS);
+        setRs(d, D3DRS_ALPHAREF, 0);
+        setRs(d, D3DRS_FOGENABLE, FALSE);
+        setRs(d, D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
         const D3DMATRIX* id = reinterpret_cast<const D3DMATRIX*>(identity().m);
         d->SetTransform(D3DTS_WORLD, id);
-        d->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-        d->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+        setTss(d, 1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+        setTss(d, 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
     }
     return d;
 }
@@ -208,37 +267,37 @@ void applyCull()
     if (!d) return;
     if (!s_cullEnabled || s_cullFace == RenderFace::FrontAndBack)
     {
-        d->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+        setRs(d, D3DRS_CULLMODE, D3DCULL_NONE);
         return;
     }
     // GL fronts are counter-clockwise as seen on screen, and D3D's CULLMODE is
     // also defined by the on-screen winding, so GL back faces are the ones
     // that appear clockwise: cull CW for GL_BACK, CCW for GL_FRONT.
-    d->SetRenderState(D3DRS_CULLMODE, s_cullFace == RenderFace::Back ? D3DCULL_CW : D3DCULL_CCW);
+    setRs(d, D3DRS_CULLMODE, s_cullFace == RenderFace::Back ? D3DCULL_CW : D3DCULL_CCW);
 }
 
 void applyFog()
 {
     IDirect3DDevice8* d = device();
     if (!d) return;
-    d->SetRenderState(D3DRS_FOGENABLE, s_fogEnabled ? TRUE : FALSE);
+    setRs(d, D3DRS_FOGENABLE, s_fogEnabled ? TRUE : FALSE);
     if (!s_fogEnabled) return;
     switch (s_fogMode)
     {
         case RenderFogMode::Linear:
         case RenderFogMode::EyeRadial:
-            d->SetRenderState(D3DRS_FOGTABLEMODE, D3DFOG_LINEAR);
+            setRs(d, D3DRS_FOGTABLEMODE, D3DFOG_LINEAR);
             break;
         case RenderFogMode::Exp2:
-            d->SetRenderState(D3DRS_FOGTABLEMODE, D3DFOG_EXP2);
+            setRs(d, D3DRS_FOGTABLEMODE, D3DFOG_EXP2);
             break;
         default:
-            d->SetRenderState(D3DRS_FOGTABLEMODE, D3DFOG_EXP);
+            setRs(d, D3DRS_FOGTABLEMODE, D3DFOG_EXP);
             break;
     }
-    d->SetRenderState(D3DRS_FOGSTART, *reinterpret_cast<const DWORD*>(&s_fogStart));
-    d->SetRenderState(D3DRS_FOGEND, *reinterpret_cast<const DWORD*>(&s_fogEnd));
-    d->SetRenderState(D3DRS_FOGDENSITY, *reinterpret_cast<const DWORD*>(&s_fogDensity));
+    setRs(d, D3DRS_FOGSTART, *reinterpret_cast<const DWORD*>(&s_fogStart));
+    setRs(d, D3DRS_FOGEND, *reinterpret_cast<const DWORD*>(&s_fogEnd));
+    setRs(d, D3DRS_FOGDENSITY, *reinterpret_cast<const DWORD*>(&s_fogDensity));
 }
 
 // ---------------------------------------------------------------------------
@@ -367,28 +426,28 @@ void applyTextureStage()
     }
     if (tex)
     {
-        d->SetTexture(0, tex->d3d);
+        setTex(d, 0, tex->d3d);
         const DWORD filter = tex->blur ? D3DTEXF_LINEAR : D3DTEXF_POINT;
         const DWORD address = tex->clamp ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
-        d->SetTextureStageState(0, D3DTSS_MINFILTER, filter);
-        d->SetTextureStageState(0, D3DTSS_MAGFILTER, filter);
-        d->SetTextureStageState(0, D3DTSS_MIPFILTER, D3DTEXF_NONE);
-        d->SetTextureStageState(0, D3DTSS_ADDRESSU, address);
-        d->SetTextureStageState(0, D3DTSS_ADDRESSV, address);
-        d->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-        d->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        d->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-        d->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-        d->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-        d->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+        setTss(d, 0, D3DTSS_MINFILTER, filter);
+        setTss(d, 0, D3DTSS_MAGFILTER, filter);
+        setTss(d, 0, D3DTSS_MIPFILTER, D3DTEXF_NONE);
+        setTss(d, 0, D3DTSS_ADDRESSU, address);
+        setTss(d, 0, D3DTSS_ADDRESSV, address);
+        setTss(d, 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+        setTss(d, 0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        setTss(d, 0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+        setTss(d, 0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+        setTss(d, 0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        setTss(d, 0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
     }
     else
     {
-        d->SetTexture(0, NULL);
-        d->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-        d->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
-        d->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-        d->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+        setTex(d, 0, NULL);
+        setTss(d, 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+        setTss(d, 0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+        setTss(d, 0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+        setTss(d, 0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
     }
 }
 
@@ -506,7 +565,7 @@ void submitVertices(RenderPrimitive primitive, const XboxVertex* vertices, int c
 
     applyMatrices();
     applyTextureStage();
-    d->SetVertexShader(kXboxVertexFvf);
+    setVs(d, kXboxVertexFvf);
 
     // DrawVerticesUP copies the vertices inline into the push buffer; a whole
     // chunk section in one call overflows what one inline submission may hold
@@ -633,10 +692,10 @@ void renderEnable(RenderCapability capability)
     switch (capability)
     {
         case RenderCapability::Texture2D: if (s_activeTextureUnit == 0) s_texture2D = true; break;
-        case RenderCapability::AlphaTest: d->SetRenderState(D3DRS_ALPHATESTENABLE, TRUE); break;
-        case RenderCapability::Blend: d->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE); break;
+        case RenderCapability::AlphaTest: setRs(d, D3DRS_ALPHATESTENABLE, TRUE); break;
+        case RenderCapability::Blend: setRs(d, D3DRS_ALPHABLENDENABLE, TRUE); break;
         case RenderCapability::CullFace: s_cullEnabled = true; applyCull(); break;
-        case RenderCapability::DepthTest: d->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE); break;
+        case RenderCapability::DepthTest: setRs(d, D3DRS_ZENABLE, D3DZB_TRUE); break;
         case RenderCapability::Fog: s_fogEnabled = true; applyFog(); break;
         default: break;  // lighting/normalize/color material: see file comment
     }
@@ -650,10 +709,10 @@ void renderDisable(RenderCapability capability)
     switch (capability)
     {
         case RenderCapability::Texture2D: if (s_activeTextureUnit == 0) s_texture2D = false; break;
-        case RenderCapability::AlphaTest: d->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE); break;
-        case RenderCapability::Blend: d->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE); break;
+        case RenderCapability::AlphaTest: setRs(d, D3DRS_ALPHATESTENABLE, FALSE); break;
+        case RenderCapability::Blend: setRs(d, D3DRS_ALPHABLENDENABLE, FALSE); break;
         case RenderCapability::CullFace: s_cullEnabled = false; applyCull(); break;
-        case RenderCapability::DepthTest: d->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE); break;
+        case RenderCapability::DepthTest: setRs(d, D3DRS_ZENABLE, D3DZB_FALSE); break;
         case RenderCapability::Fog: s_fogEnabled = false; applyFog(); break;
         default: break;
     }
@@ -664,28 +723,28 @@ void renderBlendFunc(RenderBlendFactor source, RenderBlendFactor destination)
     if (recordIfCompiling([source, destination] { renderBlendFunc(source, destination); })) return;
     IDirect3DDevice8* d = device();
     if (!d) return;
-    d->SetRenderState(D3DRS_SRCBLEND, toD3DBlend(source));
-    d->SetRenderState(D3DRS_DESTBLEND, toD3DBlend(destination));
+    setRs(d, D3DRS_SRCBLEND, toD3DBlend(source));
+    setRs(d, D3DRS_DESTBLEND, toD3DBlend(destination));
 }
 
 void renderDepthMask(bool enabled)
 {
     if (recordIfCompiling([enabled] { renderDepthMask(enabled); })) return;
-    if (IDirect3DDevice8* d = device()) d->SetRenderState(D3DRS_ZWRITEENABLE, enabled ? TRUE : FALSE);
+    if (IDirect3DDevice8* d = device()) setRs(d, D3DRS_ZWRITEENABLE, enabled ? TRUE : FALSE);
 }
 
 void renderDepthFunc(RenderCompare function)
 {
-    if (IDirect3DDevice8* d = device()) d->SetRenderState(D3DRS_ZFUNC, toD3DCompare(function));
+    if (IDirect3DDevice8* d = device()) setRs(d, D3DRS_ZFUNC, toD3DCompare(function));
 }
 
 void renderAlphaFunc(RenderCompare function, float reference)
 {
     IDirect3DDevice8* d = device();
     if (!d) return;
-    d->SetRenderState(D3DRS_ALPHAFUNC, toD3DCompare(function));
+    setRs(d, D3DRS_ALPHAFUNC, toD3DCompare(function));
     const float clamped = reference < 0.0f ? 0.0f : (reference > 1.0f ? 1.0f : reference);
-    d->SetRenderState(D3DRS_ALPHAREF, static_cast<DWORD>(clamped * 255.0f + 0.5f));
+    setRs(d, D3DRS_ALPHAREF, static_cast<DWORD>(clamped * 255.0f + 0.5f));
 }
 
 void renderCullFace(RenderFace face)
@@ -703,13 +762,13 @@ void renderColorMask(bool red, bool green, bool blue, bool alpha)
     if (green) mask |= D3DCOLORWRITEENABLE_GREEN;
     if (blue) mask |= D3DCOLORWRITEENABLE_BLUE;
     if (alpha) mask |= D3DCOLORWRITEENABLE_ALPHA;
-    d->SetRenderState(D3DRS_COLORWRITEENABLE, mask);
+    setRs(d, D3DRS_COLORWRITEENABLE, mask);
 }
 
 void renderShadeModel(RenderShadeModel model)
 {
     if (IDirect3DDevice8* d = device())
-        d->SetRenderState(D3DRS_SHADEMODE, model == RenderShadeModel::Flat ? D3DSHADE_FLAT : D3DSHADE_GOURAUD);
+        setRs(d, D3DRS_SHADEMODE, model == RenderShadeModel::Flat ? D3DSHADE_FLAT : D3DSHADE_GOURAUD);
 }
 
 void renderColor4f(float r, float g, float b, float a)
@@ -931,7 +990,7 @@ void renderDeleteTextures(int count, const int* textures)
         if (it->second.d3d)
         {
             if (IDirect3DDevice8* d = device())
-                if (s_boundTexture == textures[i]) d->SetTexture(0, NULL);
+                if (s_boundTexture == textures[i]) setTex(d, 0, NULL);
             it->second.d3d->Release();
         }
         s_textures.erase(it);
@@ -1043,7 +1102,7 @@ void renderFogColor(const float* values)
 {
     if (!values) return;
     if (IDirect3DDevice8* d = device())
-        d->SetRenderState(D3DRS_FOGCOLOR, toD3DColor(values[0], values[1], values[2], values[3]));
+        setRs(d, D3DRS_FOGCOLOR, toD3DColor(values[0], values[1], values[2], values[3]));
 }
 
 void renderFogHint(RenderHintMode) {}

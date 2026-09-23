@@ -6,8 +6,13 @@
 //
 //  * One-shot sounds are decoded once to 16-bit PCM into a bounded LRU cache
 //    (kSfxCacheBudget). Voices play straight out of that memory through
-//    SetBufferData -- no second copy per voice. An entry is only evicted when
-//    no voice is playing it.
+//    SetBufferData -- no second copy per voice. The APU reads it by physical
+//    address with its own DMA, so the cache lives in physically contiguous,
+//    write-combined memory (XPhysicalAlloc); ordinary heap memory is neither
+//    contiguous nor guaranteed out of the CPU cache, and on real hardware the
+//    APU then plays garbage and DirectSound hangs the console (xemu does not
+//    care). An entry is only evicted when no voice is playing it, and is
+//    detached from its voice before it is freed.
 //  * Music and jukebox records stream through one small looping buffer that a
 //    worker thread refills from stb_vorbis.
 //
@@ -148,10 +153,16 @@ bool evictOneSfx()
     if (victim == s_sfxCache.end())
         return false;
     for (SfxVoice &voice : s_voices)
+    {
         if (voice.sample == &victim->second)
+        {
+            voice.buffer->Stop();
+            voice.buffer->SetBufferData(nullptr, 0);
             voice.sample = nullptr;
+        }
+    }
     s_sfxCacheBytes -= victim->second.bytes;
-    std::free(victim->second.pcm);
+    XPhysicalFree(victim->second.pcm);
     s_sfxCache.erase(victim);
     return true;
 }
@@ -190,8 +201,17 @@ const SfxSample *getSfxSample(const std::string &path)
         std::free(pcm);   // everything resident is playing; drop this one
         return nullptr;
     }
+    // Memory the APU can DMA from: contiguous, write-combined (see top).
+    short *apuPcm = static_cast<short *>(XPhysicalAlloc(bytes, MAXULONG_PTR, 0, PAGE_READWRITE | PAGE_WRITECOMBINE));
+    if (apuPcm == nullptr)
+    {
+        std::free(pcm);
+        return nullptr;
+    }
+    std::memcpy(apuPcm, pcm, bytes);
+    std::free(pcm);
     SfxSample &sample = s_sfxCache[path];
-    sample.pcm = pcm;
+    sample.pcm = apuPcm;
     sample.bytes = bytes;
     sample.channels = channels;
     sample.sampleRate = rate;
@@ -250,7 +270,7 @@ void clearSfx()
         voice.sample = nullptr;
     }
     for (auto &entry : s_sfxCache)
-        std::free(entry.second.pcm);
+        XPhysicalFree(entry.second.pcm);
     s_sfxCache.clear();
     s_sfxCacheBytes = 0;
 }

@@ -397,3 +397,9 @@ extracted_assets_vanilla/
 # Xbox bring-up outputs (link XDK library code; never commit)
 xbox-spike/**/out/
 *.xbe
+
+# Xbox tool run outputs
+scripts/xbox/tools/autotest*.txt
+scripts/xbox/tools/autotest*.png
+scripts/xbox/tools/autotest_build.log
+scripts/xbox/tools/__pycache__/
