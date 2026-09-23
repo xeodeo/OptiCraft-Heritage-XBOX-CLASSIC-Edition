@@ -44,6 +44,19 @@ The Wii build uses devkitPPC/libogc and a native GX rendering path. The Homebrew
 apps/OptiCraft/
 ```
 
+### Original Xbox
+
+The Xbox build targets the retail console (733 MHz Pentium III, 64 MB, NV2A) and runs both on hardware and in [xemu](https://xemu.app). It is compiled with Visual Studio 2022 (C++17, `/arch:SSE`) and linked against the Xbox Development Kit (XDK 5849).
+
+It provides:
+
+- a Direct3D 8 fixed-function renderer;
+- XInput controller input;
+- DirectSound audio on the MCPX APU (stereo, or Dolby Digital 5.1 from the options);
+- saves on the title drive `T:` (`E:\TDATA\FFFF4F43`).
+
+Launch `default.xbe` from a folder on the hard disk, with the `data/` folder next to it, or boot `OptiCraft.iso` in xemu.
+
 ## Source layout
 
 ```text
@@ -115,6 +128,72 @@ cmake --build --preset wii-release
 ```
 
 Use `wii-debug` for a debug build and `wii-bringup` for the minimal hardware/toolchain bring-up target.
+
+### Original Xbox
+
+The Xbox build needs the Microsoft Xbox Development Kit. It is **not** included in this repository and must never be committed to it. The build was developed with **XDK 5849**, which is preserved in the Internet Archive collection <https://archive.org/details/xbox-sdks> (archive `2005-03 - 5849.6, 5849.17 - RecoveryEXE, SDK.7z`).
+
+The XDK does not have to be installed; its installer expects Visual Studio .NET 2003 and Windows XP. The build only uses the XDK's headers, libraries and tools, taken straight from the installer's payload:
+
+1. Download the archive above and unpack it with 7-Zip. It contains `XDKSetup5849.17.exe`.
+2. Unpack the installer itself with 7-Zip into a folder of your choice:
+
+   ```text
+   7z x XDKSetup5849.17.exe -o<xdk>\sdk
+   ```
+
+   The XDK proper ends up in `<xdk>\sdk\XDK\xbox` (`bin\`, `include\`, `lib\`). That folder is all the build uses:
+   - the XDK linker (`bin\vc71\Link.Exe`);
+   - `imagebld.exe`;
+   - the XAPI, Direct3D 8, DirectSound and XNet libraries.
+3. Point `XBOX_XDK_ROOT` at that folder.
+
+Other requirements:
+
+- **Visual Studio 2022** with the C++ x86 tools and the Windows 10 SDK (for the static UCRT).
+- **[extract-xiso](https://github.com/XboxDev/extract-xiso)** to pack the ISO. Put it on `PATH` or in `XBOX_TOOLS`, or pass `-DXBOX_EXTRACT_XISO=...`.
+- **Game data** (`assets/`, `resources/`). It is not in the repository either; pass its folder as `XBOX_DATA_DIR`.
+
+```text
+set XBOX_XDK_ROOT=C:\path\to\xdk\5849\sdk\XDK\xbox
+cmake --preset xbox-release -DXBOX_DATA_DIR=C:/path/to/data
+cmake --build build/xbox-release --target xbox-data
+cmake --build --preset xbox-release
+```
+
+The output lands in `bin/xbox/`:
+
+- `iso/` holds `default.xbe` plus `data/`. Copy that folder to the console's hard disk.
+- `OptiCraft.iso` holds the same content as an Xbox ISO, for xemu.
+
+Optional cache variables:
+
+| Variable | Meaning |
+|----------|---------|
+| `XBOX_DEPLOY_DIR` | Copies `OptiCraft.iso` there after every build (for example, an emulator ROM folder). |
+| `MC_LOG_LEVEL` | `1` writes a log to `T:\debug.log` and to an in-memory ring readable from xemu's gdbstub. |
+| `XBOX_NETLOG_HOST` | A PC's IPv4 address. Every log line is also sent over UDP (port 9999) to `scripts/xbox/tools/escuchar_log.py`, so a hang on the console can be followed live. |
+| `XBOX_ENABLE_SOUND` | Enables DirectSound audio (on in the preset). |
+
+`xbox-bringup` builds a small hardware/toolchain smoke test instead of the game.
+
+#### How the hybrid toolchain works
+
+The XDK's own compiler is Visual C++ 7.1 (2003), which cannot build C++17. So the build combines two toolchains:
+
+- **Compile:** `cmake/xbox_toolchain.cmake` compiles with the VS2022 `cl.exe` for 32-bit x86 with `/arch:SSE`. The Pentium III has SSE but no SSE2.
+- **Link:** the XDK's linker links against the modern static CRT (`libcmt`, `libcpmt`, `libucrt`), followed by the XDK libraries.
+
+These pieces make that combination boot:
+
+- `src/xbox/runtime/XboxEntry.cpp` does what the XDK's `xapi0` startup does: TLS setup, the main thread and XAPI init. It also runs the XDK libraries' static initializers, which the modern CRT's tables do not reach.
+- `src/xbox/runtime/XboxCrtShim.cpp` implements, on top of XAPI and the kernel, the Win32 imports the modern CRT expects. `XboxImports.txt` generates the import thunks.
+- `scripts/xbox/patch_pe_for_imagebld.ps1` marks the PE as an Xbox image and moves the CRT's TLS slot from `fs:[2Ch]` to the XDK's `fs:[04h]`. `imagebld` then produces `default.xbe`.
+- The VS2022 CRT is prebuilt for SSE2 and, in a few places, uses it with no CPU check. xemu executes SSE2 anyway, but a real console faults on the first such instruction. Two fixes handle this:
+  - `scripts/xbox/patch_sse2_moves.ps1` runs after linking. It rewrites the SSE2 data moves to SSE1 and replaces the one SSE2 conversion with an x87 stub. The build prints any SSE2 it leaves behind.
+  - `src/xbox/runtime/XboxP3Math.c` supplies x87 versions of the SSE2-only math routines: `ldexp`, `scalbn`, `ceil`, `floor` and the float formatter's `log10`.
+
+The `scripts/xbox/tools` folder has debugging helpers for xemu's gdbstub and for the network log; see its README.
 
 ## Development notes
 

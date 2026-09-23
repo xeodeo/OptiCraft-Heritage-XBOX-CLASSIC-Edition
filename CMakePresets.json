@@ -152,7 +152,7 @@
         "CMAKE_BUILD_TYPE": "Release",
         "PLATFORM": "XBOX",
         "XBOX_BRINGUP": "OFF",
-        "XBOX_ENABLE_SOUND": "OFF",
+        "XBOX_ENABLE_SOUND": "ON",
         "CMAKE_MAKE_PROGRAM": "${sourceDir}/ninja.exe"
       }
     },
