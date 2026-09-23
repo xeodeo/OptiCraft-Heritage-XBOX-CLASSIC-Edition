@@ -31,6 +31,8 @@
 #include <cmath>
 #include <cstring>
 #include <functional>
+#include <iterator>
+#include <map>
 #include <unordered_map>
 #include <memory>
 #include <vector>
@@ -652,17 +654,190 @@ bool drawNow(const RenderInterleavedMesh& mesh)
 // played back, as GL would.
 long s_recordedBytes = 0;
 
+// ---- Static vertex memory for display lists --------------------------------
+// One vertex buffer per mesh would round every chunk section up to whole 4 KB
+// pages of contiguous memory (thousands of small meshes = megabytes wasted).
+// Meshes instead take ranges of a few shared 1 MB vertex buffers. A freed
+// range is tagged with a GPU fence and only reused once the GPU has passed it.
+constexpr UINT kVertexPoolBytes = 1024 * 1024;
+constexpr UINT kVertexGranule = 96;   // multiple of the 24-byte vertex, 32-byte aligned
+
+struct VertexPool
+{
+    IDirect3DVertexBuffer8* vb = nullptr;
+    BYTE* base = nullptr;                    // CPU address of the buffer memory
+    std::map<UINT, UINT> freeRanges;         // offset -> size
+};
+
+struct PendingRange
+{
+    int pool;
+    UINT offset;
+    UINT size;
+    DWORD fence;
+};
+
+std::vector<VertexPool> s_vertexPools;
+std::vector<PendingRange> s_pendingRanges;
+
+UINT roundToGranule(UINT bytes)
+{
+    return (bytes + kVertexGranule - 1) / kVertexGranule * kVertexGranule;
+}
+
+void releaseRangeNow(int pool, UINT offset, UINT size)
+{
+    std::map<UINT, UINT>& ranges = s_vertexPools[static_cast<size_t>(pool)].freeRanges;
+    auto next = ranges.lower_bound(offset);
+    if (next != ranges.begin())
+    {
+        auto prev = std::prev(next);
+        if (prev->first + prev->second == offset)
+        {
+            offset = prev->first;
+            size += prev->second;
+            ranges.erase(prev);
+        }
+    }
+    if (next != ranges.end() && offset + size == next->first)
+    {
+        size += next->second;
+        ranges.erase(next);
+    }
+    ranges[offset] = size;
+}
+
+void reapVertexRanges()
+{
+    IDirect3DDevice8* d = g_pD3DDevice;
+    if (!d) return;
+    size_t kept = 0;
+    for (const PendingRange& r : s_pendingRanges)
+    {
+        if (d->IsFencePending(r.fence))
+            s_pendingRanges[kept++] = r;
+        else
+            releaseRangeNow(r.pool, r.offset, r.size);
+    }
+    s_pendingRanges.resize(kept);
+
+    // Give fully free pools back to the system (e.g. after leaving a world).
+    // A released pool keeps its slot so pool indices of live meshes stay valid.
+    if (!s_pendingRanges.empty())
+        return;
+    for (VertexPool& pool : s_vertexPools)
+    {
+        if (pool.vb != nullptr && pool.freeRanges.size() == 1 &&
+            pool.freeRanges.begin()->first == 0 && pool.freeRanges.begin()->second == kVertexPoolBytes &&
+            !pool.vb->IsBusy())
+        {
+            pool.vb->Release();
+            pool.vb = nullptr;
+            pool.base = nullptr;
+            pool.freeRanges.clear();
+        }
+    }
+}
+
+bool allocateVertexRange(UINT bytes, int* pool, UINT* offset)
+{
+    bytes = roundToGranule(bytes);
+    if (bytes > kVertexPoolBytes) return false;
+    int emptySlot = -1;
+    for (size_t p = 0; p < s_vertexPools.size(); ++p)
+    {
+        if (s_vertexPools[p].vb == nullptr)
+        {
+            if (emptySlot < 0) emptySlot = static_cast<int>(p);
+            continue;
+        }
+        std::map<UINT, UINT>& ranges = s_vertexPools[p].freeRanges;
+        for (auto it = ranges.begin(); it != ranges.end(); ++it)
+        {
+            if (it->second < bytes) continue;
+            *pool = static_cast<int>(p);
+            *offset = it->first;
+            const UINT rest = it->second - bytes;
+            const UINT restOffset = it->first + bytes;
+            ranges.erase(it);
+            if (rest > 0) ranges[restOffset] = rest;
+            return true;
+        }
+    }
+    IDirect3DDevice8* d = g_pD3DDevice;
+    VertexPool fresh;
+    if (!d || FAILED(d->CreateVertexBuffer(kVertexPoolBytes, 0, 0, D3DPOOL_DEFAULT, &fresh.vb)))
+        return false;
+    if (FAILED(fresh.vb->Lock(0, 0, &fresh.base, 0)))
+    {
+        fresh.vb->Release();
+        return false;
+    }
+    fresh.vb->Unlock();   // Xbox buffers stay CPU-addressable; the pointer remains valid
+    fresh.freeRanges[bytes] = kVertexPoolBytes - bytes;
+    if (emptySlot >= 0)
+    {
+        s_vertexPools[static_cast<size_t>(emptySlot)] = fresh;
+        *pool = emptySlot;
+    }
+    else
+    {
+        s_vertexPools.push_back(fresh);
+        *pool = static_cast<int>(s_vertexPools.size()) - 1;
+    }
+    *offset = 0;
+    return true;
+}
+
+void freeVertexRange(int pool, UINT offset, UINT bytes)
+{
+    bytes = roundToGranule(bytes);
+    IDirect3DDevice8* d = g_pD3DDevice;
+    if (d)
+        s_pendingRanges.push_back({pool, offset, bytes, d->InsertFence()});
+    else
+        releaseRangeNow(pool, offset, bytes);
+}
+
+// Geometry of a display list. Meshes with per-vertex color (all terrain) are
+// converted once into a static vertex buffer the GPU fetches by itself, so
+// replaying a chunk costs a few commands instead of the CPU copying every
+// vertex into the push buffer each frame (DrawVerticesUP). Meshes that take
+// the current color at playback keep a CPU copy and go through the UP path.
 struct RecordedMesh
 {
-    ~RecordedMesh() { s_recordedBytes -= static_cast<long>(vertices.capacity() * sizeof(XboxVertex)); }
+    ~RecordedMesh()
+    {
+        s_recordedBytes -= bytes;
+        if (pool >= 0)
+            freeVertexRange(pool, offset, static_cast<UINT>(vertexCount) * sizeof(XboxVertex));
+    }
     std::vector<XboxVertex> vertices;
+    int pool = -1;          // shared vertex buffer holding this mesh, or -1
+    UINT offset = 0;        // byte offset of the mesh inside it
+    int vertexCount = 0;
+    long bytes = 0;
     RenderPrimitive primitive = RenderPrimitive::Triangles;
     bool usesCurrentColor = false;
 };
 
 void drawRecorded(const RecordedMesh& mesh)
 {
-    if (!device()) return;
+    IDirect3DDevice8* d = device();
+    if (!d) return;
+    if (mesh.pool >= 0)
+    {
+        int count = mesh.vertexCount;
+        if (mesh.primitive == RenderPrimitive::Quads) count -= count % 4;
+        else if (mesh.primitive == RenderPrimitive::Triangles) count -= count % 3;
+        if (count <= 0) return;
+        applyMatrices();
+        applyTextureStage();
+        setVs(d, kXboxVertexFvf);
+        d->SetStreamSource(0, s_vertexPools[static_cast<size_t>(mesh.pool)].vb, sizeof(XboxVertex));
+        d->DrawVertices(toD3DPrimitive(mesh.primitive), mesh.offset / sizeof(XboxVertex), static_cast<UINT>(count));
+        return;
+    }
     const int count = static_cast<int>(mesh.vertices.size());
     if (!mesh.usesCurrentColor)
     {
@@ -1140,11 +1315,30 @@ bool renderDrawInterleaved(const RenderInterleavedMesh& mesh)
         auto recorded = std::make_shared<RecordedMesh>();
         recorded->primitive = mesh.primitive;
         recorded->usesCurrentColor = !mesh.hasColor;
-        recorded->vertices.resize(static_cast<size_t>(mesh.count + (loop ? 1 : 0)));
-        convertVertices(mesh, recorded->vertices.data());
-        s_recordedBytes += static_cast<long>(recorded->vertices.capacity() * sizeof(XboxVertex));
-        if (loop)
-            recorded->vertices.back() = recorded->vertices.front();
+        const int count = mesh.count + (loop ? 1 : 0);
+        int pool = -1;
+        UINT offset = 0;
+        if (!recorded->usesCurrentColor && device() != nullptr &&
+            allocateVertexRange(static_cast<UINT>(count) * sizeof(XboxVertex), &pool, &offset))
+        {
+            // Written once, straight into the (write-combined) buffer memory.
+            XboxVertex* out = reinterpret_cast<XboxVertex*>(s_vertexPools[static_cast<size_t>(pool)].base + offset);
+            convertVertices(mesh, out);
+            if (loop)
+                out[count - 1] = out[0];
+            recorded->pool = pool;
+            recorded->offset = offset;
+            recorded->vertexCount = count;
+        }
+        else
+        {
+            recorded->vertices.resize(static_cast<size_t>(count));
+            convertVertices(mesh, recorded->vertices.data());
+            if (loop)
+                recorded->vertices.back() = recorded->vertices.front();
+        }
+        recorded->bytes = static_cast<long>(count) * static_cast<long>(sizeof(XboxVertex));
+        s_recordedBytes += recorded->bytes;
         s_recording->push_back([recorded] { drawRecorded(*recorded); });
         return true;
     }
@@ -1269,6 +1463,22 @@ void renderSetLegacyPresentationGamma(bool) {}
 #endif // XBOX_PLATFORM
 
 #ifdef XBOX_PLATFORM
+// Called once per frame after Present: releases vertex buffers of deleted
+// display lists the GPU no longer reads.
+void xboxRenderEndFrame()
+{
+    reapVertexRanges();
+}
+
+// Number of 1 MB vertex pools currently allocated, for the memory log.
+long xboxVertexPoolCount()
+{
+    long pools = 0;
+    for (const VertexPool& pool : s_vertexPools)
+        if (pool.vb != nullptr) ++pools;
+    return pools;
+}
+
 // Memory held by the emulated GL objects, for the periodic memory log.
 void xboxRenderMemoryStats(long* listKB, long* lists, long* textureKB, long* textures)
 {

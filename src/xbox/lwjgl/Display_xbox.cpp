@@ -14,6 +14,8 @@
 
 void xboxRenderMemoryStats(long* listKB, long* lists, long* textureKB, long* textures);
 void xboxProfileReport(unsigned int frames, unsigned long elapsedMs, double presentMs);
+void xboxRenderEndFrame();
+long xboxVertexPoolCount();
 
 namespace lwjgl {
 namespace Display {
@@ -74,6 +76,7 @@ void swapBuffers() {
 #endif
     if (g_pD3DDevice) {
         g_pD3DDevice->Present(NULL, NULL, NULL, NULL);
+        xboxRenderEndFrame();
     }
 #if MC_LOG_LEVEL > 0
     s_presentCycles += __rdtsc() - presentStart;
@@ -109,7 +112,7 @@ void swapBuffers() {
                     s_frames, cw, sw, tag, precise ? 1 : 0, platformHeapFreeKb());
         long listKB = 0, lists = 0, textureKB = 0, textures = 0;
         xboxRenderMemoryStats(&listKB, &lists, &textureKB, &textures);
-        MC_LOG_INFO("xbox.mem", "lists=%ld (%ldKB) textures=%ld (%ldKB)\n", lists, listKB, textures, textureKB);
+        MC_LOG_INFO("xbox.mem", "lists=%ld (%ldKB) vbPools=%ld textures=%ld (%ldKB)\n", lists, listKB, xboxVertexPoolCount(), textures, textureKB);
     }
     _mm_empty();
     unsigned int control = 0;
