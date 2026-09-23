@@ -148,6 +148,8 @@ The XDK does not have to be installed; its installer expects Visual Studio .NET 
    - the XAPI, Direct3D 8, DirectSound and XNet libraries.
 3. Point `XBOX_XDK_ROOT` at that folder.
 
+Tested with: Windows 10 Pro 22H2, **Visual Studio 2022 Community 17.14** (MSVC 14.44, workload *Desktop development with C++* with the x86 build tools), **Windows SDK 10.0.26100**, CMake 3.31 (bundled with VS2022), Ninja 1.13 (in the repository), XDK 5849, extract-xiso 2.7.1, xemu 0.8.136 and a softmodded retail console. The full list of versions and of the technologies used is in [docs/XBOX_PORT.md](docs/XBOX_PORT.md#tested-environment).
+
 Other requirements:
 
 - **Visual Studio 2022** with the C++ x86 tools and the Windows 10 SDK (for the static UCRT).

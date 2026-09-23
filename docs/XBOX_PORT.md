@@ -32,6 +32,59 @@ Known limits are listed in [section 9](#9-known-issues-and-next-steps).
 | xemu (optional) | <https://xemu.app> | Needs its usual BIOS/MCPX/HDD images. |
 | Python 3 (optional) | python.org | For the debugging tools in `scripts/xbox/tools`. |
 
+### Tested environment
+
+The port was built and tested with exactly this setup. Other versions of Visual Studio 2022 and of the Windows SDK should work, but these are the ones known to work:
+
+| Tool | Version used | Needed for |
+|------|--------------|------------|
+| Windows | 10 Pro 22H2 (x64) | Host OS |
+| **Visual Studio 2022 Community** | 17.14 (build 17.14.37614) | Compiler and CRT |
+| MSVC toolset | 14.44.35207 (v143) | `cl.exe`, `ml.exe`, `lib.exe` and `dumpbin.exe` (x86) |
+| **Windows SDK** | 10.0.26100.0 | Static UCRT (`libucrt.lib`) and UCRT headers; `rc.exe` and `mt.exe` |
+| CMake | 3.31.6 (the one bundled with VS2022) | Configure and build; needs 3.26 or newer for `copy_directory_if_different` |
+| Ninja | 1.13.2 (`ninja.exe` in the repository) | Build tool used by the presets |
+| **XDK** | 5849 (`XDKSetup5849.17.exe`, extracted, not installed) | Linker, `imagebld`, Xbox headers and libraries |
+| 7-Zip | 26.02 | Extracting the XDK |
+| extract-xiso | 2.7.1 | Packing `OptiCraft.iso` |
+| Windows PowerShell | 5.1 (built into Windows) | Post-build scripts in `scripts/xbox/*.ps1` |
+| xemu | 0.8.136 | Emulator tests |
+| Python | 3.14 (optional) | Debugging tools in `scripts/xbox/tools` |
+| Console | Retail original Xbox, softmodded, 64 MB | Hardware tests (game launched from a hard-disk folder) |
+
+**Visual Studio Installer components** to select (workload *Desktop development with C++*):
+
+- *MSVC v143 – VS 2022 C++ x64/x86 build tools (latest)*. This provides the 32-bit x86 compiler, MASM and `dumpbin`.
+- *Windows 11 SDK (10.0.26100)*, or another Windows 10/11 SDK. The toolchain picks the newest installed one.
+- *C++ CMake tools for Windows*. This provides CMake; a separate CMake 3.26+ also works.
+
+No Visual Studio IDE project is used and no Developer Command Prompt is needed. `cmake/xbox_toolchain.cmake` finds VS2022 through `vswhere`, and the Windows SDK in `Program Files (x86)\Windows Kits\10`. Both can be overridden with `-DXBOX_MSVC_ROOT=...`, `-DXBOX_WINSDK_ROOT=...` and `-DXBOX_WINSDK_VERSION=...`.
+
+### Technologies used
+
+- **Compilation:**
+  - C++17 with the VS2022 compiler (`cl.exe` x86, `/arch:SSE`).
+  - The modern static C/C++ runtime (UCRT, `libcpmt`, `libvcruntime`).
+  - MASM (`ml.exe`) for the generated import thunks.
+- **Linking and image:** the XDK 5849 linker (`Link.Exe`, VC 7.1 era) and `imagebld` (PE to XBE).
+- **XDK libraries:**
+  - `xapilib`: Win32-like system API, threads, files, XInput.
+  - `d3d8`, `d3dx8` and `xgraphics`: Direct3D 8 and texture swizzling.
+  - `dsound`: DirectSound on the MCPX APU, including Dolby Digital.
+  - `xnet`: sockets, only for the debug network log.
+  - `xboxkrnl`: kernel.
+- **Libraries already in the project** (`external/`, `src/java/fdlibm`):
+  - `stb_vorbis` (Ogg Vorbis decoding) and `stb_image` (PNG);
+  - zlib and minizip (saves, packs);
+  - fdlibm (Java `StrictMath`).
+- **Build scripts:**
+  - CMake presets and toolchain file.
+  - PowerShell scripts for the post-link steps: PE patch, SSE2 patch (uses `dumpbin` from the MSVC toolset), import generation.
+- **Debugging:**
+  - xemu's gdbstub with small Python clients.
+  - UDP log receiver.
+  - `T:\debug.log` read over FTP from a softmodded console.
+
 ### Getting the XDK without installing it
 
 The XDK installer expects Windows XP and Visual Studio .NET 2003. The build needs neither: it only uses the XDK's headers, libraries and a few tools, and those sit inside the installer as plain files.
