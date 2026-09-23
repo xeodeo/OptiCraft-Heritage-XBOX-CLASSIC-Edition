@@ -1,0 +1,49 @@
+﻿[kernel] eip=800151ef eax=0000001e ecx=c0000005 edx=001bc66b -> ?sortForward@Path@@AAEXH@Z+0x8b (Path.cpp.obj)
+[log] 2369 bytes written; last 2369:
+[MC][I][xbox] main() entered
+[MC][I][xbox] initializing display...
+[MC][I][xbox] handing off to Minecraft::start()
+[MC][I][client.boot] [CLIENT] ctor: static init begin
+[MC][I][assets] [pak] no D:assets.pak; reading loose files
+[MC][I][recipe] 182 recipes
+[MC][I][game] 27 achievements
+[MC][I][client.boot] [CLIENT] ctor: static init done, allocating subsystems
+[MC][I][client.boot] [CLIENT] ctor: done
+[MC][I][client.boot] [CLIENT] run() begin
+[MC][I][client.boot] [CLIENT] startGame begin
+[MC][I][client.boot] [CLIENT] getMinecraftDir begin
+[MC][I][client.boot] [CLIENT] getMinecraftDir ready: T:/.minecraft
+[MC][I][client.boot] [CLIENT] SaveConverter begin
+[MC][I][client.boot] [CLIENT] SaveConverter ready
+[MC][I][client.boot] [CLIENT] GameSettings begin
+[MC][I][client.boot] [CLIENT] GameSettings ready
+[MC][I][client.boot] [CLIENT] TexturePackList begin
+[MC][I][client.boot] [CLIENT] TexturePackList ready
+[MC][I][client.boot] [CLIENT] RenderEngine begin
+[MC][I][client.boot] [CLIENT] RenderEngine ready
+[MC][I][client.boot] [CLIENT] FontRenderer begin
+[MC][I][client.boot] [CLIENT] FontRenderer ready
+[MC][I][client.boot] [CLIENT] Colorizers begin
+[MC][I][client.boot] [CLIENT] Colorizers ready
+[MC][I][client.boot] [CLIENT] render helpers begin
+[MC][I][client.boot] [CLIENT] render helpers ready
+[MC][I][client.boot] [CLIENT] sound settings begin
+[MC][I][client.boot] [CLIENT] sound settings ready
+[MC][I][client.boot] [CLIENT] startup presentation begin
+[MC][W][client.startup] No playable calm music found for this platform
+[MC][I][client.boot] [CLIENT] startup presentation done
+[MC][I][client.boot] [CLIENT] render capabilities ready
+[MC][I][client.boot] [CLIENT] texture FX begin
+[MC][I][client.boot] [CLIENT] texture FX core ready
+[MC][I][client.boot] [CLIENT] texture FX ready
+[MC][I][client.boot] [CLIENT] RenderGlobal begin
+[MC][I][client.boot] [CLIENT] RenderGlobal ready
+[MC][I][client.boot] [CLIENT] IngameGUI begin
+[MC][I][client.boot] [CLIENT] IngameGUI ready
+[MC][I][client.boot] [CLIENT] ModManager init begin
+[MC][I][mods] ModManager initialized with 0 mods.
+[MC][I][client.boot] [CLIENT] ModManager init ready
+[MC][I][client.boot] [CLIENT] displayGuiScreen begin
+[MC][I][client.boot] [CLIENT] startGame end currentScreen=00F4E540
+[MC][I][tutorial] direct world='D:/data/assets/legacy/tutorial' saveVersion=19133 worldName='TU1 Tutorial World'
+

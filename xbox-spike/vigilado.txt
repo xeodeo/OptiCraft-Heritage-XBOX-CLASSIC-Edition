@@ -1,0 +1,144 @@
+[log] 8726 bytes written; last 8726:
+[MC][I][xbox] writable root T:, debug.log open, build Sep 23 2026 16:13:35
+[MC][I][xbox] cpu: cpuid_sse2=0 isa=0->0 sse2_math=0 mxcsr=1f80->1f80
+[MC][I][xbox.selftest] step fpu cw=027f sw=0000
+[MC][I][xbox.selftest] step int ok (42); next %.0f 0.0
+[MC][I][xbox.selftest] step zero ok (0); next controlfp
+[MC][I][xbox.selftest] step controlfp ok (0009001f); next fegetenv
+[MC][I][xbox.selftest] step fegetenv ok; next feholdexcept
+[MC][I][xbox.selftest] step feholdexcept ok; next fesetenv
+[MC][I][xbox.selftest] step fesetenv ok; next log10
+[MC][I][xbox.selftest] step log10 ok (301); next ceil
+[MC][I][xbox.selftest] step ceil ok (1); next %.0f 2.0
+[MC][I][xbox.selftest] step two ok (2); next %.3f 1.5
+[MC][I][xbox.selftest] snprintf(%.3f,1.5) ret=5 chars=49,46,53,48,48
+[MC][I][xbox.selftest] PASS Random(42).nextInt got=-1170105035 expected=-1170105035
+[MC][I][xbox.selftest] PASS Random(42).nextDouble got=0.72756368003286809 expected=0.72756368003286809
+[MC][I][xbox.selftest] PASS Random(0).nextLong got=-4.9627684656763822e+18 expected=-4.9627684656763822e+18
+[MC][I][xbox.selftest] PASS int64 mul got=3.1129510725363425e+18 expected=3.1129510725363425e+18
+[MC][I][xbox.selftest] PASS int64 mask48 got=119305093197809 expected=119305093197809
+[MC][I][xbox.selftest] PASS int64 sar got=-4 expected=-4
+[MC][I][xbox.selftest] PASS floor_double(-1.5) got=-2 expected=-2
+[MC][I][xbox.selftest] PASS floor_double(2.7) got=2 expected=2
+[MC][I][xbox.selftest] PASS (int)-2.7 got=-2 expected=-2
+[MC][I][xbox.selftest] PASS (int)1e10 saturates java-style got=10000000000 expected=10000000000
+[MC][I][xbox.selftest] PASS sqrt(2) got=1.4142135623730951 expected=1.4142135623730951
+[MC][I][xbox.selftest] PASS 1/3*3 got=1 expected=1
+[MC][I][xbox.selftest] PASS sin(0.5) got=0.47942553860420301 expected=0.47942553860420301
+[MC][I][xbox.selftest] PASS atan2(1,0.5) got=1.1071487177940904 expected=1.1071487177940904
+[MC][I][xbox.selftest] PASS MathHelper::sin(1) got=0.84145140647888184 expected=0.8414709848078965
+[MC][I][xbox.selftest] PASS MathHelper::sqrt_double(16) got=4 expected=4
+[MC][I][xbox.selftest] done: 0 failure(s)
+[MC][I][xbox] main() entered
+[MC][I][xbox] initializing display...
+[MC][I][xbox] CreateDevice hr=00000000 device=003093F0 video=00000009
+[MC][I][xbox] display ready
+[MC][I][xbox] handing off to Minecraft::start()
+[MC][I][client.boot] [CLIENT] ctor: static init begin
+[MC][I][assets] [pak] no D:assets.pak; reading loose files
+[MC][I][recipe] 182 recipes
+[MC][I][game] 27 achievements
+[MC][I][client.boot] [CLIENT] ctor: static init done, allocating subsystems
+[MC][I][client.boot] [CLIENT] ctor: done
+[MC][I][client.boot] [CLIENT] run() begin
+[MC][I][client.boot] [CLIENT] startGame begin
+[MC][I][client.boot] [CLIENT] getMinecraftDir begin
+[MC][I][client.boot] [CLIENT] getMinecraftDir ready: T:/.minecraft
+[MC][I][client.boot] [CLIENT] SaveConverter begin
+[MC][I][client.boot] [CLIENT] SaveConverter ready
+[MC][I][client.boot] [CLIENT] GameSettings begin
+[MC][I][client.boot] [CLIENT] GameSettings ready
+[MC][I][client.boot] [CLIENT] TexturePackList begin
+[MC][I][client.boot] [CLIENT] TexturePackList ready
+[MC][I][client.boot] [CLIENT] RenderEngine begin
+[MC][I][client.boot] [CLIENT] RenderEngine ready
+[MC][I][client.boot] [CLIENT] FontRenderer begin
+[MC][I][client.boot] [CLIENT] FontRenderer ready
+[MC][I][client.boot] [CLIENT] Colorizers begin
+[MC][I][client.boot] [CLIENT] Colorizers ready
+[MC][I][client.boot] [CLIENT] render helpers begin
+[MC][I][client.boot] [CLIENT] render helpers ready
+[MC][I][client.boot] [CLIENT] sound settings begin
+[MC][I][audio] DirectSound ready (16 voices, stream ok, stereo)
+[MC][I][client.boot] [CLIENT] sound settings ready
+[MC][I][client.boot] [CLIENT] startup presentation begin
+[MC][I][xbox.fpu] frame=1 cw=027f sw=0100 tag=ffff double53=1 freeKB=38044
+[MC][I][xbox.mem] lists=0 (0KB) textures=6 (3762KB)
+[MC][I][xbox.fpu] frame=301 cw=027f sw=0100 tag=ffff double53=1 freeKB=37820
+[MC][I][xbox.mem] lists=0 (0KB) textures=6 (3762KB)
+[MC][I][client.boot] [CLIENT] startup presentation done
+[MC][I][client.boot] [CLIENT] render capabilities ready
+[MC][I][client.boot] [CLIENT] texture FX begin
+[MC][I][client.boot] [CLIENT] texture FX core ready
+[MC][I][client.boot] [CLIENT] texture FX ready
+[MC][I][client.boot] [CLIENT] RenderGlobal begin
+[MC][I][client.boot] [CLIENT] RenderGlobal ready
+[MC][I][client.boot] [CLIENT] IngameGUI begin
+[MC][I][client.boot] [CLIENT] IngameGUI ready
+[MC][I][client.boot] [CLIENT] ModManager init begin
+[MC][I][mods] ModManager initialized with 0 mods.
+[MC][I][client.boot] [CLIENT] ModManager init ready
+[MC][I][client.boot] [CLIENT] displayGuiScreen begin
+[MC][I][gui] screen -> class GuiMainMenu
+[MC][I][client.boot] [CLIENT] startGame end currentScreen=01030F90
+[MC][I][xbox.fpu] frame=601 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=901 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=1201 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=1501 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=1801 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=2101 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=2401 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=2701 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=3001 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=3301 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=3601 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=3901 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=4201 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=4501 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=4801 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=5101 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=5401 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=5701 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=6001 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=6301 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=6601 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=6901 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=7201 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=7501 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=7801 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=8101 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=8401 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=8701 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=9001 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+[MC][I][xbox.fpu] frame=9301 cw=027f sw=4000 tag=ffff double53=1 freeKB=32604
+[MC][I][xbox.mem] lists=3 (47KB) textures=11 (7468KB)
+

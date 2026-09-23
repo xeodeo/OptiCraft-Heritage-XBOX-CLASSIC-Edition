@@ -1,0 +1,22 @@
+hit 00663745 cnt=1490
+[MC][I][xbox] cpu: cpuid_sse2=0 isa=0->0 sse2_math=0 mxcsr=1f80->1f80
+[MC][I][xbox.selftest] snprintf(%.3f,1.5) ret=5 chars=49,46,53,48,48
+[MC][I][xbox.selftest] PASS Random(42).nextInt got=-1170105035 expected=-1170105035
+[MC][I][xbox.selftest] PASS Random(42).nextDouble got=0.72756368003286809 expected=0.72756368003286809
+[MC][I][xbox.selftest] PASS Random(0).nextLong got=-4.9627684656763822e+18 expected=-4.9627684656763822e+18
+[MC][I][xbox.selftest] PASS int64 mul got=3.1129510725363425e+18 expected=3.1129510725363425e+18
+[MC][I][xbox.selftest] PASS int64 mask48 got=119305093197809 expected=119305093197809
+[MC][I][xbox.selftest] PASS int64 sar got=-4 expected=-4
+[MC][I][xbox.selftest] PASS floor_double(-1.5) got=-2 expected=-2
+[MC][I][xbox.selftest] PASS floor_double(2.7) got=2 expected=2
+[MC][I][xbox.selftest] PASS (int)-2.7 got=-2 expected=-2
+[MC][I][xbox.selftest] PASS (int)1e10 saturates java-style got=10000000000 expected=10000000000
+[MC][I][xbox.selftest] PASS sqrt(2) got=1.4142135623730951 expected=1.4142135623730951
+[MC][I][xbox.selftest] PASS 1/3*3 got=1 expected=1
+[MC][I][xbox.selftest] PASS sin(0.5) got=0.47942553860420301 expected=0.47942553860420301
+[MC][I][xbox.selftest] PASS atan2(1,0.5) got=1.1071487177940904 expected=1.1071487177940904
+[MC][I][xbox.selftest] PASS MathHelper::sin(1) got=0.84145140647888184 expected=0.8414709848078965
+[MC][I][xbox.selftest] PASS MathHelper::sqrt_double(16) got=4 expected=4
+[MC][I][xbox.selftest] done: 0 failure(s)
+
+----

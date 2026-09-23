@@ -177,6 +177,8 @@ Optional cache variables:
 
 `xbox-bringup` builds a small hardware/toolchain smoke test instead of the game.
 
+The full write-up (requirements, setup, toolchain internals, every adaptation made to the shared code, debugging and known issues) is in [docs/XBOX_PORT.md](docs/XBOX_PORT.md).
+
 #### How the hybrid toolchain works
 
 The XDK's own compiler is Visual C++ 7.1 (2003), which cannot build C++17. So the build combines two toolchains:

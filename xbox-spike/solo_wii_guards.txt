@@ -1,0 +1,132 @@
+src\client\Minecraft.cpp:2276: #if PLATFORM_WII && PLATFORM_ASYNC_CHUNK_GENERATION
+src\client\Minecraft.cpp:2288: #if PLATFORM_WII && PLATFORM_ASYNC_CHUNK_GENERATION
+src\external\stb_image.cpp:34: // a WII_PLATFORM branch that would leave two code paths to reason about.
+src\net\minecraft\src\BlockFluid.cpp:409: #if PLATFORM_WII
+src\net\minecraft\src\CanvasMojangLogo.cpp:52: // pair outside WII_PLATFORM, and it was the only immediate-mode draw left in
+src\net\minecraft\src\ChunkProvider.cpp:111: #if PLATFORM_PC_LEGACY || PLATFORM_WII
+src\net\minecraft\src\ChunkProviderLoadOrGenerate.cpp:19: #ifdef WII_PLATFORM
+src\net\minecraft\src\ChunkProviderLoadOrGenerate.cpp:24: #if defined(WII_PLATFORM) && MC_LOG_LEVEL >= 2
+src\net\minecraft\src\ChunkProviderLoadOrGenerate.cpp:412: #if defined(WII_PLATFORM) && MC_LOG_LEVEL >= 2
+src\net\minecraft\src\ChunkProviderLoadOrGenerate.cpp:419: #if defined(WII_PLATFORM) && MC_LOG_LEVEL >= 2
+src\net\minecraft\src\ContainerSlotNavigator.cpp:210: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiBetaOptions.cpp:48: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiBetaOptions.cpp:152: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiBetaOptions.cpp:182: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiControls.cpp:37: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiControls.cpp:60: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiErrorScreen.cpp:41: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiIngameMenu.cpp:253: #if PLATFORM_WII
+src\net\minecraft\src\GuiMainMenu.cpp:178: #elif PLATFORM_WII
+src\net\minecraft\src\GuiOptiCraftOptions.cpp:57: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiOptiCraftOptions.cpp:176: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiOptiCraftOptions.cpp:203: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiScreen.cpp:36: // screen already have PLATFORM_WII pointer branches that this used to keep
+src\net\minecraft\src\GuiScreen.cpp:47: #elif PLATFORM_WII
+src\net\minecraft\src\GuiScreen.cpp:72: #elif PLATFORM_WII
+src\net\minecraft\src\GuiScreen.cpp:555: #if PLATFORM_WII
+src\net\minecraft\src\IntCache.cpp:8: #if PLATFORM_WII
+src\net\minecraft\src\IntCache.cpp:14: #if PLATFORM_WII
+src\net\minecraft\src\IntCache.cpp:48: #if PLATFORM_WII
+src\net\minecraft\src\IntCache.cpp:67: #if PLATFORM_WII
+src\net\minecraft\src\IntCache.h:19: #if PLATFORM_WII
+src\net\minecraft\src\NetworkManager.cpp:8: #ifdef WII_PLATFORM
+src\net\minecraft\src\NetworkManager.cpp:191: #elif defined(WII_PLATFORM)
+src\net\minecraft\src\NetworkManager.cpp:525: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderBlocks.cpp:261: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderBlocks.cpp:372: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderBlocks.h:36: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderBlocks.h:194: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderEngine.cpp:370: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderEngine.cpp:403: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderGlobal.cpp:1196: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderGlobal.cpp:2224: #if defined(WII_PLATFORM) && MC_LOG_LEVEL >= 2
+src\net\minecraft\src\RenderGlobal.cpp:3419: #elif PLATFORM_WII
+src\net\minecraft\src\RenderGlobal.h:117: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderList.h:31: #elif PLATFORM_WII
+src\net\minecraft\src\ThreadDownloadImage.cpp:30: #ifdef WII_PLATFORM
+src\net\minecraft\src\ThreadPollServers.cpp:11: #ifdef WII_PLATFORM
+src\net\minecraft\src\Timer.cpp:74: #elif defined(WII_PLATFORM)
+src\net\minecraft\src\WorldClient.cpp:186: #if PLATFORM_WII
+src\net\minecraft\src\WorldRenderer.cpp:87: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:90: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:213: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:220: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:252: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:333: #elif PLATFORM_WII
+src\net\minecraft\src\WorldRenderer.cpp:565: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:607: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:633: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.h:32: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.h:102: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.h:227: #ifdef WII_PLATFORM
+src\net\minecraft\src\legacy\LegacyColorGradePass.cpp:257: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:8: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:14: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:116: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:169: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:198: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:221: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsScreen.cpp:19: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsScreen.cpp:35: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyCreateWorldScreen.cpp:203: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyCreateWorldScreen.cpp:331: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyCreateWorldScreen.cpp:335: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyHeritageOptions.cpp:55: #ifdef WII_PLATFORM
+src\net\minecraft\src\legacy\LegacyHeritageOptions.cpp:93: #ifdef WII_PLATFORM
+src\net\minecraft\src\legacy\LegacyHeritageOptions.cpp:214: #ifdef WII_PLATFORM
+src\net\minecraft\src\legacy\LegacyMenuHints.cpp:19: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyMenuNavigation.cpp:72: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyMenuNavigation.cpp:101: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyOptionsScreen.cpp:170: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyOptionsScreen.cpp:181: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyPanoramaUpload.cpp:22: #elif defined(WII_PLATFORM)
+src\net\minecraft\src\legacy\LegacyPlayGameScreen.cpp:338: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyPlayGameScreen.cpp:342: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyVideoOptions.cpp:42: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyVideoOptions.cpp:78: #if PLATFORM_WII
+src\net\minecraft\src\skin\GuiSkinSelector.cpp:207: #elif PLATFORM_WII
+src\net\minecraft\src\skin\GuiSkinSelector.cpp:599: #elif PLATFORM_WII
+src\platform\ConsoleAspectRatio.cpp:30: #if defined(WII_PLATFORM) && defined(WII_WIDESCREEN)
+src\platform\ConsoleInputClock.h:7: #elif defined(WII_PLATFORM)
+src\platform\ConsoleInputClock.h:26: #elif defined(WII_PLATFORM)
+src\platform\GameDefaults.cpp:10: #if PLATFORM_CONSOLE_LOW || PLATFORM_WII || PLATFORM_PC_LEGACY
+src\platform\GameDefaults.cpp:25: #elif PLATFORM_WII
+src\platform\GameDefaults.cpp:33: #if PLATFORM_WII
+src\platform\LegacyControlPromptBackend_WII.cpp:3: #ifdef WII_PLATFORM
+src\platform\Log.cpp:7: #if PLATFORM_WII
+src\platform\Log.cpp:201: #if PLATFORM_WII
+src\platform\Log.cpp:276: #if PLATFORM_WII
+src\platform\PlatformCompat.h:13: #ifdef WII_PLATFORM
+src\platform\PlatformCompat.h:34: #if defined(WII_PLATFORM)
+src\platform\PlatformCompat.h:70: #if defined(WII_PLATFORM)
+src\platform\PlatformCompat.h:84: #if defined(WII_PLATFORM)
+src\platform\PlatformConfig.h:8: //   PLATFORM_WII        -> Nintendo Wii only. Use for WPAD/PAD, libfat paths,
+src\platform\PlatformConfig.h:32: #ifndef PLATFORM_WII
+src\platform\PlatformConfig.h:33: #  if defined(WII_PLATFORM)
+src\platform\PlatformConfig.h:34: #    define PLATFORM_WII 1
+src\platform\PlatformConfig.h:36: #    define PLATFORM_WII 0
+src\platform\PlatformConfig.h:92: #  define PLATFORM_ASYNC_CHUNK_GENERATION (PLATFORM_WII || PLATFORM_PC_LEGACY)
+src\platform\PlatformConfig.h:161: #  define PLATFORM_NATIVE_TERRAIN_PIPELINE PLATFORM_WII
+src\platform\PlatformConfig.h:169: #  define PLATFORM_BOUNDED_PATHFIND (PLATFORM_CONSOLE_LOW || PLATFORM_WII || PLATFORM_PC_LEGACY)
+src\platform\PlatformConfig.h:192: #  define PLATFORM_CHUNK_EDGE_FOG PLATFORM_WII
+src\platform\PlatformConfig.h:343: #  define PLATFORM_PERSISTENT_RENDER_MESH PLATFORM_WII
+src\platform\PlatformConfig.h:375: #  define PLATFORM_TEXTURE_QUALITY_CONTROLS (PLATFORM_PC || PLATFORM_WII)
+src\platform\PlatformConfig.h:379: #  define PLATFORM_FRAMEBUFFER_READBACK (PLATFORM_PC || PLATFORM_WII)
+src\platform\Thread.cpp:3: #ifdef WII_PLATFORM
+src\platform\Thread.cpp:22: #ifdef WII_PLATFORM
+src\platform\Thread.h:28: #ifdef WII_PLATFORM
+src\platform\chunks\ChunkGenerationScheduler.cpp:226: #if PLATFORM_WII
+src\platform\chunks\ChunkGenerationScheduler.cpp:327: #if PLATFORM_PC_LEGACY || PLATFORM_WII
+src\platform\chunks\ChunkGenerationScheduler.cpp:364: #if PLATFORM_WII
+src\platform\tuning\PlatformAsyncTuning.h:20: #  elif PLATFORM_WII
+src\platform\tuning\PlatformAsyncTuning.h:21: #    define PLATFORM_ASYNC_GENERATION_QUEUE_LIMIT        PLATFORM_WII_ASYNC_GENERATION_QUEUE_LIMIT
+src\platform\tuning\PlatformAsyncTuning.h:22: #    define PLATFORM_ASYNC_GENERATION_REQUESTS_PER_TICK  PLATFORM_WII_ASYNC_GENERATION_REQUESTS_PER_TICK
+src\platform\tuning\PlatformAsyncTuning.h:23: #    define PLATFORM_ASYNC_GENERATION_PUBLISH_PER_TICK   PLATFORM_WII_ASYNC_GENERATION_PUBLISH_PER_TICK
+src\platform\tuning\PlatformAsyncTuning.h:24: #    define PLATFORM_ASYNC_GENERATION_THREAD_PRIORITY    PLATFORM_WII_ASYNC_GENERATION_THREAD_PRIORITY
+src\platform\tuning\PlatformAsyncTuning.h:29: #    define PLATFORM_ASYNC_GENERATION_REQUESTS_PER_FRAME PLATFORM_WII_ASYNC_GENERATION_REQUESTS_PER_FRAME
+src\platform\tuning\PlatformAsyncTuning.h:30: #    define PLATFORM_ASYNC_GENERATION_PUBLISH_PER_FRAME  PLATFORM_WII_ASYNC_GENERATION_PUBLISH_PER_FRAME
+src\platform\tuning\PlatformClientTuning.h:14: #elif PLATFORM_WII
+src\platform\tuning\PlatformClientTuning.h:15: #  define PLATFORM_LOAD_TERRAIN_MIN_MS             PLATFORM_WII_LOAD_MIN_MS
+src\platform\tuning\PlatformClientTuning.h:16: #  define PLATFORM_LOAD_TERRAIN_WARMUP_MS          PLATFORM_WII_LOAD_WARMUP_MS
+src\platform\tuning\PlatformClientTuning.h:35: #elif PLATFORM_WII
+src\platform\tuning\PlatformWiiTuning.h:11: #if PLATFORM_WII

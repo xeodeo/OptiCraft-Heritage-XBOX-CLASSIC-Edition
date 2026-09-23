@@ -1,0 +1,99 @@
+﻿[log] 6641 bytes written; last 6000:
+ASS int64 sar got=-4 expected=-4
+[MC][I][xbox.selftest] PASS floor_double(-1.5) got=-2 expected=-2
+[MC][I][xbox.selftest] PASS floor_double(2.7) got=2 expected=2
+[MC][I][xbox.selftest] PASS (int)-2.7 got=-2 expected=-2
+[MC][I][xbox.selftest] PASS (int)1e10 saturates java-style got=10000000000 expected=10000000000
+[MC][I][xbox.selftest] PASS sqrt(2) got=1.4142135623730951 expected=1.4142135623730951
+[MC][I][xbox.selftest] PASS 1/3*3 got=1 expected=1
+[MC][I][xbox.selftest] PASS sin(0.5) got=0.47942553860420301 expected=0.47942553860420301
+[MC][I][xbox.selftest] PASS atan2(1,0.5) got=1.1071487177940904 expected=1.1071487177940904
+[MC][I][xbox.selftest] PASS MathHelper::sin(1) got=0.84145140647888184 expected=0.8414709848078965
+[MC][I][xbox.selftest] PASS MathHelper::sqrt_double(16) got=4 expected=4
+[MC][I][xbox.selftest] done: 0 failure(s)
+[MC][I][xbox] main() entered
+[MC][I][xbox] initializing display...
+[MC][I][xbox] handing off to Minecraft::start()
+[MC][I][client.boot] [CLIENT] ctor: static init begin
+[MC][I][assets] [pak] no D:assets.pak; reading loose files
+[MC][I][recipe] 182 recipes
+[MC][I][game] 27 achievements
+[MC][I][client.boot] [CLIENT] ctor: static init done, allocating subsystems
+[MC][I][client.boot] [CLIENT] ctor: done
+[MC][I][client.boot] [CLIENT] run() begin
+[MC][I][client.boot] [CLIENT] startGame begin
+[MC][I][client.boot] [CLIENT] getMinecraftDir begin
+[MC][I][client.boot] [CLIENT] getMinecraftDir ready: T:/.minecraft
+[MC][I][client.boot] [CLIENT] SaveConverter begin
+[MC][I][client.boot] [CLIENT] SaveConverter ready
+[MC][I][client.boot] [CLIENT] GameSettings begin
+[MC][I][client.boot] [CLIENT] GameSettings ready
+[MC][I][client.boot] [CLIENT] TexturePackList begin
+[MC][I][client.boot] [CLIENT] TexturePackList ready
+[MC][I][client.boot] [CLIENT] RenderEngine begin
+[MC][I][client.boot] [CLIENT] RenderEngine ready
+[MC][I][client.boot] [CLIENT] FontRenderer begin
+[MC][I][client.boot] [CLIENT] FontRenderer ready
+[MC][I][client.boot] [CLIENT] Colorizers begin
+[MC][I][client.boot] [CLIENT] Colorizers ready
+[MC][I][client.boot] [CLIENT] render helpers begin
+[MC][I][client.boot] [CLIENT] render helpers ready
+[MC][I][client.boot] [CLIENT] sound settings begin
+[MC][I][client.boot] [CLIENT] sound settings ready
+[MC][I][client.boot] [CLIENT] startup presentation begin
+[MC][I][xbox.fpu] frame=1 cw=027f sw=0100 tag=ffff double53=1 freeKB=38740
+[MC][I][xbox.mem] lists=0 (0KB) textures=6 (3762KB)
+[MC][W][client.startup] No playable calm music found for this platform
+[MC][I][client.boot] [CLIENT] startup presentation done
+[MC][I][client.boot] [CLIENT] render capabilities ready
+[MC][I][client.boot] [CLIENT] texture FX begin
+[MC][I][client.boot] [CLIENT] texture FX core ready
+[MC][I][client.boot] [CLIENT] texture FX ready
+[MC][I][client.boot] [CLIENT] RenderGlobal begin
+[MC][I][client.boot] [CLIENT] RenderGlobal ready
+[MC][I][client.boot] [CLIENT] IngameGUI begin
+[MC][I][client.boot] [CLIENT] IngameGUI ready
+[MC][I][client.boot] [CLIENT] ModManager init begin
+[MC][I][mods] ModManager initialized with 0 mods.
+[MC][I][client.boot] [CLIENT] ModManager init ready
+[MC][I][client.boot] [CLIENT] displayGuiScreen begin
+[MC][I][client.boot] [CLIENT] startGame end currentScreen=00F47B90
+[MC][I][xbox.input] text pressed=0010 held=0010
+[MC][E][save] Failed reading NBT 'T:/.minecraft/saves/New World1111/level.dat': gzip decompress failed
+[MC][E][save] Failed reading NBT 'T:/.minecraft/saves/New World1111/level.dat_old': gzip decompress failed
+[MC][I][xbox.fpu] frame=301 cw=027f sw=0100 tag=ffff double53=1 freeKB=33552
+[MC][I][xbox.mem] lists=3 (47KB) textures=12 (7469KB)
+[MC][I][xbox.input] text pressed=0010 held=0010
+[MC][I][xbox.fpu] frame=601 cw=027f sw=0100 tag=ffff double53=1 freeKB=33540
+[MC][I][xbox.mem] lists=3 (47KB) textures=12 (7469KB)
+[MC][I][xbox.fpu] frame=901 cw=027f sw=0100 tag=ffff double53=1 freeKB=33540
+[MC][I][xbox.mem] lists=3 (47KB) textures=12 (7469KB)
+[MC][I][xbox.input] text pressed=0100 held=0100
+[MC][I][xbox.fpu] frame=1201 cw=027f sw=0100 tag=ffff double53=1 freeKB=33540
+[MC][I][xbox.mem] lists=3 (47KB) textures=12 (7469KB)
+[MC][I][xbox.input] text pressed=0008 held=0008
+[MC][I][xbox.input] text pressed=0008 held=0008
+[MC][I][xbox.input] text pressed=0008 held=0008
+[MC][I][xbox.fpu] frame=1501 cw=027f sw=0100 tag=ffff double53=1 freeKB=33540
+[MC][I][xbox.mem] lists=3 (47KB) textures=12 (7469KB)
+[MC][I][xbox.input] text pressed=0010 held=0010
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.fpu] frame=1801 cw=027f sw=0200 tag=ffff double53=1 freeKB=11016
+[MC][I][xbox.mem] lists=654 (11971KB) textures=23 (8781KB)
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -199.500 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -203.126 motionY=-0.0784 onGround=1 menu=0
+[MC][I][xbox.player] pos=-131.500 65.620 -208.522 motionY=-0.0784 onGround=1 menu=0
+

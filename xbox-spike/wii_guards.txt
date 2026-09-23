@@ -1,0 +1,325 @@
+src\client\Minecraft.cpp:24: #if defined(_WIN32) && !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\client\Minecraft.cpp:122: #if defined(_WIN32) && !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\client\Minecraft.cpp:2276: #if PLATFORM_WII && PLATFORM_ASYNC_CHUNK_GENERATION
+src\client\Minecraft.cpp:2288: #if PLATFORM_WII && PLATFORM_ASYNC_CHUNK_GENERATION
+src\client\Minecraft.cpp:2485: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PC_LEGACY
+src\client\Minecraft.cpp:2538: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PC_LEGACY
+src\external\stb_image.cpp:34: // a WII_PLATFORM branch that would leave two code paths to reason about.
+src\java\JavaNetwork.cpp:6: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\java\Random.cpp:44: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(HW_RVL) || defined(GEKKO)
+src\java\System.cpp:4: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\java\System.cpp:23: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\mods\GuiConfirmModInstall.cpp:9: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\mods\GuiConfirmModInstall.cpp:70: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\mods\GuiLoadModsList.cpp:15: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\mods\GuiLoadModsList.cpp:301: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\mods\GuiLoadModsMenu.cpp:7: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\mods\GuiLoadModsMenu.cpp:61: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\mods\GuiMods.cpp:13: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\mods\GuiMods.cpp:242: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\Block.h:191: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\BlockFluid.cpp:409: #if PLATFORM_WII
+src\net\minecraft\src\CanvasMojangLogo.cpp:52: // pair outside WII_PLATFORM, and it was the only immediate-mode draw left in
+src\net\minecraft\src\ChunkProvider.cpp:111: #if PLATFORM_PC_LEGACY || PLATFORM_WII
+src\net\minecraft\src\ChunkProviderGeneratePopulateIncremental.cpp:63: #if defined(PS2_RENDER_STATS) || (defined(WII_PLATFORM) && MC_LOG_LEVEL >= 2)
+src\net\minecraft\src\ChunkProviderGeneratePopulateIncremental.cpp:290: #if defined(PS2_RENDER_STATS) || (defined(WII_PLATFORM) && MC_LOG_LEVEL >= 2)
+src\net\minecraft\src\ChunkProviderLoadOrGenerate.cpp:19: #ifdef WII_PLATFORM
+src\net\minecraft\src\ChunkProviderLoadOrGenerate.cpp:24: #if defined(WII_PLATFORM) && MC_LOG_LEVEL >= 2
+src\net\minecraft\src\ChunkProviderLoadOrGenerate.cpp:412: #if defined(WII_PLATFORM) && MC_LOG_LEVEL >= 2
+src\net\minecraft\src\ChunkProviderLoadOrGenerate.cpp:419: #if defined(WII_PLATFORM) && MC_LOG_LEVEL >= 2
+src\net\minecraft\src\Config.cpp:193: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || PLATFORM_PC_LEGACY
+src\net\minecraft\src\Config.cpp:603: #elif defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\ConsoleInputClock.h:3: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\ConsoleInputClock.h:29: #endif // PS2_PLATFORM || WII_PLATFORM
+src\net\minecraft\src\ContainerSlotNavigator.cpp:3: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\ContainerSlotNavigator.cpp:210: #ifdef WII_PLATFORM
+src\net\minecraft\src\ContainerSlotNavigator.cpp:293: #endif // PS2_PLATFORM || WII_PLATFORM
+src\net\minecraft\src\ContainerSlotNavigator.h:3: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\ContainerSlotNavigator.h:60: #endif // PS2_PLATFORM || WII_PLATFORM
+src\net\minecraft\src\EntityPlayer.cpp:57: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\ExtendedBlockStorage.cpp:15: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\ExtendedBlockStorage.h:100: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiBetaOptions.cpp:48: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiBetaOptions.cpp:152: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiBetaOptions.cpp:182: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiChat.cpp:53: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiChat.cpp:248: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiContainer.cpp:26: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiContainer.cpp:45: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiContainer.cpp:74: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiContainer.cpp:127: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiContainer.cpp:151: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiContainer.cpp:163: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiContainer.cpp:192: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiContainer.cpp:299: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiContainer.cpp:340: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiContainer.cpp:364: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiContainerCreative.cpp:168: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiControls.cpp:37: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiControls.cpp:60: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiDeadzoneSettings.h:15: bool suppressesPlatformPointerInput() const override { return PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX; }
+src\net\minecraft\src\GuiEditSign.cpp:4: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiEditSign.cpp:22: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiEditSign.cpp:30: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiEditSign.cpp:45: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiEditSign.cpp:59: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiEditSign.cpp:101: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiEditSign.h:7: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiEditSign.h:16: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiEditSign.h:36: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiErrorScreen.cpp:41: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiIngame.cpp:13: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiIngame.cpp:329: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiIngameMenu.cpp:34: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiIngameMenu.cpp:129: #if !PLATFORM_PS2 && !PLATFORM_WII
+src\net\minecraft\src\GuiIngameMenu.cpp:253: #if PLATFORM_WII
+src\net\minecraft\src\GuiIngameMenu.h:34: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiMainMenu.cpp:169: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiMainMenu.cpp:178: #elif PLATFORM_WII
+src\net\minecraft\src\GuiMainMenu.cpp:199: #if !PLATFORM_PS2 && !PLATFORM_WII
+src\net\minecraft\src\GuiMainMenu.cpp:256: #if !PLATFORM_PS2 && !PLATFORM_WII
+src\net\minecraft\src\GuiOptiCraftOptions.cpp:57: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiOptiCraftOptions.cpp:176: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiOptiCraftOptions.cpp:203: #ifdef WII_PLATFORM
+src\net\minecraft\src\GuiScreen.cpp:15: #if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
+src\net\minecraft\src\GuiScreen.cpp:18: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiScreen.cpp:36: // screen already have PLATFORM_WII pointer branches that this used to keep
+src\net\minecraft\src\GuiScreen.cpp:40: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiScreen.cpp:47: #elif PLATFORM_WII
+src\net\minecraft\src\GuiScreen.cpp:58: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiScreen.cpp:72: #elif PLATFORM_WII
+src\net\minecraft\src\GuiScreen.cpp:195: #if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
+src\net\minecraft\src\GuiScreen.cpp:209: #if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
+src\net\minecraft\src\GuiScreen.cpp:304: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiScreen.cpp:313: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiScreen.cpp:328: #if !PLATFORM_PS2 && !PLATFORM_WII
+src\net\minecraft\src\GuiScreen.cpp:377: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiScreen.cpp:518: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiScreen.cpp:546: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\GuiScreen.cpp:555: #if PLATFORM_WII
+src\net\minecraft\src\GuiScreenAddServer.cpp:30: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiScreenAddServer.cpp:57: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiScreenAddServer.cpp:93: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiScreenAddServer.cpp:128: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiScreenServerList.cpp:30: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiScreenServerList.cpp:49: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiSleepMP.cpp:19: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiTextField.cpp:13: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\GuiTextField.cpp:393: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\IntCache.cpp:8: #if PLATFORM_WII
+src\net\minecraft\src\IntCache.cpp:14: #if PLATFORM_WII
+src\net\minecraft\src\IntCache.cpp:48: #if PLATFORM_WII
+src\net\minecraft\src\IntCache.cpp:67: #if PLATFORM_WII
+src\net\minecraft\src\IntCache.h:19: #if PLATFORM_WII
+src\net\minecraft\src\Item.h:82: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\NetworkManager.cpp:8: #ifdef WII_PLATFORM
+src\net\minecraft\src\NetworkManager.cpp:52: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\NetworkManager.cpp:93: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\NetworkManager.cpp:179: #if !defined(WII_PLATFORM) && !defined(PS2_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\NetworkManager.cpp:191: #elif defined(WII_PLATFORM)
+src\net\minecraft\src\NetworkManager.cpp:420: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\NetworkManager.cpp:443: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\NetworkManager.cpp:525: #ifdef WII_PLATFORM
+src\net\minecraft\src\NetworkManager.cpp:573: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\NetworkManager.cpp:583: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\NetworkManager.h:76: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\NetworkManager.h:84: #if !defined(WII_PLATFORM) && !defined(PS2_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\NetworkManager.h:104: #if !defined(WII_PLATFORM) && !defined(PS2_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\NetworkManager.h:107: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\Packet51MapChunk.cpp:53: #if !defined(WII_PLATFORM) && !defined(PS2_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\Packet51MapChunk.cpp:84: #if !defined(WII_PLATFORM) && !defined(PS2_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\PlayerUsageSnooperThread.cpp:22: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\RenderBlocks.cpp:261: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderBlocks.cpp:372: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderBlocks.h:36: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderBlocks.h:194: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderEndPortal.cpp:16: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\RenderEndPortal.cpp:26: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\RenderEngine.cpp:370: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderEngine.cpp:403: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderGlobal.cpp:176: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+src\net\minecraft\src\RenderGlobal.cpp:289: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+src\net\minecraft\src\RenderGlobal.cpp:389: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+src\net\minecraft\src\RenderGlobal.cpp:425: #if (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX) && PLATFORM_CENTER_VERTICAL_RENDERERS
+src\net\minecraft\src\RenderGlobal.cpp:835: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\RenderGlobal.cpp:904: #if (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX) && MC_LOG_LEVEL > 2
+src\net\minecraft\src\RenderGlobal.cpp:932: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\RenderGlobal.cpp:946: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\RenderGlobal.cpp:1020: #if PLATFORM_PS2 || PLATFORM_WII
+src\net\minecraft\src\RenderGlobal.cpp:1196: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderGlobal.cpp:1316: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM)
+src\net\minecraft\src\RenderGlobal.cpp:1459: #if PLATFORM_PS2 || defined(WII_PLATFORM)
+src\net\minecraft\src\RenderGlobal.cpp:1690: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+src\net\minecraft\src\RenderGlobal.cpp:1811: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+src\net\minecraft\src\RenderGlobal.cpp:1833: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+src\net\minecraft\src\RenderGlobal.cpp:1877: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+src\net\minecraft\src\RenderGlobal.cpp:2224: #if defined(WII_PLATFORM) && MC_LOG_LEVEL >= 2
+src\net\minecraft\src\RenderGlobal.cpp:2893: #if PLATFORM_PS2 || PLATFORM_WII
+src\net\minecraft\src\RenderGlobal.cpp:3419: #elif PLATFORM_WII
+src\net\minecraft\src\RenderGlobal.h:113: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\RenderGlobal.h:117: #ifdef WII_PLATFORM
+src\net\minecraft\src\RenderGlobal.h:121: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+src\net\minecraft\src\RenderGlobal.h:163: #if (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX) && PLATFORM_CENTER_VERTICAL_RENDERERS
+src\net\minecraft\src\RenderGlobal.h:176: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+src\net\minecraft\src\RenderList.h:31: #elif PLATFORM_WII
+src\net\minecraft\src\StatFileWriter.h:48: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\TexturePackBase.cpp:6: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\TexturePackBase.cpp:44: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\TexturePackList.cpp:6: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\TexturePackList.cpp:16: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\TexturePackList.cpp:26: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\TexturePackList.cpp:74: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\net\minecraft\src\ThreadDownloadImage.cpp:30: #ifdef WII_PLATFORM
+src\net\minecraft\src\ThreadPollServers.cpp:11: #ifdef WII_PLATFORM
+src\net\minecraft\src\Timer.cpp:74: #elif defined(WII_PLATFORM)
+src\net\minecraft\src\VirtualKeyboard.cpp:4: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\VirtualKeyboard.cpp:291: #endif // PS2_PLATFORM || WII_PLATFORM
+src\net\minecraft\src\VirtualKeyboard.h:3: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\VirtualKeyboard.h:49: #endif // PS2_PLATFORM || WII_PLATFORM
+src\net\minecraft\src\WorldClient.cpp:186: #if PLATFORM_WII
+src\net\minecraft\src\WorldRenderer.cpp:49: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\WorldRenderer.cpp:87: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:90: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:213: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:220: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:252: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:333: #elif PLATFORM_WII
+src\net\minecraft\src\WorldRenderer.cpp:355: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !PLATFORM_PC_LEGACY
+src\net\minecraft\src\WorldRenderer.cpp:565: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:587: #if WII_PLATFORM || PS2_PLATFORM || PLATFORM_PC_LEGACY
+src\net\minecraft\src\WorldRenderer.cpp:607: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.cpp:622: #if WII_PLATFORM || PS2_PLATFORM || PLATFORM_PC_LEGACY
+src\net\minecraft\src\WorldRenderer.cpp:633: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.h:32: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.h:55: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
+src\net\minecraft\src\WorldRenderer.h:58: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || PLATFORM_PC_LEGACY
+src\net\minecraft\src\WorldRenderer.h:82: #if PLATFORM_PC_LEGACY || PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\WorldRenderer.h:102: #ifdef WII_PLATFORM
+src\net\minecraft\src\WorldRenderer.h:221: #if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
+src\net\minecraft\src\WorldRenderer.h:227: #ifdef WII_PLATFORM
+src\net\minecraft\src\legacy\LegacyColorGradePass.cpp:257: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:8: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:14: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:116: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:169: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:198: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsBinding.cpp:221: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsScreen.cpp:19: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsScreen.cpp:35: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyControlsScreen.cpp:45: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\legacy\LegacyControlsScreen.cpp:227: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\legacy\LegacyControlsScreen.cpp:242: #if !PLATFORM_PS2 && !PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyCreateWorldScreen.cpp:108: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\legacy\LegacyCreateWorldScreen.cpp:203: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyCreateWorldScreen.cpp:305: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\legacy\LegacyCreateWorldScreen.cpp:331: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyCreateWorldScreen.cpp:335: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyCreateWorldScreen.cpp:399: #if !PLATFORM_PS2 && !PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyHeritageOptions.cpp:55: #ifdef WII_PLATFORM
+src\net\minecraft\src\legacy\LegacyHeritageOptions.cpp:93: #ifdef WII_PLATFORM
+src\net\minecraft\src\legacy\LegacyHeritageOptions.cpp:214: #ifdef WII_PLATFORM
+src\net\minecraft\src\legacy\LegacyLook.cpp:38: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\legacy\LegacyMenuHints.cpp:19: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyMenuNavigation.cpp:72: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyMenuNavigation.cpp:101: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyOptionsScreen.cpp:106: #if !PLATFORM_PS2 && !PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyOptionsScreen.cpp:137: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\legacy\LegacyOptionsScreen.cpp:170: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyOptionsScreen.cpp:181: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyPanoramaUpload.cpp:22: #elif defined(WII_PLATFORM)
+src\net\minecraft\src\legacy\LegacyPlayGameScreen.cpp:320: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\legacy\LegacyPlayGameScreen.cpp:338: #elif PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyPlayGameScreen.cpp:342: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyPlayGameScreen.cpp:388: #if !PLATFORM_PS2 && !PLATFORM_WII
+src\net\minecraft\src\legacy\LegacySelectionCursor.cpp:13: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\legacy\LegacySelectionCursor.cpp:21: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\legacy\LegacySelectionCursor.cpp:43: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\legacy\LegacyUiPolicy.cpp:6: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\net\minecraft\src\legacy\LegacyVideoOptions.cpp:42: #if PLATFORM_WII
+src\net\minecraft\src\legacy\LegacyVideoOptions.cpp:66: #if !(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+src\net\minecraft\src\legacy\LegacyVideoOptions.cpp:78: #if PLATFORM_WII
+src\net\minecraft\src\skin\GuiSkinSelector.cpp:101: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\net\minecraft\src\skin\GuiSkinSelector.cpp:207: #elif PLATFORM_WII
+src\net\minecraft\src\skin\GuiSkinSelector.cpp:599: #elif PLATFORM_WII
+src\pc\lwjgl\GLContext.h:6: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\pc\lwjgl\GLContext.h:39: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\pc\lwjgl\Keyboard.h:8: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\pc\lwjgl\Keyboard.h:19: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\pc\lwjgl\Mouse.h:5: #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+src\pc\lwjgl\Mouse.h:16: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\platform\ConsoleAspectRatio.cpp:30: #if defined(WII_PLATFORM) && defined(WII_WIDESCREEN)
+src\platform\ConsoleInputClock.h:3: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\platform\ConsoleInputClock.h:7: #elif defined(WII_PLATFORM)
+src\platform\ConsoleInputClock.h:26: #elif defined(WII_PLATFORM)
+src\platform\ConsoleInputClock.h:33: #endif // PS2_PLATFORM || WII_PLATFORM
+src\platform\GameDefaults.cpp:10: #if PLATFORM_CONSOLE_LOW || PLATFORM_WII || PLATFORM_PC_LEGACY
+src\platform\GameDefaults.cpp:25: #elif PLATFORM_WII
+src\platform\GameDefaults.cpp:33: #if PLATFORM_WII
+src\platform\GameDefaults.cpp:41: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\platform\GameDefaults.cpp:47: d.brightness = (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX) ? 1.0f : 0.0f;
+src\platform\LegacyControlPromptBackend_WII.cpp:3: #ifdef WII_PLATFORM
+src\platform\Log.cpp:7: #if PLATFORM_WII
+src\platform\Log.cpp:201: #if PLATFORM_WII
+src\platform\Log.cpp:276: #if PLATFORM_WII
+src\platform\Log.h:15: #  if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\platform\PlatformCompat.h:6: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\platform\PlatformCompat.h:13: #ifdef WII_PLATFORM
+src\platform\PlatformCompat.h:34: #if defined(WII_PLATFORM)
+src\platform\PlatformCompat.h:70: #if defined(WII_PLATFORM)
+src\platform\PlatformCompat.h:84: #if defined(WII_PLATFORM)
+src\platform\PlatformCompat.h:100: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\platform\PlatformCompat.h:122: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\platform\PlatformConfig.h:8: //   PLATFORM_WII        -> Nintendo Wii only. Use for WPAD/PAD, libfat paths,
+src\platform\PlatformConfig.h:32: #ifndef PLATFORM_WII
+src\platform\PlatformConfig.h:33: #  if defined(WII_PLATFORM)
+src\platform\PlatformConfig.h:34: #    define PLATFORM_WII 1
+src\platform\PlatformConfig.h:36: #    define PLATFORM_WII 0
+src\platform\PlatformConfig.h:52: #  define PLATFORM_HAS_CONTROLLER_CALIBRATION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+src\platform\PlatformConfig.h:56: #  define PLATFORM_HAS_ASPECT_RATIO_OPTION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+src\platform\PlatformConfig.h:62: #  define PLATFORM_CACHE_NEAREST_PLAYER (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PC_LEGACY)
+src\platform\PlatformConfig.h:69: #  define PLATFORM_THROTTLE_ENTITY_AI (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PC_LEGACY)
+src\platform\PlatformConfig.h:77: #  define PLATFORM_ENTITY_CHUNK_RETENTION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+src\platform\PlatformConfig.h:84: #  define PLATFORM_RANDOM_SPLIT_MULTIPLY (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+src\platform\PlatformConfig.h:92: #  define PLATFORM_ASYNC_CHUNK_GENERATION (PLATFORM_WII || PLATFORM_PC_LEGACY)
+src\platform\PlatformConfig.h:100: #  define PLATFORM_OPTIFINE_CUSTOM_ANIMATIONS (!(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX))
+src\platform\PlatformConfig.h:104: #  define PLATFORM_OPTIFINE_RANDOM_MOBS (!(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX))
+src\platform\PlatformConfig.h:108: #  define PLATFORM_OPTIFINE_CUSTOM_FONTS (!(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX))
+src\platform\PlatformConfig.h:112: #  define PLATFORM_LOCAL_STATS (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+src\platform\PlatformConfig.h:120: #  if defined(NO_NETWORK) || PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\platform\PlatformConfig.h:141: #  define PLATFORM_FAST_REGION_COMPRESSION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+src\platform\PlatformConfig.h:145: #  define PLATFORM_PROFILE_STREAMING (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+src\platform\PlatformConfig.h:157: #  define PLATFORM_PROFILE_RENDER_PHASES (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+src\platform\PlatformConfig.h:161: #  define PLATFORM_NATIVE_TERRAIN_PIPELINE PLATFORM_WII
+src\platform\PlatformConfig.h:169: #  define PLATFORM_BOUNDED_PATHFIND (PLATFORM_CONSOLE_LOW || PLATFORM_WII || PLATFORM_PC_LEGACY)
+src\platform\PlatformConfig.h:173: #  define PLATFORM_HAS_VIRTUAL_KEYBOARD (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+src\platform\PlatformConfig.h:188: #  define PLATFORM_GUI_FORCE_DEPTH_DISABLED (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+src\platform\PlatformConfig.h:192: #  define PLATFORM_CHUNK_EDGE_FOG PLATFORM_WII
+src\platform\PlatformConfig.h:196: #  if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\platform\PlatformConfig.h:270: #  if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_CONSOLE_LOW
+src\platform\PlatformConfig.h:324: #  if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\platform\PlatformConfig.h:343: #  define PLATFORM_PERSISTENT_RENDER_MESH PLATFORM_WII
+src\platform\PlatformConfig.h:365: #  if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\platform\PlatformConfig.h:375: #  define PLATFORM_TEXTURE_QUALITY_CONTROLS (PLATFORM_PC || PLATFORM_WII)
+src\platform\PlatformConfig.h:379: #  define PLATFORM_FRAMEBUFFER_READBACK (PLATFORM_PC || PLATFORM_WII)
+src\platform\Thread.cpp:3: #ifdef WII_PLATFORM
+src\platform\Thread.cpp:22: #ifdef WII_PLATFORM
+src\platform\Thread.h:28: #ifdef WII_PLATFORM
+src\platform\chunks\ChunkGenerationScheduler.cpp:226: #if PLATFORM_WII
+src\platform\chunks\ChunkGenerationScheduler.cpp:327: #if PLATFORM_PC_LEGACY || PLATFORM_WII
+src\platform\chunks\ChunkGenerationScheduler.cpp:364: #if PLATFORM_WII
+src\platform\storage\AssetPak.cpp:12: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\platform\storage\AssetPak.cpp:34: #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+src\platform\storage\PosixFileSystem.cpp:1: #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+src\platform\storage\PosixFileSystem.cpp:229: #endif // PS2_PLATFORM || WII_PLATFORM
+src\platform\tuning\PlatformAsyncTuning.h:20: #  elif PLATFORM_WII
+src\platform\tuning\PlatformAsyncTuning.h:21: #    define PLATFORM_ASYNC_GENERATION_QUEUE_LIMIT        PLATFORM_WII_ASYNC_GENERATION_QUEUE_LIMIT
+src\platform\tuning\PlatformAsyncTuning.h:22: #    define PLATFORM_ASYNC_GENERATION_REQUESTS_PER_TICK  PLATFORM_WII_ASYNC_GENERATION_REQUESTS_PER_TICK
+src\platform\tuning\PlatformAsyncTuning.h:23: #    define PLATFORM_ASYNC_GENERATION_PUBLISH_PER_TICK   PLATFORM_WII_ASYNC_GENERATION_PUBLISH_PER_TICK
+src\platform\tuning\PlatformAsyncTuning.h:24: #    define PLATFORM_ASYNC_GENERATION_THREAD_PRIORITY    PLATFORM_WII_ASYNC_GENERATION_THREAD_PRIORITY
+src\platform\tuning\PlatformAsyncTuning.h:29: #    define PLATFORM_ASYNC_GENERATION_REQUESTS_PER_FRAME PLATFORM_WII_ASYNC_GENERATION_REQUESTS_PER_FRAME
+src\platform\tuning\PlatformAsyncTuning.h:30: #    define PLATFORM_ASYNC_GENERATION_PUBLISH_PER_FRAME  PLATFORM_WII_ASYNC_GENERATION_PUBLISH_PER_FRAME
+src\platform\tuning\PlatformClientTuning.h:14: #elif PLATFORM_WII
+src\platform\tuning\PlatformClientTuning.h:15: #  define PLATFORM_LOAD_TERRAIN_MIN_MS             PLATFORM_WII_LOAD_MIN_MS
+src\platform\tuning\PlatformClientTuning.h:16: #  define PLATFORM_LOAD_TERRAIN_WARMUP_MS          PLATFORM_WII_LOAD_WARMUP_MS
+src\platform\tuning\PlatformClientTuning.h:35: #elif PLATFORM_WII
+src\platform\tuning\PlatformWiiTuning.h:11: #if PLATFORM_WII

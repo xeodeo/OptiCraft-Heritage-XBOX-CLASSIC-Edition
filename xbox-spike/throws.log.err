@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\xbox-spike\gdbthrow.py", line 99, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\xbox-spike\gdbthrow.py", line 59, in main
+    reply = g._read_packet()
+  File "C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\xbox-spike\gdbpeek.py", line 46, in _read_packet
+    self.buf += self.s.recv(65536)
+                ~~~~~~~~~~~^^^^^^^
+ConnectionResetError: [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
