@@ -152,12 +152,11 @@ Other requirements:
 
 - **Visual Studio 2022** with the C++ x86 tools and the Windows 10 SDK (for the static UCRT).
 - **[extract-xiso](https://github.com/XboxDev/extract-xiso)** to pack the ISO. Put it on `PATH` or in `XBOX_TOOLS`, or pass `-DXBOX_EXTRACT_XISO=...`.
-- **Game data** (`assets/`, `resources/`). It is not in the repository either; pass its folder as `XBOX_DATA_DIR`.
+- **Game data** (`assets/`, `resources/`). It is not in the repository either. Copy it into `data/` at the repository root, which is ignored by git; the build stages it into the ISO automatically. A different location can be passed as `-DXBOX_DATA_DIR=...`.
 
 ```text
 set XBOX_XDK_ROOT=C:\path\to\xdk\5849\sdk\XDK\xbox
-cmake --preset xbox-release -DXBOX_DATA_DIR=C:/path/to/data
-cmake --build build/xbox-release --target xbox-data
+cmake --preset xbox-release
 cmake --build --preset xbox-release
 ```
 

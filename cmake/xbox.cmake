@@ -248,8 +248,25 @@ if(XBOX_LIMIT_MEMORY)
     list(APPEND XBOX_IMAGEBLD_FLAGS /LIMITMEM)
 endif()
 
+# Game data (assets/, resources/) is not part of the repository. Put it in
+# <repo>/data or pass -DXBOX_DATA_DIR=...; every build stages whatever changed
+# into the ISO tree before the ISO is packed.
+set(XBOX_DATA_DIR "${CMAKE_SOURCE_DIR}/data" CACHE PATH "Folder with the game's assets/ and resources/")
+set(_xbox_stage_data)
+if(EXISTS "${XBOX_DATA_DIR}/assets")
+    set(_xbox_stage_data
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                "${XBOX_DATA_DIR}/assets" "${XBOX_ISO_DIR}/data/assets"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                "${XBOX_DATA_DIR}/resources" "${XBOX_ISO_DIR}/data/resources")
+else()
+    message(WARNING "Xbox build: no game data at XBOX_DATA_DIR='${XBOX_DATA_DIR}' "
+                    "(expects assets/ and resources/); the ISO will not have data/.")
+endif()
+
 add_custom_command(TARGET OptiCraft POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_ISO_DIR}"
+    ${_xbox_stage_data}
     COMMAND powershell -NoProfile -ExecutionPolicy Bypass
             -File "${CMAKE_SOURCE_DIR}/scripts/xbox/patch_pe_for_imagebld.ps1"
             -Path "$<TARGET_FILE:OptiCraft>"
@@ -286,12 +303,8 @@ if(XBOX_EXTRACT_XISO AND XBOX_DEPLOY_DIR AND NOT XBOX_AUTOPILOT)
         VERBATIM
     )
 endif()
-# Staging data/ into the ISO tree is thousands of copies, so it is a separate
-# target like wii-data. Run it once, and again whenever the assets change:
-#     cmake --build build/xbox-release --target xbox-data
-# The game data is not part of the repository; point XBOX_DATA_DIR at a
-# folder holding assets/ and resources/ (defaults to <repo>/data).
-set(XBOX_DATA_DIR "${CMAKE_SOURCE_DIR}/data" CACHE PATH "Folder with the game's assets/ and resources/")
+# Forces a full re-copy of the game data (the normal build only copies what
+# changed):  cmake --build build/xbox-release --target xbox-data
 add_custom_target(xbox-data
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${XBOX_DATA_DIR}/assets" "${XBOX_ISO_DIR}/data/assets"

@@ -28,7 +28,7 @@ Known limits are listed in [section 9](#9-known-issues-and-next-steps).
 | **CMake** + **Ninja** | CMake ships with VS2022; `ninja.exe` is in the repository root | The presets use `${sourceDir}/ninja.exe`. |
 | **7-Zip** | 7-zip.org | Unpacks the XDK archive and its installer. |
 | **extract-xiso** | <https://github.com/XboxDev/extract-xiso> | Packs the ISO. Put it on `PATH`, in `XBOX_TOOLS`, in `../xbox-tools/artifacts/`, or pass `-DXBOX_EXTRACT_XISO=<path>`. |
-| **Game data** | Your own copy (`assets/` and `resources/`) | Not in the repository; passed as `XBOX_DATA_DIR`. |
+| **Game data** | Your own copy (`assets/` and `resources/`) | Not in the repository. Copy it to `<repo>/data/` (ignored by git), or pass `-DXBOX_DATA_DIR=...`. Each build copies whatever changed into the ISO tree. |
 | xemu (optional) | <https://xemu.app> | Needs its usual BIOS/MCPX/HDD images. |
 | Python 3 (optional) | python.org | For the debugging tools in `scripts/xbox/tools`. |
 
@@ -65,8 +65,7 @@ The XDK installer expects Windows XP and Visual Studio .NET 2003. The build need
 
 ```text
 set XBOX_XDK_ROOT=C:\xdk\5849\sdk\XDK\xbox
-cmake --preset xbox-release -DXBOX_DATA_DIR=C:/path/to/data
-cmake --build build/xbox-release --target xbox-data      (copies the game data once)
+cmake --preset xbox-release
 cmake --build --preset xbox-release
 ```
 
@@ -85,7 +84,7 @@ Run these from a normal command prompt. The toolchain file sets the compilers it
 | Variable | Default | Meaning |
 |----------|---------|---------|
 | `XBOX_XDK_ROOT` | env `XBOX_XDK_ROOT` | The XDK `xbox` folder. |
-| `XBOX_DATA_DIR` | `<repo>/data` | Folder with `assets/` and `resources/`. |
+| `XBOX_DATA_DIR` | `<repo>/data` | Folder with `assets/` and `resources/`. Staged into the ISO on every build (changed files only); `--target xbox-data` forces a full copy. |
 | `XBOX_DEPLOY_DIR` | empty | Also copies `OptiCraft.iso` there after each build (for example an emulator ROM folder). |
 | `XBOX_ENABLE_SOUND` | `ON` in the preset | DirectSound audio. `OFF` builds the silent stub. |
 | `MC_LOG_LEVEL` | `0` | `1` enables the log: an in-memory ring, `T:\debug.log`, and the network log if set. |
