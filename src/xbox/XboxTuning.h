@@ -116,6 +116,32 @@
 #undef  PLATFORM_BULK_GENERATED_CHUNK_IMPORT
 #define PLATFORM_BULK_GENERATED_CHUNK_IMPORT     1
 
+// Saved columns requested from outside the synchronous radius (mesh builder
+// dependencies, spawn checks, entity lookups) load one per tick instead of
+// all at once; callers get the blank chunk meanwhile and ask again.
+#define PLATFORM_DEFERRED_DISK_LOADS_PER_TICK    1
+
+// Deferred, incremental population (decoration: trees, ores, lakes, snow):
+// it ran inline when a generated column was published, 20-40 ms in one tick.
+// Now one column is decorated per tick in steps under a small budget (the
+// low-end PC / PS2 path). Same seeds and stage order; only when it happens
+// changes. Distant sections keep their mesh until decoration finishes, so no
+// half-decorated terrain is shown.
+#undef  PLATFORM_DEFERRED_POPULATE
+#define PLATFORM_DEFERRED_POPULATE               1
+#undef  PLATFORM_INCREMENTAL_POPULATE
+#define PLATFORM_INCREMENTAL_POPULATE            1
+#undef  PLATFORM_POPULATE_CHUNKS_PER_TICK
+#define PLATFORM_POPULATE_CHUNKS_PER_TICK        1
+#undef  PLATFORM_POPULATE_STEPS_PER_TICK
+#define PLATFORM_POPULATE_STEPS_PER_TICK         8
+#undef  PLATFORM_POPULATE_BUDGET_US
+#define PLATFORM_POPULATE_BUDGET_US              3000
+#undef  PLATFORM_DEFER_MESH_DURING_POPULATE
+#define PLATFORM_DEFER_MESH_DURING_POPULATE      1
+#undef  PLATFORM_POPULATE_MESH_DEFER_DISTANCE_SQ
+#define PLATFORM_POPULATE_MESH_DEFER_DISTANCE_SQ 1024.0f
+
 // Mob cap.
 #undef  PLATFORM_MAX_LIVE_MOBS
 #define PLATFORM_MAX_LIVE_MOBS                   40

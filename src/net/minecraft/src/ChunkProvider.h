@@ -130,6 +130,9 @@ private:
 	// Per-tick synchronous-generation budget (see PLATFORM_GENERATE_CHUNKS_PER_TICK).
 	// Reset at the start of every world tick; incremented for each chunk generated.
 	int_t genChunksThisTick;
+	// Saved columns loaded from disk this tick for requests that may wait
+	// (see PLATFORM_DEFERRED_DISK_LOADS_PER_TICK).
+	int_t diskLoadsThisTick = 0;
 #endif
 
 #if PLATFORM_INCREMENTAL_CHUNK_GENERATION

@@ -126,6 +126,20 @@ void xboxRenderTakeListStats(double* transformMs, double* listMs, double* stageM
 void pcLegacyTakeMeshSchedulerStats(long *calls, long *pending, long *steps, long *published, long *stepUs);
 void xboxTakeWorldDirtyStats();
 
+// Render parts outside the phase list, per frame (EntityRenderer.cpp):
+// 0 particles, 1 rain/snow, 2 clouds, 3 open menu screen.
+namespace
+{
+constexpr int kFrameSlots = 4;
+unsigned long long s_frameSlotCycles[kFrameSlots] = {};
+}
+
+extern "C" void xboxProfileFrameSlot(int slot, unsigned long long cycles)
+{
+    if (slot >= 0 && slot < kFrameSlots)
+        s_frameSlotCycles[slot] += cycles;
+}
+
 // Called once per frame (ClientProfilerBackend_XBOX.cpp). A frame over 45 ms
 // is a visible hitch: log where its time went, then start the next frame.
 void xboxProfileFrameEnd(double frameMs, long long ticksNs, int ticks, long long lightingNs,
@@ -147,14 +161,18 @@ void xboxProfileFrameEnd(double frameMs, long long ticksNs, int ticks, long long
         for (int t = 0; t < 3 && top[t] >= 0; ++t)
             used += std::snprintf(phases + used, sizeof(phases) - used, "%s%s=%.1f", t ? " " : "",
                                   s_phaseNames[top[t]], s_framePhaseNs[top[t]] / 1e6);
-        MC_LOG_INFO("xbox.spike", "frame=%.0fms ticks=%.1fms(%d) world=%.1fms {%s} gen=%.1fms pop=%.1fms load=%.1fms save=%.1fms light=%.1fms render=%.1fms [build=%.1f opaque=%.1f ent=%.1f hud=%.1f] display=%.1fms\n",
+        MC_LOG_INFO("xbox.spike", "frame=%.0fms ticks=%.1fms(%d) world=%.1fms {%s} gen=%.1fms pop=%.1fms load=%.1fms save=%.1fms light=%.1fms render=%.1fms [build=%.1f opaque=%.1f ent=%.1f hud=%.1f sky=%.1f transl=%.1f hand=%.1f particles=%.1f weather=%.1f clouds=%.1f screen=%.1f] display=%.1fms\n",
                     frameMs, ticksNs / 1e6, ticks, s_frameTickNs / 1e6, phases, s_frameGenerateNs / 1e6,
                     s_framePopulateNs / 1e6, s_frameChunkLoadNs / 1e6, s_frameUnloadSaveNs / 1e6,
                     lightingNs / 1e6, renderNs / 1e6, s_frameRenderCycles[2] * c, s_frameRenderCycles[3] * c,
-                    s_frameRenderCycles[4] * c, s_frameRenderCycles[7] * c, displayNs / 1e6);
+                    s_frameRenderCycles[4] * c, s_frameRenderCycles[7] * c, s_frameRenderCycles[0] * c,
+                    s_frameRenderCycles[5] * c, s_frameRenderCycles[6] * c, s_frameSlotCycles[0] * c,
+                    s_frameSlotCycles[1] * c, s_frameSlotCycles[2] * c, s_frameSlotCycles[3] * c, displayNs / 1e6);
     }
     for (int i = 0; i < s_phaseCount; ++i)
         s_framePhaseNs[i] = 0;
+    for (int i = 0; i < kFrameSlots; ++i)
+        s_frameSlotCycles[i] = 0;
     for (int i = 0; i < kRenderPhases; ++i)
         s_frameRenderCycles[i] = 0;
     s_frameTickNs = s_frameGenerateNs = s_framePopulateNs = s_frameChunkLoadNs = s_frameUnloadSaveNs = 0;

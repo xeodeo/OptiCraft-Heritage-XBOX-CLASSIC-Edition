@@ -606,6 +606,15 @@ Chunk *ChunkProvider::prepareChunkInternal(int_t i, int_t j, bool deferGeneratio
 	}
 
 	WORLD_LOAD_STAGE("prepareChunk");
+#if PLATFORM_BOUNDED_WORLD && PLATFORM_INCREMENTAL_CHUNK_GENERATION && defined(PLATFORM_DEFERRED_DISK_LOADS_PER_TICK)
+	// A request that can wait (outside the synchronous radius) loads at most
+	// PLATFORM_DEFERRED_DISK_LOADS_PER_TICK saved columns per tick; the rest
+	// get the blank chunk now and are asked for again, like deferred
+	// generation. Reading + inflating + decoding a column took 25-450 ms in
+	// one tick when several arrived together.
+	if (deferGeneration && diskLoadsThisTick >= PLATFORM_DEFERRED_DISK_LOADS_PER_TICK)
+		return blankChunk;
+#endif
 	bool readFailed = false;
 #if PLATFORM_PROFILE_STREAMING
 	const long_t chunkLoadStartNs = System::nanoTime();
@@ -614,6 +623,10 @@ Chunk *ChunkProvider::prepareChunkInternal(int_t i, int_t j, bool deferGeneratio
 	chunk = loadChunkFromFile(i, j, readFailed);
 #if PLATFORM_PROFILE_STREAMING
 	platformProfileChunkLoad(System::nanoTime() - chunkLoadStartNs);
+#endif
+#if PLATFORM_BOUNDED_WORLD
+	if (chunk != nullptr && deferGeneration)
+		++diskLoadsThisTick;
 #endif
 	if (chunk == nullptr && readFailed)
 	{
@@ -1359,6 +1372,7 @@ bool ChunkProvider::unload100OldestChunks()
 	// so unbounded low-end desktop profiles can reuse it without adopting the
 	// console chunk-cache policy.
 	genChunksThisTick = 0;
+	diskLoadsThisTick = 0;
 #if PLATFORM_INCREMENTAL_CHUNK_GENERATION
 #if PLATFORM_PROFILE_STREAMING
 	const long_t generationStartNs = System::nanoTime();

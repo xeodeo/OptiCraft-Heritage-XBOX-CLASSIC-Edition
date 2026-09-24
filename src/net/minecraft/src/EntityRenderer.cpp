@@ -77,6 +77,18 @@
 #include "platform/Input.h"
 #endif
 
+#if PLATFORM_XBOX
+#include <intrin.h>
+#endif
+#if PLATFORM_XBOX
+extern "C" void xboxProfileFrameSlot(int slot, unsigned long long cycles);   // Profiler_XBOX.cpp
+#define XBOX_FRAME_SLOT_BEGIN(var) const unsigned long long var = __rdtsc()
+#define XBOX_FRAME_SLOT_END(slot, var) xboxProfileFrameSlot(slot, __rdtsc() - (var))
+#else
+#define XBOX_FRAME_SLOT_BEGIN(var) ((void)0)
+#define XBOX_FRAME_SLOT_END(slot, var) ((void)0)
+#endif
+
 #if defined(PS2_PLATFORM)
 namespace
 {
@@ -1418,7 +1430,9 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
 #endif
         renderClear(RenderClearMask::Depth);  // 256 = GL_DEPTH_BUFFER_BIT
 
+        XBOX_FRAME_SLOT_BEGIN(xboxScreen);
         mc->currentScreen->drawScreen(scaledMouseX, scaledMouseY, partialTicks);
+        XBOX_FRAME_SLOT_END(3, xboxScreen);
 
 #if PLATFORM_HAS_VIRTUAL_KEYBOARD
         // On-screen keyboard overlay (drawn on top of the focused text screen).
@@ -1675,7 +1689,9 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
         const PlatformDrawSnapshot particlesDrawStart = platformProfileDrawSnapshot();
 #endif
         enableLightmap(partialTicks);
+        XBOX_FRAME_SLOT_BEGIN(xboxLitParticles);
         effectrenderer->renderLitParticles(entityliving, partialTicks);
+        XBOX_FRAME_SLOT_END(0, xboxLitParticles);
 #endif
         
         RenderHelper::disableStandardItemLighting();
@@ -1684,7 +1700,9 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
         
         // Particulas
 #if !PLATFORM_SKIP_WORLD_PARTICLES
+        XBOX_FRAME_SLOT_BEGIN(xboxParticles);
         effectrenderer->renderParticles(entityliving, partialTicks);
+        XBOX_FRAME_SLOT_END(0, xboxParticles);
         disableLightmap(partialTicks);
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2
         platformProfileDrawCategory(PlatformDrawCategory::Particles, particlesDrawStart);
@@ -1892,7 +1910,9 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2
         const PlatformDrawSnapshot weatherDrawStart = platformProfileDrawSnapshot();
 #endif
+        XBOX_FRAME_SLOT_BEGIN(xboxWeather);
         renderRainSnow(partialTicks);
+        XBOX_FRAME_SLOT_END(1, xboxWeather);
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2
         platformProfileDrawCategory(PlatformDrawCategory::Weather, weatherDrawStart);
 #endif
@@ -1906,7 +1926,9 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2
         const PlatformDrawSnapshot cloudsDrawStart = platformProfileDrawSnapshot();
 #endif
+        XBOX_FRAME_SLOT_BEGIN(xboxClouds);
         renderglobal->renderClouds(partialTicks);
+        XBOX_FRAME_SLOT_END(2, xboxClouds);
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2
         platformProfileDrawCategory(PlatformDrawCategory::Clouds, cloudsDrawStart);
 #endif
