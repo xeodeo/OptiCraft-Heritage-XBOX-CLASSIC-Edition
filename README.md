@@ -55,9 +55,13 @@ It provides:
 - a Direct3D 8 fixed-function renderer;
 - XInput controller input;
 - DirectSound audio on the MCPX APU (stereo, or Dolby Digital 5.1 from the options);
-- saves on the title drive `T:` (`E:\TDATA\FFFF4F43`).
+- saves on the title drive `T:` (`E:\TDATA\FFFF4F43`);
+- 480p (`default.xbe`) or 720p progressive (`OptiCraft_720p.xbe`, same program; needs component video and 720p enabled in the dashboard);
+- dashboard artwork and the title name "OptiCraft by xeodeo".
 
-Launch `default.xbe` from a folder on the hard disk, with the `data/` folder next to it, or boot `OptiCraft.iso` in xemu.
+It runs at about 60 FPS on the console at a 2-chunk render distance, with 28-33 MB of RAM free.
+
+Launch `default.xbe` (or `OptiCraft_720p.xbe`) from a folder on the hard disk, with the `data/` folder next to it, or boot `OptiCraft.iso` in xemu. Prebuilt releases: <https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition/releases>.
 
 ## Source layout
 
@@ -166,15 +170,19 @@ cmake --build --preset xbox-release
 
 The output lands in `bin/xbox/`:
 
-- `iso/` holds `default.xbe` plus `data/`. Copy that folder to the console's hard disk.
+- `iso/` holds `default.xbe`, `OptiCraft_720p.xbe`, `default.tbn` (folder thumbnail) and `data/`. Copy that folder to the console's hard disk.
 - `OptiCraft.iso` holds the same content as an Xbox ISO, for xemu.
+
+For a build to publish, use the `xbox-public` preset (`cmake --preset xbox-public` / `cmake --build --preset xbox-public`). It never embeds a network-log address, writes to `bin/xbox-public/` and skips `XBOX_DEPLOY_DIR`, so local test builds keep their own settings.
+
+The dashboard title image and save image come from `scripts/xbox/media/` (BMPs made from the game's own textures, packed to XPR by the XDK `bundler.exe` during the build); `logo3.png` there is the port-credit screen of the intro.
 
 Optional cache variables:
 
 | Variable | Meaning |
 |----------|---------|
 | `XBOX_DEPLOY_DIR` | Copies `OptiCraft.iso` there after every build (for example, an emulator ROM folder). |
-| `MC_LOG_LEVEL` | `1` writes a log to `T:\debug.log` and to an in-memory ring readable from xemu's gdbstub. |
+| `MC_LOG_LEVEL` | `1` keeps a log in an in-memory ring readable from xemu's gdbstub (and in `T:\debug.log` when the code is built with `XBOX_DISK_LOG=1`; off by default because it cost disk writes during play). |
 | `XBOX_NETLOG_HOST` | A PC's IPv4 address. Every log line is also sent over UDP (port 9999) to `scripts/xbox/tools/escuchar_log.py`, so a hang on the console can be followed live. |
 | `XBOX_ENABLE_SOUND` | Enables DirectSound audio (on in the preset). |
 

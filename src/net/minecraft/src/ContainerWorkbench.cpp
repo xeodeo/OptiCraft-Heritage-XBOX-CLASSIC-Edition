@@ -69,6 +69,8 @@ void ContainerWorkbench::onCraftGuiClosed(EntityPlayer *entityplayer)
 			entityplayer->dropPlayerItem(itemstack);
 		}
 	}
+	// Upstream fix for issue #18 (item duplication), see ContainerPlayer.
+	craftResult->setInventorySlotContents(0, nullptr);
 }
 
 bool ContainerWorkbench::isUsableByPlayer(EntityPlayer *entityplayer)

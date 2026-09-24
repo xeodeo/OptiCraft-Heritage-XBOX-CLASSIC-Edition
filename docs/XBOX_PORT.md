@@ -159,8 +159,12 @@ Run these from a normal command prompt. The toolchain file sets the compilers it
 **Real console** (softmodded, with FTP access):
 
 1. Copy the **whole** `bin/xbox/iso` folder to the hard disk, for example `E:\Games\OptiCraft\`, so that `default.xbe` and `data\` sit side by side. The game reads its assets from `D:\data`, and `D:` is the folder the XBE was launched from.
-2. Launch `default.xbe` from the dashboard.
-3. Saves, `options.txt` and `debug.log` are written to `E:\TDATA\FFFF4F43\`. XAPI maps `T:` there for this title. If `T:` is not writable, the game mounts its utility drive `Z:` and uses that instead.
+2. Launch `default.xbe` (640x480) or `OptiCraft_720p.xbe` (1280x720 progressive) from the dashboard. Both are the same program: `src/xbox/system/XboxVideoMode.cpp` picks 720p when the XBE's file name contains "720" (kernel export `XeImageFileName`) and the dashboard allows it (`XC_VIDEO_FLAGS_HDTV_720p`); otherwise it runs at 480.
+3. Saves and `options.txt` are written to `E:\TDATA\FFFF4F43\`. XAPI maps `T:` there for this title. If `T:` is not writable, the game mounts its utility drive `Z:` and uses that instead.
+
+The dashboard shows the title "OptiCraft by xeodeo" and the title image embedded by `imagebld /TITLEIMAGE` (see `scripts/xbox/media/`). The intro adds a port-credit screen after the OptiProjects logo.
+
+**Release build:** the `xbox-public` preset builds without any network-log address into `bin/xbox-public/`. Test builds keep `XBOX_NETLOG_HOST` in their own cache.
 
 Launching a game unloads the dashboard, and its FTP server goes with it. To read logs while the game runs, use the network log.
 
@@ -176,7 +180,7 @@ Launching a game unloads the dashboard, and its FTP server goes with it. To read
 | Right stick: look | A: select |
 | A: jump | B / Y: back |
 | Y: inventory | X: delete the highlighted world (in the world list) |
-| B: drop | Left/right: sliders, or switch between side-by-side buttons (Yes/Cancel) |
+| B: drop (ignored until released when it was held to close a menu) | Left/right: sliders, or switch between side-by-side buttons (Yes/Cancel) |
 | Left stick click: sneak | |
 
 ---
@@ -374,6 +378,11 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
 | `pow` through fdlibm on Xbox | `EntityRenderer.cpp`, `legacy/LegacyLook.cpp`, `legacy/LegacyColorGradePolicy.h` | See 5.5. |
 | Display lists and GL allocation also compiled for Xbox | `RenderList.h`, `GLAllocation.*`, `WorldRenderer.*`, `RenderGlobal.*`, `ModelRenderer.cpp`, `RenderAPI.h` | The Xbox renderer uses the desktop display-list path. |
 | Log hook for the ring and UDP copies | `platform/Log.cpp` | Diagnostics. |
+| **Villager texture kept at 64x64** | `RenderEngine.cpp` | Every 64x64 texture under `/mob/` was converted to the 64x32 skin layout. The villager is the one 1.2.5 mob whose own texture is 64x64, so it lost its lower half: faceless head, black arm and robe faces. Affects every platform. |
+| **Crafting result cleared when the grid closes** (upstream fix for issue #18, without its double delete) | `ContainerPlayer.cpp`, `ContainerWorkbench.cpp` | The result outlived the closed grid and could be taken again (item duplication). |
+| **Respawn out of the End/Nether switches dimension immediately** | `client/Minecraft.cpp` | With portal transitions deferred (Xbox, Wii), the player was rebuilt in the old dimension first and the late trip built a Nether portal there and moved the spawn. |
+| **Respawn preloads 3x3 columns** instead of 5x5 on Xbox | `client/Minecraft.cpp` (`preloadWorld` radius argument) | The full preload froze the console 2.6-9.7 s on every death. |
+| Incremental terrain builder, section visibility, fast collisions, entity lookups, HUD/sky batching, font glyph table | `PlatformConfig.h`, `WorldRenderer*`, `RenderGlobal*`, `World*`, `FontRenderer.cpp`, `GuiIngame.cpp` | See "Performance work". |
 
 ---
 
@@ -384,7 +393,8 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
   - With xemu started with `-gdb tcp:127.0.0.1:1235`, `python scripts/xbox/tools/gdblog.py bin/xbox/OptiCraft.exe.map` prints it.
   - If the CPU sits in a kernel bug check, the script decodes it: `eax=1E`, `ecx`=exception code, `edx`=faulting address.
   - **XBE address = map address − `0x3F0000`.**
-- **`T:\debug.log`:** the same log written to the console's hard disk. It is committed line by line, so a hang still names its last step. Read it over FTP from `E:\TDATA\FFFF4F43\debug.log` after powering off.
+- **`T:\debug.log`:** off by default (`XBOX_DISK_LOG 0` in `src/xbox/main_xbox.cpp`). When enabled, the same log is written to the console's hard disk and committed line by line, so a hang still names its last step; it is read over FTP from `E:\TDATA\FFFF4F43\debug.log`. The per-line close/reopen caused micro-stutter, so the network log is the normal way to follow the console.
+- **Hitch report:** `xbox.spike` logs every frame over 45 ms with its breakdown: the three most expensive named tick phases, generation/load/save times and the render phases (terrain build, opaque, entities, HUD, sky, particles, weather, clouds, menu).
 - **Network log (live, on real hardware):**
   - Configure with `-DXBOX_NETLOG_HOST=<PC IPv4>`.
   - Run `python scripts/xbox/tools/escuchar_log.py` on that PC. Allow Python through the Windows firewall on private networks.
@@ -407,12 +417,14 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
 - **Memory** is no longer the limit at 2 chunks (20-35 MB free). Remaining candidates:
   - keep fewer chunks resident and lean on the hard disk (`T:` or the `Z:` utility drive) for evicted chunks;
   - DXT-compressed textures.
-- **Remaining hitches** (about one frame over 45 ms per second on the console), in the order they will be tackled:
-  1. Name the tick phases in the Xbox profiler (nested phases are currently summed twice).
-  2. Chunk streaming: load saved chunks through a budgeted queue instead of synchronously; defer/slice population (the real cost of the `gen` spikes); split the remaining atomic generation steps (base terrain noise, chunk build, skylight).
-  3. World tick: the low-end PC tick scheduler, fewer allocations in entity queries, cheaper mob-spawn attempts.
-  4. HUD and render: the font looks up every glyph by rebuilding a 220-character table; status bars, model faces and the sky dome are one draw each; animated tiles re-swizzle the whole atlas.
-  5. Hardware: triple buffering, `_mm_prefetch` in meshing/generation loops.
+- **Remaining hitches:** short 50-100 ms frames, mostly while new terrain is generated or saved (`chunkUnload`), plus chunk meshing and mob ticks. Next steps, all behaviour-exact:
+  1. Split the atomic base-terrain step of chunk generation into sub-steps that finish within a few consecutive frames.
+  2. Fast lighting chunk access (`PLATFORM_FAST_LIGHTING_CHUNK_ACCESS`, as on Wii).
+  3. Hardware `sqrt` and a magic-number `floor_double` (x87 `__ftol2` changes the rounding mode twice per call).
+  4. Chunk lookups through the last-used chunk; chunk saves without copying every pending tick.
+  5. SFX cache large enough for the overworld sounds (decoding happens on the main thread today).
+- **Rejected:** deferred/incremental population (`PLATFORM_DEFERRED_POPULATE`) and paced disk loads. On the console trees, passive mobs and snow appeared far too late; anything that postpones world content must be validated on hardware, not only in xemu.
+- **Mobs sinking into the ground at the edge of the loaded area:** a mob next to a column that is not loaded yet has no collision there (as in vanilla, missing chunks are air). The console keeps few columns resident, so it shows more than on PC. Fix planned: freeze mobs whose surroundings are not loaded and push them out of blocks when the column arrives.
 - **Leftover SSE2** reported by the build, in paths not expected to run:
   - wide/money `num_put`;
   - `frexp` (iostream float output);
@@ -569,6 +581,15 @@ A comprehensive profiling and optimization pass (using the new `xbox.perf` and `
 - **Stability:** Pathfinding was bounded to 300 nodes and time-sliced (3 per tick), preventing the `vector too long` out-of-memory crashes.
 
 These changes stabilized memory and boosted performance to ~50-60 FPS on real hardware at a 2-chunk render distance.
+
+### Phase 8: smoothness and release
+
+- **Measure first.** Draw counters showed the opaque pass spent 0.5 ms in D3D and ~9 ms elsewhere; `SetTransform` cost 0.03 ms, so a terrain vertex shader was dropped. The real cost was OptiFine's "Smooth FPS" calling `BlockUntilIdle` every frame (10.5 → 1.6 ms once removed). The `xbox.spike` hitch report then named each remaining stall.
+- **Streaming.** The low-end PC incremental chunk builder and the PS2 incremental generator removed the 20-40 ms meshing and generation frames. Deferred population was tried and reverted (see Known issues).
+- **Memory.** Compact vertex declarations, quads straight to `D3DPT_QUADLIST`, a console-sized tessellator buffer and dropping the menu textures in game took free RAM from ~6 MB to 28-33 MB at 2 chunks.
+- **Hitch sources found in logs.** `T:\debug.log` reopened after every line, chunk unloads saved 8 columns in one tick, the font rebuilt a 220-character table per glyph, the status HUD was ~45 draws and the sky dome 169.
+- **Bugs.** Villager texture (converted as a skin), crafting duplication, the Nether portal built when respawning out of the End, a 3-10 s freeze on respawn, and B dropping the held item when it closed a menu (`src/xbox/input/XboxInput.cpp` now ignores buttons held across a menu close until they are released).
+- **Release.** 720p XBE, dashboard artwork, title name, port-credit intro and the `xbox-public` preset without the network log. Tagged `xbox-v1.0`.
 
 ---
 

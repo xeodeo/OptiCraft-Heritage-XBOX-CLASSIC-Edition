@@ -39,6 +39,9 @@ const float MENU_NAV_REPEAT_INTERVAL = 0.11f;
 float s_deadzone = 0.20f;
 bool s_gameplayKeyDown[256] = {};
 bool s_previousMenu = false;
+// Buttons still held when a menu closes (B closes the inventory and is also
+// "drop item" in game): ignored by gameplay until released.
+unsigned int s_suppressedButtons = 0;
 int s_cameraWarmup = 0;
 int s_menuAnalogDirection = 0;
 float s_menuAnalogRepeat = 0.0f;
@@ -370,6 +373,7 @@ void poll(bool inMenu, bool specializedMenuNavigation)
 	}
 	if (!inMenu && s_previousMenu)
 	{
+		s_suppressedButtons = pad.held;
 		s_cameraWarmup = CAMERA_WARMUP_FRAMES;
 		lwjgl::Mouse::clearDeltas();
 		XboxPad::clearLatchedPressed();
@@ -384,9 +388,26 @@ void poll(bool inMenu, bool specializedMenuNavigation)
 		return;
 	}
 	if (inMenu)
+	{
+		s_suppressedButtons = 0;
 		updateMenu(pad, specializedMenuNavigation);
+	}
 	else
-		updateGameplay(pad);
+	{
+		s_suppressedButtons &= pad.held;   // a released button counts again
+		if (s_suppressedButtons == 0)
+		{
+			updateGameplay(pad);
+		}
+		else
+		{
+			XboxPadSnapshot filtered = pad;
+			filtered.held &= ~s_suppressedButtons;
+			filtered.pressed &= ~s_suppressedButtons;
+			filtered.released &= ~s_suppressedButtons;
+			updateGameplay(filtered);
+		}
+	}
 }
 
 void setMenuCursor(int x, int y)

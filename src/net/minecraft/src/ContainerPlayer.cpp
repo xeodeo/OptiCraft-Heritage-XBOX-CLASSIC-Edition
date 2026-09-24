@@ -72,6 +72,10 @@ void ContainerPlayer::onCraftGuiClosed(EntityPlayer *entityplayer)
 			entityplayer->dropPlayerItem(itemstack);
 		}
 	}
+	// Upstream fix for issue #18: the crafted result outlived the closed
+	// grid and could be taken again (item duplication). Clearing the slot
+	// also frees the stack.
+	craftResult->setInventorySlotContents(0, nullptr);
 }
 
 bool ContainerPlayer::isUsableByPlayer(EntityPlayer *entityplayer)
