@@ -379,10 +379,16 @@ bool RenderEngine::loadTextureStreamInto(const std::string &s, int_t texture, st
 			std::string lowerPath = normalizedPath;
 			for (char &c : lowerPath)
 				c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-			if (lowerPath.find("skin") != std::string::npos ||
-			    lowerPath.find("char") != std::string::npos ||
-			    lowerPath.find("player") != std::string::npos ||
-			    lowerPath.find("/mob/") != std::string::npos)
+			// Villagers are the one 1.2.5 mob whose own texture is 64x64
+			// (ModelVillager maps it with setTextureSize(64, 64)); converting
+			// it cut off the lower half: faceless head, black arm and robe
+			// faces.
+			const bool nativeTallMobTexture = lowerPath.find("/mob/villager") != std::string::npos;
+			if (!nativeTallMobTexture &&
+			    (lowerPath.find("skin") != std::string::npos ||
+			     lowerPath.find("char") != std::string::npos ||
+			     lowerPath.find("player") != std::string::npos ||
+			     lowerPath.find("/mob/") != std::string::npos))
 			{
 				std::vector<unsigned char> srcRgba(BufferedImage::checkedRgbaByteCount(64, 64));
 				image->getRGB(0, 0, 64, 64, srcRgba.data());
