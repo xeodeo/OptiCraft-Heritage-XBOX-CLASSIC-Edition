@@ -35,6 +35,7 @@ enable_language(ASM_MASM)
 # --- Options ------------------------------------------------------------------
 option(XBOX_BRINGUP "Build only the Xbox toolchain smoke test instead of the game" OFF)
 option(XBOX_ENABLE_SOUND "Enable the DirectSound backend" OFF)
+option(XBOX_ENABLE_NETWORK "Experimental: multiplayer over XNet TCP (Minecraft 1.2.5 servers)" OFF)
 option(XBOX_AUTOPILOT "Test build: replay a scripted controller from D:/autopilot.txt (never deployed)" OFF)
 option(XBOX_LIMIT_MEMORY "Limit the title to the retail 64 MB even on 128 MB dev kits / xemu" ON)
 set(MC_LOG_LEVEL "0" CACHE STRING "Unified diagnostic verbosity: 0=off, 1=info, 2=debug, 3=trace")
@@ -152,7 +153,7 @@ target_compile_definitions(OptiCraft PRIVATE
     "NDEBUG"
     "NOMINMAX"
     "_CRT_SECURE_NO_WARNINGS"
-    "NO_NETWORK"
+    $<$<NOT:$<BOOL:${XBOX_ENABLE_NETWORK}>>:NO_NETWORK>
     MC_LOG_LEVEL=${MC_LOG_LEVEL}
     XBOX_AUTOPILOT=$<BOOL:${XBOX_AUTOPILOT}>
     # With /arch:SSE (no SSE2) the UCRT evaluates floats in x87 precision and
@@ -237,7 +238,7 @@ set(XBOX_LINK_LIBS
     "${XBOX_XDK_ROOT}/lib/xgraphics.lib"
     "${XBOX_XDK_ROOT}/lib/dsound.lib"
 )
-if(XBOX_NETLOG_HOST)
+if(XBOX_NETLOG_HOST OR XBOX_ENABLE_NETWORK)
     # Devkit XNet: the only flavour that may talk to an untrusted host (a PC).
     list(APPEND XBOX_LINK_LIBS "${XBOX_XDK_ROOT}/lib/xnet.lib")
 endif()

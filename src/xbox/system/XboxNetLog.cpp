@@ -10,6 +10,7 @@
 #ifdef XBOX_PLATFORM
 
 #include "xbox/XboxXtl.h"
+#include "xbox/system/XboxNetwork.h"
 
 #include <cstring>
 
@@ -24,21 +25,9 @@ sockaddr_in s_target = {};
 
 extern "C" void xboxNetLogInit()
 {
-    XNetStartupParams params;
-    std::memset(&params, 0, sizeof(params));
-    params.cfgSizeOfStruct = sizeof(params);
-    params.cfgFlags = XNET_STARTUP_BYPASS_SECURITY;
-    if (XNetStartup(&params) != 0)
+    // Shared with multiplayer: starts XNet once and waits for the address.
+    if (!XboxNetwork::initialize())
         return;
-    WSADATA wsa;
-    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-        return;
-
-    // Wait (up to 6 s) for the address, DHCP included; lines sent before the
-    // stack has one are dropped.
-    XNADDR addr;
-    for (int i = 0; i < 120 && XNetGetTitleXnAddr(&addr) == XNET_GET_XNADDR_PENDING; ++i)
-        Sleep(50);
 
     s_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (s_socket == INVALID_SOCKET)
