@@ -1577,8 +1577,48 @@ bool World::setBlockAndMetadataWithNotify(int x, int y, int z, int blockId, int 
     return false;
 }
 
+#if PLATFORM_XBOX
+// Diagnostics: what dirties terrain sections (Xbox profile report). Off by
+// default: it costs a block lookup per change and log lines.
+#ifndef XBOX_MESH_DIAGNOSTICS
+#define XBOX_MESH_DIAGNOSTICS 0
+#endif
+#if !XBOX_MESH_DIAGNOSTICS
+void xboxTakeWorldDirtyStats() {}
+#else
+namespace
+{
+long s_xboxDirtyBlocks = 0;
+long s_xboxDirtyRanges = 0;
+long s_xboxDirtyRangeBlocks = 0;
+long s_xboxDirtySingles = 0;
+long s_xboxDirtyIds[256] = {};
+}
+
+void xboxTakeWorldDirtyStats()
+{
+    int top[3] = {0, 0, 0};
+    for (int t = 0; t < 3; ++t)
+        for (int id = 0; id < 256; ++id)
+            if ((t < 1 || id != top[0]) && (t < 2 || id != top[1]) &&
+                s_xboxDirtyIds[id] > s_xboxDirtyIds[top[t]])
+                top[t] = id;
+    MC_LOG_INFO("xbox.dirty", "blockChanges=%ld (id %d x%ld, id %d x%ld, id %d x%ld) ranges=%ld (%ld blocks) single=%ld\n",
+                s_xboxDirtyBlocks, top[0], s_xboxDirtyIds[top[0]], top[1], s_xboxDirtyIds[top[1]],
+                top[2], s_xboxDirtyIds[top[2]], s_xboxDirtyRanges, s_xboxDirtyRangeBlocks, s_xboxDirtySingles);
+    s_xboxDirtyBlocks = s_xboxDirtyRanges = s_xboxDirtyRangeBlocks = s_xboxDirtySingles = 0;
+    for (long &count : s_xboxDirtyIds)
+        count = 0;
+}
+#endif
+#endif
+
 void World::markBlockNeedsUpdate(int x, int y, int z)
 {
+#if PLATFORM_XBOX && XBOX_MESH_DIAGNOSTICS
+    ++s_xboxDirtyBlocks;
+    ++s_xboxDirtyIds[getBlockId(x, y, z) & 255];
+#endif
     for (size_t i = 0; i < worldAccesses.size(); i++)
     {
         worldAccesses[i]->markBlockAndNeighborsNeedsUpdate(x, y, z);
@@ -1609,6 +1649,9 @@ void World::markBlocksDirtyVertical(int x, int z, int y1, int y2)
 
 void World::markBlockAsNeedsUpdate(int x, int y, int z)
 {
+#if PLATFORM_XBOX && XBOX_MESH_DIAGNOSTICS
+    ++s_xboxDirtySingles;
+#endif
     for (size_t i = 0; i < worldAccesses.size(); i++)
     {
         worldAccesses[i]->markBlockRangeNeedsUpdate(x, y, z, x, y, z);
@@ -1617,6 +1660,10 @@ void World::markBlockAsNeedsUpdate(int x, int y, int z)
 
 void World::markBlocksDirty(int minX, int minY, int minZ, int maxX, int maxY, int maxZ)
 {
+#if PLATFORM_XBOX && XBOX_MESH_DIAGNOSTICS
+    ++s_xboxDirtyRanges;
+    s_xboxDirtyRangeBlocks += static_cast<long>(maxX - minX + 1) * (maxY - minY + 1) * (maxZ - minZ + 1);
+#endif
     for (size_t i = 0; i < worldAccesses.size(); i++)
     {
         worldAccesses[i]->markBlockRangeNeedsUpdate(minX, minY, minZ, maxX, maxY, maxZ);

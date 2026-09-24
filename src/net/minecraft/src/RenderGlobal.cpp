@@ -1144,6 +1144,24 @@ bool RenderGlobal::isRendererUpdateActing(EntityLiving *entityliving) const
 	return player->isSwinging || player->isUsingItem();
 }
 
+#if PLATFORM_XBOX
+#include <intrin.h>
+extern "C" void xboxProfileSlotAdd(int slot, unsigned long long cycles);
+namespace
+{
+struct XboxSlotTimer
+{
+	int slot;
+	unsigned long long start;
+	explicit XboxSlotTimer(int s) : slot(s), start(__rdtsc()) {}
+	~XboxSlotTimer() { xboxProfileSlotAdd(slot, __rdtsc() - start); }
+};
+}
+#define XBOX_TERRAIN_SLOT(n) XboxSlotTimer xboxSlotTimer##n(n)
+#else
+#define XBOX_TERRAIN_SLOT(n) ((void)0)
+#endif
+
 int_t RenderGlobal::sortAndRender(EntityLiving *entityliving, int_t i, double d)
 {
 	for (int_t j = 0; j < 10; j++)
@@ -1210,6 +1228,7 @@ int_t RenderGlobal::sortAndRender(EntityLiving *entityliving, int_t i, double d)
 		// culling: the nearest chunks must be rendered first so the depth buffer
 		// holds the closest occluders before farther chunks' boxes are queried.
 		int_t totalRenderers = renderChunksWide * renderChunksTall * renderChunksDeep;
+		XBOX_TERRAIN_SLOT(1);
 		std::sort(sortedWorldRenderers, sortedWorldRenderers + totalRenderers, EntitySorter(entityliving));
 	}
 
@@ -1229,7 +1248,10 @@ int_t RenderGlobal::sortAndRender(EntityLiving *entityliving, int_t i, double d)
 
 #if PLATFORM_SECTION_VISIBILITY_CULL
 	if (i == 0)
+	{
+		XBOX_TERRAIN_SLOT(0);
 		updatePcLegacySectionVisibility(entityliving);
+	}
 #endif
 #if PLATFORM_PS2
 	if (i == 0)
@@ -1432,6 +1454,9 @@ int_t RenderGlobal::renderSortedRenderers(int_t i, int_t j, int_t k, double d)
 		return 0;
 #endif
 	renderBatchRenderers.clear();
+#if PLATFORM_XBOX
+	const unsigned long long xboxSelectStart = __rdtsc();
+#endif
 
 #if PLATFORM_PC || defined(XBOX_PLATFORM)
 	const bool useOcclusion = occlusionEnabled
@@ -1495,6 +1520,10 @@ int_t RenderGlobal::renderSortedRenderers(int_t i, int_t j, int_t k, double d)
 #endif
 	}
 
+#if PLATFORM_XBOX
+	xboxProfileSlotAdd(2, __rdtsc() - xboxSelectStart);
+	XBOX_TERRAIN_SLOT(3);
+#endif
 	EntityLiving *entityliving = mc->renderViewEntity;
 	double d1 = entityliving->lastTickPosX + (entityliving->posX - entityliving->lastTickPosX) * d;
 	double d2 = entityliving->lastTickPosY + (entityliving->posY - entityliving->lastTickPosY) * d;

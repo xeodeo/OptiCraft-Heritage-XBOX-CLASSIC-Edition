@@ -23,6 +23,14 @@ long long s_chunkLoadNs = 0;
 long long s_unloadSaveNs = 0;
 int s_meshCount = 0;
 int s_generateCount = 0;
+
+// The same, for the current frame only (spike report).
+unsigned long long s_frameRenderCycles[kRenderPhases] = {};
+long long s_frameTickNs = 0;
+long long s_frameGenerateNs = 0;
+long long s_framePopulateNs = 0;
+long long s_frameChunkLoadNs = 0;
+long long s_frameUnloadSaveNs = 0;
 }
 
 std::uint32_t platformProfileRenderPhaseBegin()
@@ -34,19 +42,23 @@ void platformProfileRenderPhaseEnd(std::uint32_t start, PlatformRenderPhase phas
 {
     const int index = static_cast<int>(phase);
     if (index >= 0 && index < kRenderPhases)
-        s_renderCycles[index] += static_cast<std::uint32_t>(static_cast<std::uint32_t>(__rdtsc()) - start);
+    {
+        const std::uint32_t cycles = static_cast<std::uint32_t>(static_cast<std::uint32_t>(__rdtsc()) - start);
+        s_renderCycles[index] += cycles;
+        s_frameRenderCycles[index] += cycles;
+    }
 }
 
-void platformProfileTickPhase(const char*, long long ns) { s_tickNs += ns; }
+void platformProfileTickPhase(const char*, long long ns) { s_tickNs += ns; s_frameTickNs += ns; }
 void platformProfileChunkBuild(long long, int) {}
 void platformProfileChunkMeshPass(int, long long, int) {}
 void platformProfileSnowColumn(bool, bool, int) {}
 void platformProfilePopulatePhase(PlatformPopulatePhase, long long) {}
-void platformProfileChunkLoad(long long ns) { s_chunkLoadNs += ns; }
-void platformProfilePopulate(long long ns) { s_populateNs += ns; }
-void platformProfileGenerate(long long ns) { s_generateNs += ns; ++s_generateCount; }
+void platformProfileChunkLoad(long long ns) { s_chunkLoadNs += ns; s_frameChunkLoadNs += ns; }
+void platformProfilePopulate(long long ns) { s_populateNs += ns; s_framePopulateNs += ns; }
+void platformProfileGenerate(long long ns) { s_generateNs += ns; ++s_generateCount; s_frameGenerateNs += ns; }
 void platformProfileMesh(long long ns) { s_meshNs += ns; ++s_meshCount; }
-void platformProfileUnloadSave(long long ns) { s_unloadSaveNs += ns; }
+void platformProfileUnloadSave(long long ns) { s_unloadSaveNs += ns; s_frameUnloadSaveNs += ns; }
 void platformProfileTickUpdates(long long) {}
 void platformProfileTickQueue(long long) {}
 void platformProfileMobSpawn(long long) {}
@@ -62,11 +74,53 @@ int xboxClientProfileTake(long long out[4]);   // ClientProfilerBackend_XBOX.cpp
 void xboxRenderTakeDrawStats(double* drawMs, long* vbDraws, long* upDraws, long* upVertices, long* viewSets);
 void xboxRenderTakeListStats(double* transformMs, double* listMs, double* stageMs, long* listCalls);
 void pcLegacyTakeMeshSchedulerStats(long *calls, long *pending, long *steps, long *published, long *stepUs);
+void xboxTakeWorldDirtyStats();
+
+// Called once per frame (ClientProfilerBackend_XBOX.cpp). A frame over 45 ms
+// is a visible hitch: log where its time went, then start the next frame.
+void xboxProfileFrameEnd(double frameMs, long long ticksNs, int ticks, long long lightingNs,
+                         long long renderNs, long long displayNs)
+{
+    if (frameMs > 45.0)
+    {
+        const double c = 1.0 / kCyclesPerMs;
+        MC_LOG_INFO("xbox.spike", "frame=%.0fms ticks=%.1fms(%d) world=%.1fms gen=%.1fms pop=%.1fms load=%.1fms save=%.1fms light=%.1fms render=%.1fms [build=%.1f opaque=%.1f ent=%.1f hud=%.1f] display=%.1fms\n",
+                    frameMs, ticksNs / 1e6, ticks, s_frameTickNs / 1e6, s_frameGenerateNs / 1e6,
+                    s_framePopulateNs / 1e6, s_frameChunkLoadNs / 1e6, s_frameUnloadSaveNs / 1e6,
+                    lightingNs / 1e6, renderNs / 1e6, s_frameRenderCycles[2] * c, s_frameRenderCycles[3] * c,
+                    s_frameRenderCycles[4] * c, s_frameRenderCycles[7] * c, displayNs / 1e6);
+    }
+    for (int i = 0; i < kRenderPhases; ++i)
+        s_frameRenderCycles[i] = 0;
+    s_frameTickNs = s_frameGenerateNs = s_framePopulateNs = s_frameChunkLoadNs = s_frameUnloadSaveNs = 0;
+}
+
+// Ad-hoc timing slots for the terrain pass (RenderGlobal), Xbox only.
+namespace
+{
+constexpr int kXboxSlots = 4;
+unsigned long long s_xboxSlotCycles[kXboxSlots] = {};
+}
+
+extern "C" void xboxProfileSlotAdd(int slot, unsigned long long cycles)
+{
+    if (slot >= 0 && slot < kXboxSlots)
+        s_xboxSlotCycles[slot] += cycles;
+}
 
 void xboxProfileReport(unsigned int frames, unsigned long elapsedMs, double presentMs)
 {
     if (frames == 0 || elapsedMs == 0)
         return;
+    {
+        const double slotToMs = 1.0 / (kCyclesPerMs * frames);
+        MC_LOG_INFO("xbox.terrain", "per frame: visibility=%.2fms sort=%.2fms select=%.2fms submit=%.2fms\n",
+                    s_xboxSlotCycles[0] * slotToMs, s_xboxSlotCycles[1] * slotToMs,
+                    s_xboxSlotCycles[2] * slotToMs, s_xboxSlotCycles[3] * slotToMs);
+        for (int i = 0; i < kXboxSlots; ++i)
+            s_xboxSlotCycles[i] = 0;
+    }
+    xboxTakeWorldDirtyStats();
     {
         long calls = 0, pending = 0, steps = 0, published = 0, stepUs = 0;
         pcLegacyTakeMeshSchedulerStats(&calls, &pending, &steps, &published, &stepUs);

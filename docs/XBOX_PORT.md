@@ -345,6 +345,15 @@ Second round (all behaviour-exact, measured with the `xbox.perf`, `xbox.draw` an
 | Animated tiles re-swizzle the atlas once per frame, not once per tile | fewer full-atlas locks per tick |
 | Hash set for `World::isLoadedEntityPointer`, fast/early block collisions, cached entity and chunk queries | cheaper entity ticking |
 
+Third round (hitches):
+
+| Change | Effect |
+|---|---|
+| OptiFine "Smooth FPS" no longer calls `BlockUntilIdle` (`XBOX_SMOOTH_FPS_WAITS_FOR_GPU 0`) | opaque pass 10.5 → 1.6 ms; CPU and GPU overlap again |
+| Incremental chunk generation (the PS2 generator), only the 3x3 columns around the player generate on demand | no more 25-40 ms generation frames while exploring |
+| `T:\debug.log` off (`XBOX_DISK_LOG 0`): McLog reopened the file after every line | fewer hard-disk writes during play; the network log carries the same lines |
+| `xbox.spike` log line: every frame over 45 ms with its breakdown | finds the cause of each hitch |
+
 ---
 
 ## 7. Changes to shared code
@@ -398,7 +407,12 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
 - **Memory** is no longer the limit at 2 chunks (20-35 MB free). Remaining candidates:
   - keep fewer chunks resident and lean on the hard disk (`T:` or the `Z:` utility drive) for evicted chunks;
   - DXT-compressed textures.
-- **Next CPU win:** the opaque pass spends ~7 ms per frame outside D3D (display-list replay and per-chunk matrices). A terrain vertex shader with one constant upload per chunk should remove most of it.
+- **Remaining hitches** (about one frame over 45 ms per second on the console), in the order they will be tackled:
+  1. Name the tick phases in the Xbox profiler (nested phases are currently summed twice).
+  2. Chunk streaming: load saved chunks through a budgeted queue instead of synchronously; defer/slice population (the real cost of the `gen` spikes); split the remaining atomic generation steps (base terrain noise, chunk build, skylight).
+  3. World tick: the low-end PC tick scheduler, fewer allocations in entity queries, cheaper mob-spawn attempts.
+  4. HUD and render: the font looks up every glyph by rebuilding a 220-character table; status bars, model faces and the sky dome are one draw each; animated tiles re-swizzle the whole atlas.
+  5. Hardware: triple buffering, `_mm_prefetch` in meshing/generation loops.
 - **Leftover SSE2** reported by the build, in paths not expected to run:
   - wide/money `num_put`;
   - `frexp` (iostream float output);

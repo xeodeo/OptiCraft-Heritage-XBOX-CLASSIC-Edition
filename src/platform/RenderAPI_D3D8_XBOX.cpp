@@ -1253,9 +1253,20 @@ void renderGetViewport(int* values)
     for (int i = 0; i < 4; ++i) values[i] = s_viewport[i];
 }
 
+// OptiFine "Smooth FPS" calls renderFinishGpu at the start of every terrain
+// pass. BlockUntilIdle stalls the CPU until the GPU has drained the whole
+// previous frame, so CPU and GPU never overlap; on this CPU-bound console
+// that stall showed up as most of the opaque pass (10.5 -> 1.6 ms without
+// it). Present() already paces the frame. Set to 1 to bring the wait back.
+#ifndef XBOX_SMOOTH_FPS_WAITS_FOR_GPU
+#define XBOX_SMOOTH_FPS_WAITS_FOR_GPU 0
+#endif
+
 void renderFinishGpu()
 {
+#if XBOX_SMOOTH_FPS_WAITS_FOR_GPU
     if (IDirect3DDevice8* d = device()) d->BlockUntilIdle();
+#endif
 }
 
 void renderSubmitFrame() {}

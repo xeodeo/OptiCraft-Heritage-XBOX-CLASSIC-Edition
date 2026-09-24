@@ -12,6 +12,7 @@
 #include "net/minecraft/src/World.h"
 #include "net/minecraft/src/WorldRenderer.h"
 #include "pc/tuning/PcLegacyTuning.h"
+#include "platform/Log.h"
 #include "platform/PlatformCompat.h"
 #include "platform/PlatformTuning.h"
 
@@ -32,6 +33,21 @@ namespace
     static long s_statPublished = 0;
     static long s_statStepUs = 0;
     static long s_statCalls = 0;
+    // Which sections keep getting rebuilt: publishes per renderer since the
+    // last take (diagnostics for sections that never settle). Off by default.
+#ifndef XBOX_MESH_DIAGNOSTICS
+#define XBOX_MESH_DIAGNOSTICS 0
+#endif
+    struct HotRenderer { WorldRenderer *renderer; int count; };
+    static HotRenderer s_hot[16];
+    static int s_hotCount = 0;
+    void noteHotPublish(WorldRenderer *renderer)
+    {
+        for (int i = 0; i < s_hotCount; ++i)
+            if (s_hot[i].renderer == renderer) { ++s_hot[i].count; return; }
+        if (s_hotCount < 16)
+            s_hot[s_hotCount++] = {renderer, 1};
+    }
 
     class PcLegacyFrameMeshBudget
     {
@@ -75,6 +91,8 @@ namespace
             renderer->updateRenderer();
             const std::uint64_t stepEndUs = PlatformCompat::getMonotonicMicros();
             s_statPublished += static_cast<long>(WorldRenderer::chunksUpdated - publishedBefore);
+            if (XBOX_MESH_DIAGNOSTICS && WorldRenderer::chunksUpdated != publishedBefore)
+                noteHotPublish(renderer);
             ++s_statSteps;
             if (stepEndUs > stepStartUs)
                 s_statStepUs += static_cast<long>(stepEndUs - stepStartUs);
@@ -102,6 +120,13 @@ void pcLegacyTakeMeshSchedulerStats(long *calls, long *pending, long *steps, lon
     *published = s_statPublished;
     *stepUs = s_statStepUs;
     s_statCalls = s_statPending = s_statSteps = s_statPublished = s_statStepUs = 0;
+    for (int i = 0; XBOX_MESH_DIAGNOSTICS && i < s_hotCount; ++i)
+    {
+        if (s_hot[i].count >= 4)
+            MC_LOG_INFO("xbox.mesh", "  rebuilt %d times: section %d,%d,%d\n", s_hot[i].count,
+                        s_hot[i].renderer->posX, s_hot[i].renderer->posY, s_hot[i].renderer->posZ);
+    }
+    s_hotCount = 0;
 }
 
 void pcLegacyRunMeshScheduler(

@@ -109,10 +109,31 @@
 #define PLATFORM_MAX_LIVE_MOBS                   40
 
 // Chunk generation around the player (bounded-world streaming).
+// Only the 3x3 columns around the player generate on demand; the rest go
+// through the incremental generator below, never inside one frame.
 #undef  PLATFORM_GENERATE_SYNC_RADIUS
-#define PLATFORM_GENERATE_SYNC_RADIUS            2
+#define PLATFORM_GENERATE_SYNC_RADIUS            1
 #undef  PLATFORM_GENERATE_CHUNKS_PER_TICK
 #define PLATFORM_GENERATE_CHUNKS_PER_TICK        1
+
+// Incremental chunk generation (the PS2 generator): a new column is built in
+// steps -- noise, surface, each slice of the cave/ravine/structure sweeps --
+// under a per-tick and a per-frame time budget, instead of 25-40 ms in one
+// frame. Same terrain, same seed results; only the work is spread out.
+#undef  PLATFORM_INCREMENTAL_CHUNK_GENERATION
+#define PLATFORM_INCREMENTAL_CHUNK_GENERATION    1
+#undef  PLATFORM_GENERATION_STEPS_PER_TICK
+#define PLATFORM_GENERATION_STEPS_PER_TICK       16
+#undef  PLATFORM_GENERATION_BUDGET_US
+#define PLATFORM_GENERATION_BUDGET_US            4000
+#undef  PLATFORM_GENERATION_STEPS_PER_FRAME
+#define PLATFORM_GENERATION_STEPS_PER_FRAME      8
+#undef  PLATFORM_GENERATION_FRAME_BUDGET_US
+#define PLATFORM_GENERATION_FRAME_BUDGET_US      3000
+#undef  PLATFORM_GENERATION_SOURCE_COLUMNS_PER_STEP
+#define PLATFORM_GENERATION_SOURCE_COLUMNS_PER_STEP 16
+#undef  PLATFORM_STRUCTURE_SOURCE_COLUMNS_PER_STEP
+#define PLATFORM_STRUCTURE_SOURCE_COLUMNS_PER_STEP  289
 
 // Autosave rate.
 #undef  PLATFORM_AUTOSAVE_PERIOD_TICKS

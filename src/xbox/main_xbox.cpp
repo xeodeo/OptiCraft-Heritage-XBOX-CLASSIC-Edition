@@ -16,6 +16,15 @@
 extern "C" int __isa_available;  // vcruntime CPU dispatch level
 
 namespace XboxSelfTest { void run(); }
+
+// T:\debug.log. McLog closes and reopens it after every line so a hang still
+// leaves a readable file, which costs a hard-disk directory update several
+// times a second in game and showed up as micro-stutter. The network log (and
+// the in-memory ring behind the red crash screen) carry the same lines. Set to
+// 1 to write the file again.
+#ifndef XBOX_DISK_LOG
+#define XBOX_DISK_LOG 0
+#endif
 extern "C" void xboxNetLogInit();
 
 namespace
@@ -46,16 +55,22 @@ void pinCpuFeaturesToPentiumIII()
 
 void __cdecl main()
 {
-	// On the console the in-memory log cannot be read; write it to the title
-	// data drive as well (E:\TDATA\<title id>\debug.log, reachable over FTP).
-	// Opened first so a boot that dies anywhere after this names its last step.
+	// On the console the in-memory log cannot be read: send it over the
+	// network, and with XBOX_DISK_LOG also to the title data drive
+	// (E:\TDATA\<title id>\debug.log, reachable over FTP). Started first so a
+	// boot that dies anywhere after this names its last step.
 	xboxNetLogInit();  // no-op unless built with XBOX_NETLOG_HOST
 	const char* writableRoot = XboxWritableRoot::get();
+#if XBOX_DISK_LOG
 	char logDir[8];
 	std::snprintf(logDir, sizeof(logDir), "%s\\", writableRoot);  // "T:\", not "T:"
 	const bool logFile = McLog::openSessionFile(logDir);
+	const char* logState = logFile ? "open" : "FAILED";
+#else
+	const char* logState = "disabled";
+#endif
 	MC_LOG_INFO("xbox", "writable root %s, debug.log %s, build %s %s\n", writableRoot,
-	            logFile ? "open" : "FAILED", __DATE__, __TIME__);
+	            logState, __DATE__, __TIME__);
 	pinCpuFeaturesToPentiumIII();
 	XboxSelfTest::run();
 
