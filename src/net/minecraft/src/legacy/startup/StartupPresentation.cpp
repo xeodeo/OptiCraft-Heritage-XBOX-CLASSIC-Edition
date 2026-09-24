@@ -296,7 +296,13 @@ void run(Minecraft* minecraft)
         return;
 
     const LogoResult second = playLegacyLogo(minecraft, "/legacy/logo2.png", musicStarted);
+#if PLATFORM_XBOX
+    // Xbox port credit, after the OptiProjects logo.
+    if (second != LogoResult::Skipped)
+        (void)playLegacyLogo(minecraft, "/legacy/logo3.png", musicStarted);
+#else
     (void)second;
+#endif
 }
 
 } // namespace LegacyStartup

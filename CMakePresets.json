@@ -165,6 +165,18 @@
       "cacheVariables": {
         "XBOX_BRINGUP": "ON"
       }
+    },
+    {
+      "name": "xbox-public",
+      "inherits": "xbox-release",
+      "displayName": "Xbox public release",
+      "description": "Xbox build for publishing: no network log, output in bin/xbox-public.",
+      "binaryDir": "${sourceDir}/build/xbox-public",
+      "cacheVariables": {
+        "XBOX_NETLOG_HOST": "",
+        "XBOX_BIN_SUBDIR": "xbox-public",
+        "XBOX_DEPLOY_DIR": ""
+      }
     }
   ],
   "buildPresets": [
@@ -235,6 +247,10 @@
     {
       "name": "xbox-bringup",
       "configurePreset": "xbox-bringup"
+    },
+    {
+      "name": "xbox-public",
+      "configurePreset": "xbox-public"
     }
   ]
 }

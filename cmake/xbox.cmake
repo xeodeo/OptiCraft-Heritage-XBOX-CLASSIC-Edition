@@ -39,7 +39,7 @@ option(XBOX_AUTOPILOT "Test build: replay a scripted controller from D:/autopilo
 option(XBOX_LIMIT_MEMORY "Limit the title to the retail 64 MB even on 128 MB dev kits / xemu" ON)
 set(MC_LOG_LEVEL "0" CACHE STRING "Unified diagnostic verbosity: 0=off, 1=info, 2=debug, 3=trace")
 set_property(CACHE MC_LOG_LEVEL PROPERTY STRINGS 0 1 2 3)
-set(XBOX_TITLE_NAME "OptiCraft" CACHE STRING "Title name embedded in the XBE")
+set(XBOX_TITLE_NAME "OptiCraft by xeodeo" CACHE STRING "Title name embedded in the XBE")
 set(XBOX_TITLE_ID "0xFFFF4F43" CACHE STRING "Test title ID embedded in the XBE ('OC')")
 set(XBOX_STACK_SIZE "0x40000" CACHE STRING "Main thread stack size")
 set(XBOX_NETLOG_HOST "" CACHE STRING
@@ -55,7 +55,8 @@ endif()
 if(XBOX_AUTOPILOT)
     set(XBOX_BIN_DIR "${CMAKE_SOURCE_DIR}/bin/xbox-autotest")
 else()
-    set(XBOX_BIN_DIR "${CMAKE_SOURCE_DIR}/bin/xbox")
+    set(XBOX_BIN_SUBDIR "xbox" CACHE STRING "Output folder under bin/ (xbox-public for the release preset)")
+    set(XBOX_BIN_DIR "${CMAKE_SOURCE_DIR}/bin/${XBOX_BIN_SUBDIR}")
 endif()
 
 # --- Runtime glue (always linked) ---------------------------------------------
@@ -308,6 +309,9 @@ add_custom_command(TARGET OptiCraft POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/OptiCraft_720p.xbe"
     # Folder thumbnail for XBMC-style dashboards.
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/scripts/xbox/media/cover.png" "${XBOX_ISO_DIR}/default.tbn"
+    # Xbox port credit shown after the OptiProjects logo (StartupPresentation).
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_ISO_DIR}/data/assets/legacy"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/xbox/media/logo3.png" "${XBOX_ISO_DIR}/data/assets/legacy/logo3.png"
     COMMENT "imagebld: ${XBOX_XBE}"
     VERBATIM
 )
