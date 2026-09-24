@@ -22,8 +22,8 @@ void GuiLoadModsMenu::initGui()
     int_t centerX = width / 2 - btnW / 2;
     int_t startY = height / 4 + 30;
 
-    controlList.push_back(new GuiButton(1, centerX, startY, btnW, btnH, "Load from Device"));
-    controlList.push_back(new GuiButton(2, centerX, startY + 28, btnW, btnH, "Load from USB"));
+    controlList.push_back(new GuiButton(1, centerX, startY, btnW, btnH, "Load from Device (Recommended)"));
+    controlList.push_back(new GuiButton(2, centerX, startY + 28, btnW, btnH, "Load from USB Storage"));
     controlList.push_back(new GuiButton(3, centerX, startY + 70, btnW, btnH, "Back"));
 }
 

@@ -188,9 +188,12 @@ file(GLOB_RECURSE OPTICRAFT_HEADERS CONFIGURE_DEPENDS
 if(WIN32)
     opticraft_exclude_sources(OPTICRAFT_COMMON_SOURCES "[/\\]pc[/\\]linux[/\\]")
 elseif(UNIX)
+    # macOS lands here too (APPLE implies UNIX): src/pc/linux is the shared
+    # POSIX implementation (File/Resource/Runtime carry their own __APPLE__
+    # paths), only the win32 variants are foreign.
     opticraft_exclude_sources(OPTICRAFT_COMMON_SOURCES "[/\\]pc[/\\]win32[/\\]")
 else()
-    message(FATAL_ERROR "OptiCraft currently supports Windows and Linux only")
+    message(FATAL_ERROR "OptiCraft currently supports Windows, Linux and macOS only")
 endif()
 
 # Each public platform facade has exactly one implementation in this target.
@@ -311,6 +314,10 @@ if(WIN32)
             $<$<CONFIG:Release>:-s>
         )
     endif()
+elseif(APPLE)
+    # Same shape as MC_WIN32/MC_LINUX: an accurate platform macro instead of
+    # telling Darwin code it is running on Linux. Nothing reads it today.
+    target_compile_definitions(OptiCraft PRIVATE MC_MACOS)
 elseif(UNIX)
     target_compile_definitions(OptiCraft PRIVATE MC_LINUX)
 endif()

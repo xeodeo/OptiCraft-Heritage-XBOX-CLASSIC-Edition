@@ -12,6 +12,8 @@
 
 #ifdef PS2_PLATFORM
 #include "java/Resource.h"
+#include "legacy/Ps2ButtonAtlasData.h"
+#include <sstream>
 #endif
 
 TexturePackDefault::TexturePackDefault() :
@@ -59,15 +61,27 @@ void TexturePackDefault::bindThumbnailTexture(Minecraft *minecraft)
 
 std::istream* TexturePackDefault::getResourceAsStream(const std::string &s)
 {
+	if (s.find(':') != std::string::npos || s.rfind("./", 0) == 0)
+	{
+		auto st = GameResources::open(s);
+		if (st)
+			return st.release();
+	}
 #ifdef PS2_PLATFORM
 	try
 	{
-		return Resource::getResource(s);
+		std::istream *stream = Resource::getResource(s);
+		if (stream != nullptr)
+			return stream;
 	}
 	catch (...)
 	{
-		return nullptr;
 	}
+	if (s.find("buttons_ps2.png") != std::string::npos)
+	{
+		return new std::istringstream(std::string(reinterpret_cast<const char*>(s_ps2ButtonAtlasPngData), PS2_BUTTON_ATLAS_PNG_SIZE));
+	}
+	return nullptr;
 #else
 	return GameResources::open(s).release();
 #endif
