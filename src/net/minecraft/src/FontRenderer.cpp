@@ -1,6 +1,7 @@
 #include "FontRenderer.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <cctype>
 #include <sstream>
 #include <cmath>
@@ -774,7 +775,31 @@ std::vector<std::string> FontRenderer::split(const std::string &s, char delimite
 
 int_t FontRenderer::getCharIndex(char_t c)
 {
-	return String::indexOfUtf16Unit(ChatAllowedCharacters::allowedCharacters(), c);
+	// Called for every glyph drawn or measured. allowedCharacters() is a
+	// function-local static that never changes, so convert it to UTF-16 once
+	// (indexOfUtf16Unit re-converted the whole ~220-character table on the
+	// heap per glyph) and answer the Latin-1 range from a direct table.
+	struct Lookup
+	{
+		std::vector<char_t> units;
+		std::int16_t first[256];
+	};
+	static const Lookup lookup = [] {
+		Lookup table;
+		table.units = String::toUtf16(ChatAllowedCharacters::allowedCharacters());
+		for (std::int16_t &index : table.first)
+			index = -1;
+		for (std::size_t i = table.units.size(); i-- > 0;)
+			if (table.units[i] < 256)
+				table.first[table.units[i]] = static_cast<std::int16_t>(i);
+		return table;
+	}();
+	if (c < 256)
+		return lookup.first[c];
+	for (std::size_t i = 0; i < lookup.units.size(); ++i)
+		if (lookup.units[i] == c)
+			return static_cast<int_t>(i);
+	return -1;
 }
 
 void FontRenderer::setUnicodeFlag(bool unicode)

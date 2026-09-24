@@ -4723,7 +4723,14 @@ void World::tick()
     }
 #endif
 
+#if PLATFORM_PROFILE_RENDER_PHASES
+    platformPhaseStartNs = System::nanoTime();
+#endif
     chunkProvider->unload100OldestChunks();
+#if PLATFORM_PROFILE_RENDER_PHASES
+    platformProfileTickPhase("chunkUnload", System::nanoTime() - platformPhaseStartNs);
+    platformPhaseStartNs = System::nanoTime();
+#endif
 
     int i = calculateSkylightSubtracted(1.0f);
     if (i != skylightSubtracted)
@@ -4732,6 +4739,10 @@ void World::tick()
         for (size_t j = 0; j < worldAccesses.size(); j++)
             worldAccesses[j]->updateAllRenderers();
     }
+#if PLATFORM_PROFILE_RENDER_PHASES
+    platformProfileTickPhase("skylightChange", System::nanoTime() - platformPhaseStartNs);
+    platformPhaseStartNs = System::nanoTime();
+#endif
 
     const long_t time = JavaArithmetic::longAdd(worldInfo->getWorldTime(), 1LL);
 #if !PLATFORM_DISABLE_RUNTIME_AUTOSAVE
@@ -4747,6 +4758,9 @@ void World::tick()
     }
 #else
     (void)autosavePeriod;
+#endif
+#if PLATFORM_PROFILE_RENDER_PHASES
+    platformProfileTickPhase("autosave", System::nanoTime() - platformPhaseStartNs);
 #endif
 
     worldInfo->setWorldTime(time);
@@ -4775,10 +4789,16 @@ void World::tick()
 #endif
 
     // Vanilla 1.2.5 updates villages after scheduled/random block ticks.
+#if PLATFORM_PROFILE_RENDER_PHASES
+    platformPhaseStartNs = System::nanoTime();
+#endif
     if (villageCollectionObj != nullptr && !multiplayerWorld)
         villageCollectionObj->tick();
     if (villageSiegeObj != nullptr && !multiplayerWorld)
         villageSiegeObj->tick();
+#if PLATFORM_PROFILE_RENDER_PHASES
+    platformProfileTickPhase("villages", System::nanoTime() - platformPhaseStartNs);
+#endif
 }
 
 void World::calculateInitialWeather()

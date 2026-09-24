@@ -548,7 +548,16 @@ void GuiIngame::renderPlayerStatusHudGeometry(int_t sw, int_t sh, Tessellator *c
 
 void GuiIngame::renderPlayerStatusHudUncached(int_t sw, int_t sh)
 {
+#if PLATFORM_XBOX
+	// Hearts, armour, food, air and the XP bar share the icons texture and
+	// state: one batch instead of one draw per 9x9 icon (40-50 a frame).
+	Tessellator &tessellator = Tessellator::instance;
+	tessellator.startDrawingQuads();
+	renderPlayerStatusHudGeometry(sw, sh, &tessellator);
+	tessellator.draw();
+#else
 	renderPlayerStatusHudGeometry(sw, sh, nullptr);
+#endif
 }
 
 #if PLATFORM_PC_LEGACY

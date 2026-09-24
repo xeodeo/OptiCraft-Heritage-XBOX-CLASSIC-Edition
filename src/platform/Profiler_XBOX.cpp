@@ -7,6 +7,8 @@
 #include "platform/Profiler.h"
 #include "platform/Log.h"
 
+#include <cstdio>
+#include <cstring>
 #include <intrin.h>
 
 namespace
@@ -49,7 +51,55 @@ void platformProfileRenderPhaseEnd(std::uint32_t start, PlatformRenderPhase phas
     }
 }
 
-void platformProfileTickPhase(const char*, long long ns) { s_tickNs += ns; s_frameTickNs += ns; }
+// Tick phases by name for the hitch report. Phases nested inside "entities"
+// and "worldTick" are listed on their own but not added to the frame's world
+// total again (they used to be counted twice).
+namespace
+{
+constexpr int kTickPhaseSlots = 32;
+const char* s_phaseNames[kTickPhaseSlots] = {};
+long long s_framePhaseNs[kTickPhaseSlots] = {};
+int s_phaseCount = 0;
+
+bool isNestedTickPhase(const char* name)
+{
+    static const char* const nested[] = {
+        "entWeather", "entUnload", "entTick", "entTile",
+        "worldWeather", "mobSpawn", "chunkUnload", "skylightChange", "autosave",
+        "blockUpdates", "randomBlocks", "villages"};
+    for (const char* n : nested)
+        if (std::strcmp(n, name) == 0)
+            return true;
+    return false;
+}
+
+void addFramePhase(const char* name, long long ns)
+{
+    for (int i = 0; i < s_phaseCount; ++i)
+        if (s_phaseNames[i] == name || std::strcmp(s_phaseNames[i], name) == 0)
+        {
+            s_framePhaseNs[i] += ns;
+            return;
+        }
+    if (s_phaseCount < kTickPhaseSlots)
+    {
+        s_phaseNames[s_phaseCount] = name;
+        s_framePhaseNs[s_phaseCount++] = ns;
+    }
+}
+}
+
+void platformProfileTickPhase(const char* name, long long ns)
+{
+    const bool nested = name != nullptr && isNestedTickPhase(name);
+    if (!nested)
+    {
+        s_tickNs += ns;
+        s_frameTickNs += ns;
+    }
+    if (name != nullptr)
+        addFramePhase(name, ns);
+}
 void platformProfileChunkBuild(long long, int) {}
 void platformProfileChunkMeshPass(int, long long, int) {}
 void platformProfileSnowColumn(bool, bool, int) {}
@@ -84,12 +134,27 @@ void xboxProfileFrameEnd(double frameMs, long long ticksNs, int ticks, long long
     if (frameMs > 45.0)
     {
         const double c = 1.0 / kCyclesPerMs;
-        MC_LOG_INFO("xbox.spike", "frame=%.0fms ticks=%.1fms(%d) world=%.1fms gen=%.1fms pop=%.1fms load=%.1fms save=%.1fms light=%.1fms render=%.1fms [build=%.1f opaque=%.1f ent=%.1f hud=%.1f] display=%.1fms\n",
-                    frameMs, ticksNs / 1e6, ticks, s_frameTickNs / 1e6, s_frameGenerateNs / 1e6,
+        // The three most expensive named tick phases of this frame.
+        int top[3] = {-1, -1, -1};
+        for (int i = 0; i < s_phaseCount; ++i)
+        {
+            if (top[0] < 0 || s_framePhaseNs[i] > s_framePhaseNs[top[0]]) { top[2] = top[1]; top[1] = top[0]; top[0] = i; }
+            else if (top[1] < 0 || s_framePhaseNs[i] > s_framePhaseNs[top[1]]) { top[2] = top[1]; top[1] = i; }
+            else if (top[2] < 0 || s_framePhaseNs[i] > s_framePhaseNs[top[2]]) { top[2] = i; }
+        }
+        char phases[160] = "";
+        int used = 0;
+        for (int t = 0; t < 3 && top[t] >= 0; ++t)
+            used += std::snprintf(phases + used, sizeof(phases) - used, "%s%s=%.1f", t ? " " : "",
+                                  s_phaseNames[top[t]], s_framePhaseNs[top[t]] / 1e6);
+        MC_LOG_INFO("xbox.spike", "frame=%.0fms ticks=%.1fms(%d) world=%.1fms {%s} gen=%.1fms pop=%.1fms load=%.1fms save=%.1fms light=%.1fms render=%.1fms [build=%.1f opaque=%.1f ent=%.1f hud=%.1f] display=%.1fms\n",
+                    frameMs, ticksNs / 1e6, ticks, s_frameTickNs / 1e6, phases, s_frameGenerateNs / 1e6,
                     s_framePopulateNs / 1e6, s_frameChunkLoadNs / 1e6, s_frameUnloadSaveNs / 1e6,
                     lightingNs / 1e6, renderNs / 1e6, s_frameRenderCycles[2] * c, s_frameRenderCycles[3] * c,
                     s_frameRenderCycles[4] * c, s_frameRenderCycles[7] * c, displayNs / 1e6);
     }
+    for (int i = 0; i < s_phaseCount; ++i)
+        s_framePhaseNs[i] = 0;
     for (int i = 0; i < kRenderPhases; ++i)
         s_frameRenderCycles[i] = 0;
     s_frameTickNs = s_frameGenerateNs = s_framePopulateNs = s_frameChunkLoadNs = s_frameUnloadSaveNs = 0;

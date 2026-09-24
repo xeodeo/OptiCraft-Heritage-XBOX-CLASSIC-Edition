@@ -35,8 +35,12 @@
 #define PLATFORM_CHUNK_CACHE_RADIUS              5
 #undef  PLATFORM_CHUNK_UNLOAD_RADIUS
 #define PLATFORM_CHUNK_UNLOAD_RADIUS             6
+// Each unload saves the column synchronously (NBT build + write). A row of
+// columns leaving the radius together cost 60-110 ms in one tick at 8; two
+// per tick spreads them out. Memory pressure still unloads faster through
+// PLATFORM_EMERGENCY_CHUNK_UNLOADS_PER_TICK.
 #undef  PLATFORM_MAX_CHUNK_UNLOADS_PER_TICK
-#define PLATFORM_MAX_CHUNK_UNLOADS_PER_TICK      8
+#define PLATFORM_MAX_CHUNK_UNLOADS_PER_TICK      2
 #undef  PLATFORM_MIN_UNUSED_TICKS_BEFORE_UNLOAD
 #define PLATFORM_MIN_UNUSED_TICKS_BEFORE_UNLOAD  20
 
@@ -103,6 +107,14 @@
 #define PLATFORM_CACHE_RANDOM_DISPLAY_CHUNKS     1
 #undef  PLATFORM_FAST_CHUNK_BLOCK_READS
 #define PLATFORM_FAST_CHUNK_BLOCK_READS          1
+
+// New columns: build the section arrays in bulk and mark the renderers once
+// per column instead of ~7000 single-block render updates from the initial
+// skylight pass. The world data is identical (PS2 / low-end PC knobs).
+#undef  PLATFORM_BATCH_INITIAL_SKYLIGHT_RENDER_UPDATES
+#define PLATFORM_BATCH_INITIAL_SKYLIGHT_RENDER_UPDATES 1
+#undef  PLATFORM_BULK_GENERATED_CHUNK_IMPORT
+#define PLATFORM_BULK_GENERATED_CHUNK_IMPORT     1
 
 // Mob cap.
 #undef  PLATFORM_MAX_LIVE_MOBS

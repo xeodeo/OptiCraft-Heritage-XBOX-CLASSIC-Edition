@@ -472,6 +472,20 @@ void ensureStorage(Texture& t, int width, int height)
 }
 
 
+// Stage-0 setup last sent by applyTextureStage. Terrain replays hundreds of
+// draws with the same texture and colour source; when nothing changed the
+// eleven filtered state writes below are skipped. Anything else that touches
+// stage 0 (texture deletion) clears s_stageValid.
+struct StageSignature
+{
+    IDirect3DTexture8* texture;
+    DWORD filter;
+    DWORD address;
+    DWORD colorArg;
+};
+StageSignature s_stageSent = {};
+bool s_stageValid = false;
+
 // colorFromFactor: the vertices carry no colour and the current colour comes
 // from D3DRS_TEXTUREFACTOR instead (display lists without per-vertex colour).
 void applyTextureStage(bool colorFromFactor = false)
@@ -497,6 +511,19 @@ void applyTextureStage(bool colorFromFactor = false)
                 tex = &it->second;
         }
     }
+    StageSignature wanted = {};
+    wanted.colorArg = colorArg;
+    if (tex)
+    {
+        wanted.texture = tex->d3d;
+        wanted.filter = tex->blur ? D3DTEXF_LINEAR : D3DTEXF_POINT;
+        wanted.address = tex->clamp ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
+    }
+    if (s_stageValid && wanted.texture == s_stageSent.texture && wanted.filter == s_stageSent.filter &&
+        wanted.address == s_stageSent.address && wanted.colorArg == s_stageSent.colorArg)
+        return;
+    s_stageSent = wanted;
+    s_stageValid = true;
     if (tex)
     {
         setTex(d, 0, tex->d3d);
@@ -1410,7 +1437,10 @@ void renderDeleteTextures(int count, const int* textures)
         if (it->second.d3d)
         {
             if (IDirect3DDevice8* d = device())
+            {
                 if (s_boundTexture == textures[i]) setTex(d, 0, NULL);
+                s_stageValid = false;
+            }
             it->second.d3d->Release();
         }
         s_textures.erase(it);
@@ -1423,11 +1453,9 @@ void renderBindTexture(int texture)
     if (s_activeTextureUnit != 0)
     {
         s_boundOtherUnit = texture;
-        if (texture > 0) s_textures[texture];
         return;
     }
     s_boundTexture = texture;
-    if (texture > 0) s_textures[texture];
 }
 
 bool renderTextureBeginUpload(int texture, int width, int height, int, bool blur, bool clamp, bool, bool)

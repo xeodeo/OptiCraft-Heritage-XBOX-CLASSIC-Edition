@@ -238,18 +238,20 @@ RenderGlobal::RenderGlobal(Minecraft *minecraft, RenderEngine *renderengine)
 	int_t i = 256 / byte1 + 2;
 	float f = 16.0f;
 
+	// One draw for the whole dome (it used to be one per 64x64 tile, 169
+	// draws replayed every frame); same quads in the same order.
+	tessellator->startDrawingQuads();
 	for (int_t j = -byte1 * i; j <= byte1 * i; j += byte1)
 	{
 		for (int_t l = -byte1 * i; l <= byte1 * i; l += byte1)
 		{
-			tessellator->startDrawingQuads();
 			tessellator->addVertex(j + 0, f, l + 0);
 			tessellator->addVertex(j + byte1, f, l + 0);
 			tessellator->addVertex(j + byte1, f, l + byte1);
 			tessellator->addVertex(j + 0, f, l + byte1);
-			tessellator->draw();
 		}
 	}
+	tessellator->draw();
 
 	renderEndDisplayList();
 
