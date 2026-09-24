@@ -254,6 +254,23 @@ set(XBOX_IMAGEBLD_FLAGS
     /NOLOGO /STACK:${XBOX_STACK_SIZE} /TESTID:${XBOX_TITLE_ID} /TESTREGION:0x80000007
     /TESTMEDIATYPES:0x400003FF "/TESTNAME:${XBOX_TITLE_NAME}" /NOLIBWARN
 )
+
+# Dashboard artwork: scripts/xbox/media/*.bmp (made from the game's own
+# textures) packed to XPR by the XDK bundler and embedded by imagebld as the
+# title image (launchers, dashboard) and the default save-game image.
+set(XBOX_MEDIA_DIR "${CMAKE_SOURCE_DIR}/scripts/xbox/media")
+set(XBOX_TITLE_IMAGE "${XBOX_BIN_DIR}/titleimage.xpr")
+set(XBOX_SAVE_IMAGE "${XBOX_BIN_DIR}/saveimage.xpr")
+if(EXISTS "${XBOX_MEDIA_DIR}/titleimage.rdf")
+    add_custom_command(TARGET OptiCraft PRE_LINK
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_BIN_DIR}"
+        COMMAND "${XBOX_XDK_ROOT}/bin/bundler.exe" titleimage.rdf -o "${XBOX_TITLE_IMAGE}" -q
+        COMMAND "${XBOX_XDK_ROOT}/bin/bundler.exe" saveimage.rdf -o "${XBOX_SAVE_IMAGE}" -q
+        WORKING_DIRECTORY "${XBOX_MEDIA_DIR}"
+        COMMENT "bundler: title and save images"
+        VERBATIM)
+    list(APPEND XBOX_IMAGEBLD_FLAGS "/TITLEIMAGE:${XBOX_TITLE_IMAGE}" "/DEFAULTSAVEIMAGE:${XBOX_SAVE_IMAGE}")
+endif()
 if(XBOX_LIMIT_MEMORY)
     list(APPEND XBOX_IMAGEBLD_FLAGS /LIMITMEM)
 endif()
@@ -289,6 +306,8 @@ add_custom_command(TARGET OptiCraft POST_BUILD
     # Same program under a name with "720" in it: runs at 1280x720 when the
     # dashboard allows it (src/xbox/system/XboxVideoMode.h).
     COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/OptiCraft_720p.xbe"
+    # Folder thumbnail for XBMC-style dashboards.
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/scripts/xbox/media/cover.png" "${XBOX_ISO_DIR}/default.tbn"
     COMMENT "imagebld: ${XBOX_XBE}"
     VERBATIM
 )

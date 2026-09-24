@@ -205,7 +205,8 @@ private:
     void freeMemoryForCrash();
     void forceReload();
     void convertMapFormat(const std::string &s, const std::string &s1);
-    void preloadWorld(const std::string &s);
+    // radiusBlocks < 0: PLATFORM_PRELOAD_RADIUS_BLOCKS (see preloadWorld).
+    void preloadWorld(const std::string &s, int_t radiusBlocks = -1);
     void resize(int_t i, int_t j);
 
     static File *getAppDir(const std::string &s);

@@ -407,3 +407,6 @@ scripts/xbox/tools/autotest*.txt
 scripts/xbox/tools/autotest*.png
 scripts/xbox/tools/autotest_build.log
 scripts/xbox/tools/__pycache__/
+
+# XDK bundler writes a header next to each .rdf on every build
+scripts/xbox/media/*.h

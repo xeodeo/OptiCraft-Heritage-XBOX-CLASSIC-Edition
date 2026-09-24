@@ -2373,7 +2373,24 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
 void Minecraft::respawn(bool flag, int_t i, bool copyPlayerState)
 {
     if (!theWorld->multiplayerWorld && !theWorld->worldProvider->canRespawnHere())
+    {
+#if PLATFORM_DEFER_PORTAL_TRANSITION
+        // Respawning out of the End (or the Nether): the dimension change has
+        // to happen NOW. Deferred to the next tick (the portal-collision
+        // path), the rest of this function first rebuilt the player inside the
+        // old dimension with dimension 0, and the late usePortal(0) then took
+        // the player for an Overworld traveller: it kept those coordinates and
+        // built a Nether portal there. respawn() runs from a screen or the win
+        // screen, never from inside the world's entity loop, so switching here
+        // is safe.
+        const bool wasRunning = runningPortalTransition;
+        runningPortalTransition = true;
         usePortal(0);
+        runningPortalTransition = wasRunning;
+#else
+        usePortal(0);
+#endif
+    }
 
     ChunkCoordinates *chunkcoordinates  = nullptr; // borrowed from the old player
     ChunkCoordinates *chunkcoordinates1 = nullptr;
@@ -2443,7 +2460,14 @@ void Minecraft::respawn(bool flag, int_t i, bool copyPlayerState)
     thePlayer->entityId      = j;
     thePlayer->handleItemUseFinish();
     playerController->initializePlayer(thePlayer);
+#if PLATFORM_XBOX
+    // Only the 3x3 columns around the respawn point on the loading screen;
+    // the rest streams in through the incremental generator as on foot. The
+    // full 5x5 preload froze the console 2.6-9.7 s on every death.
+    preloadWorld("Respawning", 16);
+#else
     preloadWorld("Respawning");
+#endif
 
     if (dynamic_cast<GuiGameOver *>(currentScreen) != nullptr)
         displayGuiScreen(nullptr);
@@ -2459,7 +2483,7 @@ void Minecraft::convertMapFormat(const std::string &s, const std::string &s1)
     startWorld(s, s1, static_cast<long_t>(0));
 }
 
-void Minecraft::preloadWorld(const std::string &s)
+void Minecraft::preloadWorld(const std::string &s, int_t radiusBlocks)
 {
     loadingScreen->printText(s);
     loadingScreen->displayLoadingString("Building terrain");
@@ -2489,6 +2513,8 @@ void Minecraft::preloadWorld(const std::string &s)
 #else
     int_t c  = 128;
 #endif
+    if (radiusBlocks >= 0)
+        c = radiusBlocks;
     int_t i  = 0;
     int_t j  = (c * 2) / 16 + 1;
     j *= j;
