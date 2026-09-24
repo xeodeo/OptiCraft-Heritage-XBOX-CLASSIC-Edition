@@ -1307,7 +1307,11 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
     }
     else if (mc->gameSettings->limitFramerate == 2)
     {
+#if PLATFORM_XBOX
+        fpsLimitChar = 30;   // 30 FPS: Present waits for every other vblank
+#else
         fpsLimitChar = '(';  // ~40 fps
+#endif
     }
     
     if (mc->theWorld != nullptr)
@@ -1332,7 +1336,7 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
 
         legacyLookApplyWorldGrade(mc);
         
-        if (mc->gameSettings->limitFramerate == 2)
+        if (mc->gameSettings->limitFramerate == 2 && !PLATFORM_XBOX)
         {
             int64_t sleepTime = (field_28133_I + (int64_t)(1000000000LL / (long)fpsLimitChar) - 
                                 std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -1377,7 +1381,7 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
         
         setupOverlayRendering();
         
-        if (mc->gameSettings->limitFramerate == 2)
+        if (mc->gameSettings->limitFramerate == 2 && !PLATFORM_XBOX)
         {
             int64_t sleepTime = (field_28133_I + (int64_t)(1000000000LL / (long)fpsLimitChar) - 
                                 std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -1583,6 +1587,18 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
 #else
 #if PLATFORM_PROFILE_RENDER_PHASES
             const std::uint32_t cycBuild = platformProfileRenderPhaseBegin();
+#endif
+#if PLATFORM_XBOX
+            // With a frame cap the vanilla loop rebuilds chunks until the frame
+            // deadline, and everything drawn after it then misses the vblank
+            // (30 FPS became 25). Give it a fixed slice of the frame instead.
+            if (renderTimeLimitNano != 0)
+            {
+                const int64_t sliceEnd = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch()).count() + 5000000LL;
+                if (renderTimeLimitNano > sliceEnd)
+                    renderTimeLimitNano = sliceEnd;
+            }
 #endif
             int64_t timeLeft;
             do

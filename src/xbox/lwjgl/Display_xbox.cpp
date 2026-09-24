@@ -5,6 +5,7 @@
 #include "client/Minecraft.h"
 #include "net/minecraft/src/GuiScreen.h"
 #include "net/minecraft/src/Entity.h"
+#include "net/minecraft/src/GameSettings.h"
 #include <cstdio>
 #include <float.h>
 #include <intrin.h>
@@ -75,6 +76,23 @@ void swapBuffers() {
     const unsigned long long presentStart = __rdtsc();
 #endif
     if (g_pD3DDevice) {
+        // 30 FPS option (limitFramerate 2): at least two vblanks between
+        // presents. Waiting here, instead of switching the presentation
+        // interval, takes effect (and reverts) immediately.
+        static UINT s_lastPresentVBlank = 0;
+        Minecraft* mc = Minecraft::getMinecraft();
+        const bool cap30 = mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->limitFramerate == 2;
+        D3DFIELD_STATUS field;
+        g_pD3DDevice->GetDisplayFieldStatus(&field);
+        if (cap30)
+        {
+            for (int guard = 0; guard < 3 && field.VBlankCount - s_lastPresentVBlank < 2; ++guard)
+            {
+                g_pD3DDevice->BlockUntilVerticalBlank();
+                g_pD3DDevice->GetDisplayFieldStatus(&field);
+            }
+        }
+        s_lastPresentVBlank = field.VBlankCount;
         g_pD3DDevice->Present(NULL, NULL, NULL, NULL);
         xboxRenderEndFrame();
     }

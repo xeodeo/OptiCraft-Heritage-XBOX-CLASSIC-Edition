@@ -25,6 +25,8 @@ enum LegacyVideoButtonId
     BUTTON_FOG = 305,
     BUTTON_BRIGHTNESS = 306,
     BUTTON_DEFLICKER = 307,
+    BUTTON_FRAME_CAP = 308,
+    BUTTON_COORDINATES = 309,
     BUTTON_DONE = 399
 };
 
@@ -33,7 +35,8 @@ enum LegacyVideoButtonId
 LegacyVideoOptions::LegacyVideoOptions(GuiScreen *parent, GameSettings *settingsValue,
     LegacyOptionsBackgroundMode backgroundModeValue)
     : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), graphicsCheckbox(nullptr), smoothLightingCheckbox(nullptr),
-      viewBobbingCheckbox(nullptr), cloudsCheckbox(nullptr), fogCheckbox(nullptr), deflickerCheckbox(nullptr)
+      viewBobbingCheckbox(nullptr), cloudsCheckbox(nullptr), fogCheckbox(nullptr), deflickerCheckbox(nullptr),
+      frameCapCheckbox(nullptr), coordinatesCheckbox(nullptr)
 {
 }
 
@@ -85,6 +88,17 @@ void LegacyVideoOptions::initGui()
     deflickerCheckbox = nullptr;
 #endif
 
+#if PLATFORM_XBOX
+    // Steady 30 FPS (every other vblank); the spare frame time goes to chunk
+    // rebuilding instead of a stutter when new terrain appears.
+    frameCapCheckbox = new LegacyOptionCheckbox(BUTTON_FRAME_CAP, x, legacyLayout.rowY(row++), w, h,
+        uiText("30 FPS Limit"), settings->limitFramerate == 2);
+    coordinatesCheckbox = new LegacyOptionCheckbox(BUTTON_COORDINATES, x, legacyLayout.rowY(row++), w, h,
+        uiText("Show Coordinates"), settings->showCoordinates);
+    controlList.push_back(frameCapCheckbox);
+    controlList.push_back(coordinatesCheckbox);
+#endif
+
     controlList.push_back(new LegacyOptionSlider(BUTTON_RENDER_DISTANCE, x, legacyLayout.rowY(row++), w, h,
         settings, EnumOptions::RENDER_DISTANCE_FINE));
     controlList.push_back(new LegacyOptionSlider(BUTTON_BRIGHTNESS, x, legacyLayout.rowY(row++), w, h,
@@ -103,6 +117,10 @@ void LegacyVideoOptions::syncCheckboxes()
         fogCheckbox->setChecked(legacyFogChecked(settings->ofFogOff));
     if (deflickerCheckbox != nullptr)
         deflickerCheckbox->setChecked(settings->wiiDeflicker);
+    if (frameCapCheckbox != nullptr)
+        frameCapCheckbox->setChecked(settings->limitFramerate == 2);
+    if (coordinatesCheckbox != nullptr)
+        coordinatesCheckbox->setChecked(settings->showCoordinates);
 }
 
 void LegacyVideoOptions::actionPerformed(GuiButton *button)
@@ -138,6 +156,16 @@ void LegacyVideoOptions::actionPerformed(GuiButton *button)
     case BUTTON_DEFLICKER:
         settings->wiiDeflicker = !settings->wiiDeflicker;
         PlatformUserSettings::setDisplayDeflicker(settings->wiiDeflicker);
+        settings->saveOptions();
+        syncCheckboxes();
+        return;
+    case BUTTON_FRAME_CAP:
+        settings->limitFramerate = settings->limitFramerate == 2 ? 0 : 2;
+        settings->saveOptions();
+        syncCheckboxes();
+        return;
+    case BUTTON_COORDINATES:
+        settings->showCoordinates = !settings->showCoordinates;
         settings->saveOptions();
         syncCheckboxes();
         return;

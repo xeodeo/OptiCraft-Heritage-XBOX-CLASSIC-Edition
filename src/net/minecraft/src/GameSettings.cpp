@@ -101,6 +101,7 @@ void GameSettings::setDefaults()
 	mouseSensitivity = 0.5f;
 	invertMouse = false;
 	dolbyDigital = false;
+	showCoordinates = false;
 	renderDistance = 0;
 	particleSetting = 0;
 	fovSetting = 0.0f;

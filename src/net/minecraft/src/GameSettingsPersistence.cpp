@@ -143,6 +143,8 @@ void GameSettings::loadOptions()
 					invertMouse = value == "true";
 				if (key == "dolbyDigital")
 					dolbyDigital = value == "true";
+				if (key == "showCoordinates")
+					showCoordinates = value == "true";
 				if (key == "viewDistance")
 				{
 					renderDistance = platformGameSettingsClampRenderDistance(parseIntJava(value));
@@ -451,6 +453,7 @@ void GameSettings::saveOptions()
 	printwriter << "sound:" << soundVolume << "\n";
 	printwriter << "invertYMouse:" << (invertMouse ? "true" : "false") << "\n";
 	printwriter << "dolbyDigital:" << (dolbyDigital ? "true" : "false") << "\n";
+	printwriter << "showCoordinates:" << (showCoordinates ? "true" : "false") << "\n";
 	printwriter << "mouseSensitivity:" << mouseSensitivity << "\n";
 	printwriter << "fov:" << fovSetting << "\n";
 	printwriter << "viewDistance:" << renderDistance << "\n";

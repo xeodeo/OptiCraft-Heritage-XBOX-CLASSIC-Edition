@@ -248,6 +248,19 @@ GuiIngame::~GuiIngame()
 	rand = nullptr;
 }
 
+namespace
+{
+// Corner HUD text position. A CRT TV crops the picture edges (overscan), so
+// the Xbox keeps it inside the title-safe area instead of at the very corner.
+#if PLATFORM_XBOX
+constexpr int_t kHudCornerX = 10;
+constexpr int_t kHudCornerY = 10;
+#else
+constexpr int_t kHudCornerX = 2;
+constexpr int_t kHudCornerY = 2;
+#endif
+}
+
 void GuiIngame::renderFpsOverlay(FontRenderer *fontRenderer)
 {
 	if (fontRenderer == nullptr || mc == nullptr)
@@ -261,9 +274,29 @@ void GuiIngame::renderFpsOverlay(FontRenderer *fontRenderer)
 		fpsLine = "0 fps";
 
 #ifdef PS2_PLATFORM
-	fontRenderer->drawString(fpsLine, 2, 2, 0xe0e0e0);
+	fontRenderer->drawString(fpsLine, kHudCornerX, kHudCornerY, 0xe0e0e0);
 #else
-	fontRenderer->drawStringWithShadow(fpsLine, 2, 2, 0xffffff);
+	fontRenderer->drawStringWithShadow(fpsLine, kHudCornerX, kHudCornerY, 0xffffff);
+#endif
+}
+
+void GuiIngame::renderCoordinatesOverlay(FontRenderer *fontRenderer, int_t y)
+{
+	if (fontRenderer == nullptr || mc == nullptr || mc->thePlayer == nullptr)
+		return;
+	const EntityPlayer *player = mc->thePlayer;
+	// Minecraft facing: 0 = south, 1 = west, 2 = north, 3 = east.
+	static const char *const kFacing[4] = {"S", "W", "N", "E"};
+	const int_t facing = MathHelper::floor_double(player->rotationYaw * 4.0f / 360.0f + 0.5) & 3;
+	char line[96];
+	std::snprintf(line, sizeof(line), "X: %d  Y: %d  Z: %d  %s",
+	              (int)MathHelper::floor_double(player->posX),
+	              (int)MathHelper::floor_double(player->boundingBox->minY),
+	              (int)MathHelper::floor_double(player->posZ), kFacing[facing]);
+#ifdef PS2_PLATFORM
+	fontRenderer->drawString(line, kHudCornerX, y, 0xe0e0e0);
+#else
+	fontRenderer->drawStringWithShadow(line, kHudCornerX, y, 0xffffff);
 #endif
 }
 
@@ -825,6 +858,8 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 
 	if (mc->gameSettings->showFps && !mc->gameSettings->showDebugInfo)
 		renderFpsOverlay(fr);
+	if (mc->gameSettings->showCoordinates && !mc->gameSettings->showDebugInfo)
+		renderCoordinatesOverlay(fr, mc->gameSettings->showFps ? kHudCornerY + 10 : kHudCornerY);
 	if (mc->gameSettings->showDebugInfo)
 		renderDebugOverlay(fr, sw);
 

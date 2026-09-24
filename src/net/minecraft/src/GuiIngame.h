@@ -32,6 +32,7 @@ private:
 	void renderInventorySlot(int_t slot, int_t x, int_t y, float_t partialTick);
 	void renderDebugOverlay(FontRenderer *fontRenderer, int_t screenWidth);
 	void renderFpsOverlay(FontRenderer *fontRenderer);
+	void renderCoordinatesOverlay(FontRenderer *fontRenderer, int_t y);
 	void renderBossHealth();
 	void renderPlayerStatusHudGeometry(int_t sw, int_t sh, Tessellator *captureTessellator);
 	void renderPlayerStatusHudUncached(int_t sw, int_t sh);

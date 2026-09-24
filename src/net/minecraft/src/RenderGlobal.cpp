@@ -393,6 +393,22 @@ void RenderGlobal::renderStars()
 #endif
 }
 
+#if PLATFORM_XBOX
+namespace
+{
+// The renderer display-list namespace is reserved once and reused. On the
+// Xbox those lists are emulated in main RAM, so geometry left in them after a
+// world is unloaded (or the renderer grid is rebuilt) is memory the next world
+// cannot use; drop it. Same span the constructor reserves.
+void releaseRendererListGeometry(int_t listBase)
+{
+	constexpr int_t maxChunksWide = 400 / 16 + 1;
+	constexpr int_t maxWorldRenderers = maxChunksWide * WorldHeight::SECTION_COUNT * maxChunksWide;
+	renderDeleteDisplayLists(listBase, maxWorldRenderers * 3);
+}
+}
+#endif
+
 void RenderGlobal::changeWorld(World *world)
 {
 	if (worldObj != nullptr)
@@ -408,6 +424,10 @@ void RenderGlobal::changeWorld(World *world)
 	delete globalRenderBlocks;
 	globalRenderBlocks = nullptr;
 	worldObj = world;
+#if PLATFORM_XBOX
+	if (world == nullptr)
+		releaseRendererListGeometry(glRenderListBase);
+#endif
 
 	if (world != nullptr)
 	{
@@ -432,6 +452,9 @@ void RenderGlobal::loadRenderers()
 
 	if (worldRenderers != nullptr)
 	{
+#if PLATFORM_XBOX
+		releaseRendererListGeometry(glRenderListBase);
+#endif
 		for (int_t i = 0; i < renderChunksWide * renderChunksTall * renderChunksDeep; i++)
 		{
 			if (worldRenderers[i] != nullptr)

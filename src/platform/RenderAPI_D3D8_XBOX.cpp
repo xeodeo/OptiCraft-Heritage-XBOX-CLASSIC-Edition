@@ -679,15 +679,18 @@ long s_recordedBytes = 0;
 // ---- Static vertex memory for display lists --------------------------------
 // One vertex buffer per mesh would round every chunk section up to whole 4 KB
 // pages of contiguous memory (thousands of small meshes = megabytes wasted).
-// Meshes instead take ranges of a few shared 1 MB vertex buffers. A freed
-// range is tagged with a GPU fence and only reused once the GPU has passed it.
-constexpr UINT kVertexPoolBytes = 1024 * 1024;
+// Meshes instead take ranges of shared 512 KB vertex buffers (small enough
+// that pools drain and get released as the world changes); a mesh larger than
+// that gets a pool of its own. A freed range is tagged with a GPU fence and
+// only reused once the GPU has passed it.
+constexpr UINT kVertexPoolBytes = 512 * 1024;
 constexpr UINT kVertexGranule = 96;   // multiple of the 24-byte vertex, 32-byte aligned
 
 struct VertexPool
 {
     IDirect3DVertexBuffer8* vb = nullptr;
     BYTE* base = nullptr;                    // CPU address of the buffer memory
+    UINT size = 0;                           // bytes
     std::map<UINT, UINT> freeRanges;         // offset -> size
 };
 
@@ -750,7 +753,7 @@ void reapVertexRanges()
     for (VertexPool& pool : s_vertexPools)
     {
         if (pool.vb != nullptr && pool.freeRanges.size() == 1 &&
-            pool.freeRanges.begin()->first == 0 && pool.freeRanges.begin()->second == kVertexPoolBytes &&
+            pool.freeRanges.begin()->first == 0 && pool.freeRanges.begin()->second == pool.size &&
             !pool.vb->IsBusy())
         {
             pool.vb->Release();
@@ -764,7 +767,6 @@ void reapVertexRanges()
 bool allocateVertexRange(UINT bytes, int* pool, UINT* offset)
 {
     bytes = roundToGranule(bytes);
-    if (bytes > kVertexPoolBytes) return false;
     // Best fit over every pool (ties go to the lower pool): keeps large holes
     // for large meshes and lets the last pools drain so they can be released.
     int emptySlot = -1;
@@ -801,7 +803,8 @@ bool allocateVertexRange(UINT bytes, int* pool, UINT* offset)
     }
     IDirect3DDevice8* d = g_pD3DDevice;
     VertexPool fresh;
-    if (!d || FAILED(d->CreateVertexBuffer(kVertexPoolBytes, 0, 0, D3DPOOL_DEFAULT, &fresh.vb)))
+    fresh.size = bytes > kVertexPoolBytes ? bytes : kVertexPoolBytes;
+    if (!d || FAILED(d->CreateVertexBuffer(fresh.size, 0, 0, D3DPOOL_DEFAULT, &fresh.vb)))
         return false;
     if (FAILED(fresh.vb->Lock(0, 0, &fresh.base, 0)))
     {
@@ -809,7 +812,8 @@ bool allocateVertexRange(UINT bytes, int* pool, UINT* offset)
         return false;
     }
     fresh.vb->Unlock();   // Xbox buffers stay CPU-addressable; the pointer remains valid
-    fresh.freeRanges[bytes] = kVertexPoolBytes - bytes;
+    if (fresh.size > bytes)
+        fresh.freeRanges[bytes] = fresh.size - bytes;
     if (emptySlot >= 0)
     {
         s_vertexPools[static_cast<size_t>(emptySlot)] = fresh;
