@@ -8,17 +8,18 @@
 #include <string>
 #include "xbox/render/XboxD3D.h"
 #include "xbox/system/XboxWritableRoot.h"
+#include "xbox/system/XboxVideoMode.h"
 
 namespace ClientPlatformPolicy
 {
 int initialWidth()
 {
-    return 640;
+    return XboxVideoMode::width();
 }
 
 int initialHeight()
 {
-    return 480;
+    return XboxVideoMode::height();
 }
 
 std::string minecraftDirectory()
@@ -53,6 +54,7 @@ void releaseWorldEntryAssets(RenderEngine* renderEngine)
         renderEngine->releaseTexture("/title/bg/panorama" + std::to_string(face) + ".png");
     renderEngine->releaseTexture("/legacy/panorama.png");
     renderEngine->releaseTexture("/title/mclogo.png");
+    renderEngine->releaseTexture("/legacy/title.png");
     renderEngine->clearDecodedTextureCache();
 }
 

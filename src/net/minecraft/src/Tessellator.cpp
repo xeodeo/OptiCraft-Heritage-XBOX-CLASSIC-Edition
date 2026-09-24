@@ -18,7 +18,7 @@ static int32_t floatToRawIntBits(float f)
 	return result;
 }
 
-#if PLATFORM_PC_LEGACY || defined(PS2_PLATFORM)
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD || defined(PS2_PLATFORM)
 static inline void writeFastTerrainVertex(int_t *dst, int_t xBits, int_t yBits, int_t zBits,
 	int_t uBits, int_t vBits, int_t color, int_t brightness)
 {
@@ -348,7 +348,7 @@ void Tessellator::setBrightness(int value)
 	brightness = value;
 }
 
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 int_t Tessellator::packOpaqueColorLegacy(int_t red, int_t green, int_t blue)
 {
 	red = std::max<int_t>(0, std::min<int_t>(255, red));
@@ -448,7 +448,7 @@ void Tessellator::addVertexWithUV(tess_coord_t d, tess_coord_t d1, tess_coord_t 
 	addVertex(d, d1, d2);
 }
 
-#if PLATFORM_PC_LEGACY || defined(PS2_PLATFORM)
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD || defined(PS2_PLATFORM)
 bool Tessellator::addAxisAlignedFaceWithUVFast(int_t side, tess_coord_t x, tess_coord_t y, tess_coord_t z,
 	tess_coord_t width, tess_coord_t height,
 	tess_coord_t u0, tess_coord_t u1, tess_coord_t v0, tess_coord_t v1)

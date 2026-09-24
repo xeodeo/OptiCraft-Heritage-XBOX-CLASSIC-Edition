@@ -96,6 +96,16 @@ else()
         "${CMAKE_SOURCE_DIR}/src/pc/external/stb_vorbis.cpp"
         # The Xbox renders the world through the desktop display-list path.
         "${CMAKE_SOURCE_DIR}/src/pc/minecraft/RenderList.cpp"
+        # Incremental terrain builder shared with the low-end PC profile.
+        "${CMAKE_SOURCE_DIR}/src/pc/minecraft/WorldRendererPcLegacy.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/minecraft/RenderGlobalPcLegacyVisibility.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacySectionCache.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyTerrainStaging.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyBlockRenderInfo.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyCubeMaterialInfo.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyMeshScheduler.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacySectionVisibility.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyStaticTileEntityMesh.cpp"
     )
     file(GLOB XBOX_ZLIB_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/external/zlib/*.c")
     list(APPEND XBOX_SOURCES ${XBOX_ZLIB_SOURCES})
@@ -276,6 +286,9 @@ add_custom_command(TARGET OptiCraft POST_BUILD
             -Dumpbin "${XBOX_DUMPBIN}"
     COMMAND "${XBOX_XDK_ROOT}/bin/imagebld.exe" ${XBOX_IMAGEBLD_FLAGS}
             "/IN:$<TARGET_FILE:OptiCraft>" "/MAP:$<TARGET_FILE:OptiCraft>.map" "/OUT:${XBOX_XBE}"
+    # Same program under a name with "720" in it: runs at 1280x720 when the
+    # dashboard allows it (src/xbox/system/XboxVideoMode.h).
+    COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/OptiCraft_720p.xbe"
     COMMENT "imagebld: ${XBOX_XBE}"
     VERBATIM
 )

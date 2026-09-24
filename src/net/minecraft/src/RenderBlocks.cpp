@@ -16,7 +16,7 @@
 #include "BlockRedstoneWire.h"
 #include "BlockTallGrass.h"
 #include "ChunkCache.h"
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 #include "pc/render/PcLegacySectionCache.h"
 #include "pc/render/PcLegacyBlockRenderInfo.h"
 #include "pc/render/PcLegacyCubeMaterialInfo.h"
@@ -112,7 +112,7 @@ RenderBlocks::RenderBlocks(IBlockAccess *iblockaccess) :
 	aoLightValueOpaque(1.0f - Config::getAmbientOcclusionLevel() * 0.8f),
 	blockAccess(iblockaccess),
 	blockAccessCache(dynamic_cast<ChunkCache *>(iblockaccess)),
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	pcLegacySectionCache(dynamic_cast<PcLegacySectionCache *>(iblockaccess)),
 	pcLegacyCompactTerrainMesh(nullptr),
 	pcLegacyCompactOriginX(0),
@@ -159,7 +159,7 @@ RenderBlocks::RenderBlocks() :
 	aoLightValueOpaque(1.0f - Config::getAmbientOcclusionLevel() * 0.8f),
 	blockAccess(nullptr),
 	blockAccessCache(nullptr),
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	pcLegacySectionCache(nullptr),
 	pcLegacyCompactTerrainMesh(nullptr),
 	pcLegacyCompactOriginX(0),
@@ -192,7 +192,7 @@ RenderBlocks::RenderBlocks() :
 // which is also where the compiler can inline the branch away.
 int_t RenderBlocks::accessGetBlockId(int_t i, int_t j, int_t k)
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	if (pcLegacySectionCache != nullptr)
 		return pcLegacySectionCache->getBlockId(i, j, k);
 #endif
@@ -203,7 +203,7 @@ int_t RenderBlocks::accessGetBlockId(int_t i, int_t j, int_t k)
 
 int_t RenderBlocks::accessGetBlockMetadata(int_t i, int_t j, int_t k)
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	if (pcLegacySectionCache != nullptr)
 		return pcLegacySectionCache->getBlockMetadata(i, j, k);
 #endif
@@ -214,7 +214,7 @@ int_t RenderBlocks::accessGetBlockMetadata(int_t i, int_t j, int_t k)
 
 Material *RenderBlocks::accessGetBlockMaterial(int_t i, int_t j, int_t k)
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	if (pcLegacySectionCache != nullptr)
 		return pcLegacySectionCache->getBlockMaterial(i, j, k);
 #endif
@@ -225,7 +225,7 @@ Material *RenderBlocks::accessGetBlockMaterial(int_t i, int_t j, int_t k)
 
 bool RenderBlocks::accessIsBlockNormalCube(int_t i, int_t j, int_t k)
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	if (pcLegacySectionCache != nullptr)
 		return pcLegacySectionCache->isBlockNormalCube(i, j, k);
 #endif
@@ -236,7 +236,7 @@ bool RenderBlocks::accessIsBlockNormalCube(int_t i, int_t j, int_t k)
 
 bool RenderBlocks::accessIsBlockOpaqueCube(int_t i, int_t j, int_t k)
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	if (pcLegacySectionCache != nullptr)
 		return pcLegacySectionCache->isBlockOpaqueCube(i, j, k);
 #endif
@@ -247,7 +247,7 @@ bool RenderBlocks::accessIsBlockOpaqueCube(int_t i, int_t j, int_t k)
 
 bool RenderBlocks::accessIsAirBlock(int_t i, int_t j, int_t k)
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	if (pcLegacySectionCache != nullptr)
 		return pcLegacySectionCache->isAirBlock(i, j, k);
 #endif
@@ -292,7 +292,7 @@ bool RenderBlocks::shouldRenderFace(Block *block, int_t i, int_t j, int_t k, int
 			return (ps2FaceMask & static_cast<unsigned char>(1u << side)) != 0;
 	}
 #endif
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	if (pcLegacyFaceMaskActive && side >= 0 && side < 6)
 	{
 		bool matches = false;
@@ -392,7 +392,7 @@ bool RenderBlocks::renderSimpleOpaqueCubeWii(Block *block, int_t i, int_t j, int
 }
 #endif
 
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 void RenderBlocks::setPcLegacyCompactTerrainMesh(RenderCapturedMesh *mesh, int_t originX, int_t originY, int_t originZ)
 {
 	pcLegacyCompactTerrainMesh = mesh;
@@ -699,7 +699,7 @@ void RenderBlocks::renderBlockAllFaces(Block *block, int_t i, int_t j, int_t k)
 
 bool RenderBlocks::renderBlockByRenderType(Block *block, int_t i, int_t j, int_t k)
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	const PcLegacyBlockRenderInfo &legacyInfo = pcLegacyGetBlockRenderInfo(block->blockID);
 	int_t l = legacyInfo.renderType;
 	const bool opaqueCube = Block::staticOpaqueCubeLookupSafe[block->blockID]

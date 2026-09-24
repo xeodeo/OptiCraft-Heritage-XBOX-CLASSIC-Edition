@@ -125,7 +125,7 @@ private:
 	void compactRendererUpdateQueue();
 	bool isRendererUpdateMoving(EntityLiving *entityliving);
 	bool isRendererUpdateActing(EntityLiving *entityliving) const;
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	void updatePcLegacySectionVisibility(EntityLiving *viewer);
 	int_t pcLegacyRendererIndexAtSection(int_t sectionX, int_t sectionY, int_t sectionZ) const;
 #endif
@@ -203,7 +203,7 @@ private:
 	int_t renderersSkippingRenderPass = 0;
 	int_t worldRenderersCheckIndex = 0;
 	std::vector<WorldRenderer *> renderBatchRenderers;
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	std::vector<std::uint8_t> pcLegacyVisibilityEntryMasks;
 	std::vector<int_t> pcLegacyVisibilityQueue;
 #endif

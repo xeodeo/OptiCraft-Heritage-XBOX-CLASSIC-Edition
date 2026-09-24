@@ -30,7 +30,7 @@
 #include "platform/PlatformTuning.h"
 #include "platform/PlatformCompat.h"
 #include "platform/ExtendedProfiler.h"
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 #include "pc/render/PcLegacyStaticTileEntityMesh.h"
 #endif
 #ifdef PS2_PLATFORM
@@ -117,7 +117,7 @@ WorldRenderer::WorldRenderer(World *world, std::vector<TileEntity *> *tileEntiti
 #if PLATFORM_PC || PLATFORM_PS2 || defined(XBOX_PLATFORM)
 	isFullyInFrustum = false;
 #endif
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	pcLegacyBuildActive = false;
 	pcLegacyBuildSourceAvailability = 0u;
 	pcLegacyBuildSourceAvailabilityValid = false;
@@ -196,7 +196,7 @@ WorldRenderer::~WorldRenderer()
 
 void WorldRenderer::removeTileEntityRenderersFromGlobalList()
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	pcLegacyStaticTileEntityClearOwner(this);
 	pcLegacyStaticTileEntityRenderers.clear();
 #endif
@@ -352,7 +352,7 @@ void WorldRenderer::updateInFrustrum(ICamera *icamera)
 
 
 
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !PLATFORM_PC_LEGACY
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !PLATFORM_INCREMENTAL_TERRAIN_BUILD
 void WorldRenderer::updateRenderer()
 {
 	if (!needsUpdate)
@@ -523,7 +523,7 @@ void WorldRenderer::updateRenderer()
 
 void WorldRenderer::markDirty()
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 #if PC_LEGACY_COALESCE_MESH_REBUILDS
 	if (pcLegacyBuildActive)
 	{
@@ -584,11 +584,11 @@ void WorldRenderer::markDirty()
 	needsUpdate = true;
 }
 
-#if WII_PLATFORM || PS2_PLATFORM || PLATFORM_PC_LEGACY
+#if WII_PLATFORM || PS2_PLATFORM || PLATFORM_INCREMENTAL_TERRAIN_BUILD
 void WorldRenderer::markDirtyFromLighting()
 {
 #if PLATFORM_COALESCE_MESH_REBUILDS
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	if (pcLegacyBuildActive)
 	{
 		pcLegacyBuildDirtyDuringBuild = true;
@@ -619,11 +619,11 @@ void WorldRenderer::markDirtyFromLighting()
 
 void WorldRenderer::setDontDraw()
 {
-	#if WII_PLATFORM || PS2_PLATFORM || PLATFORM_PC_LEGACY
+	#if WII_PLATFORM || PS2_PLATFORM || PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	// Whatever edit marked this renderer urgent was at its old position.
 	urgentRebuild = false;
 	#endif
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	pcLegacyResetBuildState();
 	for (int_t face = 0; face < 6; ++face)
 		pcLegacyPublishedVisibility[face] = 0x3f;

@@ -5,7 +5,7 @@
 
 class IBlockAccess;
 class ChunkCache;
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 class PcLegacySectionCache;
 #endif
 class Block;
@@ -25,7 +25,7 @@ public:
 	void clearOverrideBlockTexture() { overrideBlockTexture = -1; }
 	void renderBlockAllFaces(Block *block, int_t i, int_t j, int_t k); // func_31075_a
 	bool renderBlockByRenderType(Block *block, int_t i, int_t j, int_t k);
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	bool renderSimpleOpaqueCubeLegacy(Block *block, int_t i, int_t j, int_t k, unsigned char faceMask);
 	bool renderSimpleOpaqueCubeWithColorMultiplierLegacy(Block *block, int_t i, int_t j, int_t k, unsigned char faceMask, int_t metadata, float red, float green, float blue, bool usePackedWhiteFaceState);
 	void setPcLegacyCompactTerrainMesh(RenderCapturedMesh *mesh, int_t originX, int_t originY, int_t originZ);
@@ -172,7 +172,7 @@ public:
 	// blockAccess resolved to its concrete type once at construction, or null
 	// when it is not a ChunkCache. See the accessors above.
 	ChunkCache *blockAccessCache;
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	PcLegacySectionCache *pcLegacySectionCache;
 	RenderCapturedMesh *pcLegacyCompactTerrainMesh = nullptr;
 	int_t pcLegacyCompactOriginX = 0;

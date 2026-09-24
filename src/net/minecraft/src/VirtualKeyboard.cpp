@@ -50,6 +50,7 @@ void VirtualKeyboard::resetSelection()
 
 void VirtualKeyboard::notifyFocus(GuiTextField* field, bool focused)
 {
+	bool wasActive = isActive();
 	if (focused)
 	{
 		if (focusedField != field)
@@ -65,8 +66,11 @@ void VirtualKeyboard::notifyFocus(GuiTextField* field, bool focused)
 		focusedField = nullptr;
 	}
 	platformSetTextInputExclusive(focusedField != nullptr);
-	MC_LOG_INFO("gui", "keyboard focus field=%p focused=%d -> active=%d\n", (void*)field, focused ? 1 : 0,
-	            focusedField != nullptr ? 1 : 0);
+	if (wasActive != isActive())
+	{
+		MC_LOG_INFO("gui", "keyboard focus field=%p focused=%d -> active=%d\n", (void*)field, focused ? 1 : 0,
+		            focusedField != nullptr ? 1 : 0);
+	}
 }
 
 void VirtualKeyboard::releaseFocus()

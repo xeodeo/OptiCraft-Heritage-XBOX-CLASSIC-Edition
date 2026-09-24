@@ -140,7 +140,7 @@ bool ChunkCache::hasResidentChunkAtBlock(int_t i, int_t k) const
 	return chunk != nullptr && !chunk->isEmptyChunk();
 }
 
-#if PLATFORM_PC_LEGACY || defined(PS2_PLATFORM)
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD || defined(PS2_PLATFORM)
 const ExtendedBlockStorage *ChunkCache::getResidentBlockStorageAt(int_t i, int_t j, int_t k) const
 {
 	if (j < WorldHeight::MIN_Y || j >= WorldHeight::HEIGHT)

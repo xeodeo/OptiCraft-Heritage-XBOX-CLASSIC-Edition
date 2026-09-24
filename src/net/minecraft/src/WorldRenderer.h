@@ -14,7 +14,7 @@ class TileEntity;
 class ICamera;
 class Entity;
 class AxisAlignedBB;
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 struct PcLegacyTerrainStaging;
 #endif
 
@@ -82,7 +82,7 @@ public:
 #if PLATFORM_PC_LEGACY || PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	bool hasPublishedTerrain() const { return isInitialized; }
 #endif
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	std::uint8_t pcLegacyVisibleFacesFrom(int_t face) const;
 	bool pcLegacyCpuVisible = true;
 #endif
@@ -208,7 +208,7 @@ public:
 
 	// Tile entities with special renderers collected during updateRenderer()
 	std::vector<TileEntity *> tileEntityRenderers;
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	std::vector<TileEntity *> pcLegacyStaticTileEntityRenderers;
 #endif
 
@@ -338,7 +338,7 @@ private:
 	static void eraseAllTileEntityRefs(std::vector<TileEntity *> *list, TileEntity *te);
 	static void pushUniqueTileEntityRef(std::vector<TileEntity *> *list, TileEntity *te);
 	void removeTileEntityRenderersFromGlobalList();
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	bool pcLegacyBuildActive;
 	unsigned int pcLegacyBuildSourceAvailability;
 	bool pcLegacyBuildSourceAvailabilityValid;

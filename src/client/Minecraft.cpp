@@ -1268,6 +1268,16 @@ void Minecraft::displayGuiScreen(GuiScreen *guiscreen)
 
     currentScreen = guiscreen;
     MC_LOG_INFO("gui", "screen -> %s\n", guiscreen != nullptr ? typeid(*guiscreen).name() : "(none)");
+#if PLATFORM_XBOX
+    // The loading screens draw the menu panorama again after world entry
+    // released it; release it once more when play actually starts.
+    static World *s_menuAssetsReleasedFor = nullptr;
+    if (guiscreen == nullptr && theWorld != nullptr && theWorld != s_menuAssetsReleasedFor)
+    {
+        s_menuAssetsReleasedFor = theWorld;
+        ClientPlatformPolicy::releaseWorldEntryAssets(renderEngine);
+    }
+#endif
     if (guiscreen != nullptr)
     {
         // Track every screen we create. Java relied on GC; in C++ a screen and its

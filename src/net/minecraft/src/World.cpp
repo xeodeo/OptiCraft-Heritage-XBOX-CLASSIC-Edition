@@ -3184,7 +3184,7 @@ static int_t s_pathfindBudgetThisTick = 0;
 
 void World::trackLoadedEntityPointer(Entity *entity)
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
     if (entity != nullptr)
         loadedEntityPointerSet.insert(entity);
 #elif PLATFORM_PS2
@@ -3197,7 +3197,7 @@ void World::trackLoadedEntityPointer(Entity *entity)
 
 void World::untrackLoadedEntityPointer(Entity *entity)
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
     if (entity != nullptr)
         loadedEntityPointerSet.erase(entity);
 #elif PLATFORM_PS2
@@ -3210,7 +3210,7 @@ void World::untrackLoadedEntityPointer(Entity *entity)
 
 void World::rebuildLoadedEntityPointerSet() const
 {
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
     loadedEntityPointerSet.clear();
     loadedEntityPointerSet.insert(loadedEntityList.begin(), loadedEntityList.end());
 #elif PLATFORM_PS2
@@ -3231,7 +3231,7 @@ bool World::isLoadedEntityPointer(const Entity *entity) const
 {
     if (entity == nullptr)
         return false;
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
     if (loadedEntityPointerSet.size() != loadedEntityList.size())
         rebuildLoadedEntityPointerSet();
     return loadedEntityPointerSet.find(entity) != loadedEntityPointerSet.end();
@@ -3313,7 +3313,7 @@ void World::updateEntities()
     {
         for (Entity *entity : unloadedEntityList)
             untrackLoadedEntityPointer(entity);
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
         loadedEntityList.erase(
             std::remove_if(loadedEntityList.begin(), loadedEntityList.end(),
                 [this](Entity* entity)

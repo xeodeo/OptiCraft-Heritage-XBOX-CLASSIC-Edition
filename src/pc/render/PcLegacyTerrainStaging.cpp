@@ -1,6 +1,6 @@
 #include "pc/render/PcLegacyTerrainStaging.h"
 
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 
 namespace
 {

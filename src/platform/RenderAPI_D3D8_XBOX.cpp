@@ -23,9 +23,12 @@
 
 #include "platform/RenderAPI.h"
 #include "xbox/render/XboxD3D.h"
+#include "platform/Log.h"
+#include "xbox/system/XboxVideoMode.h"
 
 #include <xgraphics.h>
 
+#include <intrin.h>
 #include <mmintrin.h>
 
 #include <cmath>
@@ -324,6 +327,22 @@ struct Texture
 };
 
 std::unordered_map<int, Texture> s_textures;
+
+// Per-frame draw statistics for the periodic profile report.
+struct DrawStats
+{
+    unsigned long long drawCycles = 0;   // CPU time inside D3D draw calls (push-buffer stalls land here)
+    long vbDraws = 0;
+    long upDraws = 0;
+    long upVertices = 0;
+    long viewSets = 0;
+    unsigned long long transformCycles = 0;   // SetTransform (view + projection)
+    unsigned long long listCycles = 0;        // top-level display-list replay, everything included
+    unsigned long long stageCycles = 0;       // applyTextureStage
+    long listCalls = 0;
+};
+int s_listDepth = 0;
+DrawStats s_drawStats;
 int s_nextTexture = 1;
 
 bool isPowerOfTwo(int v)
@@ -395,19 +414,40 @@ void swizzleUpload(Texture& t)
     _mm_empty();
     t.d3d->UnlockRect(0);
     t.dirty = false;
-    if (!t.dynamic && t.storageWidth == t.width && t.storageHeight == t.height)
+    if (!t.dynamic)
         std::vector<DWORD>().swap(t.pixels);   // the GPU copy is the only one needed
 }
 
-// Brings back the CPU copy of a power-of-two texture from its swizzled D3D
-// texture, the first time it receives a sub-image update.
+// Brings back the CPU copy of a texture from its swizzled D3D texture, the
+// first time it receives a sub-image update. A non-power-of-two image was
+// only ever enlarged by the nearest-neighbour resample, so every image texel
+// is still present in the storage and comes back exactly.
 bool restorePixels(Texture& t)
 {
-    if (!t.d3d || t.storageWidth != t.width || t.storageHeight != t.height) return false;
-    t.pixels.assign(static_cast<size_t>(t.width) * t.height, 0);
+    if (!t.d3d || t.width <= 0 || t.height <= 0) return false;
+    const bool resampled = t.storageWidth != t.width || t.storageHeight != t.height;
     D3DLOCKED_RECT locked;
     if (FAILED(t.d3d->LockRect(0, &locked, NULL, 0))) return false;
-    XGUnswizzleRect(locked.pBits, t.storageWidth, t.storageHeight, NULL, t.pixels.data(), t.width * 4, NULL, 4);
+    t.pixels.assign(static_cast<size_t>(t.width) * t.height, 0);
+    if (!resampled)
+    {
+        XGUnswizzleRect(locked.pBits, t.storageWidth, t.storageHeight, NULL, t.pixels.data(), t.width * 4, NULL, 4);
+    }
+    else
+    {
+        s_resampled.resize(static_cast<size_t>(t.storageWidth) * t.storageHeight);
+        XGUnswizzleRect(locked.pBits, t.storageWidth, t.storageHeight, NULL, s_resampled.data(), t.storageWidth * 4, NULL, 4);
+        // Storage texel s holds image texel s * size / storage; the first
+        // storage texel showing image texel i is ceil(i * storage / size).
+        for (int y = 0; y < t.height; ++y)
+        {
+            const int sy = (y * t.storageHeight + t.height - 1) / t.height;
+            const DWORD* row = s_resampled.data() + static_cast<size_t>(sy) * t.storageWidth;
+            DWORD* out = t.pixels.data() + static_cast<size_t>(y) * t.width;
+            for (int x = 0; x < t.width; ++x)
+                out[x] = row[(x * t.storageWidth + t.width - 1) / t.width];
+        }
+    }
     _mm_empty();   // see swizzleUpload
     t.d3d->UnlockRect(0);
     return true;
@@ -432,8 +472,17 @@ void ensureStorage(Texture& t, int width, int height)
 }
 
 
-void applyTextureStage()
+// colorFromFactor: the vertices carry no colour and the current colour comes
+// from D3DRS_TEXTUREFACTOR instead (display lists without per-vertex colour).
+void applyTextureStage(bool colorFromFactor = false)
 {
+    const unsigned long long stageStart = __rdtsc();
+    struct StageTimer
+    {
+        unsigned long long start;
+        ~StageTimer() { s_drawStats.stageCycles += __rdtsc() - start; }
+    } stageTimer{stageStart};
+    const DWORD colorArg = colorFromFactor ? D3DTA_TFACTOR : D3DTA_DIFFUSE;
     IDirect3DDevice8* d = device();
     if (!d) return;
     Texture* tex = nullptr;
@@ -460,18 +509,18 @@ void applyTextureStage()
         setTss(d, 0, D3DTSS_ADDRESSV, address);
         setTss(d, 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
         setTss(d, 0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        setTss(d, 0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+        setTss(d, 0, D3DTSS_COLORARG2, colorArg);
         setTss(d, 0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
         setTss(d, 0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-        setTss(d, 0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+        setTss(d, 0, D3DTSS_ALPHAARG2, colorArg);
     }
     else
     {
         setTex(d, 0, NULL);
         setTss(d, 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-        setTss(d, 0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+        setTss(d, 0, D3DTSS_COLORARG1, colorArg);
         setTss(d, 0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-        setTss(d, 0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+        setTss(d, 0, D3DTSS_ALPHAARG1, colorArg);
     }
 }
 
@@ -481,13 +530,30 @@ void applyMatrices()
     IDirect3DDevice8* d = device();
     if (!d) return;
     s_matricesDirty = false;
-    d->SetTransform(D3DTS_VIEW, reinterpret_cast<const D3DMATRIX*>(s_modelView.m));
-    // GL clip z is [-w, w]; D3D wants [0, w]: z' = 0.5 z + 0.5 w.
-    Mat4 zFix = identity();
-    zFix.m[10] = 0.5f;
-    zFix.m[14] = 0.5f;
-    const Mat4 projection = multiply(zFix, s_projection);
-    d->SetTransform(D3DTS_PROJECTION, reinterpret_cast<const D3DMATRIX*>(projection.m));
+    // Every chunk section moves the modelview; the projection stays the same
+    // for the whole pass. Each SetTransform makes the driver rebuild the
+    // composite matrix, so only send what actually changed.
+    static Mat4 s_sentView, s_sentProjection;
+    static bool s_sentValid = false;
+    if (!s_sentValid || std::memcmp(s_sentView.m, s_modelView.m, sizeof(s_modelView.m)) != 0)
+    {
+        s_sentView = s_modelView;
+        ++s_drawStats.viewSets;
+        const unsigned long long start = __rdtsc();
+        d->SetTransform(D3DTS_VIEW, reinterpret_cast<const D3DMATRIX*>(s_modelView.m));
+        s_drawStats.transformCycles += __rdtsc() - start;
+    }
+    if (!s_sentValid || std::memcmp(s_sentProjection.m, s_projection.m, sizeof(s_projection.m)) != 0)
+    {
+        s_sentProjection = s_projection;
+        // GL clip z is [-w, w]; D3D wants [0, w]: z' = 0.5 z + 0.5 w.
+        Mat4 zFix = identity();
+        zFix.m[10] = 0.5f;
+        zFix.m[14] = 0.5f;
+        const Mat4 projection = multiply(zFix, s_projection);
+        d->SetTransform(D3DTS_PROJECTION, reinterpret_cast<const D3DMATRIX*>(projection.m));
+    }
+    s_sentValid = true;
 }
 
 // ---------------------------------------------------------------------------
@@ -517,6 +583,124 @@ struct XboxVertex
     float u, v;
 };
 const DWORD kXboxVertexFvf = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1;
+
+// Compact layout for display lists kept in vertex buffers (all terrain):
+// 16 bytes instead of 24. Chunk sections are built in section-local
+// coordinates, so positions fit a short at 1/1024 of a block (error below
+// 1/2000 block, far under a texel) and atlas UVs a normalized short (error
+// 1/65000, well inside the atlas' texel inset). The world transform scales
+// positions back. Meshes whose values do not fit keep the 24-byte layout.
+struct XboxCompactVertex
+{
+    short x, y, z, w;   // w = 1
+    DWORD color;
+    short u, v;
+};
+// Same without colour (entity models, items): the colour comes from the
+// texture factor at playback, as GL takes the current colour.
+struct XboxCompactVertexNoColor
+{
+    short x, y, z, w;   // w = 1
+    short u, v;
+};
+constexpr float kCompactPositionScale = 1024.0f;
+constexpr float kCompactPositionLimit = 32767.0f / kCompactPositionScale;
+DWORD s_compactShader = 0;
+bool s_compactShaderTried = false;
+DWORD s_compactNoColorShader = 0;
+bool s_worldCompact = false;   // D3DTS_WORLD holds the compact scale
+
+DWORD compactShader(IDirect3DDevice8* d)
+{
+    if (!s_compactShaderTried)
+    {
+        s_compactShaderTried = true;
+        const DWORD decl[] = {
+            D3DVSD_STREAM(0),
+            D3DVSD_REG(D3DVSDE_POSITION, D3DVSDT_SHORT4),
+            D3DVSD_REG(D3DVSDE_DIFFUSE, D3DVSDT_D3DCOLOR),
+            D3DVSD_REG(D3DVSDE_TEXCOORD0, D3DVSDT_NORMSHORT2),
+            D3DVSD_END()
+        };
+        DWORD handle = 0;
+        if (SUCCEEDED(d->CreateVertexShader(decl, NULL, &handle, 0)))
+            s_compactShader = handle;
+        const DWORD declNoColor[] = {
+            D3DVSD_STREAM(0),
+            D3DVSD_REG(D3DVSDE_POSITION, D3DVSDT_SHORT4),
+            D3DVSD_REG(D3DVSDE_TEXCOORD0, D3DVSDT_NORMSHORT2),
+            D3DVSD_END()
+        };
+        handle = 0;
+        if (SUCCEEDED(d->CreateVertexShader(declNoColor, NULL, &handle, 0)))
+            s_compactNoColorShader = handle;
+        MC_LOG_INFO("xbox.render", "compact vertex shaders %s/%s\n", s_compactShader ? "ready" : "FAILED",
+                    s_compactNoColorShader ? "ready" : "FAILED");
+    }
+    return s_compactShader;
+}
+
+void setWorldCompact(IDirect3DDevice8* d, bool compact)
+{
+    if (s_worldCompact == compact) return;
+    s_worldCompact = compact;
+    D3DMATRIX m;
+    std::memset(&m, 0, sizeof(m));
+    const float scale = compact ? 1.0f / kCompactPositionScale : 1.0f;
+    m._11 = m._22 = m._33 = scale;
+    m._44 = 1.0f;
+    d->SetTransform(D3DTS_WORLD, &m);
+}
+
+bool fitsCompact(const XboxVertex* v, int count)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        if (!(v[i].x >= -kCompactPositionLimit && v[i].x <= kCompactPositionLimit &&
+              v[i].y >= -kCompactPositionLimit && v[i].y <= kCompactPositionLimit &&
+              v[i].z >= -kCompactPositionLimit && v[i].z <= kCompactPositionLimit &&
+              v[i].u >= -1.0f && v[i].u <= 1.0f && v[i].v >= -1.0f && v[i].v <= 1.0f))
+            return false;
+    }
+    return true;
+}
+
+short quantize(float value, float scale)
+{
+    const float q = value * scale;
+    return static_cast<short>(q >= 0.0f ? q + 0.5f : q - 0.5f);
+}
+
+void writeCompact(const XboxVertex* in, int count, XboxCompactVertex* out)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        XboxCompactVertex c;
+        c.x = quantize(in[i].x, kCompactPositionScale);
+        c.y = quantize(in[i].y, kCompactPositionScale);
+        c.z = quantize(in[i].z, kCompactPositionScale);
+        c.w = 1;
+        c.color = in[i].color;
+        c.u = quantize(in[i].u, 32767.0f);
+        c.v = quantize(in[i].v, 32767.0f);
+        out[i] = c;   // one 16-byte store run into write-combined memory
+    }
+}
+
+void writeCompactNoColor(const XboxVertex* in, int count, XboxCompactVertexNoColor* out)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        XboxCompactVertexNoColor c;
+        c.x = quantize(in[i].x, kCompactPositionScale);
+        c.y = quantize(in[i].y, kCompactPositionScale);
+        c.z = quantize(in[i].z, kCompactPositionScale);
+        c.w = 1;
+        c.u = quantize(in[i].u, 32767.0f);
+        c.v = quantize(in[i].v, 32767.0f);
+        out[i] = c;
+    }
+}
 
 std::vector<XboxVertex> s_scratch;
 
@@ -589,6 +773,7 @@ void submitVertices(RenderPrimitive primitive, const XboxVertex* vertices, int c
 
     applyMatrices();
     applyTextureStage();
+    setWorldCompact(d, false);
     setVs(d, kXboxVertexFvf);
 
     // DrawVerticesUP copies the vertices inline into the push buffer; a whole
@@ -612,6 +797,8 @@ void submitVertices(RenderPrimitive primitive, const XboxVertex* vertices, int c
         count -= count % perPrimitive;
     if (count <= 0 || (primitive == RenderPrimitive::TriangleFan && count < 3))
         return;
+    ++s_drawStats.upDraws;
+    s_drawStats.upVertices += count;
     if (count <= kMaxBatchVertices)
     {
         d->DrawVerticesUP(type, static_cast<UINT>(count), vertices, sizeof(XboxVertex));
@@ -684,7 +871,7 @@ long s_recordedBytes = 0;
 // that gets a pool of its own. A freed range is tagged with a GPU fence and
 // only reused once the GPU has passed it.
 constexpr UINT kVertexPoolBytes = 512 * 1024;
-constexpr UINT kVertexGranule = 96;   // multiple of the 24-byte vertex, 32-byte aligned
+constexpr UINT kVertexGranule = 96;   // multiple of both vertex sizes (24, 16), 32-byte aligned
 
 struct VertexPool
 {
@@ -849,12 +1036,13 @@ struct RecordedMesh
     {
         s_recordedBytes -= bytes;
         if (pool >= 0)
-            freeVertexRange(pool, offset, static_cast<UINT>(vertexCount) * sizeof(XboxVertex));
+            freeVertexRange(pool, offset, static_cast<UINT>(vertexCount) * stride);
     }
     std::vector<XboxVertex> vertices;
     int pool = -1;          // shared vertex buffer holding this mesh, or -1
     UINT offset = 0;        // byte offset of the mesh inside it
     int vertexCount = 0;
+    UINT stride = sizeof(XboxVertex);   // sizeof(XboxCompactVertex) when compact
     long bytes = 0;
     RenderPrimitive primitive = RenderPrimitive::Triangles;
     bool usesCurrentColor = false;
@@ -871,10 +1059,17 @@ void drawRecorded(const RecordedMesh& mesh)
         else if (mesh.primitive == RenderPrimitive::Triangles) count -= count % 3;
         if (count <= 0) return;
         applyMatrices();
-        applyTextureStage();
-        setVs(d, kXboxVertexFvf);
-        d->SetStreamSource(0, s_vertexPools[static_cast<size_t>(mesh.pool)].vb, sizeof(XboxVertex));
-        d->DrawVertices(toD3DPrimitive(mesh.primitive), mesh.offset / sizeof(XboxVertex), static_cast<UINT>(count));
+        applyTextureStage(mesh.usesCurrentColor);
+        if (mesh.usesCurrentColor)
+            setRs(d, D3DRS_TEXTUREFACTOR, s_currentColor);
+        const bool compact = mesh.stride != sizeof(XboxVertex);
+        setWorldCompact(d, compact);
+        setVs(d, !compact ? kXboxVertexFvf : mesh.usesCurrentColor ? s_compactNoColorShader : s_compactShader);
+        d->SetStreamSource(0, s_vertexPools[static_cast<size_t>(mesh.pool)].vb, mesh.stride);
+        const unsigned long long start = __rdtsc();
+        d->DrawVertices(toD3DPrimitive(mesh.primitive), mesh.offset / mesh.stride, static_cast<UINT>(count));
+        s_drawStats.drawCycles += __rdtsc() - start;
+        ++s_drawStats.vbDraws;
         return;
     }
     const int count = static_cast<int>(mesh.vertices.size());
@@ -1039,8 +1234,8 @@ void renderViewport(int x, int y, int width, int height)
     s_viewport[3] = height;
     IDirect3DDevice8* d = device();
     if (!d || width <= 0 || height <= 0) return;
-    // GL's viewport origin is bottom-left, D3D's is top-left of a 480-line target.
-    const int screenHeight = 480;
+    // GL's viewport origin is bottom-left, D3D's is top-left of the back buffer.
+    const int screenHeight = XboxVideoMode::height();
     D3DVIEWPORT8 vp;
     vp.X = static_cast<DWORD>(x < 0 ? 0 : x);
     const int top = screenHeight - (y + height);
@@ -1266,7 +1461,10 @@ void renderTextureSubImageRgba(int level, int x, int y, int width, int height, c
         convertRgba(src + static_cast<size_t>(row) * width * 4,
                     t.pixels.data() + static_cast<size_t>(ty) * t.width + x, cols);
     }
-    swizzleUpload(t);
+    // Animated tiles (water, lava, fire, portal...) arrive a dozen per tick,
+    // each re-swizzling and locking the whole atlas. Mark it instead: the next
+    // bind (applyTextureStage) uploads it once with every tile applied.
+    t.dirty = true;
 }
 
 void renderTextureParameters(bool blur, bool, bool clamp)
@@ -1362,26 +1560,46 @@ bool renderDrawInterleaved(const RenderInterleavedMesh& mesh)
         const int count = mesh.count + (loop ? 1 : 0);
         int pool = -1;
         UINT offset = 0;
-        if (!recorded->usesCurrentColor && device() != nullptr &&
-            allocateVertexRange(static_cast<UINT>(count) * sizeof(XboxVertex), &pool, &offset))
+        IDirect3DDevice8* d = device();
+        if (d != nullptr)
         {
-            // Written once, straight into the (write-combined) buffer memory.
-            XboxVertex* out = reinterpret_cast<XboxVertex*>(s_vertexPools[static_cast<size_t>(pool)].base + offset);
-            convertVertices(mesh, out);
+            if (static_cast<int>(s_scratch.size()) < count)
+                s_scratch.resize(static_cast<size_t>(count));
+            convertVertices(mesh, s_scratch.data());
             if (loop)
-                out[count - 1] = out[0];
-            recorded->pool = pool;
-            recorded->offset = offset;
-            recorded->vertexCount = count;
+                s_scratch[static_cast<size_t>(count - 1)] = s_scratch[0];
+            compactShader(d);
+            const bool colorless = recorded->usesCurrentColor;
+            const bool compact = (colorless ? s_compactNoColorShader : s_compactShader) != 0 &&
+                                 fitsCompact(s_scratch.data(), count);
+            // A colourless mesh that does not fit the compact layout keeps
+            // the CPU copy below (its colour is patched in at playback).
+            const UINT stride = colorless ? sizeof(XboxCompactVertexNoColor)
+                              : compact ? sizeof(XboxCompactVertex) : sizeof(XboxVertex);
+            if ((compact || !colorless) && allocateVertexRange(static_cast<UINT>(count) * stride, &pool, &offset))
+            {
+                // Written once, straight into the (write-combined) buffer memory.
+                BYTE* out = s_vertexPools[static_cast<size_t>(pool)].base + offset;
+                if (colorless)
+                    writeCompactNoColor(s_scratch.data(), count, reinterpret_cast<XboxCompactVertexNoColor*>(out));
+                else if (compact)
+                    writeCompact(s_scratch.data(), count, reinterpret_cast<XboxCompactVertex*>(out));
+                else
+                    std::memcpy(out, s_scratch.data(), static_cast<size_t>(count) * sizeof(XboxVertex));
+                recorded->pool = pool;
+                recorded->offset = offset;
+                recorded->vertexCount = count;
+                recorded->stride = stride;
+            }
         }
-        else
+        if (pool < 0)
         {
             recorded->vertices.resize(static_cast<size_t>(count));
             convertVertices(mesh, recorded->vertices.data());
             if (loop)
                 recorded->vertices.back() = recorded->vertices.front();
         }
-        recorded->bytes = static_cast<long>(count) * static_cast<long>(sizeof(XboxVertex));
+        recorded->bytes = static_cast<long>(count) * static_cast<long>(recorded->stride);
         s_recordedBytes += recorded->bytes;
         s_recording->push_back([recorded] { drawRecorded(*recorded); });
         return true;
@@ -1475,8 +1693,15 @@ void renderCallDisplayList(int list)
     if (it == s_lists.end()) return;
     // A list may be called from inside another list's recording.
     if (recordIfCompiling([list] { renderCallDisplayList(list); })) return;
+    const unsigned long long start = __rdtsc();
+    ++s_listDepth;
     for (const auto& command : it->second)
         command();
+    if (--s_listDepth == 0)
+    {
+        s_drawStats.listCycles += __rdtsc() - start;
+        ++s_drawStats.listCalls;
+    }
 }
 
 void renderCallDisplayLists(int count, const int* lists)
@@ -1523,6 +1748,25 @@ long xboxVertexPoolCount()
     return pools;
 }
 
+// Draw statistics since the last call, for the profile report.
+void xboxRenderTakeListStats(double* transformMs, double* listMs, double* stageMs, long* listCalls)
+{
+    *transformMs = static_cast<double>(s_drawStats.transformCycles) / 733333.0;
+    *listMs = static_cast<double>(s_drawStats.listCycles) / 733333.0;
+    *stageMs = static_cast<double>(s_drawStats.stageCycles) / 733333.0;
+    *listCalls = s_drawStats.listCalls;
+}
+
+void xboxRenderTakeDrawStats(double* drawMs, long* vbDraws, long* upDraws, long* upVertices, long* viewSets)
+{
+    *drawMs = static_cast<double>(s_drawStats.drawCycles) / 733333.0;
+    *vbDraws = s_drawStats.vbDraws;
+    *upDraws = s_drawStats.upDraws;
+    *upVertices = s_drawStats.upVertices;
+    *viewSets = s_drawStats.viewSets;
+    s_drawStats = DrawStats();
+}
+
 // Memory held by the emulated GL objects, for the periodic memory log.
 void xboxRenderMemoryStats(long* listKB, long* lists, long* textureKB, long* textures)
 {
@@ -1534,6 +1778,23 @@ void xboxRenderMemoryStats(long* listKB, long* lists, long* textureKB, long* tex
                  static_cast<long>(entry.second.storageWidth) * entry.second.storageHeight * 4;
     *textureKB = bytes / 1024;
     *textures = static_cast<long>(s_textures.size());
+
+    // Which textures hold the memory, whenever the set changes.
+    static size_t s_loggedCount = 0;
+    if (s_textures.size() != s_loggedCount)
+    {
+        s_loggedCount = s_textures.size();
+        for (const auto& entry : s_textures)
+        {
+            const Texture& t = entry.second;
+            const long kb = static_cast<long>(t.pixels.capacity() * sizeof(DWORD) +
+                                              static_cast<size_t>(t.storageWidth) * t.storageHeight * 4) / 1024;
+            if (kb >= 128)
+                MC_LOG_INFO("xbox.tex", "id=%d %dx%d storage=%dx%d cpuKB=%ld totalKB=%ld dynamic=%d\n",
+                            entry.first, t.width, t.height, t.storageWidth, t.storageHeight,
+                            static_cast<long>(t.pixels.capacity() * sizeof(DWORD) / 1024), kb, t.dynamic ? 1 : 0);
+        }
+    }
 }
 #endif
 

@@ -11,6 +11,8 @@ The short build recipe is also in the main [README](../README.md#original-xbox).
 - It boots and plays on a **real retail console** (softmodded, 64 MB, launched from a hard-disk folder) and in **[xemu](https://xemu.app)**.
 - It is the full game: menus in the Legacy console UI, world generation, saving, the tutorial world, the skin selector and options.
 - **Rendering:** Direct3D 8 fixed-function on the NV2A (textures, fog, blending, culling).
+- **Performance:** 40-60 FPS at 2 chunks render distance on real hardware, with 20-35 MB free memory in a world.
+- **Video:** `default.xbe` runs at 640x480; `OptiCraft_720p.xbe` (the same program under another name) runs at 1280x720 progressive when 720p is enabled in the dashboard (component cable).
 - **Sound:** DirectSound on the MCPX audio processor. Music streams; effects are pitched and attenuated by distance. Output is stereo, or Dolby Digital 5.1 from the options.
 - **Controller:** XInput. The first connected pad is player 1, on any port.
 - **Saves** go to the title drive `T:`, which is `E:\TDATA\FFFF4F43` on the console.
@@ -162,6 +164,10 @@ Run these from a normal command prompt. The toolchain file sets the compilers it
 
 Launching a game unloads the dashboard, and its FTP server goes with it. To read logs while the game runs, use the network log.
 
+**Settings:**
+- **Video:** Includes "30 FPS Limit" (waits for an extra vblank, applied instantly) and "Show Coordinates" (displays X/Y/Z and orientation within the TV safe zone).
+- **Music/Sound:** Includes a "Dolby Digital" checkbox to enable 5.1 surround sound.
+
 **Controller:**
 
 | In game | In menus |
@@ -303,6 +309,42 @@ Everything Xbox-specific sits behind `PLATFORM_XBOX` / `XBOX_PLATFORM`. It lives
 - Music streams through a 64 KB ring on a worker thread.
 - Stereo, or Dolby Digital 5.1 through `DirectSoundOverrideSpeakerConfig`. DirectSound is re-created when the option changes.
 
+### Performance work
+
+These optimizations were implemented to make the game playable on a retail 64 MB console (data measured on real console, from the `xbox.perf` log):
+
+| Change | Measured effect |
+|---|---|
+| Audio SFX in contiguous physical memory (`XPhysicalAlloc`, write-combine) | fixes noisy crash on real hardware |
+| Redundant D3D state filtering | lower draw cost |
+| Display lists in static vertex buffers (shared pools, fences) | 17 → ~43 FPS, opaque pass 19 → 6.5 ms |
+| Static textures without RAM copy | ~6.7 → ~10.5 MB free |
+| Chunk cache bounded by render distance | ~10.5 → ~25 MB free, ~50-60 FPS |
+| Bounded pathfinding re-enabled (300 nodes, 3 per tick) | cheaper mob AI |
+| Free chunk geometry when exiting to menu | ~31 MB free in the menu after playing |
+| 512 KB vertex pools | less fragmentation |
+
+- **Audio SFX in contiguous physical memory:** DirectSound effects previously crashed or produced loud noise on the real console because regular allocations were used. They are now allocated with `XPhysicalAlloc` as contiguous, write-combined memory, which the MCPX audio processor requires. (`src/platform/audio/SoundManager_XBOX.cpp`)
+- **Redundant D3D state filtering:** The D3D8 fixed-function pipeline received many redundant state changes per frame. A software state filter now tracks the current render states and texture binds, dropping duplicate calls before they reach the GPU. (`src/platform/RenderAPI_D3D8_XBOX.cpp`)
+- **Display lists in static vertex buffers:** Pushing vertices every frame via `DrawVerticesUP` was too slow. Display lists are now compiled into static vertex buffers, managed via shared memory pools and GPU fences, significantly reducing CPU overhead per frame. (`src/platform/RenderAPI_D3D8_XBOX.cpp`, `src/net/minecraft/src/RenderGlobal.cpp`)
+- **Static textures without RAM copy:** The game used to keep a CPU copy of texture data after uploading it to the GPU. This copy is now freed for static textures, saving several megabytes of main memory. (`src/platform/RenderAPI_D3D8_XBOX.cpp`)
+- **Chunk cache bounded by render distance:** Chunks outside the visible area were kept loaded, wasting memory. The cache is now tightly constrained to the active render distance, freeing up significant memory and allowing the game to run at ~50-60 FPS at a distance of 2. (`src/net/minecraft/src/ChunkProvider*.cpp`, `src/xbox/XboxTuning.h`)
+- **Bounded pathfinding re-enabled:** Unbounded pathfinding could freeze the game by generating huge node vectors. It was modified to evaluate a maximum of 300 nodes, processed across multiple ticks (3 per tick), keeping mob AI functional without stalling the main thread. (`src/xbox/XboxTuning.h`)
+- **Free chunk geometry when exiting to menu:** Returning to the main menu left chunk geometry in memory. A cleanup step now explicitly frees these vertex buffers when leaving a world, ensuring a stable memory baseline before the next session.
+- **512 KB vertex pools:** Small, individual allocations for vertex buffers caused severe memory fragmentation over time. They are now sub-allocated from large 512 KB pools, which keeps the memory layout clean and predictable.
+
+Second round (all behaviour-exact, measured with the `xbox.perf`, `xbox.draw` and `xbox.mesh` log lines):
+
+| Change | Effect |
+|---|---|
+| Compact vertices: `SHORT4` position at 1/1024 block, `D3DCOLOR`, `NORMSHORT2` UV (16 bytes instead of 24; 12 without colour) | chunk geometry ~15 → ~6-10 MB |
+| Entity models and items in pooled vertex buffers, colour from `D3DRS_TEXTUREFACTOR` | entity pass 4.2 → 2-3 ms |
+| Menu textures released in game, no CPU copy of static non-power-of-two textures | textures in game 7.4 → 2.3 MB |
+| Incremental, time-sliced chunk builder of the low-end PC profile (`PLATFORM_INCREMENTAL_TERRAIN_BUILD`) plus section visibility culling | meshing spikes 20 → ~8 ms |
+| Tessellator keeps quads (`D3DPT_QUADLIST`), staging buffer 8 MB → 256 KB | a third fewer terrain vertices, ~38 MB free in xemu |
+| Animated tiles re-swizzle the atlas once per frame, not once per tile | fewer full-atlas locks per tick |
+| Hash set for `World::isLoadedEntityPointer`, fast/early block collisions, cached entity and chunk queries | cheaper entity ticking |
+
 ---
 
 ## 7. Changes to shared code
@@ -340,7 +382,8 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
   - The console takes its IP from the dashboard's network settings. Every line arrives as a UDP datagram and is also saved to `netlog.txt`.
   - This is how the real-console boot failures were found. The log stopped at the first `%f`, and later at `ceil`.
 - **Crash screen:** an unexpected C++ exception logs `crash: <what()>` and holds a red screen. Without it the title would exit and the Xbox would reboot it, wiping the in-memory log.
-- **Out of memory** logs `out of memory: free=<KB>` and returns to the menu. Every 300 frames the log records free memory and the size of display lists and textures (`xbox.fpu`, `xbox.mem`).
+- **Performance reporting:** Every 5 seconds, an `xbox.perf` report logs FPS, present time, render phases, ticks, lighting, and chunk load/save times. An `xbox.mem` report logs free memory, display lists, `vbPools` size, and texture memory.
+- **Out of memory** logs `out of memory: free=<KB>` and returns to the menu.
 - **Other gdb tools** in `scripts/xbox/tools`:
   - `gdbthrow.py` catches every C++ throw.
   - `gdbstack.py` resolves the call chain at a bug check.
@@ -352,11 +395,10 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
 
 ## 9. Known issues and next steps
 
-- **Memory is tight** (64 MB for everything). In a world, display lists take about 10 MB and textures about 10 MB. The lighting cap and releasing the menu textures on world entry keep it stable; long sessions may still run out and return to the menu. Candidates:
-  - drop the CPU copy of textures after upload;
+- **Memory** is no longer the limit at 2 chunks (20-35 MB free). Remaining candidates:
   - keep fewer chunks resident and lean on the hard disk (`T:` or the `Z:` utility drive) for evicted chunks;
   - DXT-compressed textures.
-- **Performance:** every frame the CPU copies each chunk mesh into the push buffer (`DrawVerticesUP`). Moving chunk meshes into static vertex buffers is the biggest expected win.
+- **Next CPU win:** the opaque pass spends ~7 ms per frame outside D3D (display-list replay and per-chunk matrices). A terrain vertex shader with one constant upload per chunk should remove most of it.
 - **Leftover SSE2** reported by the build, in paths not expected to run:
   - wide/money `num_put`;
   - `frexp` (iostream float output);
@@ -501,6 +543,18 @@ Then it was bisected on the console, one boot at a time:
   - `XboxEntry.cpp` now runs them, between two read-write markers.
   - A stereo / Dolby Digital option was added to the options.
 - **Red crash screen.** An unexpected exception now logs the error and holds a red screen, instead of exiting and letting the console reboot the title.
+
+### Phase 7: optimization
+
+With the game booting on real hardware, it ran at around 17 FPS at 2 chunks, and memory was constantly nearing the 64 MB limit. The unbounded pathfinding caused `vector too long` out-of-memory crashes (desktop limits were infinite), and audio often crashed the console entirely.
+
+A comprehensive profiling and optimization pass (using the new `xbox.perf` and `xbox.mem` logs) solved the main bottlenecks:
+- **Audio:** SFX data was moved to contiguous physical memory (`XPhysicalAlloc` with write-combine) to fix the hardware crashes.
+- **Memory:** Dropping CPU-side texture copies, freeing geometry on menu exit, and restricting the chunk cache to the render distance reclaimed over 15 MB.
+- **Performance:** Rendering was overhauled by filtering redundant D3D states and moving display lists to static vertex buffers backed by 512 KB shared pools.
+- **Stability:** Pathfinding was bounded to 300 nodes and time-sliced (3 per tick), preventing the `vector too long` out-of-memory crashes.
+
+These changes stabilized memory and boosted performance to ~50-60 FPS on real hardware at a 2-chunk render distance.
 
 ---
 

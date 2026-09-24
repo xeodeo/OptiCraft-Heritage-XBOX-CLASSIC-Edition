@@ -14,6 +14,7 @@
 #include "xbox/input/XboxInput.h"
 #include "xbox/input/XboxPad.h"
 #include "xbox/input/XboxPadKeyCodes.h"
+#include "xbox/system/XboxVideoMode.h"
 
 #include "lwjgl/Keyboard.h"
 #include "lwjgl/Mouse.h"
@@ -22,8 +23,10 @@
 
 namespace
 {
-const int kScreenWidth = 640;
-const int kScreenHeight = 480;
+// Back-buffer size (640x480, or 1280x720 for the 720p XBE); read when used,
+// not during static initialisation, which runs before the log exists.
+#define kScreenWidth (XboxVideoMode::width())
+#define kScreenHeight (XboxVideoMode::height())
 
 const float MENU_SCROLL_THRESHOLD = 0.18f;
 const float CAM_SCALE = 14.0f;
@@ -41,8 +44,8 @@ int s_menuAnalogDirection = 0;
 float s_menuAnalogRepeat = 0.0f;
 
 // --- menu pointer (Ps2Pointer) -----------------------------------------------
-float s_pointerX = kScreenWidth * 0.5f;
-float s_pointerY = kScreenHeight * 0.5f;
+float s_pointerX = 320.0f;   // recentred by pointerEnterMenu()
+float s_pointerY = 240.0f;
 float s_pointerLastTime = 0.0f;
 int s_publishedX = -1;
 int s_publishedY = -1;

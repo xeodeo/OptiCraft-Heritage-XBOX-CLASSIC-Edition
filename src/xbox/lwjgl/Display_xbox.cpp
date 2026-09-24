@@ -2,6 +2,7 @@
 #include "lwjgl/Display.h"
 #include "xbox/render/XboxD3D.h"
 #include "xbox/input/XboxInput.h"
+#include "xbox/system/XboxVideoMode.h"
 #include "client/Minecraft.h"
 #include "net/minecraft/src/GuiScreen.h"
 #include "net/minecraft/src/Entity.h"
@@ -154,8 +155,11 @@ void create() {
 
     D3DPRESENT_PARAMETERS d3dpp;
     ZeroMemory(&d3dpp, sizeof(d3dpp));
-    d3dpp.BackBufferWidth        = 640;
-    d3dpp.BackBufferHeight       = 480;
+    d3dpp.BackBufferWidth        = XboxVideoMode::width();
+    d3dpp.BackBufferHeight       = XboxVideoMode::height();
+    if (XboxVideoMode::isHd())
+        d3dpp.Flags              = D3DPRESENTFLAG_PROGRESSIVE | D3DPRESENTFLAG_WIDESCREEN;
+    g_mode = DisplayMode(d3dpp.BackBufferWidth, d3dpp.BackBufferHeight);
     d3dpp.BackBufferFormat       = D3DFMT_X8R8G8B8;
     d3dpp.BackBufferCount        = 1;
     d3dpp.EnableAutoDepthStencil = TRUE;

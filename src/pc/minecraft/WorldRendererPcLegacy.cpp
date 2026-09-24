@@ -1,6 +1,6 @@
 #include "platform/PlatformConfig.h"
 
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 
 #include "net/minecraft/src/WorldRenderer.h"
 
@@ -142,7 +142,7 @@ void WorldRenderer::pcLegacyPublishBuild(PcLegacyTerrainStaging &staging)
 {
     std::vector<TileEntity *> rebuiltStaticTileEntityRenderers;
 
-#if PC_LEGACY_STATIC_TILE_ENTITY_MESH
+#if PC_LEGACY_STATIC_TILE_ENTITY_MESH && PLATFORM_PC_LEGACY
     // ModelRenderer itself owns per-part display lists on desktop. Compile those
     // before opening the chunk display list; OpenGL does not allow glNewList to
     // be nested inside another glNewList.
@@ -194,7 +194,7 @@ void WorldRenderer::pcLegacyPublishBuild(PcLegacyTerrainStaging &staging)
         renderPopMatrix();
 
         bool staticTileDrawn = false;
-#if PC_LEGACY_STATIC_TILE_ENTITY_MESH
+#if PC_LEGACY_STATIC_TILE_ENTITY_MESH && PLATFORM_PC_LEGACY
         if (pass == 0 && worldObj != nullptr && !staging.staticTileEntityCandidates.empty())
         {
             renderPushMatrix();
@@ -260,7 +260,7 @@ void WorldRenderer::pcLegacyPublishBuild(PcLegacyTerrainStaging &staging)
             eraseAllTileEntityRefs(tileEntities, te);
     }
 
-#if PC_LEGACY_STATIC_TILE_ENTITY_MESH
+#if PC_LEGACY_STATIC_TILE_ENTITY_MESH && PLATFORM_PC_LEGACY
     for (TileEntity *te : pcLegacyStaticTileEntityRenderers)
         pcLegacyStaticTileEntityUnpublish(te, this);
     pcLegacyStaticTileEntityRenderers = rebuiltStaticTileEntityRenderers;
@@ -435,7 +435,7 @@ bool WorldRenderer::pcLegacyBuildRendererStep(int_t blockBudget)
                     {
                         staging->tileEntityRenderers.push_back(te);
                     }
-#if PC_LEGACY_STATIC_TILE_ENTITY_MESH
+#if PC_LEGACY_STATIC_TILE_ENTITY_MESH && PLATFORM_PC_LEGACY
                     if (TileEntityRenderer::instance.canRenderStaticPart(te))
                     {
                         const bool alreadyQueued = std::any_of(staging->staticTileEntityCandidates.begin(),

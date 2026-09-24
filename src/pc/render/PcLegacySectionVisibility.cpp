@@ -1,6 +1,6 @@
 #include "pc/render/PcLegacySectionVisibility.h"
 
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 
 #include <array>
 

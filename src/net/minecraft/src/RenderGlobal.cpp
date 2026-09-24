@@ -6,7 +6,7 @@
 #include "java/Math.h"
 #include "java/String.h"
 #include "platform/PlatformTuning.h"
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 #include "pc/render/PcLegacyMeshScheduler.h"
 #endif
 
@@ -21,7 +21,7 @@
 #endif
 
 #include "platform/RenderAPI.h"
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 #include "pc/render/PcLegacyStaticTileEntityMesh.h"
 #endif
 #include "platform/RenderTerrainAPI.h"
@@ -1227,7 +1227,7 @@ int_t RenderGlobal::sortAndRender(EntityLiving *entityliving, int_t i, double d)
 
 	int_t k = 0;
 
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_SECTION_VISIBILITY_CULL
 	if (i == 0)
 		updatePcLegacySectionVisibility(entityliving);
 #endif
@@ -1447,7 +1447,7 @@ int_t RenderGlobal::renderSortedRenderers(int_t i, int_t j, int_t k, double d)
 	for (int_t i1 = i; i1 < j; i1++)
 	{
 		WorldRenderer *sortedRenderer = sortedWorldRenderers[i1];
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_SECTION_VISIBILITY_CULL
 		const bool cpuOccluded = !sortedRenderer->pcLegacyCpuVisible;
 #elif PLATFORM_PS2
 		const bool cpuOccluded = PLATFORM_CPU_SECTION_OCCLUSION && !sortedRenderer->ps2CpuVisible;
@@ -2191,7 +2191,7 @@ void RenderGlobal::renderCloudsFancy(float f)
 
 
 
-#if PLATFORM_MESH_BUDGET && !PLATFORM_PC_LEGACY
+#if PLATFORM_MESH_BUDGET && !PLATFORM_INCREMENTAL_TERRAIN_BUILD
 namespace
 {
 	// Per-frame meshing budget.
@@ -2272,7 +2272,7 @@ bool RenderGlobal::updateRenderers(EntityLiving *entityliving, bool flag)
 	int_t requestedUpdateLimit = std::max(1, Config::getUpdatesPerFrame());
 	if (Config::isDynamicUpdates() && !isRendererUpdateMoving(entityliving)) requestedUpdateLimit = requestedUpdateLimit * 3;
 
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	pcLegacyRunMeshScheduler(
 		worldRenderersToUpdate,
 		entityliving,
@@ -2941,7 +2941,7 @@ void RenderGlobal::markRenderersInRange(int_t i, int_t j, int_t k, int_t l, int_
 						worldrenderer->urgentRebuild = true;
 					}
 				}
-#elif PLATFORM_PC_LEGACY
+#elif PLATFORM_INCREMENTAL_TERRAIN_BUILD
 				// Legacy keeps only one queue entry, but active incremental builds still
 				// need to hear every mutation so population can be coalesced safely.
 				enqueueRendererUpdate(worldrenderer);
@@ -3200,7 +3200,7 @@ void RenderGlobal::doNothingWithTileEntity(int_t i, int_t j, int_t k, TileEntity
 			WorldRenderer *renderer = worldRenderers[idx];
 			if (renderer == nullptr)
 				continue;
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 			pcLegacyStaticTileEntityUnpublish(tileentity, renderer);
 			renderer->pcLegacyStaticTileEntityRenderers.erase(
 				std::remove(renderer->pcLegacyStaticTileEntityRenderers.begin(), renderer->pcLegacyStaticTileEntityRenderers.end(), tileentity),

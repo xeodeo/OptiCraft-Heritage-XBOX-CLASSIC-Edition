@@ -49,6 +49,61 @@
 #define PLATFORM_PATHFIND_BUDGET_PER_TICK        3
 #undef  PLATFORM_REUSE_PATHFINDER
 #define PLATFORM_REUSE_PATHFINDER                1
+// Incremental terrain builder (PLATFORM_INCREMENTAL_TERRAIN_BUILD): one
+// section is built in slices of 2.5 ms, at most 5 ms of meshing per frame,
+// with the low-end PC scheduler. Same geometry as the vanilla builder; it only
+// spreads the work so a heavy section no longer costs a whole frame.
+#undef  PLATFORM_MESH_BUDGET
+#define PLATFORM_MESH_BUDGET                     PC_LEGACY_MESH_BUDGET
+#undef  PLATFORM_MIN_RENDERER_UPDATES_PER_FRAME
+#define PLATFORM_MIN_RENDERER_UPDATES_PER_FRAME  PC_LEGACY_MIN_RENDERER_UPDATES_PER_FRAME
+#undef  PLATFORM_MAX_RENDERER_UPDATES_PER_FRAME
+#define PLATFORM_MAX_RENDERER_UPDATES_PER_FRAME  PC_LEGACY_MAX_RENDERER_UPDATES_PER_FRAME
+#undef  PLATFORM_RENDERER_UPDATE_CANDIDATES_PER_FRAME
+#define PLATFORM_RENDERER_UPDATE_CANDIDATES_PER_FRAME PC_LEGACY_RENDERER_UPDATE_CANDIDATES_PER_FRAME
+#undef  PLATFORM_COALESCE_MESH_REBUILDS
+#define PLATFORM_COALESCE_MESH_REBUILDS          PC_LEGACY_COALESCE_MESH_REBUILDS
+#undef  PLATFORM_CHUNK_BUILD_BLOCKS_PER_STEP
+#define PLATFORM_CHUNK_BUILD_BLOCKS_PER_STEP     PC_LEGACY_CHUNK_BUILD_BLOCKS_PER_STEP
+#undef  PLATFORM_CHUNK_BUILD_BUDGET_MS
+#define PLATFORM_CHUNK_BUILD_BUDGET_MS           PC_LEGACY_CHUNK_BUILD_BUDGET_MS
+#undef  PLATFORM_CHUNK_BUILD_STEP_US
+#define PLATFORM_CHUNK_BUILD_STEP_US             PC_LEGACY_CHUNK_BUILD_STEP_US
+// The low-end PC's direct cube emitter writes triangles (6 vertices a face);
+// the tessellator path below keeps quads (4), which the NV2A draws natively.
+#undef  PLATFORM_COMPACT_TERRAIN_VERTICES
+#define PLATFORM_COMPACT_TERRAIN_VERTICES        0
+
+// Tessellator: quads straight to D3DPT_QUADLIST (no conversion to triangles,
+// a third fewer vertices to build, store and draw) and the console-sized
+// staging buffer (it grows on demand; the desktop 8 MB one is never needed).
+#undef  PLATFORM_TESSELLATOR_CONVERT_QUADS
+#define PLATFORM_TESSELLATOR_CONVERT_QUADS       0
+#undef  PLATFORM_TESSELLATOR_BUFFER_INTS
+#define PLATFORM_TESSELLATOR_BUFFER_INTS         0x10000
+
+// Behaviour-exact CPU shortcuts shared with the PS2 and low-end PC profiles:
+// direct section reads for block collision, early outs where only "any
+// collision" matters, cached entity queries and chunk-existence lookups.
+#undef  PLATFORM_FAST_BLOCK_COLLISIONS
+#define PLATFORM_FAST_BLOCK_COLLISIONS           1
+#undef  PLATFORM_EARLY_UNIT_CUBE_COLLISION_TEST
+#define PLATFORM_EARLY_UNIT_CUBE_COLLISION_TEST  1
+#undef  PLATFORM_EARLY_COLLISION_EXIT
+#define PLATFORM_EARLY_COLLISION_EXIT            1
+#undef  PLATFORM_ENTITY_QUERY_CACHE
+#define PLATFORM_ENTITY_QUERY_CACHE              1
+#undef  PLATFORM_CACHE_ENTITY_CHUNK_EXISTENCE
+#define PLATFORM_CACHE_ENTITY_CHUNK_EXISTENCE    1
+#undef  PLATFORM_CACHE_RANDOM_TICK_CHUNKS
+#define PLATFORM_CACHE_RANDOM_TICK_CHUNKS        1
+#undef  PLATFORM_CACHE_SPAWN_CHUNKS
+#define PLATFORM_CACHE_SPAWN_CHUNKS              1
+#undef  PLATFORM_CACHE_RANDOM_DISPLAY_CHUNKS
+#define PLATFORM_CACHE_RANDOM_DISPLAY_CHUNKS     1
+#undef  PLATFORM_FAST_CHUNK_BLOCK_READS
+#define PLATFORM_FAST_CHUNK_BLOCK_READS          1
+
 // Mob cap.
 #undef  PLATFORM_MAX_LIVE_MOBS
 #define PLATFORM_MAX_LIVE_MOBS                   40

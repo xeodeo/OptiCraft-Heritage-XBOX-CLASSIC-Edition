@@ -47,11 +47,11 @@ public:
 	void setColorOpaque(int r, int g, int b);
 	void setColorRGBA(int r, int g, int b, int a);
 	void addVertexWithUV(tess_coord_t x, tess_coord_t y, tess_coord_t z, tess_coord_t u, tess_coord_t v);
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	static int_t packOpaqueColorLegacy(int_t red, int_t green, int_t blue);
 	bool setPackedFaceStateLegacy(int_t packedColor, int_t packedBrightness);
 #endif
-#if PLATFORM_PC_LEGACY || defined(PS2_PLATFORM)
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD || defined(PS2_PLATFORM)
 	bool addAxisAlignedFaceWithUVFast(int_t side, tess_coord_t x, tess_coord_t y, tess_coord_t z,
 		tess_coord_t width, tess_coord_t height,
 		tess_coord_t u0, tess_coord_t u1, tess_coord_t v0, tess_coord_t v1);

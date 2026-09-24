@@ -59,10 +59,37 @@ void platformProfileChunkEvict(long long) {}
 // the GPU / vsync) over the same period.
 int xboxClientProfileTake(long long out[4]);   // ClientProfilerBackend_XBOX.cpp
 
+void xboxRenderTakeDrawStats(double* drawMs, long* vbDraws, long* upDraws, long* upVertices, long* viewSets);
+void xboxRenderTakeListStats(double* transformMs, double* listMs, double* stageMs, long* listCalls);
+void pcLegacyTakeMeshSchedulerStats(long *calls, long *pending, long *steps, long *published, long *stepUs);
+
 void xboxProfileReport(unsigned int frames, unsigned long elapsedMs, double presentMs)
 {
     if (frames == 0 || elapsedMs == 0)
         return;
+    {
+        long calls = 0, pending = 0, steps = 0, published = 0, stepUs = 0;
+        pcLegacyTakeMeshSchedulerStats(&calls, &pending, &steps, &published, &stepUs);
+        const long c = calls > 0 ? calls : 1;
+        MC_LOG_INFO("xbox.mesh", "per frame: queue=%ld steps=%ld (%.2fms) | sections published in %.1fs: %ld\n",
+                    pending / c, steps / static_cast<long>(frames), stepUs / 1000.0 / frames,
+                    elapsedMs / 1000.0, published);
+    }
+    {
+        double transformMs = 0.0, listMs = 0.0, stageMs = 0.0;
+        long listCalls = 0;
+        xboxRenderTakeListStats(&transformMs, &listMs, &stageMs, &listCalls);
+        MC_LOG_INFO("xbox.draw", "per frame: lists=%ld replay=%.2fms setTransform=%.2fms textureStage=%.2fms\n",
+                    listCalls / static_cast<long>(frames), listMs / frames, transformMs / frames, stageMs / frames);
+    }
+    {
+        double drawMs = 0.0;
+        long vbDraws = 0, upDraws = 0, upVertices = 0, viewSets = 0;
+        xboxRenderTakeDrawStats(&drawMs, &vbDraws, &upDraws, &upVertices, &viewSets);
+        MC_LOG_INFO("xbox.draw", "per frame: vbDraws=%ld (in D3D %.2fms) upDraws=%ld upVerts=%ld viewSets=%ld\n",
+                    vbDraws / static_cast<long>(frames), drawMs / frames, upDraws / static_cast<long>(frames),
+                    upVertices / static_cast<long>(frames), viewSets / static_cast<long>(frames));
+    }
     long long client[4] = {};
     const int ticks = xboxClientProfileTake(client);
     const double perFrame = 1.0 / static_cast<double>(frames);

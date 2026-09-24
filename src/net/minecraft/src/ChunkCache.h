@@ -24,7 +24,7 @@ public:
 
 	int_t getBlockId(int_t i, int_t j, int_t k) override;
 	bool hasResidentChunkAtBlock(int_t i, int_t k) const;
-#if PLATFORM_PC_LEGACY || defined(PS2_PLATFORM)
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD || defined(PS2_PLATFORM)
 	const ExtendedBlockStorage *getResidentBlockStorageAt(int_t i, int_t j, int_t k) const;
 #endif
 	TileEntity *getBlockTileEntity(int_t i, int_t j, int_t k) override;

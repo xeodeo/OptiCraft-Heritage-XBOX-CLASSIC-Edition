@@ -1,6 +1,6 @@
 #include "pc/render/PcLegacyMeshScheduler.h"
 
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 
 #include <algorithm>
 #include <cstddef>
@@ -26,6 +26,12 @@ namespace
     };
 
     static std::vector<PcLegacyMeshCandidate> s_candidates;
+    // Scheduler counters since the last take (Xbox profile report).
+    static long s_statPending = 0;
+    static long s_statSteps = 0;
+    static long s_statPublished = 0;
+    static long s_statStepUs = 0;
+    static long s_statCalls = 0;
 
     class PcLegacyFrameMeshBudget
     {
@@ -65,8 +71,13 @@ namespace
         void run(WorldRenderer *renderer)
         {
             const std::uint64_t stepStartUs = PlatformCompat::getMonotonicMicros();
+            const int_t publishedBefore = WorldRenderer::chunksUpdated;
             renderer->updateRenderer();
             const std::uint64_t stepEndUs = PlatformCompat::getMonotonicMicros();
+            s_statPublished += static_cast<long>(WorldRenderer::chunksUpdated - publishedBefore);
+            ++s_statSteps;
+            if (stepEndUs > stepStartUs)
+                s_statStepUs += static_cast<long>(stepEndUs - stepStartUs);
 
             ++steps;
             if (stepEndUs > stepStartUs)
@@ -79,6 +90,18 @@ namespace
         int_t steps;
         int_t maxSteps;
     };
+}
+
+// Scheduler counters since the last take (Xbox profile report).
+
+void pcLegacyTakeMeshSchedulerStats(long *calls, long *pending, long *steps, long *published, long *stepUs)
+{
+    *calls = s_statCalls;
+    *pending = s_statPending;
+    *steps = s_statSteps;
+    *published = s_statPublished;
+    *stepUs = s_statStepUs;
+    s_statCalls = s_statPending = s_statSteps = s_statPublished = s_statStepUs = 0;
 }
 
 void pcLegacyRunMeshScheduler(
@@ -95,6 +118,8 @@ void pcLegacyRunMeshScheduler(
         s_candidates.reserve(fixedRendererCapacity);
 
     s_candidates.clear();
+    ++s_statCalls;
+    s_statPending += static_cast<long>(pending.size());
     for (WorldRenderer *candidate : pending)
     {
         if (candidate == nullptr || !candidate->needsUpdate)
