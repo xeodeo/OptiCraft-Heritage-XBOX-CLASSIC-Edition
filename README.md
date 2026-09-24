@@ -46,6 +46,8 @@ apps/OptiCraft/
 
 ### Original Xbox
 
+<p align="center"><img src="scripts/xbox/media/cover.png" alt="OptiCraft by xeodeo — Xbox" width="256"></p>
+
 The Xbox build targets the retail console (733 MHz Pentium III, 64 MB, NV2A) and runs both on hardware and in [xemu](https://xemu.app). It is compiled with Visual Studio 2022 (C++17, `/arch:SSE`) and linked against the Xbox Development Kit (XDK 5849).
 
 It provides:
