@@ -173,7 +173,19 @@ The output lands in `bin/xbox/`:
 - `iso/` holds `default.xbe`, `OptiCraft_720p.xbe`, `default.tbn` (folder thumbnail) and `data/`. Copy that folder to the console's hard disk.
 - `OptiCraft.iso` holds the same content as an Xbox ISO, for xemu.
 
-For a build to publish, use the `xbox-public` preset (`cmake --preset xbox-public` / `cmake --build --preset xbox-public`). It never embeds a network-log address, writes to `bin/xbox-public/` and skips `XBOX_DEPLOY_DIR`, so local test builds keep their own settings.
+There are two builds, from the same sources:
+
+| | Test build | Public build |
+|---|---|---|
+| Preset | `xbox-release` | `xbox-public` |
+| Configure | `cmake --preset xbox-release -DXBOX_NETLOG_HOST=<your PC's IPv4>` (once; the address stays in `build/xbox-release`) | `cmake --preset xbox-public` |
+| Build | `cmake --build --preset xbox-release` | `cmake --build --preset xbox-public` |
+| Output | `bin/xbox/` | `bin/xbox-public/` |
+| Network log | every log line goes over UDP to that PC; read it live with `python scripts/xbox/tools/escuchar_log.py` (allow Python through the Windows firewall) | none, and `MC_LOG_LEVEL` 0 |
+| `XBOX_DEPLOY_DIR` | honoured | ignored |
+| Use it for | testing on the console and finding hangs or hitches (`xbox.perf`, `xbox.spike` lines) | the ISO/zip you publish |
+
+Both enable sound and multiplayer (`XBOX_ENABLE_SOUND`, `XBOX_ENABLE_NETWORK`).
 
 The dashboard title image and save image come from `scripts/xbox/media/` (BMPs made from the game's own textures, packed to XPR by the XDK `bundler.exe` during the build); `logo3.png` there is the port-credit screen of the intro.
 

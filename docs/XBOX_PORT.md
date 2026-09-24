@@ -15,6 +15,7 @@ The short build recipe is also in the main [README](../README.md#original-xbox).
 - **Video:** `default.xbe` runs at 640x480; `OptiCraft_720p.xbe` (the same program under another name) runs at 1280x720 progressive when 720p is enabled in the dashboard (component cable).
 - **Sound:** DirectSound on the MCPX audio processor. Music streams; effects are pitched and attenuated by distance. Output is stereo, or Dolby Digital 5.1 from the options.
 - **Controller:** XInput. The first connected pad is player 1, on any port.
+- **Multiplayer (experimental):** the Multiplayer screen joins Minecraft 1.2.5 servers (`online-mode=false`) over the console's network connection (XNet TCP, address from the dashboard's network settings).
 - **Saves** go to the title drive `T:`, which is `E:\TDATA\FFFF4F43` on the console.
 
 Known limits are listed in [section 9](#9-known-issues-and-next-steps).
@@ -164,7 +165,16 @@ Run these from a normal command prompt. The toolchain file sets the compilers it
 
 The dashboard shows the title "OptiCraft by xeodeo" and the title image embedded by `imagebld /TITLEIMAGE` (see `scripts/xbox/media/`). The intro adds a port-credit screen after the OptiProjects logo.
 
-**Release build:** the `xbox-public` preset builds without any network-log address into `bin/xbox-public/`. Test builds keep `XBOX_NETLOG_HOST` in their own cache.
+**Test build vs release build** (same sources):
+
+| | Test (`xbox-release`) | Release (`xbox-public`) |
+|---|---|---|
+| Configure | `cmake --preset xbox-release -DXBOX_NETLOG_HOST=<PC IPv4>` once | `cmake --preset xbox-public` |
+| Build | `cmake --build --preset xbox-release` | `cmake --build --preset xbox-public` |
+| Output | `bin/xbox/` | `bin/xbox-public/` |
+| Log | UDP to the PC; run `python scripts/xbox/tools/escuchar_log.py` there (see [section 8](#8-debugging)) | none (`MC_LOG_LEVEL` 0) |
+
+Both enable sound and multiplayer.
 
 Launching a game unloads the dashboard, and its FTP server goes with it. To read logs while the game runs, use the network log.
 
@@ -295,7 +305,8 @@ Everything Xbox-specific sits behind `PLATFORM_XBOX` / `XBOX_PLATFORM`. It lives
 | Settings/UI policy | `platform/ClientPlatformPolicy_XBOX.cpp`, `PlatformUserSettings_XBOX.cpp`, `LegacyControlPromptBackend_XBOX.cpp` | Minecraft folder on the writable root; releases the menu textures when a world starts; red crash screen instead of a reboot. |
 | Tuning | `src/xbox/XboxTuning.h` | World and memory policy: bounded world, render distance 2, chunk cache radius 5, 40 live mobs, autosave every 1200 ticks, GUI scale 2. |
 | Diagnostics | `system/XboxLogRing.cpp`, `XboxNetLog.cpp`, `XboxSelfTest.cpp`, `platform/Diagnostics_XBOX.cpp` | See section 8. |
-| Stubs | `java/JavaNetwork_xbox.cpp`, `Runtime_xbox.cpp`, profiler/screenshot backends | No online play. |
+| Network | `src/java/JavaNetworkXbox.cpp`, `system/XboxNetwork.*` | TCP sockets for multiplayer over XNet (Winsock API), host names through `XNetDnsLookup`; one shared XNet startup also used by the UDP log. Needs `XBOX_ENABLE_NETWORK`. |
+| Stubs | `Runtime_xbox.cpp`, profiler/screenshot backends | |
 
 **Renderer details:**
 
@@ -433,7 +444,7 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
 
   If a real-console crash points at one of them, replace it like the others.
 - **Skins:** the skin images are not part of every data set; missing ones fall back to Steve.
-- **No online or multiplayer.**
+- **Multiplayer is experimental:** only Minecraft 1.2.5 servers with `online-mode=false`; no LAN discovery or Xbox Live.
 
 ---
 

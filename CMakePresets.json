@@ -153,6 +153,7 @@
         "PLATFORM": "XBOX",
         "XBOX_BRINGUP": "OFF",
         "XBOX_ENABLE_SOUND": "ON",
+        "XBOX_ENABLE_NETWORK": "ON",
         "CMAKE_MAKE_PROGRAM": "${sourceDir}/ninja.exe"
       }
     },

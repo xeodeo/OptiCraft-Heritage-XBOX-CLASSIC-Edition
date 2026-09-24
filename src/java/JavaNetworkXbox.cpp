@@ -1,11 +1,16 @@
-// JavaNetwork_xbox.cpp — java/JavaNetwork.h for the Xbox.
+// JavaNetworkXbox.cpp — java/JavaNetwork.h for the Xbox.
 //
 // With networking enabled (XBOX_ENABLE_NETWORK, i.e. no NO_NETWORK define)
-// sockets are XNet TCP sockets: the same Winsock calls as a PC, with the stack
-// started in security-bypass mode by XboxNetwork (the mode that may reach an
-// ordinary Minecraft 1.2.5 server) and host names resolved with
-// XNetDnsLookup. It mirrors src/wii/JavaNetwork_wii.cpp. URL requests are not
-// implemented (skins and resources come from the local data).
+// sockets are XNet TCP sockets opened through XboxNetwork (security-bypass
+// mode, the one that may reach an ordinary Minecraft 1.2.5 server). It mirrors
+// src/wii/JavaNetwork_wii.cpp. URL requests are not implemented (skins and
+// resources come from the local data).
+//
+// This file lives outside src/xbox on purpose: sources there are compiled with
+// the XDK include path, whose 2003 STL headers shadow the VS2022 ones. Streams
+// built against that STL reached NetworkManager (VS2022 STL) with a different
+// std::ios layout and failed at once with "ios_base::badbit set". Only plain C
+// calls cross into XboxNetwork.cpp.
 //
 // Without networking the sockets never connect, like the PS2 build.
 #ifdef XBOX_PLATFORM
@@ -13,6 +18,7 @@
 #include "java/JavaNetwork.h"
 
 #include <atomic>
+#include <cstdint>
 #include <cstring>
 #include <istream>
 #include <memory>
@@ -21,7 +27,7 @@
 #include <streambuf>
 
 #ifndef NO_NETWORK
-#include "xbox/XboxXtl.h"
+#include "platform/Log.h"
 #include "xbox/system/XboxNetwork.h"
 #endif
 
@@ -57,42 +63,26 @@ public:
 		receivedBytes.store(0, std::memory_order_release);
 		sentBytes.store(0, std::memory_order_release);
 		remoteAddress = host + ":" + std::to_string(port);
-		if (port < 1 || port > 65535)
-			return false;
-
-		unsigned long address = 0;
-		if (!XboxNetwork::resolveIPv4(host, &address))
-			return false;
-
-		const SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (s == INVALID_SOCKET)
-			return false;
-		fd.store(s, std::memory_order_release);
-
-		// Minecraft's protocol is many small packets; don't hold them back.
-		BOOL noDelay = TRUE;
-		setsockopt(s, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char *>(&noDelay), sizeof(noDelay));
-
-		sockaddr_in target;
-		std::memset(&target, 0, sizeof(target));
-		target.sin_family = AF_INET;
-		target.sin_port = htons(static_cast<u_short>(port));
-		target.sin_addr.s_addr = address;
-		if (::connect(s, reinterpret_cast<const sockaddr *>(&target), sizeof(target)) != 0)
+		const intptr_t s = XboxNetwork::tcpConnect(host.c_str(), port);
+		if (s == XboxNetwork::kInvalidSocket)
 		{
-			close();
+			MC_LOG_ERROR("network", "xbox connect %s failed, wsa=%d\n", remoteAddress.c_str(), XboxNetwork::lastError());
 			return false;
 		}
+		fd.store(s, std::memory_order_release);
 		return true;
 	}
 
 	int read(char *buffer, int length) override
 	{
-		const SOCKET s = fd.load(std::memory_order_acquire);
-		if (s == INVALID_SOCKET || buffer == nullptr || length <= 0 ||
+		const intptr_t s = fd.load(std::memory_order_acquire);
+		if (s == XboxNetwork::kInvalidSocket || buffer == nullptr || length <= 0 ||
 		    closing.load(std::memory_order_acquire))
 			return -1;
-		const int count = recv(s, buffer, length, 0);
+		const int count = XboxNetwork::tcpRecv(s, buffer, length);
+		if (count <= 0 && !closing.load(std::memory_order_acquire))
+			MC_LOG_ERROR("network", "xbox recv returned %d, wsa=%d, got %u bytes so far\n", count,
+			             XboxNetwork::lastError(), static_cast<unsigned>(receivedBytes.load()));
 		if (count > 0)
 			receivedBytes.fetch_add(static_cast<std::size_t>(count), std::memory_order_relaxed);
 		return count > 0 ? count : -1;
@@ -100,17 +90,24 @@ public:
 
 	bool write(const char *buffer, int length) override
 	{
-		const SOCKET s = fd.load(std::memory_order_acquire);
-		if (s == INVALID_SOCKET || buffer == nullptr || closing.load(std::memory_order_acquire))
+		const intptr_t s = fd.load(std::memory_order_acquire);
+		if (s == XboxNetwork::kInvalidSocket || buffer == nullptr || closing.load(std::memory_order_acquire))
+		{
+			MC_LOG_ERROR("network", "xbox write on closed socket (fd=%d closing=%d)\n", static_cast<int>(s),
+			             closing.load() ? 1 : 0);
 			return false;
+		}
 		int offset = 0;
 		while (offset < length)
 		{
 			if (closing.load(std::memory_order_acquire))
 				return false;
-			const int count = send(s, buffer + offset, length - offset, 0);
+			const int count = XboxNetwork::tcpSend(s, buffer + offset, length - offset);
 			if (count <= 0)
+			{
+				MC_LOG_ERROR("network", "xbox send(%d) returned %d, wsa=%d\n", length - offset, count, XboxNetwork::lastError());
 				return false;
+			}
 			sentBytes.fetch_add(static_cast<std::size_t>(count), std::memory_order_relaxed);
 			offset += count;
 		}
@@ -119,23 +116,23 @@ public:
 
 	bool flush() override
 	{
-		return fd.load(std::memory_order_acquire) != INVALID_SOCKET &&
+		return fd.load(std::memory_order_acquire) != XboxNetwork::kInvalidSocket &&
 		       !closing.load(std::memory_order_acquire);
 	}
 
 	void interruptRead() override
 	{
-		const SOCKET s = fd.load(std::memory_order_acquire);
-		if (s != INVALID_SOCKET)
-			shutdown(s, SD_RECEIVE);
+		const intptr_t s = fd.load(std::memory_order_acquire);
+		if (s != XboxNetwork::kInvalidSocket)
+			XboxNetwork::tcpShutdown(s, true);
 	}
 
 	void close() override
 	{
 		closing.store(true, std::memory_order_release);
-		const SOCKET s = fd.load(std::memory_order_acquire);
-		if (s != INVALID_SOCKET)
-			shutdown(s, SD_BOTH);
+		const intptr_t s = fd.load(std::memory_order_acquire);
+		if (s != XboxNetwork::kInvalidSocket)
+			XboxNetwork::tcpShutdown(s, false);
 	}
 
 	std::string getRemoteSocketAddress() const override { return remoteAddress; }
@@ -146,15 +143,15 @@ private:
 	void releaseSocket()
 	{
 		closing.store(true, std::memory_order_release);
-		const SOCKET s = fd.exchange(INVALID_SOCKET, std::memory_order_acq_rel);
-		if (s != INVALID_SOCKET)
+		const intptr_t s = fd.exchange(XboxNetwork::kInvalidSocket, std::memory_order_acq_rel);
+		if (s != XboxNetwork::kInvalidSocket)
 		{
-			shutdown(s, SD_BOTH);
-			closesocket(s);
+			XboxNetwork::tcpShutdown(s, false);
+			XboxNetwork::tcpClose(s);
 		}
 	}
 
-	std::atomic<SOCKET> fd{INVALID_SOCKET};
+	std::atomic<intptr_t> fd{XboxNetwork::kInvalidSocket};
 	std::atomic_bool closing{true};
 	std::atomic<std::size_t> receivedBytes{0};
 	std::atomic<std::size_t> sentBytes{0};
