@@ -12,7 +12,6 @@
 
 #ifdef PS2_PLATFORM
 #include "java/Resource.h"
-#include "legacy/Ps2ButtonAtlasData.h"
 #include <sstream>
 #endif
 
@@ -83,10 +82,7 @@ std::istream* TexturePackDefault::getResourceAsStream(const std::string &s)
 	catch (...)
 	{
 	}
-	if (s.find("buttons_ps2.png") != std::string::npos)
-	{
-		return new std::istringstream(std::string(reinterpret_cast<const char*>(s_ps2ButtonAtlasPngData), PS2_BUTTON_ATLAS_PNG_SIZE));
-	}
+
 	return nullptr;
 #elif defined(XBOX_PLATFORM)
 	auto st = GameResources::open(s);

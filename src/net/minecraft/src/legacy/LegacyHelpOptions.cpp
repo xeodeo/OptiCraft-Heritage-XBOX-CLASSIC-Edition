@@ -3,6 +3,8 @@
 
 #include "LegacyGuiButton.h"
 #include "LegacyControlsScreen.h"
+#include "LegacyControllerLayoutScreen.h"
+#include "platform/PlatformConfig.h"
 #include "LegacyHeritageOptions.h"
 #include "LegacyLanguageOptions.h"
 #include "LegacyMainMenuLayout.h"
@@ -71,7 +73,11 @@ void LegacyHelpOptions::actionPerformed(GuiButton *button)
         mc->displayGuiScreen(new LegacyVideoOptions(this, settings, backgroundMode));
         return;
     case BUTTON_CONTROLS:
+#if PLATFORM_PS2
+        mc->displayGuiScreen(new LegacyControllerLayoutScreen(this, settings, backgroundMode));
+#else
         mc->displayGuiScreen(new LegacyControlsScreen(this, settings, backgroundMode));
+#endif
         return;
     case BUTTON_LANGUAGE:
         mc->displayGuiScreen(new LegacyLanguageOptions(this, settings, backgroundMode));

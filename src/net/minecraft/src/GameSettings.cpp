@@ -139,6 +139,7 @@ void GameSettings::setDefaults()
     language = "en_US";
     playerName = "Player";
     selectedSkin = "LegacySteve";
+    selectedSkinP2 = "TennisSteve";
     legacyUI = legacyUiDefaultEnabled();
     legacyLook = legacyLookDefaultEnabled();
     legacyCrafting = PLATFORM_XBOX != 0;

@@ -24,6 +24,8 @@ protected:
     void mouseClicked(int_t x, int_t y, int_t button) override;
 
 private:
+    void drawLayoutArtwork();
+    bool artworkAvailable = false;
     void rebuildPage();
     void beginCapture(int_t visibleRow);
     void cancelCapture();

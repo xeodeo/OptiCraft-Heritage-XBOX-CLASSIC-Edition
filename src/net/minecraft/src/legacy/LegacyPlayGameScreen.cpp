@@ -491,7 +491,7 @@ void LegacyPlayGameScreen::drawScrollIndicators()
 
 void LegacyPlayGameScreen::drawMenuControlHints()
 {
-    drawLegacyMenuHints(fontRenderer, width, height, true);
+    drawLegacyMenuHints(mc, width, height, true);
 #if PLATFORM_XBOX
     if (selectedWorldIndex() >= 0)
     {

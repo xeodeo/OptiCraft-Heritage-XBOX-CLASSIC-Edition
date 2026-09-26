@@ -115,6 +115,7 @@ public:
 	// not need command-line arguments to choose a player name.
 	std::string playerName;
 	std::string selectedSkin;
+	std::string selectedSkinP2;
 	bool legacyUI;
 	bool legacyLook;
 	// Console crafting menu (tabs + recipe list) instead of the crafting grid.
