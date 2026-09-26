@@ -39,6 +39,10 @@ static const Ps2ButtonPromptInfo s_iconInfos[] = {
     { 2.0f / 256.0f, 195.0f / 256.0f, 62.0f / 256.0f, 253.0f / 256.0f, 60, 58 }
 };
 
+#if PLATFORM_XBOX
+#include "XboxButtonAtlasData.h"
+#endif
+
 static const Ps2ButtonPromptInfo s_defaultInfo = { 0.0f, 0.0f, 1.0f, 1.0f, 60, 60 };
 } // namespace
 
@@ -49,6 +53,45 @@ Ps2ButtonIcon iconFromName(const std::string &name)
 {
     if (name.empty())
         return Ps2ButtonIcon::None;
+
+#if PLATFORM_XBOX
+    // Names from LegacyControlPromptBackend_XBOX / xboxPadKeyName.
+    if (name == "A" || name == "[A]")
+        return Ps2ButtonIcon::Cross;
+    if (name == "B" || name == "[B]")
+        return Ps2ButtonIcon::Circle;
+    if (name == "X" || name == "[X]")
+        return Ps2ButtonIcon::Square;
+    if (name == "Y" || name == "[Y]")
+        return Ps2ButtonIcon::Triangle;
+    if (name == "White")
+        return Ps2ButtonIcon::L1;
+    if (name == "Black")
+        return Ps2ButtonIcon::R1;
+    if (name == "LT")
+        return Ps2ButtonIcon::L2;
+    if (name == "RT")
+        return Ps2ButtonIcon::R2;
+    if (name == "LS" || name == "Left Stick")
+        return Ps2ButtonIcon::L3;
+    if (name == "RS" || name == "Right Stick")
+        return Ps2ButtonIcon::R3;
+    if (name == "Back")
+        return Ps2ButtonIcon::Select;
+    if (name == "Start")
+        return Ps2ButtonIcon::Start;
+    if (name == "D-Pad Up")
+        return Ps2ButtonIcon::DPadUp;
+    if (name == "D-Pad Down")
+        return Ps2ButtonIcon::DPadDown;
+    if (name == "D-Pad Left")
+        return Ps2ButtonIcon::DPadLeft;
+    if (name == "D-Pad Right")
+        return Ps2ButtonIcon::DPadRight;
+    if (name.find("D-Pad") != std::string::npos || name.find("DPad") != std::string::npos)
+        return Ps2ButtonIcon::DPad;
+    return Ps2ButtonIcon::None;
+#endif
 
     if (name == "Cross" || name == "X" || name == "[X]")
         return Ps2ButtonIcon::Cross;
@@ -83,8 +126,13 @@ Ps2ButtonIcon iconFromName(const std::string &name)
 const Ps2ButtonPromptInfo &getIconInfo(Ps2ButtonIcon icon)
 {
     int idx = static_cast<int>(icon);
+#if PLATFORM_XBOX
+    if (idx >= 0 && idx < static_cast<int>(sizeof(s_xboxIconInfos) / sizeof(s_xboxIconInfos[0])))
+        return s_xboxIconInfos[idx];
+#else
     if (idx >= 0 && idx < static_cast<int>(sizeof(s_iconInfos) / sizeof(s_iconInfos[0])))
         return s_iconInfos[idx];
+#endif
     return s_defaultInfo;
 }
 
@@ -100,7 +148,11 @@ int getAtlasTexture(RenderEngine *renderEngine)
 {
     if (renderEngine == nullptr)
         return -1;
+#if PLATFORM_XBOX
+    return renderEngine->getTexture("/gui/buttons_xbox.png");
+#else
     return renderEngine->getTexture("/gui/buttons_ps2.png");
+#endif
 }
 
 void drawIcon(RenderEngine *renderEngine, Ps2ButtonIcon icon, int x, int y, int height)

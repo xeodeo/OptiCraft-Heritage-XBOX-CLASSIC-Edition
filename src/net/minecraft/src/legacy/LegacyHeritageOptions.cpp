@@ -30,13 +30,14 @@ constexpr int_t BUTTON_ALTERNATIVE_CONTROLS = 601;
 constexpr int_t BUTTON_DEADZONE = 602;
 constexpr int_t BUTTON_DONE = 600;
 constexpr int_t BUTTON_EDIT_PLAYER_NAME = 606;
+constexpr int_t BUTTON_LEGACY_CRAFTING = 607;
 
 }
 
 LegacyHeritageOptions::LegacyHeritageOptions(GuiScreen *parent, GameSettings *settingsValue,
     LegacyOptionsBackgroundMode backgroundModeValue)
     : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), nameField(nullptr), legacyUiCheckbox(nullptr),
-      legacyLookCheckbox(nullptr), alternativeControlsCheckbox(nullptr)
+      legacyLookCheckbox(nullptr), legacyCraftingCheckbox(nullptr), alternativeControlsCheckbox(nullptr)
 {
 }
 
@@ -54,6 +55,9 @@ void LegacyHeritageOptions::initGui()
 #endif
 #ifdef WII_PLATFORM
     ++rowCount;
+#endif
+#if PLATFORM_XBOX
+    ++rowCount; // Console Crafting
 #endif
 #if PLATFORM_HAS_CONTROLLER_CALIBRATION
     ++rowCount;
@@ -89,6 +93,12 @@ void LegacyHeritageOptions::initGui()
     legacyLookCheckbox = new LegacyOptionCheckbox(BUTTON_LEGACY_LOOK, x, legacyLayout.rowY(row++), w, h,
         uiText("Legacy Look"), settings->legacyLook);
     controlList.push_back(legacyLookCheckbox);
+
+#if PLATFORM_XBOX
+    legacyCraftingCheckbox = new LegacyOptionCheckbox(BUTTON_LEGACY_CRAFTING, x, legacyLayout.rowY(row++), w, h,
+        uiText("Console Crafting"), settings->legacyCrafting);
+    controlList.push_back(legacyCraftingCheckbox);
+#endif
 
 #ifdef WII_PLATFORM
     alternativeControlsCheckbox = new LegacyOptionCheckbox(BUTTON_ALTERNATIVE_CONTROLS, x,
@@ -208,6 +218,15 @@ void LegacyHeritageOptions::actionPerformed(GuiButton *button)
         settings->saveOptions();
         if (mc != nullptr && mc->entityRenderer != nullptr)
             mc->entityRenderer->updateWorldLightLevels();
+        return;
+    }
+
+    if (button->id == BUTTON_LEGACY_CRAFTING)
+    {
+        settings->legacyCrafting = !settings->legacyCrafting;
+        if (legacyCraftingCheckbox != nullptr)
+            legacyCraftingCheckbox->setChecked(settings->legacyCrafting);
+        settings->saveOptions();
         return;
     }
 

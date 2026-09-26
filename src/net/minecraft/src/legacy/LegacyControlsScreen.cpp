@@ -21,6 +21,9 @@
 #endif
 
 #if PLATFORM_XBOX
+#include "LegacyButtonPrompt.h"
+#include "LegacyOptionMetrics.h"
+#include "net/minecraft/src/KeyBinding.h"
 #include "xbox/input/XboxPadKeyCodes.h"
 #endif
 
@@ -102,6 +105,10 @@ int_t LegacyControlsScreen::pageCount() const
 
 void LegacyControlsScreen::refreshRowLabels()
 {
+#if PLATFORM_XBOX
+    rowIcons.assign(static_cast<size_t>(rowsPerPage), -1);
+    rowIconX.assign(static_cast<size_t>(rowsPerPage), 0);
+#endif
     for (int_t visibleRow = 0; visibleRow < rowsPerPage; ++visibleRow)
     {
         GuiButton *button = controlList[visibleRow];
@@ -116,6 +123,29 @@ void LegacyControlsScreen::refreshRowLabels()
         }
 
         const LegacyControlsBindingRow &row = rows[rowIndex];
+#if PLATFORM_XBOX
+        if (captureRow != rowIndex && fontRenderer != nullptr && row.kind == LegacyControlsBindingKind::KeyBinding &&
+            row.bindingIndex >= 0 && row.bindingIndex < static_cast<int_t>(settings->keyBindings.size()))
+        {
+            const char *name = xboxPadKeyName(settings->keyBindings[row.bindingIndex]->keyCode);
+            const Ps2ButtonIcon icon = name != nullptr ? LegacyButtonPrompt::iconFromName(name) : Ps2ButtonIcon::None;
+            if (icon != Ps2ButtonIcon::None)
+            {
+                // Label, gap, then room for the icon: the button centres the
+                // whole string and drawScreen puts the icon in the blank tail.
+                const std::string head = (legacyControlsBindingConflicts(settings, row) ? std::string("\xc2\xa7" "c") : std::string()) +
+                    row.label + "    ";
+                const int_t iconW = LegacyButtonPrompt::getIconDisplayWidth(icon, 11);
+                const int_t spaceW = std::max<int_t>(1, fontRenderer->getStringWidth(" "));
+                const std::string label = head + std::string(static_cast<size_t>((iconW + spaceW - 1) / spaceW), ' ');
+                button->displayString = label;
+                rowIcons[visibleRow] = static_cast<int_t>(icon);
+                rowIconX[visibleRow] = button->xPosition + (legacyLayout.contentWidth - fontRenderer->getStringWidth(label)) / 2 +
+                    fontRenderer->getStringWidth(head);
+                continue;
+            }
+        }
+#endif
         std::string value;
         if (captureRow == rowIndex)
             value = capturePrompt();
@@ -274,6 +304,16 @@ void LegacyControlsScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partia
     drawLegacyBackground(partialTick);
     updateLegacyPointerHover(mouseX, mouseY);
     GuiScreen::drawScreen(mouseX, mouseY, partialTick);
+#if PLATFORM_XBOX
+    for (int_t i = 0; i < static_cast<int_t>(rowIcons.size()) && i < static_cast<int_t>(controlList.size()); ++i)
+    {
+        if (rowIcons[i] < 0 || controlList[i] == nullptr)
+            continue;
+        const GuiButton *button = controlList[i];
+        const int_t y = legacyOptionTextY(button->yPosition, legacyLayout.rowHeight) - 2;
+        LegacyButtonPrompt::drawIcon(mc->renderEngine, static_cast<Ps2ButtonIcon>(rowIcons[i]), rowIconX[i], y, 11);
+    }
+#endif
 }
 
 void LegacyControlsScreen::onGuiClosed()

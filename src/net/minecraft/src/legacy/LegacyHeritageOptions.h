@@ -31,5 +31,6 @@ private:
     GuiTextField *nameField;
     LegacyOptionCheckbox *legacyUiCheckbox;
     LegacyOptionCheckbox *legacyLookCheckbox;
+    LegacyOptionCheckbox *legacyCraftingCheckbox;
     LegacyOptionCheckbox *alternativeControlsCheckbox;
 };

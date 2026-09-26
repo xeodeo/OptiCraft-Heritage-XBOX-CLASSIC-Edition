@@ -7,8 +7,8 @@
 #include "net/minecraft/src/FontRenderer.h"
 #include "platform/PlatformConfig.h"
 
-#if PLATFORM_PS2
 #include "LegacyButtonPrompt.h"
+#if LEGACY_BUTTON_ICONS
 #include "net/minecraft/src/Minecraft.h"
 #include "net/minecraft/src/RenderEngine.h"
 #endif
@@ -18,7 +18,7 @@ void drawLegacyMenuHints(FontRenderer *font, int_t screenWidth, int_t screenHeig
     if (font == nullptr)
         return;
 
-#if PLATFORM_PS2
+#if LEGACY_BUTTON_ICONS
     Minecraft *mc = Minecraft::getMinecraft();
     RenderEngine *renderEngine = mc ? mc->renderEngine : nullptr;
     if (renderEngine != nullptr)
@@ -45,6 +45,8 @@ void drawLegacyMenuHints(FontRenderer *font, int_t screenWidth, int_t screenHeig
         }
         return;
     }
+#endif
+#if PLATFORM_PS2
     const std::string navigate = "[D-Pad] " + uiText("Navigate");
     const std::string select = "[X] " + uiText("Select");
     const std::string back = "[O] " + uiText("Back");

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 
+#include "LegacyButtonPrompt.h"
 #include "LegacyCreateWorldScreen.h"
 #include "LegacyGuiButton.h"
 #include "LegacyMainMenuLayout.h"
@@ -494,9 +495,10 @@ void LegacyPlayGameScreen::drawMenuControlHints()
 #if PLATFORM_XBOX
     if (selectedWorldIndex() >= 0)
     {
-        const std::string hint = "[X] " + uiText("Delete");
-        fontRenderer->drawStringWithShadow(hint, width - LEGACY_HINT_MARGIN - fontRenderer->getStringWidth(hint),
-            legacyHintRowY(height) - 12, 0xf0f0f0);
+        const std::string label = uiText("Delete");
+        const int_t w = LegacyButtonPrompt::getPromptWidth(fontRenderer, Ps2ButtonIcon::Square, label);
+        LegacyButtonPrompt::drawPrompt(mc->renderEngine, fontRenderer, Ps2ButtonIcon::Square, label,
+            width - LEGACY_HINT_MARGIN - w, legacyHintRowY(height) - 12, 11, 0xf0f0f0);
     }
 #endif
 }

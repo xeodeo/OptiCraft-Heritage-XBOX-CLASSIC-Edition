@@ -14,6 +14,9 @@ enum PlatformTextAction : std::uint32_t
     PLATFORM_TEXT_SHIFT  = 1u << 7,
     PLATFORM_TEXT_ENTER  = 1u << 8,
     PLATFORM_TEXT_CLOSE  = 1u << 9,
+    // Page/tab switching (Xbox White/Black). Backends without them never set them.
+    PLATFORM_TEXT_TAB_LEFT  = 1u << 10,
+    PLATFORM_TEXT_TAB_RIGHT = 1u << 11,
 };
 
 struct PlatformTextInputSnapshot

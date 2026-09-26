@@ -117,6 +117,10 @@
 #include "net/minecraft/src/Tessellator.h"
 #include "net/minecraft/src/legacy/startup/StartupPresentation.h"
 #include "net/minecraft/src/legacy/LegacyDebugOptions.h"
+#if PLATFORM_XBOX
+#include "net/minecraft/src/legacy/LegacyCraftingScreen.h"
+#include "xbox/input/XboxPadKeyCodes.h"
+#endif
 
 namespace
 {
@@ -1804,6 +1808,19 @@ void Minecraft::runTick()
             }
             if (eventKey == lwjgl::Keyboard::KEY_F8)
                 gameSettings->smoothCamera = !gameSettings->smoothCamera;
+#if PLATFORM_XBOX
+            // X opens the console crafting menu (2x2), as on the console
+            // editions, unless the player bound an action to X.
+            if (eventKey == XBOX_KEY_X && gameSettings->legacyCrafting && thePlayer != nullptr &&
+                !playerController->isInCreativeMode())
+            {
+                bool bound = false;
+                for (KeyBinding *binding : gameSettings->keyBindings)
+                    bound = bound || (binding != nullptr && binding->keyCode == XBOX_KEY_X);
+                if (!bound)
+                    displayGuiScreen(new LegacyCraftingScreen(thePlayer));
+            }
+#endif
 
             for (int_t slot = 0; slot < 9; ++slot)
             {

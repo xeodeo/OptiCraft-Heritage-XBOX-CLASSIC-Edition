@@ -36,4 +36,8 @@ private:
     int_t page;
     int_t rowsPerPage;
     std::vector<LegacyControlsBindingRow> rows;
+    // Xbox: controller bindings draw their button icon after the label instead
+    // of the name (-1 = text row, e.g. a keyboard key kept from PC).
+    std::vector<int_t> rowIcons;
+    std::vector<int_t> rowIconX;
 };

@@ -1,7 +1,14 @@
 #pragma once
 
 #include "java/Type.h"
+#include "platform/PlatformConfig.h"
 #include <string>
+
+// Consoles whose prompts draw controller icons instead of bracketed text. The
+// enum keeps its PS2 names; on Xbox each slot holds the button in the same
+// position (Cross = A, Circle = B, Square = X, Triangle = Y, L1/R1 = White/Black,
+// L2/R2 = LT/RT, Select = Back).
+#define LEGACY_BUTTON_ICONS (PLATFORM_PS2 || PLATFORM_XBOX)
 
 class RenderEngine;
 class FontRenderer;
@@ -21,7 +28,12 @@ enum class Ps2ButtonIcon : int
     L3 = 9,
     R3 = 10,
     Select = 11,
-    Start = 12
+    Start = 12,
+    // Xbox atlas only: single D-pad directions for the Controls screen.
+    DPadUp = 13,
+    DPadDown = 14,
+    DPadLeft = 15,
+    DPadRight = 16
 };
 
 struct Ps2ButtonPromptInfo

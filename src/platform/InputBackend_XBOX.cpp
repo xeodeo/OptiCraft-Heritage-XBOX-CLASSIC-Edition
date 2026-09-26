@@ -21,6 +21,8 @@ std::uint32_t mapTextButtons(unsigned short bits)
     if (bits & XBOX_PAD_Y) value |= PLATFORM_TEXT_SHIFT;
     if (bits & XBOX_PAD_START) value |= PLATFORM_TEXT_ENTER;
     if (bits & XBOX_PAD_B) value |= PLATFORM_TEXT_CLOSE;
+    if (bits & XBOX_PAD_WHITE) value |= PLATFORM_TEXT_TAB_LEFT;
+    if (bits & XBOX_PAD_BLACK) value |= PLATFORM_TEXT_TAB_RIGHT;
     return value;
 }
 }

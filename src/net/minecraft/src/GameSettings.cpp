@@ -141,6 +141,7 @@ void GameSettings::setDefaults()
     selectedSkin = "LegacySteve";
     legacyUI = legacyUiDefaultEnabled();
     legacyLook = legacyLookDefaultEnabled();
+    legacyCrafting = PLATFORM_XBOX != 0;
     alternativeControllerLayout = false;
     controllerDeadzone = 0.20f;
     wiiDeflicker = true;

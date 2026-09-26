@@ -117,6 +117,9 @@ public:
 	std::string selectedSkin;
 	bool legacyUI;
 	bool legacyLook;
+	// Console crafting menu (tabs + recipe list) instead of the crafting grid.
+	// Only a front end: it crafts through the same container clicks.
+	bool legacyCrafting;
 	int_t renderBackend;
 	bool alternativeControllerLayout;
 	// Platform-neutral controller settings consumed through PlatformUserSettings.

@@ -18,6 +18,8 @@
 #include "EntityPickupFX.h"
 #include "EntityCrit2FX.h"
 #include "GuiChest.h"
+#include "legacy/LegacyCraftingScreen.h"
+#include "platform/PlatformConfig.h"
 #include "GuiCrafting.h"
 #include "GuiDispenser.h"
 #include "GuiEnchantment.h"
@@ -307,6 +309,13 @@ void EntityPlayerSP::displayGUIChest(IInventory *iinventory)
 
 void EntityPlayerSP::displayWorkbenchGUI(int_t i, int_t j, int_t k)
 {
+#if PLATFORM_XBOX
+	if (mc->gameSettings != nullptr && mc->gameSettings->legacyCrafting)
+	{
+		mc->displayGuiScreen(new LegacyCraftingScreen(this, worldObj, i, j, k));
+		return;
+	}
+#endif
 	mc->displayGuiScreen(new GuiCrafting(inventory, worldObj, i, j, k));
 }
 

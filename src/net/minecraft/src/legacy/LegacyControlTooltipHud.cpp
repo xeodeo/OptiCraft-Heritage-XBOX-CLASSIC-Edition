@@ -107,7 +107,7 @@ struct PromptRow
     bool capturedValid;
     bool valid;
 
-#if PLATFORM_PS2
+#if LEGACY_BUTTON_ICONS
     Ps2ButtonIcon icons[PROMPT_COUNT];
     int_t iconX[PROMPT_COUNT];
     int_t iconW[PROMPT_COUNT];
@@ -121,7 +121,7 @@ struct PromptRow
         for (int_t i = 0; i < PROMPT_COUNT; ++i)
         {
             x[i] = 0;
-#if PLATFORM_PS2
+#if LEGACY_BUTTON_ICONS
             icons[i] = Ps2ButtonIcon::None;
             iconX[i] = 0;
             iconW[i] = 0;
@@ -157,7 +157,7 @@ void rebuildRow(const GameSettings &settings, FontRenderer *font, PromptRow &row
 {
     for (int_t i = 0; i < PROMPT_COUNT; ++i)
     {
-#if PLATFORM_PS2
+#if LEGACY_BUTTON_ICONS
         row.actionLabels[i] = actionName(actionAt(i));
         row.icons[i] = LegacyButtonPrompt::iconFromName(row.labels[i]);
         row.iconW[i] = LegacyButtonPrompt::getIconDisplayWidth(row.icons[i], 11);
@@ -181,7 +181,7 @@ void rebuildRow(const GameSettings &settings, FontRenderer *font, PromptRow &row
     if (visible <= 0)
         return;
 
-#if PLATFORM_PS2
+#if LEGACY_BUTTON_ICONS
     int_t textWidth = 0;
     for (int_t i = 0; i < PROMPT_COUNT; ++i)
     {
@@ -203,7 +203,7 @@ void rebuildRow(const GameSettings &settings, FontRenderer *font, PromptRow &row
     {
         if (row.texts[i].empty())
             continue;
-#if PLATFORM_PS2
+#if LEGACY_BUTTON_ICONS
         row.iconX[i] = x;
         row.textX[i] = x + row.iconW[i] + 3;
         row.x[i] = x;
@@ -219,7 +219,7 @@ void emitRow(FontRenderer *font, const PromptRow &row)
 {
     for (int_t i = 0; i < PROMPT_COUNT; ++i)
     {
-#if PLATFORM_PS2
+#if LEGACY_BUTTON_ICONS
         if (row.actionLabels[i].empty())
             continue;
         font->drawStringWithShadow(row.actionLabels[i], row.textX[i], row.y, 0xffffff);
@@ -262,7 +262,7 @@ void drawRow(Minecraft *mc, FontRenderer *font, PromptRow &row)
     if (visiblePromptCount(row.texts, PROMPT_COUNT) <= 0)
         return;
 
-#if PLATFORM_PS2
+#if LEGACY_BUTTON_ICONS
     if (mc != nullptr && mc->renderEngine != nullptr)
     {
         for (int_t i = 0; i < PROMPT_COUNT; ++i)

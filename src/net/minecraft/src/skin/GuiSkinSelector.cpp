@@ -23,6 +23,9 @@
 #include "ps2/input/Ps2PadKeyCodes.h"
 #include "legacy/LegacyButtonPrompt.h"
 #endif
+#ifdef XBOX_PLATFORM
+#include "legacy/LegacyButtonPrompt.h"
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -857,8 +860,21 @@ void GuiSkinSelector::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick
         fontRenderer->drawStringWithShadow(hint, dialogLeft, footerY, 0xC0C0C0);
     }
 #elif PLATFORM_XBOX
-    std::string hint = "[A] Select   [B] Back   [D-Pad </>] Skin   [D-Pad ^/v] Tab";
-    fontRenderer->drawStringWithShadow(hint, dialogLeft, footerY, 0xC0C0C0);
+    RenderEngine *renderEngine = mc ? mc->renderEngine : nullptr;
+    if (renderEngine != nullptr)
+    {
+        const int_t gap = 10;
+        int_t curX = dialogLeft;
+
+        curX += LegacyButtonPrompt::drawPrompt(renderEngine, fontRenderer, Ps2ButtonIcon::Cross, "Select", curX, footerY, 11, 0xE0E0E0) + gap;
+        curX += LegacyButtonPrompt::drawPrompt(renderEngine, fontRenderer, Ps2ButtonIcon::Circle, "Back", curX, footerY, 11, 0xE0E0E0) + gap;
+        curX += LegacyButtonPrompt::drawPrompt(renderEngine, fontRenderer, Ps2ButtonIcon::DPad, "Skin / Tab", curX, footerY, 11, 0xE0E0E0);
+    }
+    else
+    {
+        std::string hint = "[A] Select   [B] Back   [D-Pad </>] Skin   [D-Pad ^/v] Tab";
+        fontRenderer->drawStringWithShadow(hint, dialogLeft, footerY, 0xC0C0C0);
+    }
 #elif PLATFORM_WII
     std::string hint = "[A] Select   [B] Back   [L/R] Skin   [ZL/ZR] Tab";
     fontRenderer->drawStringWithShadow(hint, dialogLeft, footerY, 0xC0C0C0);
