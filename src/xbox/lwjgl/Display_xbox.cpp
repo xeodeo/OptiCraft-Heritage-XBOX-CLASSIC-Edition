@@ -157,7 +157,9 @@ void create() {
     ZeroMemory(&d3dpp, sizeof(d3dpp));
     d3dpp.BackBufferWidth        = XboxVideoMode::width();
     d3dpp.BackBufferHeight       = XboxVideoMode::height();
-    if (XboxVideoMode::isHd())
+    if (XboxVideoMode::isInterlaced())
+        d3dpp.Flags              = D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_WIDESCREEN;
+    else if (XboxVideoMode::isHd())
         d3dpp.Flags              = D3DPRESENTFLAG_PROGRESSIVE | D3DPRESENTFLAG_WIDESCREEN;
     g_mode = DisplayMode(d3dpp.BackBufferWidth, d3dpp.BackBufferHeight);
     d3dpp.BackBufferFormat       = D3DFMT_X8R8G8B8;

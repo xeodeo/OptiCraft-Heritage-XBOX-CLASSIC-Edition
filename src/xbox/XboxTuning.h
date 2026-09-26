@@ -157,8 +157,10 @@
 #undef  PLATFORM_INCREMENTAL_CHUNK_SAVE_LIMIT
 #define PLATFORM_INCREMENTAL_CHUNK_SAVE_LIMIT    4
 
-// UI scaling (640x480).
-#define XBOX_LEGACY_GUI_SCALE                    2
+// UI scaling: 2 at 480 and 720 lines, 3 at 1080 so the menus keep the size
+// they have in 720p.
+namespace XboxVideoMode { int height(); }
+#define XBOX_LEGACY_GUI_SCALE                    (XboxVideoMode::height() >= 1080 ? 3.0 : 2.0)
 #define XBOX_LEGACY_CREATE_WORLD_PANEL_WIDTH     310
 
 #endif // PLATFORM_XBOX

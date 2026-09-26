@@ -308,6 +308,8 @@ add_custom_command(TARGET OptiCraft POST_BUILD
     # Same program under a name with "720" in it: runs at 1280x720 when the
     # dashboard allows it (src/xbox/system/XboxVideoMode.h).
     COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/OptiCraft_720p.xbe"
+    # And with "1080" in it: 1920x1080 interlaced when the dashboard allows it.
+    COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/OptiCraft_1080i.xbe"
     # Folder thumbnail for XBMC-style dashboards.
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/scripts/xbox/media/cover.png" "${XBOX_ISO_DIR}/default.tbn"
     # Xbox port credit shown after the OptiProjects logo (StartupPresentation).
