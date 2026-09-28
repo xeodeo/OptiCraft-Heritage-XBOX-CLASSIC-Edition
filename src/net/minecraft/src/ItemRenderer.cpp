@@ -28,6 +28,24 @@ namespace {
     bool isRenderableStack(ItemStack* stack) {
         return stack != nullptr && stack->isValid();
     }
+
+    // itemToRender outlives the slot it came from: on a server the inventory
+    // packets replace (and delete) ItemStacks, and the next frame read the
+    // freed stack's NBT (crash in hasEffect -> isItemEnchanted). Only trust
+    // the pointer while the player's inventory still holds it; this compares
+    // addresses and never touches the stack itself.
+    bool isHeldByInventory(const EntityPlayer* player, const ItemStack* stack) {
+        if (stack == nullptr || player == nullptr || player->inventory == nullptr)
+            return false;
+        const InventoryPlayer* inventory = player->inventory;
+        for (int i = 0; i < 36; ++i)
+            if (inventory->mainInventory[i] == stack)
+                return true;
+        for (int i = 0; i < 4; ++i)
+            if (inventory->armorInventory[i] == stack)
+                return true;
+        return inventory->itemStack == stack;
+    }
 }
 
 ItemRenderer::ItemRenderer(Minecraft* minecraft)
@@ -214,7 +232,7 @@ void ItemRenderer::renderItemInFirstPerson(float partialTick) {
     renderRotate((player->rotationYaw - armYaw) * 0.1f, 0.0f, 1.0f, 0.0f);
 
     ItemStack* itemstack = itemToRender;
-    if (!isRenderableStack(itemstack)) {
+    if (!isHeldByInventory(player, itemstack) || !isRenderableStack(itemstack)) {
         itemstack = nullptr;
         itemToRender = nullptr;
     }
@@ -563,7 +581,7 @@ void ItemRenderer::updateEquippedItem() {
     EntityPlayerSP* entityplayersp = mc->thePlayer;
     EntityPlayer* entityplayer = (EntityPlayer*)entityplayersp;
     ItemStack* itemstack1 = entityplayer->inventory->getCurrentItem();
-    if (!isRenderableStack(itemToRender)) {
+    if (!isHeldByInventory(entityplayer, itemToRender) || !isRenderableStack(itemToRender)) {
         itemToRender = nullptr;
     }
     if (!isRenderableStack(itemstack1)) {

@@ -177,6 +177,11 @@ void tick(Minecraft *mc)
             ChunkCoordinates spawn = mc->theWorld->getSpawnPoint();
             p2->setLocationAndAngles(spawn.x + 0.5, spawn.y + 1.0, spawn.z + 0.5, 0.0f, 0.0f);
         }
+        // onDeath() shrank the hitbox to 0.2x0.2; without the vanilla spawn
+        // reset the revived P2 keeps it and player 1's hits pass through.
+        p2->preparePlayerToSpawn();
+        p2->hurtTime = 0;
+        p2->heartsLife = 0;
         p2->motionX = 0.0;
         p2->motionY = 0.0;
         p2->motionZ = 0.0;

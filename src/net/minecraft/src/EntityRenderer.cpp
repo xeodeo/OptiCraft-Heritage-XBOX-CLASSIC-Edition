@@ -80,6 +80,7 @@
 
 #if PLATFORM_XBOX
 #include <intrin.h>
+#include "client/XboxSplitScreen.h"
 #endif
 #if PLATFORM_XBOX
 extern "C" void xboxProfileFrameSlot(int slot, unsigned long long cycles);   // Profiler_XBOX.cpp
@@ -1242,6 +1243,12 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
         prevFrameTime = std::chrono::steady_clock::now();
     }
     
+#if PLATFORM_XBOX
+    // Split screen: player 2's right stick turns its camera. Outside the
+    // block below: that one is player 1's (its focus, its mouse path) and its
+    // direct-camera branch is PS2 only, so the Xbox never reached this call.
+    XboxSplitScreen::turnCamera(mc);
+#endif
     // Manejo de camara/mouse
     if (mc->inGameHasFocus && mc->thePlayer != nullptr)
     {
@@ -1457,7 +1464,9 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
     }
     
     // Renderizar pantalla actual (GUI)
-    if (mc->currentScreen != nullptr)
+    const bool screensDrawnPerViewport = mc->theWorld != nullptr && mc->isSplitScreenActive() &&
+                                         mc->thePlayer2 != nullptr;
+    if (mc->currentScreen != nullptr && !screensDrawnPerViewport)
     {
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2
         const PlatformDrawSnapshot screenDrawStart = platformProfileDrawSnapshot();
@@ -1535,7 +1544,10 @@ void EntityRenderer::renderSplitScreen(float partialTicks, int64_t renderTimeLim
 
         renderWorld(partialTicks, renderTimeLimitNano);
 
-        if (!mc->gameSettings->hideGUI || mc->currentScreen != nullptr)
+        // This player's own screen (Legacy-style split screen): each one is
+        // sized for and drawn inside its half.
+        GuiScreen *screen = (i == 0) ? mc->player1Screen() : mc->player2Screen();
+        if (!mc->gameSettings->hideGUI || screen != nullptr)
         {
             setupOverlayRendering();
             ScaledResolution scaledResolution(mc->gameSettings, mc->displayWidth, mc->displayHeight);
@@ -1543,11 +1555,29 @@ void EntityRenderer::renderSplitScreen(float partialTicks, int64_t renderTimeLim
             int scaledHeight = scaledResolution.getScaledHeight();
             int mouseX, mouseY;
             PlatformCompat::getMouseState(&mouseX, &mouseY);
-            int scaledMouseX = (mouseX * scaledWidth) / mc->displayWidth;
-            int scaledMouseY = (mouseY * scaledHeight) / mc->displayHeight;
+            // Player 1's pointer spans the whole display, as the screen's
+            // mouse handler maps it (GuiScreen::handleMouseInput).
+            int scaledMouseX = (mouseX * scaledWidth) / fullW;
+            int scaledMouseY = (mouseY * scaledHeight) / fullH;
+            if (i == 1)
+                scaledMouseX = scaledMouseY = -1000;   // player 2 has no pointer
 
-            mc->ingameGUI->renderGameOverlay(partialTicks, mc->currentScreen != nullptr,
-                                             scaledMouseX, scaledMouseY);
+            mc->ingameGUI->renderGameOverlay(partialTicks, screen != nullptr, scaledMouseX, scaledMouseY);
+
+            if (screen != nullptr)
+            {
+#if PLATFORM_GUI_FORCE_DEPTH_DISABLED
+                renderDisable(RenderCapability::DepthTest);
+#endif
+                renderClear(RenderClearMask::Depth);
+                if (i == 1)
+                    mc->enterPlayer2Context();
+                screen->drawScreen(scaledMouseX, scaledMouseY, partialTicks);
+                if (screen->guiParticles != nullptr)
+                    screen->guiParticles->renderParticles(partialTicks);
+                if (i == 1)
+                    mc->leavePlayer2Context();
+            }
         }
     }
 

@@ -25,6 +25,7 @@
 #include "pc/lwjgl/Keyboard.h"
 #include "platform/Input.h"
 #include "platform/PlatformConfig.h"
+#include "client/XboxSplitScreen.h"
 
 GuiIngameMenu::GuiIngameMenu()
 	: updateCounter2(0)
@@ -54,8 +55,13 @@ void GuiIngameMenu::initGui()
 	const bool legacyPause = mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI;
 	if (legacyPause)
 	{
-		const LegacyMainMenuLayout layout = legacyMainMenuLayout(width, height, legacyPauseButtonCount());
+		LegacyMainMenuLayout layout = legacyMainMenuLayout(width, height, legacyPauseButtonCount());
 		const int_t stride = layout.buttonHeight + layout.buttonSpacing;
+		// Split screen: each half is short, so the title goes and the
+		// buttons use the whole height.
+		if (mc->isSplitScreenActive() && mc->thePlayer2 != nullptr)
+			layout.firstButtonY = std::max<int_t>(4,
+				(height - (legacyPauseButtonCount() * stride - layout.buttonSpacing)) / 2);
 		const float_t alpha = legacyPauseButtonOpacity();
 		int_t row = 0;
 
@@ -70,7 +76,9 @@ void GuiIngameMenu::initGui()
 		addLegacyButton(0, uiText("Help & Options"));
 		addLegacyButton(5, uiText("Achievements"));
 		addLegacyButton(6, uiText("Statistics"));
-		addLegacyButton(1, mc->isMultiplayerWorld() ? uiText("Disconnect") : uiText("Save & Quit"));
+		// Player 2's pause (split screen) only takes that player out.
+		addLegacyButton(1, mc->inPlayer2Context() ? uiText("Leave Game") :
+			mc->isMultiplayerWorld() ? uiText("Disconnect") : uiText("Save & Quit"));
 		hoveredControlIndex = -1;
 		syncLegacySelection();
 		return;
@@ -156,6 +164,12 @@ void GuiIngameMenu::actionPerformed(GuiButton *button)
 		else
 			mc->displayGuiScreen(new GuiOptions(this, mc->gameSettings));
 	}
+	if (button->id == 1 && mc->inPlayer2Context())
+	{
+		mc->displayGuiScreen(nullptr);
+		XboxSplitScreen::requestLeave();
+		return;
+	}
 	if (button->id == 1)
 	{
 		mc->statFileWriter->readStat(StatList::leaveGameStat, 1);
@@ -183,7 +197,8 @@ void GuiIngameMenu::closeLegacyPause()
 	if (mc == nullptr)
 		return;
 	mc->displayGuiScreen(nullptr);
-	mc->setIngameFocus();
+	if (!mc->inPlayer2Context())
+		mc->setIngameFocus();
 }
 
 void GuiIngameMenu::handleSpecializedMenuInput()
@@ -283,7 +298,8 @@ void GuiIngameMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 		drawGradientRect(0, 0, width, height, legacyPauseOverlayTopColor(), legacyPauseOverlayBottomColor());
 
 		const LegacyMainMenuLayout layout = legacyMainMenuLayout(width, height, legacyPauseButtonCount());
-		if (!legacyDrawTitleTexture(mc, layout, width, zLevel, nullptr))
+		const bool splitScreen = mc->isSplitScreenActive() && mc->thePlayer2 != nullptr;
+		if (!splitScreen && !legacyDrawTitleTexture(mc, layout, width, zLevel, nullptr))
 			drawCenteredString(fontRenderer, "HERITAGE EDITION", width / 2, layout.titleY + 8, 0xffffff);
 
 		bool saving = !mc->theWorld->isSafeToSave(updateCounter2++);

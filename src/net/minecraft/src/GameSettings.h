@@ -114,6 +114,8 @@ public:
 	// Offline/LAN multiplayer identity. Kept in options.txt so console builds do
 	// not need command-line arguments to choose a player name.
 	std::string playerName;
+	// Split screen player 2's name (Options > Heritage).
+	std::string playerName2;
 	std::string selectedSkin;
 	std::string selectedSkinP2;
 	bool legacyUI;

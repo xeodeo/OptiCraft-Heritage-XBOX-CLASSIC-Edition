@@ -24,6 +24,9 @@ protected:
 	virtual void keyTyped(char_t c, int_t key);
 
 public:
+	// Split screen: player 2's controller has no keyboard queue, so its
+	// B/Y reach a non-console screen as a typed Escape through here.
+	void injectKeyTyped(char_t c, int_t key) { keyTyped(c, key); }
 	static jstring getClipboardString();
 	static void setClipboardString(const std::string &text);
 	static bool isCtrlKeyDown();

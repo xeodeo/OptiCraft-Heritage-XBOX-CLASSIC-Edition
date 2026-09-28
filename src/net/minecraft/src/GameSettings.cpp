@@ -138,6 +138,7 @@ void GameSettings::setDefaults()
     lastServer = "";
     language = "en_US";
     playerName = "Player";
+    playerName2 = "Player 2";
     selectedSkin = "LegacySteve";
     selectedSkinP2 = "TennisSteve";
     legacyUI = legacyUiDefaultEnabled();

@@ -15,6 +15,7 @@
 
 extern "C" int __isa_available;  // vcruntime CPU dispatch level
 
+#include "xbox/system/XboxCrashLog.h"
 namespace XboxSelfTest { void run(); }
 
 // T:\debug.log. McLog closes and reopens it after every line so a hang still
@@ -60,6 +61,7 @@ void __cdecl main()
 	// (E:\TDATA\<title id>\debug.log, reachable over FTP). Started first so a
 	// boot that dies anywhere after this names its last step.
 	xboxNetLogInit();  // no-op unless built with XBOX_NETLOG_HOST
+	XboxCrashLog::install();  // worker-thread and access-violation crashes
 	const char* writableRoot = XboxWritableRoot::get();
 #if XBOX_DISK_LOG
 	char logDir[8];

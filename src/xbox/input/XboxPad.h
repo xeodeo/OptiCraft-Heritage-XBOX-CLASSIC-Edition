@@ -44,9 +44,16 @@ void initialize();
 void poll();
 // Player 1 = the first connected controller, whatever port it is in.
 const XboxPadSnapshot& snapshot();
+// Raw per-player state: 0 = first connected controller, 1 = the second.
+// setMenuPlayer picks whose presses consumePressed/clear/latchPressed use
+// (1 only while Minecraft runs player 2's screen, see enterPlayer2Context).
+const XboxPadSnapshot& playerSnapshot(int player);
+void setMenuPlayer(int player);
+int menuPlayer();
 // Buttons pressed since the last consume (text entry reads these).
 unsigned short consumePressed();
 void clearLatchedPressed();
+void clearLatchedPressed(int player);
 void latchPressed(unsigned short pressed);
 }
 

@@ -29,6 +29,7 @@ private:
     void saveAndClose();
 
     GuiTextField *nameField;
+    GuiTextField *nameField2;   // Xbox split screen: player 2's name
     LegacyOptionCheckbox *legacyUiCheckbox;
     LegacyOptionCheckbox *legacyLookCheckbox;
     LegacyOptionCheckbox *legacyCraftingCheckbox;

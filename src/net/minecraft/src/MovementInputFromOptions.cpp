@@ -14,6 +14,10 @@
 #ifdef PS2_PLATFORM
 #include "ps2/input/Ps2PadState.h"
 #endif
+#ifdef XBOX_PLATFORM
+#include "xbox/input/XboxPad.h"
+#include <cmath>
+#endif
 
 namespace
 {
@@ -65,6 +69,35 @@ void MovementInputFromOptions::updatePlayerMoveState(EntityPlayer *entityplayer)
         {
             jump = (ps2Snap.held & PS2_PAD_CROSS) != 0;
             sneak = (ps2Snap.held & PS2_PAD_R3) != 0;
+        }
+        else
+        {
+            jump = false;
+            sneak = false;
+        }
+#elif defined(XBOX_PLATFORM)
+        // Split screen's player 2 (XboxSplitScreen): left stick moves, A
+        // jumps, the left stick click sneaks, as for player 1. Paused only
+        // while player 2 has its own screen open (Legacy-style split screen).
+        const XboxPadSnapshot &pad2 = XboxPad::playerSnapshot(1);
+        Minecraft *owner = Minecraft::getMinecraft();
+        const bool inScreen = owner != nullptr && owner->player2Screen() != nullptr;
+        if (pad2.connected && !inScreen)
+        {
+            static constexpr float kDeadzone = 0.24f;
+            auto axis = [](float v) {
+                if (v > -kDeadzone && v < kDeadzone) return 0.0f;
+                const float sign = v < 0.0f ? -1.0f : 1.0f;
+                return sign * (std::fabs(v) - kDeadzone) / (1.0f - kDeadzone);
+            };
+            moveStrafe -= axis(pad2.leftX);
+            moveForward -= axis(pad2.leftY);
+            if (pad2.held & XBOX_PAD_DPAD_UP) moveForward++;
+            if (pad2.held & XBOX_PAD_DPAD_DOWN) moveForward--;
+            if (pad2.held & XBOX_PAD_DPAD_LEFT) moveStrafe++;
+            if (pad2.held & XBOX_PAD_DPAD_RIGHT) moveStrafe--;
+            jump = (pad2.held & XBOX_PAD_A) != 0;
+            sneak = (pad2.held & XBOX_PAD_LEFT_THUMB) != 0;
         }
         else
         {

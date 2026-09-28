@@ -31,7 +31,8 @@ PlatformTextInputSnapshot platformTextInputSnapshot(int port)
 {
     (void)port;
     PlatformTextInputSnapshot out;
-    const XboxPadSnapshot& pad = XboxPad::snapshot();
+    // The controller of the player whose screen is being run (split screen).
+    const XboxPadSnapshot& pad = XboxPad::playerSnapshot(XboxPad::menuPlayer());
     out.connected = pad.connected;
     out.held = mapTextButtons(pad.held);
     out.pressed = mapTextButtons(XboxPad::consumePressed());
@@ -44,9 +45,9 @@ PlatformTextInputSnapshot platformTextInputSnapshot(int port)
 
 PlatformGamepadSnapshot platformGamepadSnapshot(int port)
 {
-    (void)port;
+    // Port 1 is split screen's player 2; port 0 follows the menu routing.
     PlatformGamepadSnapshot out;
-    const XboxPadSnapshot& pad = XboxPad::snapshot();
+    const XboxPadSnapshot& pad = port == 1 ? XboxPad::playerSnapshot(1) : XboxPad::snapshot();
     out.connected = pad.connected;
     out.leftX = XboxInput::applyDeadzone(pad.leftX);
     out.leftY = XboxInput::applyDeadzone(pad.leftY);
@@ -70,22 +71,24 @@ PlatformGamepadSnapshot platformRawGamepadSnapshot(int port)
 
 int platformMenuPad()
 {
-    return 0;
+    return XboxPad::menuPlayer();
 }
 
+// The stick pointer is player 1's; player 2's screens use the D-pad only.
 bool platformMenuPointerActive()
 {
-    return true;
+    return XboxPad::menuPlayer() == 0;
 }
 
 bool platformMenuCursorVisible()
 {
-    return true;
+    return XboxPad::menuPlayer() == 0;
 }
 
 void platformSetMenuCursor(int x, int y)
 {
-    XboxInput::setMenuCursor(x, y);
+    if (XboxPad::menuPlayer() == 0)
+        XboxInput::setMenuCursor(x, y);
 }
 
 const PlatformKeyboardHints& platformKeyboardHints()

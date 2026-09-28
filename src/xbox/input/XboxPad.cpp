@@ -1,12 +1,14 @@
 // XboxPad.cpp — reads the Xbox controller through the XDK's XInput.
 //
 // Four ports; the first one with a controller is player 1, so it works no
-// matter which port the pad (or the emulator's binding) uses.
+// matter which port the pad (or the emulator's binding) uses. The next
+// connected controller is player 2 (split screen, src/client/XboxSplitScreen).
 #ifdef XBOX_PLATFORM
 
 #include "xbox/XboxXtl.h"
 
 #include "xbox/input/XboxPad.h"
+#include "platform/Log.h"
 
 #include <cstdio>
 #include <cstring>
@@ -21,7 +23,40 @@ const BYTE kAnalogPressed = 30;
 bool s_initialized = false;
 HANDLE s_handles[kPorts] = {};
 XboxPadSnapshot s_snapshot = {false, 0.0f, 0.0f, 0.0f, 0.0f, 0, 0, 0};
-unsigned short s_latched = 0;
+// Per player: [0] = first connected controller, [1] = the second one.
+XboxPadSnapshot s_players[2] = {{false, 0.0f, 0.0f, 0.0f, 0.0f, 0, 0, 0},
+                                {false, 0.0f, 0.0f, 0.0f, 0.0f, 0, 0, 0}};
+// Whose controller the menu queries (platformTextInputSnapshot and friends)
+// read: 0, or 1 while Minecraft is in player 2's screen context. snapshot()
+// itself is always player 1.
+int s_menuPlayer = 0;
+// Presses since the last consume, per player (each player's menus).
+unsigned short s_latched[2] = {0, 0};
+
+float normalizeAxis(SHORT value);
+unsigned short buttonsFrom(const XINPUT_GAMEPAD& pad);
+
+void readPlayer(XboxPadSnapshot& out, const XINPUT_GAMEPAD* pad)
+{
+	const unsigned short previous = out.held;
+	if (pad == nullptr)
+	{
+		out.connected = false;
+		out.leftX = out.leftY = out.rightX = out.rightY = 0.0f;
+		out.held = 0;
+	}
+	else
+	{
+		out.connected = true;
+		out.leftX = normalizeAxis(pad->sThumbLX);
+		out.leftY = -normalizeAxis(pad->sThumbLY);
+		out.rightX = normalizeAxis(pad->sThumbRX);
+		out.rightY = -normalizeAxis(pad->sThumbRY);
+		out.held = buttonsFrom(*pad);
+	}
+	out.pressed = static_cast<unsigned short>(out.held & ~previous);
+	out.released = static_cast<unsigned short>(previous & ~out.held);
+}
 
 float normalizeAxis(SHORT value)
 {
@@ -70,16 +105,20 @@ unsigned short buttonsFrom(const XINPUT_GAMEPAD& pad)
 //   <start_ms> <buttons|-> <lx> <ly> <rx> <ry>
 // buttons: A B X Y START BACK UP DOWN LEFT RIGHT LT RT WHITE BLACK LS RS
 // joined with '+'. Sticks are -1..1 (ly/ry: -1 = up). A step holds until the
-// next line starts; times count from the first poll.
+// next line starts; times count from the first poll. An optional seventh
+// field is player 2's buttons (split screen); using it plugs in a pad 2.
 struct AutopilotStep
 {
 	DWORD start;
 	unsigned short buttons;
 	float lx, ly, rx, ry;
+	unsigned short buttons2;
 };
 AutopilotStep s_steps[128];
 int s_stepCount = -1;  // -1: not loaded yet
 DWORD s_autopilotStart = 0;
+bool s_autopilotHasP2 = false;
+unsigned short s_autopilotP2 = 0;
 
 unsigned short parseButtons(const char* text)
 {
@@ -121,12 +160,18 @@ void loadAutopilot()
 	{
 		AutopilotStep& step = s_steps[s_stepCount];
 		char buttons[64];
+		char buttons2[64] = "-";
 		unsigned long start = 0;
 		step.lx = step.ly = step.rx = step.ry = 0.0f;
-		if (sscanf(line, "%lu %63s %f %f %f %f", &start, buttons, &step.lx, &step.ly, &step.rx, &step.ry) >= 2)
+		const int fields = sscanf(line, "%lu %63s %f %f %f %f %63s", &start, buttons, &step.lx, &step.ly,
+		                          &step.rx, &step.ry, buttons2);
+		if (fields >= 2)
 		{
 			step.start = start;
 			step.buttons = parseButtons(buttons);
+			step.buttons2 = parseButtons(buttons2);
+			if (fields >= 7)
+				s_autopilotHasP2 = true;
 			++s_stepCount;
 		}
 	}
@@ -149,6 +194,7 @@ bool autopilotState(XboxPadSnapshot& out)
 	out.rightX = current ? current->rx : 0.0f;
 	out.rightY = current ? current->ry : 0.0f;
 	out.held = current ? current->buttons : 0;
+	s_autopilotP2 = current ? current->buttons2 : 0;
 	return true;
 }
 #endif
@@ -195,38 +241,64 @@ void poll()
 	{
 		s_snapshot.pressed = static_cast<unsigned short>(s_snapshot.held & ~previous);
 		s_snapshot.released = static_cast<unsigned short>(previous & ~s_snapshot.held);
-		s_latched |= s_snapshot.pressed;
+		s_latched[0] |= s_snapshot.pressed;
+		s_players[0] = s_snapshot;
+		const unsigned short previous2 = s_players[1].held;
+		s_players[1].connected = s_autopilotHasP2;
+		s_players[1].held = s_autopilotP2;
+		if (s_players[1].held != previous2)
+			MC_LOG_INFO("xbox.input", "autopilot pad 2 held=%04x connected=%d\n", s_players[1].held, s_autopilotHasP2 ? 1 : 0);
+		s_players[1].pressed = static_cast<unsigned short>(s_autopilotP2 & ~previous2);
+		s_players[1].released = static_cast<unsigned short>(previous2 & ~s_autopilotP2);
+		s_latched[1] |= s_players[1].pressed;
 		return;
 	}
 #endif
-	for (int port = 0; port < kPorts; ++port)
+	XINPUT_STATE states[2];
+	int found = 0;
+	for (int port = 0; port < kPorts && found < 2; ++port)
 	{
 		if (s_handles[port] == NULL)
 			continue;
-		XINPUT_STATE state;
-		if (XInputGetState(s_handles[port], &state) != ERROR_SUCCESS)
+		if (XInputGetState(s_handles[port], &states[found]) != ERROR_SUCCESS)
 			continue;
-
-		const XINPUT_GAMEPAD& pad = state.Gamepad;
-		s_snapshot.connected = true;
-		s_snapshot.leftX = normalizeAxis(pad.sThumbLX);
-		s_snapshot.leftY = -normalizeAxis(pad.sThumbLY);
-		s_snapshot.rightX = normalizeAxis(pad.sThumbRX);
-		s_snapshot.rightY = -normalizeAxis(pad.sThumbRY);
-		s_snapshot.held = buttonsFrom(pad);
-		s_snapshot.pressed = static_cast<unsigned short>(s_snapshot.held & ~previous);
-		s_snapshot.released = static_cast<unsigned short>(previous & ~s_snapshot.held);
-		s_latched |= s_snapshot.pressed;
-		return;
+		++found;
 	}
+	readPlayer(s_players[0], found > 0 ? &states[0].Gamepad : nullptr);
+	readPlayer(s_players[1], found > 1 ? &states[1].Gamepad : nullptr);
 
-	// No controller: report released everything once, then idle.
-	s_snapshot.released = previous;
-	s_snapshot.connected = false;
-	s_snapshot.leftX = s_snapshot.leftY = s_snapshot.rightX = s_snapshot.rightY = 0.0f;
-	s_snapshot.held = 0;
-	s_snapshot.pressed = 0;
-	s_latched = 0;
+	const XboxPadSnapshot& source = s_players[0];
+	s_snapshot.connected = source.connected;
+	s_snapshot.leftX = source.leftX;
+	s_snapshot.leftY = source.leftY;
+	s_snapshot.rightX = source.rightX;
+	s_snapshot.rightY = source.rightY;
+	s_snapshot.held = source.held;
+	s_snapshot.pressed = static_cast<unsigned short>(s_snapshot.held & ~previous);
+	s_snapshot.released = static_cast<unsigned short>(previous & ~s_snapshot.held);
+	if (source.connected)
+		s_latched[0] |= s_snapshot.pressed;
+	else
+		s_latched[0] = 0;   // no controller: everything released once, then idle
+	if (s_players[1].connected)
+		s_latched[1] |= s_players[1].pressed;
+	else
+		s_latched[1] = 0;
+}
+
+const XboxPadSnapshot& playerSnapshot(int player)
+{
+	return s_players[player == 1 ? 1 : 0];
+}
+
+void setMenuPlayer(int player)
+{
+	s_menuPlayer = player == 1 ? 1 : 0;
+}
+
+int menuPlayer()
+{
+	return s_menuPlayer;
 }
 
 const XboxPadSnapshot& snapshot()
@@ -236,19 +308,24 @@ const XboxPadSnapshot& snapshot()
 
 unsigned short consumePressed()
 {
-	const unsigned short pressed = s_latched;
-	s_latched = 0;
+	const unsigned short pressed = s_latched[s_menuPlayer];
+	s_latched[s_menuPlayer] = 0;
 	return pressed;
 }
 
 void clearLatchedPressed()
 {
-	s_latched = 0;
+	s_latched[s_menuPlayer] = 0;
+}
+
+void clearLatchedPressed(int player)
+{
+	s_latched[player == 1 ? 1 : 0] = 0;
 }
 
 void latchPressed(unsigned short pressed)
 {
-	s_latched |= pressed;
+	s_latched[s_menuPlayer] |= pressed;
 }
 
 } // namespace XboxPad

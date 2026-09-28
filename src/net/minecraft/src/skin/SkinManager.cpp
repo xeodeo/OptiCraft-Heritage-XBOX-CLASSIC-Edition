@@ -678,15 +678,6 @@ void SkinManager::setSelectedSkinIdP2(const std::string& id)
     s_selectedIdP2 = id;
 }
 
-std::string SkinManager::getPlayer2SkinTexture()
-{
-    init();
-    const SkinEntry* skin = getSkinById(s_selectedIdP2);
-    if (skin != nullptr)
-        return skin->modelPath;
-    return getDefaultSkinTexture();
-}
-
 namespace
 {
 bool skinTextureAvailable(const std::string& path)
@@ -694,6 +685,17 @@ bool skinTextureAvailable(const std::string& path)
     const std::unique_ptr<std::istream> stream = GameResources::open(path);
     return stream != nullptr && stream->good();
 }
+}
+
+std::string SkinManager::getPlayer2SkinTexture()
+{
+    init();
+    const SkinEntry* skin = getSkinById(s_selectedIdP2);
+    // Same fallback as player 1: a data set without the skin images would
+    // otherwise leave player 2 with a missing texture.
+    if (skin != nullptr && skinTextureAvailable(skin->modelPath))
+        return skin->modelPath;
+    return getDefaultSkinTexture();
 }
 
 std::string SkinManager::getActiveSkinTexture()

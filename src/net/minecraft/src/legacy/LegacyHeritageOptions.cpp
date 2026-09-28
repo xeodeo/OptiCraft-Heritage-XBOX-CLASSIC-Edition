@@ -31,12 +31,13 @@ constexpr int_t BUTTON_DEADZONE = 602;
 constexpr int_t BUTTON_DONE = 600;
 constexpr int_t BUTTON_EDIT_PLAYER_NAME = 606;
 constexpr int_t BUTTON_LEGACY_CRAFTING = 607;
+constexpr int_t BUTTON_EDIT_PLAYER_NAME2 = 608;
 
 }
 
 LegacyHeritageOptions::LegacyHeritageOptions(GuiScreen *parent, GameSettings *settingsValue,
     LegacyOptionsBackgroundMode backgroundModeValue)
-    : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), nameField(nullptr), legacyUiCheckbox(nullptr),
+    : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), nameField(nullptr), nameField2(nullptr), legacyUiCheckbox(nullptr),
       legacyLookCheckbox(nullptr), legacyCraftingCheckbox(nullptr), alternativeControlsCheckbox(nullptr)
 {
 }
@@ -45,6 +46,8 @@ LegacyHeritageOptions::~LegacyHeritageOptions()
 {
     delete nameField;
     nameField = nullptr;
+    delete nameField2;
+    nameField2 = nullptr;
 }
 
 void LegacyHeritageOptions::initGui()
@@ -71,14 +74,30 @@ void LegacyHeritageOptions::initGui()
 
     delete nameField;
     const int_t nameFieldInset = 2;
+#if PLATFORM_XBOX
+    // Player 1 and player 2 (split screen) names side by side.
+    const int_t nameW = std::max<int_t>(1, (w - nameFieldInset * 4) / 2);
+#else
+    const int_t nameW = std::max<int_t>(1, w - nameFieldInset * 2);
+#endif
     nameField = new GuiTextField(this, fontRenderer, x + nameFieldInset, legacyLayout.rowY(row + 1),
-        std::max<int_t>(1, w - nameFieldInset * 2), h,
+        nameW, h,
         settings != nullptr ? settings->playerName : "Player");
     nameField->setMaxStringLength(16);
     nameField->setFocused(false);
     controlList.push_back(new GuiTextFieldSelector(BUTTON_EDIT_PLAYER_NAME,
-        x + nameFieldInset, legacyLayout.rowY(row + 1),
-        std::max<int_t>(1, w - nameFieldInset * 2), h));
+        x + nameFieldInset, legacyLayout.rowY(row + 1), nameW, h));
+
+#if PLATFORM_XBOX
+    delete nameField2;
+    const int_t name2X = x + w - nameFieldInset - nameW;
+    nameField2 = new GuiTextField(this, fontRenderer, name2X, legacyLayout.rowY(row + 1), nameW, h,
+        settings != nullptr ? settings->playerName2 : "Player 2");
+    nameField2->setMaxStringLength(16);
+    nameField2->setFocused(false);
+    controlList.push_back(new GuiTextFieldSelector(BUTTON_EDIT_PLAYER_NAME2,
+        name2X, legacyLayout.rowY(row + 1), nameW, h));
+#endif
     row += 2;
 
 #if PLATFORM_HAS_ASPECT_RATIO_OPTION
@@ -121,6 +140,11 @@ void LegacyHeritageOptions::saveIdentity()
     settings->playerName = sanitizeHeritagePlayerName(nameField != nullptr ? nameField->getText() : "");
     if (nameField != nullptr)
         nameField->setText(settings->playerName);
+    if (nameField2 != nullptr)
+    {
+        settings->playerName2 = sanitizeHeritagePlayerName(nameField2->getText());
+        nameField2->setText(settings->playerName2);
+    }
     if (mc != nullptr && mc->session != nullptr)
         mc->session->username = settings->playerName;
 }
@@ -135,16 +159,32 @@ void LegacyHeritageOptions::updateScreen()
     LegacyOptionsScreen::updateScreen();
     if (nameField != nullptr)
         nameField->updateCursorCounter();
+    if (nameField2 != nullptr)
+        nameField2->updateCursorCounter();
 }
 
 void LegacyHeritageOptions::onGuiClosed()
 {
     if (nameField != nullptr)
         nameField->setFocused(false);
+    if (nameField2 != nullptr)
+        nameField2->setFocused(false);
 }
 
 void LegacyHeritageOptions::keyTyped(char_t c, int_t key)
 {
+    if (nameField2 != nullptr && nameField2->getFocused())
+    {
+        if (c == '\r' || key == lwjgl::Keyboard::KEY_RETURN)
+        {
+            saveIdentity();
+            settings->saveOptions();
+            nameField2->setFocused(false);
+            return;
+        }
+        nameField2->textboxKeyTyped(c, key);
+        return;
+    }
     if (nameField != nullptr && nameField->getFocused())
     {
         if (c == '\r' || key == lwjgl::Keyboard::KEY_RETURN)
@@ -166,6 +206,8 @@ void LegacyHeritageOptions::mouseClicked(int_t x, int_t y, int_t button)
     GuiScreen::mouseClicked(x, y, button);
     if (nameField != nullptr)
         nameField->mouseClicked(x, y, button);
+    if (nameField2 != nullptr)
+        nameField2->mouseClicked(x, y, button);
 }
 
 void LegacyHeritageOptions::actionPerformed(GuiButton *button)
@@ -177,6 +219,12 @@ void LegacyHeritageOptions::actionPerformed(GuiButton *button)
     {
         if (nameField != nullptr)
             nameField->setFocused(true);
+        return;
+    }
+    if (button->id == BUTTON_EDIT_PLAYER_NAME2)
+    {
+        if (nameField2 != nullptr)
+            nameField2->setFocused(true);
         return;
     }
 
@@ -271,6 +319,13 @@ void LegacyHeritageOptions::drawScreen(int_t mouseX, int_t mouseY, float_t parti
         legacyOptionTextY(legacyLayout.rowY(0), legacyLayout.rowHeight), legacyOptionNormalTextColor());
     if (nameField != nullptr)
         nameField->drawTextBox();
+    if (nameField2 != nullptr)
+    {
+        legacyDrawOptionText(fontRenderer, uiText("Player 2 Name"),
+            legacyLayout.contentX + legacyLayout.contentWidth / 2 + 2,
+            legacyOptionTextY(legacyLayout.rowY(0), legacyLayout.rowHeight), legacyOptionNormalTextColor());
+        nameField2->drawTextBox();
+    }
     updateLegacyPointerHover(mouseX, mouseY);
     GuiScreen::drawScreen(mouseX, mouseY, partialTick);
 }

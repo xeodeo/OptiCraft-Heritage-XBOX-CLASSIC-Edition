@@ -81,6 +81,31 @@ void LegacyControlsScreen::initGui()
     captureRow = -1;
     platformSetPadRebindExclusive(false);
     rows = legacyControlsRows(settings);
+#if PLATFORM_XBOX
+    // The Xbox keeps the single-column page its controller icons are laid
+    // out for (drawScreen draws them over each row).
+    rowsPerPage = std::max<int_t>(3, std::min<int_t>(8,
+        legacyOptionsMaxRows(width, height, LegacyOptionsLayoutPreset::Wide) - 3));
+    configureLegacyLayout(rowsPerPage + 3, true, LegacyOptionsLayoutPreset::Wide);
+    artworkAvailable = false;
+    {
+        const int_t x = legacyLayout.contentX;
+        const int_t w = legacyLayout.contentWidth;
+        const int_t h = legacyLayout.rowHeight;
+        for (int_t i = 0; i < rowsPerPage; ++i)
+            controlList.push_back(new LegacyGuiButton(BUTTON_ROW_BASE + i, x, legacyLayout.rowY(i), w, h, ""));
+        const int_t navY = legacyLayout.rowY(rowsPerPage);
+        const int_t gap = 2;
+        const int_t halfWidth = (w - gap) / 2;
+        controlList.push_back(new LegacyGuiButton(BUTTON_PREVIOUS, x, navY, halfWidth, h, uiText("Previous")));
+        controlList.push_back(new LegacyGuiButton(BUTTON_NEXT, x + halfWidth + gap, navY, w - halfWidth - gap, h, uiText("Next")));
+        controlList.push_back(new LegacyGuiButton(BUTTON_RESET, x, legacyLayout.rowY(rowsPerPage + 1), w, h,
+            uiText("Reset to Defaults")));
+        controlList.push_back(new LegacyGuiButton(BUTTON_BACK, x, legacyLayout.rowY(rowsPerPage + 2), w, h, uiText("Back")));
+    }
+    rebuildPage();
+    return;
+#endif
 #if PLATFORM_WII
     // Whole family pages keep the remote illustration honest and retain all
     // Classic/GameCube actions. Put the supplied remote layout first.
@@ -348,7 +373,9 @@ void LegacyControlsScreen::updateScreen()
 void LegacyControlsScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 {
     drawLegacyBackground(partialTick);
+#if !PLATFORM_XBOX
     drawLayoutArtwork();
+#endif
     updateLegacyPointerHover(mouseX, mouseY);
     GuiScreen::drawScreen(mouseX, mouseY, partialTick);
 #if PLATFORM_XBOX

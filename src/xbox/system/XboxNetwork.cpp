@@ -91,6 +91,11 @@ bool resolveIPv4(const char* host, unsigned long* address)
     return ok;
 }
 
+namespace
+{
+const long kConnectTimeoutSeconds = 4;
+}
+
 intptr_t tcpConnect(const char* host, int port)
 {
     unsigned long address = 0;
@@ -110,23 +115,47 @@ intptr_t tcpConnect(const char* host, int port)
     target.sin_family = AF_INET;
     target.sin_port = htons(static_cast<u_short>(port));
     target.sin_addr.s_addr = address;
-    if (connect(s, reinterpret_cast<const sockaddr*>(&target), sizeof(target)) != 0)
-    {
-        closesocket(s);
-        return kInvalidSocket;
-    }
 
     // The game reads and writes the socket from two threads. XNet refuses a
     // call on a socket while another thread is blocked in one
     // (WSAEINPROGRESS), so the socket is non-blocking and tcpRecv/tcpSend
-    // wait by polling.
+    // wait by polling. Connecting non-blocking also bounds the wait for a
+    // server that does not answer (the same fix the Wii port got upstream).
     u_long nonBlocking = 1;
     ioctlsocket(s, FIONBIO, &nonBlocking);
+    if (connect(s, reinterpret_cast<const sockaddr*>(&target), sizeof(target)) != 0)
+    {
+        const int error = WSAGetLastError();
+        if (error != WSAEWOULDBLOCK && error != WSAEINPROGRESS)
+        {
+            closesocket(s);
+            return kInvalidSocket;
+        }
+        fd_set writable;
+        fd_set failed;
+        FD_ZERO(&writable);
+        FD_ZERO(&failed);
+        FD_SET(s, &writable);
+        FD_SET(s, &failed);
+        timeval timeout;
+        timeout.tv_sec = kConnectTimeoutSeconds;
+        timeout.tv_usec = 0;
+        if (select(0, nullptr, &writable, &failed, &timeout) <= 0 || FD_ISSET(s, &failed) ||
+            !FD_ISSET(s, &writable))
+        {
+            closesocket(s);
+            return kInvalidSocket;
+        }
+    }
     return static_cast<intptr_t>(s);
 }
 
 namespace
 {
+// A 1.2.5 server sends a keep-alive every few seconds, so a socket silent (or
+// unable to take data) for this long is dead; give up instead of polling on.
+const DWORD kStallTimeoutMs = 45000;
+
 bool shouldRetry()
 {
     const int error = WSAGetLastError();
@@ -136,22 +165,34 @@ bool shouldRetry()
 
 int tcpRecv(intptr_t s, char* buffer, int length)
 {
+    const DWORD start = GetTickCount();
     for (;;)
     {
         const int count = recv(static_cast<SOCKET>(s), buffer, length, 0);
         if (count >= 0 || !shouldRetry())
             return count;
+        if (GetTickCount() - start > kStallTimeoutMs)
+        {
+            WSASetLastError(WSAETIMEDOUT);
+            return -1;
+        }
         Sleep(2);
     }
 }
 
 int tcpSend(intptr_t s, const char* buffer, int length)
 {
+    const DWORD start = GetTickCount();
     for (;;)
     {
         const int count = send(static_cast<SOCKET>(s), buffer, length, 0);
         if (count >= 0 || !shouldRetry())
             return count;
+        if (GetTickCount() - start > kStallTimeoutMs)
+        {
+            WSASetLastError(WSAETIMEDOUT);
+            return -1;
+        }
         Sleep(1);
     }
 }

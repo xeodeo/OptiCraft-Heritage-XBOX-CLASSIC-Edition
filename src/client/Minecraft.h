@@ -126,6 +126,31 @@ public:
     bool isSplitScreenActive() const;
     void setSplitScreenActive(bool val);
 
+    // Split screen, Legacy style: each player has its own screen. The one of
+    // the player that is not "in context" waits in otherPlayerScreen. Entering
+    // player 2's context swaps it (and the owned-screen list, thePlayer,
+    // objectMouseOver and the menu controller) in, so every screen class works
+    // for player 2 unchanged: displayGuiScreen/currentScreen then mean P2's.
+    void enterPlayer2Context();
+    void leavePlayer2Context();
+    bool inPlayer2Context() const { return screenPlayer == 1; }
+    GuiScreen *player1Screen() const { return screenPlayer == 1 ? otherPlayerScreen : currentScreen; }
+    GuiScreen *player2Screen() const { return screenPlayer == 1 ? currentScreen : otherPlayerScreen; }
+    // Closes player 2's screen without running its close hooks against
+    // player 1 (world change, player 2 leaving).
+    void discardPlayer2Screen();
+    // GUI size of one screen: half height while two players share the display.
+    void guiScreenResolution(int_t &width, int_t &height);
+    // Resize both players' screens after split screen starts or stops.
+    void refreshScreenResolutions();
+    // Split screen: player 2 keeps its own attack/use cooldowns (swapped in
+    // with its context); its tick counts them down here.
+    void tickClickCounters();
+    bool useItemReady() const { return rightClickDelayTimer == 0; }
+    // Player 2 is holding RT on a block: player 1's idle "not attacking"
+    // tick must not reset the shared block-breaking progress.
+    bool player2Mining = false;
+
     void clickMouse(int_t i, bool flag);
     void clickMouse(int_t i);
     void clickMiddleMouseButton();
@@ -199,6 +224,12 @@ public:
     bool isRaining;
     bool screenOwnedByPlayer2;
     bool splitScreenActive;
+    GuiScreen *otherPlayerScreen = nullptr;
+    std::vector<GuiScreen *> otherOwnedGuiScreens;
+    int_t screenPlayer = 0;          // 0: player 1 in context, 1: player 2
+    EntityPlayerSP *contextSavedPlayer = nullptr;
+    int_t otherLeftClickCounter = 0;
+    int_t otherRightClickDelayTimer = 0;
 #if !PLATFORM_PS2
     SDL_Window *window;
 #endif

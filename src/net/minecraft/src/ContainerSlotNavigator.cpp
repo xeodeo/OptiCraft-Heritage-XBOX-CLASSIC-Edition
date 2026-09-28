@@ -23,10 +23,31 @@ int_t absInt(int_t value)
 }
 }
 
+namespace
+{
+// The container-navigation flag stops player 1's stick pointer; player 2's
+// screens (Xbox split screen) must leave it alone.
+bool steersMenuPointer()
+{
+#ifdef XBOX_PLATFORM
+    return platformMenuPad() == 0;
+#else
+    return true;
+#endif
+}
+}
+
 ContainerSlotNavigator& ContainerSlotNavigator::instance()
 {
+#ifdef XBOX_PLATFORM
+    // Split screen: each player's container screen keeps its own selection;
+    // platformMenuPad() is the player whose screen is being run.
+    static ContainerSlotNavigator s_navigators[2];
+    return s_navigators[platformMenuPad() == 1 ? 1 : 0];
+#else
     static ContainerSlotNavigator s_navigator;
     return s_navigator;
+#endif
 }
 
 void ContainerSlotNavigator::notifyOpen(GuiContainer *guiContainer, const Layout &guiLayout)
@@ -34,7 +55,8 @@ void ContainerSlotNavigator::notifyOpen(GuiContainer *guiContainer, const Layout
     if (guiContainer == nullptr)
         return;
 
-    platformSetContainerNavigationActive(true);
+    if (steersMenuPointer())
+        platformSetContainerNavigationActive(true);
     if (screen != guiContainer)
     {
         screen = guiContainer;
@@ -62,7 +84,8 @@ void ContainerSlotNavigator::notifyClosed(const GuiContainer *guiContainer)
     pendingPrimary = false;
     pendingSecondary = false;
     nextRepeatMs = 0;
-    platformSetContainerNavigationActive(false);
+    if (steersMenuPointer())
+        platformSetContainerNavigationActive(false);
 }
 
 void ContainerSlotNavigator::repairSelection()

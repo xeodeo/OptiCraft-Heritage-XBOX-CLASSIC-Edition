@@ -293,6 +293,16 @@ void EntityPlayerSP::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 
 void EntityPlayerSP::closeScreen()
 {
+	// Split screen: player 2's screen lives in its own context; closing it
+	// from outside (a container it can no longer use) must not close P1's.
+	if (this == mc->thePlayer2 && !mc->inPlayer2Context())
+	{
+		mc->enterPlayer2Context();
+		EntityPlayer::closeScreen();
+		mc->displayGuiScreen(nullptr);
+		mc->leavePlayer2Context();
+		return;
+	}
 	EntityPlayer::closeScreen();
 	mc->displayGuiScreen(nullptr);
 }

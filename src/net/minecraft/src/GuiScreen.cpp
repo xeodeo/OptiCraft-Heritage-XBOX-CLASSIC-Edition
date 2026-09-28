@@ -271,6 +271,10 @@ void GuiScreen::handleInput()
 	handleConsoleJavaUiNavigation();
 #endif
 #endif
+	// Split screen: player 2's screen reads only its own controller; the
+	// mouse/keyboard queues belong to player 1.
+	if (mc != nullptr && mc->inPlayer2Context())
+		return;
 	while (lwjgl::Mouse::next()) handleMouseInput();
 	while (lwjgl::Keyboard::next()) handleKeyboardInput();
 }

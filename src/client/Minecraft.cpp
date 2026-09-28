@@ -101,6 +101,10 @@
 #include "net/minecraft/src/MovementInputFromOptions.h"
 #include "net/minecraft/src/MovingObjectPosition.h"
 #include "client/Ps2SplitScreen.h"
+#include "client/XboxSplitScreen.h"
+#if PLATFORM_XBOX
+#include "xbox/input/XboxPad.h"
+#endif
 #include "net/minecraft/src/NetClientHandler.h"
 #include "net/minecraft/src/OpenGlHelper.h"
 #include "net/minecraft/src/PlayerController.h"
@@ -112,6 +116,7 @@
 #include "net/minecraft/src/RenderManager.h"
 #include "net/minecraft/src/AnvilSaveConverter.h"
 #include "net/minecraft/src/ScaledResolution.h"
+#include <utility>
 #include "net/minecraft/src/ScreenShotHelper.h"
 #include "net/minecraft/src/Session.h"
 #include "net/minecraft/src/SoundManager.h"
@@ -1064,9 +1069,12 @@ void Minecraft::run()
 
                 checkGLError("Post render");
                 i++;
+                // With two players on one console a pause menu (either one's)
+                // must not stop the other player, as on the Legacy editions.
                 isGamePaused = !isMultiplayerWorld() &&
                                currentScreen != nullptr &&
-                               currentScreen->doesGuiPauseGame();
+                               currentScreen->doesGuiPauseGame() &&
+                               !(splitScreenActive && thePlayer2 != nullptr);
 
                 while (System::currentTimeMillis() >= l + 1000L)
                 {
@@ -1281,9 +1289,11 @@ void Minecraft::displayGuiScreen(GuiScreen *guiscreen)
     statFileWriter->syncStats();
 #endif
 
-    if (guiscreen == nullptr && theWorld == nullptr)
+    // Player 2's screens never fall back to the title or death screens: its
+    // world and respawn belong to player 1 (XboxSplitScreen revives it).
+    if (guiscreen == nullptr && theWorld == nullptr && !inPlayer2Context())
         guiscreen = new GuiMainMenu();
-    else if (guiscreen == nullptr && thePlayer != nullptr && thePlayer->health <= 0)
+    else if (guiscreen == nullptr && thePlayer != nullptr && thePlayer->health <= 0 && !inPlayer2Context())
         guiscreen = new GuiGameOver();
 
     if (dynamic_cast<GuiMainMenu *>(guiscreen) != nullptr)
@@ -1320,12 +1330,17 @@ void Minecraft::displayGuiScreen(GuiScreen *guiscreen)
         if (!tracked)
             ownedGuiScreens.push_back(guiscreen);
 
-        setIngameNotInFocus();
-        ScaledResolution scaledresolution(gameSettings, displayWidth, displayHeight);
-        int_t i = scaledresolution.getScaledWidth();
-        int_t j = scaledresolution.getScaledHeight();
+        if (!inPlayer2Context())
+            setIngameNotInFocus();
+        int_t i = 0, j = 0;
+        guiScreenResolution(i, j);
         guiscreen->setWorldAndResolution(this, i, j);
         skipRenderWorld = false;
+    }
+    else if (inPlayer2Context())
+    {
+        // Player 2 closed its screen: player 1's focus and menu routing stay.
+        purgeOwnedGuiScreens();
     }
     else
     {
@@ -1341,6 +1356,8 @@ void Minecraft::displayGuiScreen(GuiScreen *guiscreen)
 #if PLATFORM_PS2
             ps2SetMenuPad(0);
             ps2SetMenuOwnerPad(-1);
+#elif PLATFORM_XBOX
+            XboxPad::setMenuPlayer(0);
 #endif
         }
         else
@@ -1390,7 +1407,7 @@ void Minecraft::clickMouse(int_t i, bool flag)
             thePlayer->swingItem();
         }
     }
-    else
+    else if (!(player2Mining && !inPlayer2Context()))
     {
         playerController->resetBlockRemoving();
     }
@@ -1877,7 +1894,7 @@ void Minecraft::runTick()
 
         while (gameSettings->keyBindInventory->isPressed())
         {
-            if (currentScreen != nullptr && screenOwnedByPlayer2)
+            if (currentScreen != nullptr && screenOwnedByPlayer2 && !PLATFORM_XBOX)
             {
                 if (ingameGUI != nullptr)
                 {
@@ -1937,6 +1954,8 @@ void Minecraft::runTick()
 
 #if defined(PS2_PLATFORM)
     Ps2SplitScreen::tick(this);
+#elif defined(XBOX_PLATFORM)
+    XboxSplitScreen::tick(this);
 #endif
 
     if (theWorld != nullptr)
@@ -1976,6 +1995,8 @@ void Minecraft::runTick()
             ClientProfiler::tickPhase("entities", System::nanoTime() - clientPhaseStartNs);
 #if defined(PS2_PLATFORM)
             Ps2SplitScreen::postTick(this);
+#elif defined(XBOX_PLATFORM)
+            XboxSplitScreen::postTick(this);
 #endif
         }
         if (!isGamePaused || isMultiplayerWorld())
@@ -2341,6 +2362,7 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
 
         renderViewEntity = thePlayer;
         thePlayerOne = thePlayer;
+        discardPlayer2Screen();
         if (thePlayer2 != nullptr)
         {
             if (oldWorld != nullptr)
@@ -2355,12 +2377,15 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
 #if PLATFORM_PS2
         ps2SetMenuPad(0);
         ps2SetMenuOwnerPad(-1);
+#elif PLATFORM_XBOX
+        XboxPad::setMenuPlayer(0);
 #endif
     }
     else
     {
         thePlayer = nullptr;
         thePlayerOne = nullptr;
+        discardPlayer2Screen();
         if (thePlayer2 != nullptr)
         {
             if (oldWorld != nullptr)
@@ -2375,6 +2400,8 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
 #if PLATFORM_PS2
         ps2SetMenuPad(0);
         ps2SetMenuOwnerPad(-1);
+#elif PLATFORM_XBOX
+        XboxPad::setMenuPlayer(0);
 #endif
     }
 
@@ -2827,6 +2854,8 @@ void Minecraft::setScreenOwnedByPlayer2(bool val)
 #if PLATFORM_PS2
     ps2SetMenuOwnerPad(val ? 1 : 0);
     ps2SetMenuPad(val ? 1 : 0);
+#elif PLATFORM_XBOX
+    XboxPad::setMenuPlayer(val ? 1 : 0);
 #endif
 }
 
@@ -2838,4 +2867,99 @@ bool Minecraft::isSplitScreenActive() const
 void Minecraft::setSplitScreenActive(bool val)
 {
     splitScreenActive = val;
+}
+
+void Minecraft::enterPlayer2Context()
+{
+    if (screenPlayer == 1 || thePlayer2 == nullptr)
+        return;
+    screenPlayer = 1;
+    std::swap(currentScreen, otherPlayerScreen);
+    std::swap(ownedGuiScreens, otherOwnedGuiScreens);
+    contextSavedPlayer = thePlayer;
+    thePlayer = thePlayer2;
+    std::swap(objectMouseOver, objectMouseOver2);
+    std::swap(leftClickCounter, otherLeftClickCounter);
+    std::swap(rightClickDelayTimer, otherRightClickDelayTimer);
+#if PLATFORM_XBOX
+    XboxPad::setMenuPlayer(1);
+#endif
+}
+
+void Minecraft::leavePlayer2Context()
+{
+    if (screenPlayer != 1)
+        return;
+    screenPlayer = 0;
+    std::swap(currentScreen, otherPlayerScreen);
+    std::swap(ownedGuiScreens, otherOwnedGuiScreens);
+    thePlayer = contextSavedPlayer != nullptr ? contextSavedPlayer : thePlayerOne;
+    contextSavedPlayer = nullptr;
+    std::swap(objectMouseOver, objectMouseOver2);
+    std::swap(leftClickCounter, otherLeftClickCounter);
+    std::swap(rightClickDelayTimer, otherRightClickDelayTimer);
+#if PLATFORM_XBOX
+    XboxPad::setMenuPlayer(0);
+#endif
+}
+
+void Minecraft::tickClickCounters()
+{
+    if (leftClickCounter > 0)
+        --leftClickCounter;
+    if (rightClickDelayTimer > 0)
+        --rightClickDelayTimer;
+}
+
+void Minecraft::discardPlayer2Screen()
+{
+    if (thePlayer2 == nullptr)
+    {
+        // Nobody to run the close hooks for: just drop the screens.
+        for (GuiScreen *s : otherOwnedGuiScreens)
+            guiScreensToDelete.push_back(s);
+        otherOwnedGuiScreens.clear();
+        otherPlayerScreen = nullptr;
+        return;
+    }
+    const bool wasInContext = inPlayer2Context();
+    enterPlayer2Context();
+    if (currentScreen != nullptr)
+        currentScreen->onGuiClosed();
+    currentScreen = nullptr;
+    for (GuiScreen *s : ownedGuiScreens)
+        guiScreensToDelete.push_back(s);
+    ownedGuiScreens.clear();
+    if (!wasInContext)
+        leavePlayer2Context();
+}
+
+void Minecraft::guiScreenResolution(int_t &width, int_t &height)
+{
+    const int_t h = (splitScreenActive && thePlayer2 != nullptr) ? displayHeight / 2 : displayHeight;
+    ScaledResolution scaledresolution(gameSettings, displayWidth, h);
+    width = scaledresolution.getScaledWidth();
+    height = scaledresolution.getScaledHeight();
+}
+
+void Minecraft::refreshScreenResolutions()
+{
+    int_t w = 0, h = 0;
+    guiScreenResolution(w, h);
+    if (GuiScreen *s1 = player1Screen())
+    {
+        const bool wasInContext = inPlayer2Context();
+        leavePlayer2Context();
+        s1->setWorldAndResolution(this, w, h);
+        if (wasInContext)
+            enterPlayer2Context();
+    }
+    if (player2Screen() != nullptr)
+    {
+        const bool wasInContext = inPlayer2Context();
+        enterPlayer2Context();
+        currentScreen->setWorldAndResolution(this, w, h);
+        if (!wasInContext)
+            leavePlayer2Context();
+    }
 }

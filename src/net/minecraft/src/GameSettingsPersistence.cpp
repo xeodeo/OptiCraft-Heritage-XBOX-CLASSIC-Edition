@@ -176,6 +176,8 @@ void GameSettings::loadOptions()
 					language = value;
 				if (key == "playerName" && !value.empty())
 					playerName = value;
+				if (key == "playerName2" && !value.empty())
+					playerName2 = value;
 				if (key == "selectedSkin" && !value.empty())
 				{
 					selectedSkin = value;
@@ -401,7 +403,7 @@ void GameSettings::saveOptions()
 	std::unordered_set<std::string> knownKeys = {
 		"music", "sound", "invertYMouse", "mouseSensitivity", "fov", "viewDistance",
 		"guiScale", "particles", "bobView", "anaglyph3d", "advancedOpengl", "fpsLimit",
-		"difficulty", "fancyGraphics", "ao", "skin", "lastServer", "lang", "playerName", "selectedSkin", "selectedSkinP2", "legacyUI",
+		"difficulty", "fancyGraphics", "ao", "skin", "lastServer", "lang", "playerName", "playerName2", "selectedSkin", "selectedSkinP2", "legacyUI",
 		"legacyLook", "legacyCrafting", "legacyGuiScaleRestore",
 		"alternativeControllerLayout", "wiiAlternativeControls", "controllerDeadzone", "wiiStickDeadzone",
 		"ofFogFancy", "ofFogOff", "ofFogStart", "ofLoadFar", "ofPreloadedChunks", "ofOcclusionFancy",
@@ -477,6 +479,7 @@ void GameSettings::saveOptions()
 	printwriter << "lastServer:" << lastServer << "\n";
 	printwriter << "lang:" << language << "\n";
 	printwriter << "playerName:" << playerName << "\n";
+	printwriter << "playerName2:" << playerName2 << "\n";
 	printwriter << "selectedSkin:" << selectedSkin << "\n";
 	printwriter << "selectedSkinP2:" << selectedSkinP2 << "\n";
 	printwriter << "legacyUI:" << (legacyUI ? "true" : "false") << "\n";
