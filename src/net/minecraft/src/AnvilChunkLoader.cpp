@@ -696,7 +696,7 @@ bool AnvilChunkLoader::writeNextIO()
     std::unique_ptr<AnvilChunkLoaderPending> ownedPending(pending);
     try
     {
-        if (ownedPending->nbtRoot != nullptr)
+        if (ownedPending != nullptr && ownedPending->nbtRoot != nullptr)
         {
             std::vector<byte_t> serialized;
 #ifdef PS2_PLATFORM
