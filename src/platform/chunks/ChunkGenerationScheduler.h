@@ -67,6 +67,7 @@ public:
     void setFocus(int_t chunkX, int_t chunkZ);
     bool popResult(Result& out);
     void complete(int_t x, int_t z);
+    bool isWorkingOn(int_t x, int_t z) const;
     void queueSizes(int_t& pending, int_t& completed) const;
 
 private:

@@ -202,6 +202,17 @@ void ChunkGenerationScheduler::complete(int_t x, int_t z)
 #endif
 }
 
+bool ChunkGenerationScheduler::isWorkingOn(int_t x, int_t z) const
+{
+#if PLATFORM_ASYNC_CHUNK_GENERATION
+    std::lock_guard<std::mutex> guard(impl_->mutex);
+    return impl_->queued.count(key(x, z)) != 0;
+#else
+    (void)x; (void)z;
+    return false;
+#endif
+}
+
 void ChunkGenerationScheduler::queueSizes(int_t& pending, int_t& completed) const
 {
 #if PLATFORM_ASYNC_CHUNK_GENERATION

@@ -1528,6 +1528,49 @@ bool ChunkProvider::unload100OldestChunks()
 		if (isOutsideUnloadRadius(chunk->xPosition, chunk->zPosition)
 			&& (emergency || JavaArithmetic::longSub(now, lastAccess) >= retentionPolicy.minUnusedTicksBeforeUnload))
 		{
+			bool hasPendingNeighbor = false;
+#if PLATFORM_ASYNC_CHUNK_GENERATION
+			if (asyncGenerationScheduler != nullptr)
+			{
+				for (int_t dx = -1; dx <= 1; ++dx)
+				{
+					for (int_t dz = -1; dz <= 1; ++dz)
+					{
+						if (asyncGenerationScheduler->isWorkingOn(chunk->xPosition + dx, chunk->zPosition + dz))
+						{
+							hasPendingNeighbor = true;
+							break;
+						}
+					}
+					if (hasPendingNeighbor)
+						break;
+				}
+			}
+#endif
+#if PLATFORM_INCREMENTAL_CHUNK_GENERATION
+			if (!hasPendingNeighbor)
+			{
+				for (int_t dx = -1; dx <= 1; ++dx)
+				{
+					for (int_t dz = -1; dz <= 1; ++dz)
+					{
+						if (isChunkGenerationPending(chunk->xPosition + dx, chunk->zPosition + dz))
+						{
+							hasPendingNeighbor = true;
+							break;
+						}
+					}
+					if (hasPendingNeighbor)
+						break;
+				}
+			}
+#endif
+			if (hasPendingNeighbor)
+			{
+				++it;
+				continue;
+			}
+
 			unloadChunk(it->first, chunk);
 			it = chunkMap.erase(it);
 			markChunkTopologyChanged();
