@@ -32,6 +32,7 @@
 #if MC_LOG_LEVEL > 0
 static int_t stat_sync = 0;
 static int_t stat_async = 0;
+static int_t stat_alreadyQueued = 0;
 static int_t stat_queueFull = 0;
 static int_t stat_popNeighbour = 0;
 static int_t stat_adopted = 0;
@@ -965,11 +966,17 @@ Chunk *ChunkProvider::provideChunk(int_t i, int_t j)
 			if (!critical && asyncGenerationScheduler != nullptr && asyncGenerationScheduler->active())
 			{
 				const ChunkRequestStatus requestStatus = requestChunkDetailed(i, j);
-				if (requestStatus == ChunkRequestStatus::Accepted ||
-					requestStatus == ChunkRequestStatus::AlreadyQueued)
+				if (requestStatus == ChunkRequestStatus::Accepted)
 				{
 #if MC_LOG_LEVEL > 0
 					stat_async++;
+#endif
+					return blankChunk;
+				}
+				else if (requestStatus == ChunkRequestStatus::AlreadyQueued)
+				{
+#if MC_LOG_LEVEL > 0
+					stat_alreadyQueued++;
 #endif
 					return blankChunk;
 				}
@@ -1406,10 +1413,14 @@ bool ChunkProvider::unload100OldestChunks()
 	long_t currentTimeMs = System::currentTimeMillis();
 	if (JavaArithmetic::longSub(currentTimeMs, stat_lastLog) >= 5000LL)
 	{
-		MC_LOG_INFO("xbox.async", "sync=%d async=%d queueFull=%d popNeighbour=%d adopted=%d\n",
-			(int_t)stat_sync, (int_t)stat_async, (int_t)stat_queueFull, (int_t)stat_popNeighbour, (int_t)stat_adopted);
+		int_t pendingCount = 0, completedCount = 0;
+		if (asyncGenerationScheduler != nullptr)
+			asyncGenerationScheduler->queueSizes(pendingCount, completedCount);
+		MC_LOG_INFO("xbox.async", "sync=%d async=%d queued=%d qFull=%d popN=%d adopted=%d pending=%d done=%d\n",
+			(int_t)stat_sync, (int_t)stat_async, (int_t)stat_alreadyQueued, (int_t)stat_queueFull, (int_t)stat_popNeighbour, (int_t)stat_adopted, (int_t)pendingCount, (int_t)completedCount);
 		stat_sync = 0;
 		stat_async = 0;
+		stat_alreadyQueued = 0;
 		stat_queueFull = 0;
 		stat_popNeighbour = 0;
 		stat_adopted = 0;

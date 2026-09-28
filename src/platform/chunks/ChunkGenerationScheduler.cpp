@@ -205,7 +205,9 @@ void ChunkGenerationScheduler::complete(int_t x, int_t z)
 bool ChunkGenerationScheduler::isWorkingOn(int_t x, int_t z) const
 {
 #if PLATFORM_ASYNC_CHUNK_GENERATION
-    std::lock_guard<std::mutex> guard(impl_->mutex);
+    std::unique_lock<std::mutex> lock(impl_->mutex, std::try_to_lock);
+    if (!lock.owns_lock())
+        return true; // Assume busy if we cannot check — safer than blocking
     return impl_->queued.count(key(x, z)) != 0;
 #else
     (void)x; (void)z;
