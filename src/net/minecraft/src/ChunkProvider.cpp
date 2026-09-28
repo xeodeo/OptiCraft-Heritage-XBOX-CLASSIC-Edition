@@ -29,6 +29,14 @@
 #include "ISaveHandler.h"
 
 #include "platform/Profiler.h"
+#if MC_LOG_LEVEL > 0
+static int_t stat_sync = 0;
+static int_t stat_async = 0;
+static int_t stat_queueFull = 0;
+static int_t stat_popNeighbour = 0;
+static int_t stat_adopted = 0;
+static long_t stat_lastLog = 0;
+#endif
 
 namespace
 {
@@ -485,6 +493,9 @@ bool ChunkProvider::drainAsyncGeneratedChunks(int_t budget)
 
 		if (chunk != nullptr)
 		{
+#if MC_LOG_LEVEL > 0
+			stat_adopted++;
+#endif
 			published = true;
 			chunkMap[key] = chunk;
 			markChunkTopologyChanged();
@@ -947,6 +958,30 @@ Chunk *ChunkProvider::provideChunk(int_t i, int_t j)
 #if PLATFORM_ENTITY_CHUNK_RETENTION
 			critical = critical || (worldObj != nullptr && worldObj->isChunkRequiredByRetainedEntity(i, j));
 #endif
+#if PLATFORM_ASYNC_CHUNK_GENERATION
+			// Non-critical terrain can be queued on a low-priority generation service.
+			// Minecraft keeps rendering the current frame until the completed chunk is
+			// published on a later tick.
+			if (!critical && asyncGenerationScheduler != nullptr && asyncGenerationScheduler->active())
+			{
+				const ChunkRequestStatus requestStatus = requestChunkDetailed(i, j);
+				if (requestStatus == ChunkRequestStatus::Accepted ||
+					requestStatus == ChunkRequestStatus::AlreadyQueued)
+				{
+#if MC_LOG_LEVEL > 0
+					stat_async++;
+#endif
+					return blankChunk;
+				}
+				else if (requestStatus == ChunkRequestStatus::QueueFull)
+				{
+#if MC_LOG_LEVEL > 0
+					stat_queueFull++;
+#endif
+					return blankChunk;
+				}
+			}
+#endif
 #if PLATFORM_INCREMENTAL_CHUNK_GENERATION
 			ChunkProviderGenerate *incrementalGenerator = dynamic_cast<ChunkProviderGenerate *>(chunkProvider);
 			if (incrementalGenerator != nullptr)
@@ -959,25 +994,19 @@ Chunk *ChunkProvider::provideChunk(int_t i, int_t j)
 				{
 					if (generationQueued.count(key) != 0)
 						return blankChunk;
+#if MC_LOG_LEVEL > 0
+					stat_sync++;
+#endif
 					return prepareChunkInternal(i, j, true);
 				}
-			}
-#endif
-#if PLATFORM_ASYNC_CHUNK_GENERATION
-			// Non-critical terrain can be queued on a low-priority generation service.
-			// Minecraft keeps rendering the current frame until the completed chunk is
-			// published on a later tick.
-			if (!critical && asyncGenerationScheduler != nullptr && asyncGenerationScheduler->active())
-			{
-				const ChunkRequestStatus requestStatus = requestChunkDetailed(i, j);
-				if (requestStatus == ChunkRequestStatus::Accepted ||
-					requestStatus == ChunkRequestStatus::AlreadyQueued)
-					return blankChunk;
 			}
 #endif
 			if (!critical && genChunksThisTick >= PLATFORM_GENERATE_CHUNKS_PER_TICK)
 				return blankChunk;
 			genChunksThisTick++;
+#if MC_LOG_LEVEL > 0
+			if (critical) stat_sync++;
+#endif
 		}
 #endif
 		return prepareChunk(i, j);
@@ -1373,6 +1402,20 @@ bool ChunkProvider::saveChunks(bool flag, IProgressUpdate *iprogressupdate)
 
 bool ChunkProvider::unload100OldestChunks()
 {
+#if MC_LOG_LEVEL > 0
+	long_t currentTimeMs = System::currentTimeMillis();
+	if (JavaArithmetic::longSub(currentTimeMs, stat_lastLog) >= 5000LL)
+	{
+		MC_LOG_INFO("xbox.async", "sync=%d async=%d queueFull=%d popNeighbour=%d adopted=%d\n",
+			(int_t)stat_sync, (int_t)stat_async, (int_t)stat_queueFull, (int_t)stat_popNeighbour, (int_t)stat_adopted);
+		stat_sync = 0;
+		stat_async = 0;
+		stat_queueFull = 0;
+		stat_popNeighbour = 0;
+		stat_adopted = 0;
+		stat_lastLog = currentTimeMs;
+	}
+#endif
 #if PLATFORM_DEFERRED_POPULATE
 	bool publishedThisTick = false;
 #endif
@@ -1567,6 +1610,9 @@ bool ChunkProvider::unload100OldestChunks()
 #endif
 			if (hasPendingNeighbor)
 			{
+#if MC_LOG_LEVEL > 0
+				stat_popNeighbour++;
+#endif
 				++it;
 				continue;
 			}
@@ -1639,3 +1685,11 @@ void ChunkProvider::removeEntityFromLoadedChunks(Entity *entity)
 			chunk->removeEntityFromAllSections(entity);
 	}
 }
+
+
+
+
+
+
+
+
