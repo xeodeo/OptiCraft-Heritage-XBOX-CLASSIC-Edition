@@ -26,7 +26,9 @@ std::string PlatformResources::resolveExisting(const std::string& path)
 {
     // D:/assets.pak, keyed the way `path` is spelled here ("assets/...",
     // "resources/..."); a hit answers with a pak:// path.
-    if (AssetPak::mountFrom(baseDir()) && AssetPak::exists(path))
+    // "D:" alone would become the drive-relative "D:assets.pak" (the PS2
+    // device-prefix rule in mountFrom): give the root with its slash.
+    if (AssetPak::mountFrom(baseDir() + "/") && AssetPak::exists(path))
         return AssetPak::makePath(path);
 
     std::string resolved;
