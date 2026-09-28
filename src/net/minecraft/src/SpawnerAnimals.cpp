@@ -123,7 +123,7 @@ static bool spawnColumnResident(World *world, int_t x, int_t z)
 
 ChunkPosition SpawnerAnimals::getRandomSpawningPointInChunk(World *world, int_t i, int_t j)
 {
-    Chunk *chunk = world->getChunkFromChunkCoords(i, j);
+    Chunk *chunk = world->getChunkIfExists(i, j);
     int_t k = JavaArithmetic::intAdd(JavaArithmetic::intMul(i, 16), world->rand.nextInt(16));
     int_t top = chunk == nullptr ? 128 : std::max<int_t>(128, chunk->getTopFilledSegment());
     if (top <= 0)

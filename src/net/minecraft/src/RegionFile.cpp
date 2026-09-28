@@ -471,7 +471,6 @@ bool RegionFile::getChunkData(int_t x, int_t z, std::vector<byte_t> &out,
 
 void RegionFile::write(int_t x, int_t z, const byte_t *rawData, int_t rawLength)
 {
-    std::lock_guard<std::mutex> lock(mtx);
     if (readOnly)
         return;
 
@@ -484,18 +483,14 @@ void RegionFile::write(int_t x, int_t z, const byte_t *rawData, int_t rawLength)
         uLongf compLen = compressBound((uLong)rawLength);
         if (compLen > static_cast<uLongf>(std::numeric_limits<std::size_t>::max()))
             return;
-        ioScratch.resize(static_cast<std::size_t>(compLen));
-        // Console chunk writes run synchronously inside a world tick, so the
-        // deflate level is frame time, not disk space. Level 1 is several times
-        // faster than level 6 for roughly 10-15% larger sectors, which the
-        // region format absorbs in sector rounding anyway. Both levels produce
-        // ordinary zlib streams, so saves stay readable by every other build.
+            
+        std::vector<byte_t> localScratch(static_cast<std::size_t>(compLen));
 #if PLATFORM_FAST_REGION_COMPRESSION
         const int compressionLevel = Z_BEST_SPEED;
 #else
         const int compressionLevel = Z_DEFAULT_COMPRESSION;
 #endif
-        int status = compress2(reinterpret_cast<Bytef *>(ioScratch.data()), &compLen,
+        int status = compress2(reinterpret_cast<Bytef *>(localScratch.data()), &compLen,
                                reinterpret_cast<const Bytef *>(rawData),
                                (uLong)rawLength, compressionLevel);
         if (status != Z_OK)
@@ -506,12 +501,15 @@ void RegionFile::write(int_t x, int_t z, const byte_t *rawData, int_t rawLength)
         const std::size_t compressedBytes = static_cast<std::size_t>(compLen);
         if (compressedBytes > std::numeric_limits<std::size_t>::max() - 5u)
             return;
-        ioScratch.resize(compressedBytes);
+        localScratch.resize(compressedBytes);
 
         const std::size_t sectorNeededSize = (compressedBytes + 5u) / 4096u + 1u;
         if (sectorNeededSize >= 256u)
             return;
         const int_t sectorNeeded = static_cast<int_t>(sectorNeededSize);
+
+        // Lock for disk writing and allocation updates.
+        std::lock_guard<std::mutex> lock(mtx);
 
 #if PLATFORM_REGION_RANDOM_ACCESS
         if (!dataFile.materializeForWrite())
@@ -553,7 +551,7 @@ void RegionFile::write(int_t x, int_t z, const byte_t *rawData, int_t rawLength)
         if (existingOwned && existingLength == sectorNeeded)
         {
             // Same-size rewrite is safe in place because ownership is proven.
-            writeSector(existingSector, ioScratch.data(), (int_t)ioScratch.size());
+            writeSector(existingSector, localScratch.data(), (int_t)localScratch.size());
         }
         else
         {
@@ -598,7 +596,7 @@ void RegionFile::write(int_t x, int_t z, const byte_t *rawData, int_t rawLength)
             }
 
             // Write the replacement before changing the on-disk header.
-            writeSector(runStart, ioScratch.data(), (int_t)ioScratch.size());
+            writeSector(runStart, localScratch.data(), (int_t)localScratch.size());
             if (!dataFile)
             {
                 // The old allocation is still untouched/published.  For a grown

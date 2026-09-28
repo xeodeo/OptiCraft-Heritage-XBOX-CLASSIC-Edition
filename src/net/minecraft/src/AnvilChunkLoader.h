@@ -39,6 +39,7 @@ private:
     Chunk *readChunkFromLevel(World *world, NBTTagCompound *level);
     void writeChunkToLevel(Chunk *chunk, World *world, NBTTagCompound *level);
     void queueChunkToSave(const ChunkCoordIntPair &position, std::vector<byte_t> serialized);
+    void queueChunkToSaveNBT(const ChunkCoordIntPair &position, std::unique_ptr<NBTTagCompound> nbt);
     void writePendingChunk(AnvilChunkLoaderPending *pending);
     bool copyPendingChunkData(const ChunkCoordIntPair &position, std::vector<byte_t> &out);
 

@@ -17,6 +17,12 @@
 #undef  PLATFORM_BOUNDED_WORLD
 #define PLATFORM_BOUNDED_WORLD                   1
 
+// XBOX_ASYNC_CHUNK_IO is defined in PlatformConfig.h to avoid ODR violations
+#if XBOX_ASYNC_CHUNK_IO
+#  undef  PLATFORM_ASYNC_GENERATION_THREAD_PRIORITY
+#  define PLATFORM_ASYNC_GENERATION_THREAD_PRIORITY 1
+#endif
+
 // Render distance: Short (2) by default to fit in 64 MB RAM.
 #undef  PLATFORM_DEFAULT_RENDER_DISTANCE
 #define PLATFORM_DEFAULT_RENDER_DISTANCE         2

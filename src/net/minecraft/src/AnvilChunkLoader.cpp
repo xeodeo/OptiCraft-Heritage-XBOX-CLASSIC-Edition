@@ -265,6 +265,9 @@ void AnvilChunkLoader::saveChunk(World *world, Chunk *chunk)
         root->setTag("Level", level);
         writeChunkToLevel(chunk, world, level);
 
+#if XBOX_ASYNC_CHUNK_IO
+        queueChunkToSaveNBT(ChunkCoordIntPair(chunk->xPosition, chunk->zPosition), std::move(root));
+#else
         std::vector<byte_t> serialized;
 #ifdef PS2_PLATFORM
         serialized.reserve(64 * 1024);
@@ -280,6 +283,7 @@ void AnvilChunkLoader::saveChunk(World *world, Chunk *chunk)
         // PS2's fragmentation-sensitive heap while terrain is streaming.
         root.reset();
         queueChunkToSave(ChunkCoordIntPair(chunk->xPosition, chunk->zPosition), std::move(serialized));
+#endif
     }
     catch (const std::exception &e)
     {
@@ -578,10 +582,21 @@ bool AnvilChunkLoader::copyPendingChunkData(const ChunkCoordIntPair &position, s
 
     for (AnvilChunkLoaderPending *pending : pendingSaves)
     {
-        if (pending != nullptr && pending->chunkPosition == position && !pending->serializedData.empty())
+        if (pending != nullptr && pending->chunkPosition == position)
         {
-            out = pending->serializedData;
-            return true;
+            if (pending->nbtRoot != nullptr)
+            {
+                std::vector<byte_t> serialized;
+                VectorOutputStream stream(serialized);
+                CompressedStreamTools::writeCompound(pending->nbtRoot.get(), stream);
+                pending->serializedData = std::move(serialized);
+                pending->nbtRoot.reset();
+            }
+            if (!pending->serializedData.empty())
+            {
+                out = pending->serializedData;
+                return true;
+            }
         }
     }
     return false;
@@ -623,6 +638,36 @@ void AnvilChunkLoader::queueChunkToSave(const ChunkCoordIntPair &position, std::
         ThreadedFileIOBase::threadedIOInstance.queueIO(this);
 }
 
+void AnvilChunkLoader::queueChunkToSaveNBT(const ChunkCoordIntPair &position, std::unique_ptr<NBTTagCompound> nbt)
+{
+    if (nbt == nullptr || storageDisabled || readOnly)
+        return;
+
+    bool queueWorker = false;
+    {
+        std::lock_guard<std::mutex> guard(pendingMutex);
+        if (pendingCoordinates.find(position) != pendingCoordinates.end())
+        {
+            for (AnvilChunkLoaderPending *pending : pendingSaves)
+            {
+                if (pending != nullptr && pending->chunkPosition == position)
+                {
+                    pending->nbtRoot = std::move(nbt);
+                    pending->serializedData.clear();
+                    return;
+                }
+            }
+        }
+
+        pendingSaves.push_back(new AnvilChunkLoaderPending(position, std::move(nbt)));
+        pendingCoordinates.insert(position);
+        queueWorker = true;
+    }
+
+    if (queueWorker)
+        ThreadedFileIOBase::threadedIOInstance.queueIO(this);
+}
+
 void AnvilChunkLoader::writePendingChunk(AnvilChunkLoaderPending *pending)
 {
     if (pending == nullptr || pending->serializedData.empty() || storageDisabled || readOnly)
@@ -651,7 +696,18 @@ bool AnvilChunkLoader::writeNextIO()
     std::unique_ptr<AnvilChunkLoaderPending> ownedPending(pending);
     try
     {
-        writePendingChunk(pending);
+        if (ownedPending->nbtRoot != nullptr)
+        {
+            std::vector<byte_t> serialized;
+#ifdef PS2_PLATFORM
+            serialized.reserve(64 * 1024);
+#endif
+            VectorOutputStream stream(serialized);
+            CompressedStreamTools::writeCompound(ownedPending->nbtRoot.get(), stream);
+            ownedPending->serializedData = std::move(serialized);
+            ownedPending->nbtRoot.reset();
+        }
+        writePendingChunk(ownedPending.get());
     }
     catch (const std::exception &e)
     {
