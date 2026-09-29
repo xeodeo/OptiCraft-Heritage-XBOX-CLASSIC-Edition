@@ -263,7 +263,7 @@ void* ChunkGenerationScheduler::threadEntry(void* argument)
 void ChunkGenerationScheduler::runWorker()
 {
 #if PLATFORM_ASYNC_CHUNK_GENERATION
-#if PLATFORM_WII
+#if PLATFORM_WII || PLATFORM_XBOX
     // Every GenLayer step below allocates from IntCache, which the main thread
     // also uses for sky colour, mob spawning and getBiomeGenAt(). Claim the
     // worker's own slot before the first chunk.
@@ -372,7 +372,7 @@ continue;
             }
         }
 
-#if PLATFORM_PC_LEGACY || PLATFORM_WII
+#if PLATFORM_PC_LEGACY || PLATFORM_WII || PLATFORM_XBOX
         if (ChunkProviderGenerate* generator = dynamic_cast<ChunkProviderGenerate*>(impl_->generator))
         {
             std::vector<byte_t> generatedData;
@@ -421,7 +421,7 @@ continue;
         }
     }
 
-#if PLATFORM_WII
+#if PLATFORM_WII || PLATFORM_XBOX
     IntCache::unbindGenerationThread();
 #endif
 #endif

@@ -16,7 +16,7 @@ public:
     static int_t checkedAreaSize(int_t width, int_t height);
     static void resetIntCache();
 
-#if PLATFORM_WII
+#if PLATFORM_WII || PLATFORM_XBOX
     // Claims the second storage slot for the calling thread, which the async
     // chunk generator does for its worker. See IntCache.cpp for why the Wii
     // cannot express this as thread_local.

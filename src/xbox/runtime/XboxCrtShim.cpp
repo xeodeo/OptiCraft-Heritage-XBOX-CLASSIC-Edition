@@ -209,10 +209,20 @@ void WINAPI DeleteCriticalSection(DesktopCriticalSection* cs)
 // ---------------------------------------------------------------------------
 // SRW locks (exclusive only is used by the CRT/STL): pointer-sized spin lock.
 // ---------------------------------------------------------------------------
+// NtYieldExecution only hands the CPU to threads of equal or higher priority.
+// When the below-normal chunk worker holds the lock and is preempted, a waiting
+// main thread would yield back to itself forever (priority inversion: black
+// screen, music still playing). After a short spin, Sleep(1) lets any priority
+// run, so the owner can finish and release.
 void WINAPI AcquireSRWLockExclusive(volatile LONG* lock)
 {
+    unsigned spins = 0;
     while (_InterlockedCompareExchange(lock, 1, 0) != 0) {
-        NtYieldExecution();
+        if (++spins < 32) {
+            NtYieldExecution();
+        } else {
+            Sleep(1);
+        }
     }
 }
 
@@ -933,7 +943,9 @@ BOOL WINAPI SleepConditionVariableSRW(volatile LONG* cv, volatile LONG* lock, DW
         if (timeoutMs != 0xFFFFFFFF && GetTickCount() - start >= timeoutMs) {
             break;
         }
-        NtYieldExecution();
+        // Same priority-inversion rule as AcquireSRWLockExclusive: a bare
+        // yield never lets a lower-priority signaller run.
+        Sleep(1);
     }
     AcquireSRWLockExclusive(lock);
     if (!signaled) {

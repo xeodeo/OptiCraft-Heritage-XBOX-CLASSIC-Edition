@@ -5,13 +5,13 @@
 #include <stdexcept>
 #include <utility>
 
-#if PLATFORM_WII
+#if PLATFORM_WII || PLATFORM_XBOX
 #include <atomic>
 
 #include "platform/Thread.h"
 #endif
 
-#if PLATFORM_WII
+#if PLATFORM_WII || PLATFORM_XBOX
 namespace
 {
 
@@ -45,7 +45,7 @@ std::atomic<std::uintptr_t> generationThreadId{0};
 
 IntCache::Storage &IntCache::storage()
 {
-#if PLATFORM_WII
+#if PLATFORM_WII || PLATFORM_XBOX
     static Storage mainStorage;
     static Storage generationStorage;
 
@@ -64,7 +64,7 @@ IntCache::Storage &IntCache::storage()
 #endif
 }
 
-#if PLATFORM_WII
+#if PLATFORM_WII || PLATFORM_XBOX
 void IntCache::bindGenerationThread()
 {
     generationThreadId.store(PlatformThread::currentId(), std::memory_order_relaxed);
