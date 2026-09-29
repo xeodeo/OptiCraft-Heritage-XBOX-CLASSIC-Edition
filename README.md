@@ -57,7 +57,9 @@ It provides:
 - DirectSound audio on the MCPX APU (stereo, or Dolby Digital 5.1 from the options);
 - saves on the title drive `T:` (`E:\TDATA\FFFF4F43`);
 - 480p (`default.xbe`) or 720p progressive (`OptiCraft_720p.xbe`, same program; needs component video and 720p enabled in the dashboard);
-- dashboard artwork and the title name "OptiCraft by xeodeo".
+- dashboard artwork and the title name "OptiCraft by xeodeo";
+- two-player split screen with independent screens per player;
+- a normal build and an experimental performance build (chunks generated and loaded on a background thread: `OptiCraft_exp.xbe`, `OptiCraft_exp_720p.xbe`).
 
 It runs at about 60 FPS on the console at a 2-chunk render distance, with 28-33 MB of RAM free.
 
@@ -184,6 +186,7 @@ There are two builds, from the same sources:
 | Network log | every log line goes over UDP to that PC; read it live with `python scripts/xbox/tools/escuchar_log.py` (allow Python through the Windows firewall) | none, and `MC_LOG_LEVEL` 0 |
 | `XBOX_DEPLOY_DIR` | honoured | ignored |
 | Use it for | testing on the console and finding hangs or hitches (`xbox.perf`, `xbox.spike` lines) | the ISO/zip you publish |
+| Experimental performance variant | `xbox-release-exp` → `bin/xbox-exp/` | `xbox-public-exp` → `bin/xbox-public-exp/` |
 
 Both enable sound and multiplayer (`XBOX_ENABLE_SOUND`, `XBOX_ENABLE_NETWORK`).
 

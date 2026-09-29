@@ -15,6 +15,9 @@ The short build recipe is also in the main [README](../README.md#original-xbox).
 - **Video:** `default.xbe` runs at 640x480; `OptiCraft_720p.xbe` (the same program under another name) runs at 1280x720 progressive when 720p is enabled in the dashboard (component cable).
 - **Sound:** DirectSound on the MCPX audio processor. Music streams; effects are pitched and attenuated by distance. Output is stereo, or Dolby Digital 5.1 from the options.
 - **Controller:** XInput. The first connected pad is player 1, on any port.
+- **Split screen:** a second controller joins as player 2, Legacy style: each player has their own screens (inventory, crafting, pause) at the same time, their own name and skin.
+- **Two builds from the same sources:** the *normal* build streams chunks as release 1.1 does; the *experimental performance* build generates and loads chunks on a background thread (`XBOX_ASYNC_CHUNK_IO`, see [section 6](#performance-work)).
+- **OptiJuegos features** merged from upstream: bed respawn, creative inventory with tabs, world size Infinite / Limited / Island, Stronghold Locator and Rei Minimap waypoints (mods, switchable in the Mods menu).
 - **Multiplayer (experimental):** the Multiplayer screen joins Minecraft 1.2.5 servers (`online-mode=false`) over the console's network connection (XNet TCP, address from the dashboard's network settings).
 - **Saves** go to the title drive `T:`, which is `E:\TDATA\FFFF4F43` on the console.
 
@@ -146,6 +149,7 @@ Run these from a normal command prompt. The toolchain file sets the compilers it
 | `MC_LOG_LEVEL` | `0` | `1` enables the log: an in-memory ring, `T:\debug.log`, and the network log if set. |
 | `XBOX_NETLOG_HOST` | empty | IPv4 address of a PC. Every log line is sent to it over UDP port 9999 (see [section 8](#8-debugging)). Links the devkit XNet library. |
 | `XBOX_LIMIT_MEMORY` | `ON` | Limits the title to the retail 64 MB even on 128 MB kits and xemu. |
+| `XBOX_ASYNC_CHUNK_IO` | `OFF` (`ON` in the `-exp` presets) | Experimental performance build: chunk generation and region loads on a background thread, chunk NBT serialized on the IO thread. Off, the chunk path is the synchronous one of release 1.1. Other platforms never enable it. |
 | `XBOX_AUTOPILOT` | `OFF` | Test builds only: replays a scripted controller from `D:\autopilot.txt`. Never deploy these. |
 | `XBOX_TITLE_ID` | `0xFFFF4F43` | Test title ID in the XBE. It decides the `E:\TDATA\<id>` save folder. |
 
@@ -165,16 +169,18 @@ Run these from a normal command prompt. The toolchain file sets the compilers it
 
 The dashboard shows the title "OptiCraft by xeodeo" and the title image embedded by `imagebld /TITLEIMAGE` (see `scripts/xbox/media/`). The intro adds a port-credit screen after the OptiProjects logo.
 
-**Test build vs release build** (same sources):
+**Test build vs release build, normal vs experimental** (same sources):
 
-| | Test (`xbox-release`) | Release (`xbox-public`) |
+| | Test | Release |
 |---|---|---|
-| Configure | `cmake --preset xbox-release -DXBOX_NETLOG_HOST=<PC IPv4>` once | `cmake --preset xbox-public` |
-| Build | `cmake --build --preset xbox-release` | `cmake --build --preset xbox-public` |
-| Output | `bin/xbox/` | `bin/xbox-public/` |
+| Normal | `xbox-release` → `bin/xbox/` | `xbox-public` → `bin/xbox-public/` |
+| Experimental performance | `xbox-release-exp` → `bin/xbox-exp/` | `xbox-public-exp` → `bin/xbox-public-exp/` |
+| Configure | `cmake --preset <preset> -DMC_LOG_LEVEL=1 -DXBOX_NETLOG_HOST=<PC IPv4>` once (each build folder keeps its own cache, so set it in every new one) | `cmake --preset <preset>` |
 | Log | UDP to the PC; run `python scripts/xbox/tools/escuchar_log.py` there (see [section 8](#8-debugging)) | none (`MC_LOG_LEVEL` 0) |
 
-Both enable sound and multiplayer.
+All four enable sound and multiplayer. From PowerShell, quote the address argument (`"-DXBOX_NETLOG_HOST=192.168.0.17"`): unquoted, PowerShell splits it at the dots.
+
+On the console both flavours can sit in the same folder: the experimental XBEs are published as `OptiCraft_exp.xbe` and `OptiCraft_exp_720p.xbe` next to `default.xbe` and `OptiCraft_720p.xbe` (the "720" in the name still selects 720p).
 
 Launching a game unloads the dashboard, and its FTP server goes with it. To read logs while the game runs, use the network log.
 
@@ -191,7 +197,10 @@ Launching a game unloads the dashboard, and its FTP server goes with it. To read
 | A: jump | B / Y: back |
 | Y: inventory | X: delete the highlighted world (in the world list) |
 | B: drop (ignored until released when it was held to close a menu) | Left/right: sliders, or switch between side-by-side buttons (Yes/Cancel) |
-| Left stick click: sneak | |
+| Left stick click: sneak | White / Black: switch tabs (console crafting, creative inventory) |
+| X: console crafting (2x2) | Right stick: drag the achievements map |
+| Back: debug screen (on release) | |
+| Back + D-pad up / down: save a waypoint here / open the waypoint manager (Rei Minimap mod) | In the waypoint manager: A show/hide, X delete, B close |
 
 ---
 
@@ -306,6 +315,9 @@ Everything Xbox-specific sits behind `PLATFORM_XBOX` / `XBOX_PLATFORM`. It lives
 | Tuning | `src/xbox/XboxTuning.h` | World and memory policy: bounded world, render distance 2, chunk cache radius 5, 40 live mobs, autosave every 1200 ticks, GUI scale 2. |
 | Diagnostics | `system/XboxLogRing.cpp`, `XboxNetLog.cpp`, `XboxSelfTest.cpp`, `platform/Diagnostics_XBOX.cpp` | See section 8. |
 | Network | `src/java/JavaNetworkXbox.cpp`, `system/XboxNetwork.*` | TCP sockets for multiplayer over XNet (Winsock API), host names through `XNetDnsLookup`; one shared XNet startup also used by the UDP log. Needs `XBOX_ENABLE_NETWORK`. |
+| Split screen | `client/XboxSplitScreen.*`, `client/Minecraft.*` (`enterPlayer2Context` / `leavePlayer2Context`), `EntityRenderer::renderSplitScreen`, `ContainerSlotNavigator` (one per player) | Player 2 runs its screens inside its own context: `currentScreen`, the owned screens, `thePlayer`, `objectMouseOver`, the click cooldowns and the menu controller are swapped in, so every screen class works for player 2 unchanged. The PS2 split screen of upstream (`displayPlayerScreen`) coexists and is not used on Xbox. |
+| Assets pack | `platform/Resources_XBOX.cpp`, `scripts/make_pak.py` | `D:\assets.pak` next to the XBE is mounted first (one file instead of ~800 small reads); anything missing from it is read from `D:\data` as before. |
+| Main-thread watchdog | `system/XboxWatchdog.*` (`XBOX_WATCHDOG_PHASE`) | Log builds only: a high-priority thread logs the main thread's phase when it has not advanced a frame for 2 s. |
 | Stubs | `Runtime_xbox.cpp`, profiler/screenshot backends | |
 
 **Renderer details:**
@@ -369,6 +381,18 @@ Third round (hitches):
 | `T:\debug.log` off (`XBOX_DISK_LOG 0`): McLog reopened the file after every line | fewer hard-disk writes during play; the network log carries the same lines |
 | `xbox.spike` log line: every frame over 45 ms with its breakdown | finds the cause of each hitch |
 
+Fourth round (chunk streaming; the background thread only in the experimental build):
+
+| Change | Effect |
+|---|---|
+| Region writes compress outside the region mutex; natural spawning reads only resident chunks (`getChunkIfExists`) | shorter `save` stalls in both builds |
+| Experimental: `ChunkGenerationScheduler` worker (priority low, queue 16, 4 publishes per tick) builds terrain and caves with its own biome source and `IntCache` slot; the game thread only adopts the result, decorates and lights it | `sync=0` generation on the game thread, hitches over 80 ms 13/min → ~5/min on the console |
+| Experimental: requests follow the direction of movement, neighbours are requested in the same batch, far columns stay hidden until populated | no bare terrain; trees and snow arrive with the chunk |
+| Experimental: chunk NBT is serialized on the IO thread (`queueChunkToSaveNBT`) | less work in `chunkUnload` |
+| The main loop sleeps 1 ms while background jobs are pending (Xbox only) | the low-priority worker gets CPU when `present` has no vsync slack left |
+
+`chunkUnload` in `xbox.spike` is the whole per-tick chunk-provider hook, not only unloading: adopting finished columns (with their population), dispatching requests, deferred population, the unload/save loop and the out-of-radius scan. On the console it is still the largest single source of 25-35 ms frames, together with entity ticks.
+
 ---
 
 ## 7. Changes to shared code
@@ -396,6 +420,12 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
 | **Xbox button icons** in menu hints, the in-game control row, the skin selector, the world list and the Controls screen (pad bindings draw their button, keyboard keys stay as text) | `legacy/LegacyButtonPrompt.*` (`LEGACY_BUTTON_ICONS`, `buttons_xbox.png`), `legacy/LegacyControlTooltipHud.cpp`, `legacy/LegacyMenuHints.cpp`, `legacy/LegacyControlsScreen.*`, `skin/GuiSkinSelector.cpp`, `TexturePackDefault.cpp` (built-in copy of the atlas) | The Xbox showed PS2 art or bracketed text. The atlas is built by `scripts/xbox/make_button_atlas.py`; White/Black are drawn by the script. |
 | **Console crafting menu** (option *Console Crafting*, on by default on Xbox): X opens the 2x2, a workbench the 3x3 | `legacy/LegacyCraftingScreen.*`, `legacy/LegacyCraftingGroups.h`, `EntityPlayerSP.cpp`, `client/Minecraft.cpp`, `GameSettings*`, `legacy/LegacyHeritageOptions.*`, `ShapedRecipes.h` / `ShapelessRecipes.h` (read-only pattern accessors), `platform/Input.h` (`PLATFORM_TEXT_TAB_LEFT/RIGHT` = White/Black) | Tabs, one column per kind of item with its material tiers, missing ingredients in red, inventory/ingredients panel on X. It only drives the real container: A lays the recipe out in the crafting grid with window clicks and shift-clicks the result, so servers see normal crafting. |
 | Incremental terrain builder, section visibility, fast collisions, entity lookups, HUD/sky batching, font glyph table | `PlatformConfig.h`, `WorldRenderer*`, `RenderGlobal*`, `World*`, `FontRenderer.cpp`, `GuiIngame.cpp` | See "Performance work". |
+| **Emptied chunk sections are kept on Xbox** (upstream frees them in `setBlockIDWithMetadata`) | `Chunk.cpp` | The random block tick holds section pointers across `updateTick`; a tick that emptied its section left the next probe reading freed memory (crash in `World::updateBlocksAndPlayCaveSounds`). Minecraft 1.2.5 never freed them either. |
+| **Chunk retention covers the whole radius** (3x3 for the ender dragon) | `World.cpp` (`isChunkRequiredByRetainedEntity`, `ensureEntityChunkRetention`) | Only the dragon's own chunk was loaded; an entity only ticks with the chunks 16 blocks around it present, so the dragon froze. Also applies to PS2 and Wii. |
+| **A chunk stays "pending save" until the IO thread has written it** | `AnvilChunkLoader.*` | `writeNextIO` dropped the coordinate before the region write (and, in the experimental build, before serializing). A reload in that window read stale or missing data, and the streaming provider generated the chunk again: repopulated mobs and trees, lost edits. A load of the chunk being written now waits for it. Affects every platform. |
+| **White/Black latched apart from the menu presses** | `xbox/input/XboxPad.*` (`consumePagePressed`), `GuiContainerCreative.cpp` | The slot navigator consumes the menu presses every frame, so the creative inventory, which switches tabs on its tick, never saw them. |
+| **Waypoint combo and achievements drag** on Xbox | `xbox/input/XboxInput.*`, `mods/reiminimap/ReiMinimap.cpp`, `GuiWaypointManager.cpp`, `GuiAchievements.cpp` | The upstream combos were PS2-only; the map could only be dragged with a mouse. |
+| `XBOX_ASYNC_CHUNK_IO` defaults to 0 | `platform/PlatformConfig.h`, `cmake/xbox.cmake`, `CMakePresets.json` | It defaulted to 1 everywhere, which also switched the PC/PS2 save path; now only the experimental Xbox presets set it. |
 
 ---
 
@@ -416,6 +446,8 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
 - **Crash screen:** an unexpected C++ exception logs `crash: <what()>` and holds a red screen. Without it the title would exit and the Xbox would reboot it, wiping the in-memory log.
 - **Performance reporting:** Every 5 seconds, an `xbox.perf` report logs FPS, present time, render phases, ticks, lighting, and chunk load/save times. An `xbox.mem` report logs free memory, display lists, `vbPools` size, and texture memory.
 - **Out of memory** logs `out of memory: free=<KB>` and returns to the menu.
+- **Watchdog** (log builds): `xbox.watchdog main stuck 2000ms phase=<phase> subphase=<subphase> frame=<n> pending=<n> freeKB=<n>`, repeated every 5 s while the main thread stays stuck. A crash instead prints `crash: unhandled exception ... at <eip> (map address <addr>)` with registers and a raw stack; resolve the addresses against `OptiCraft.exe.map` of the same build.
+- **Async report** (experimental build): `xbox.async workerMs sync async queued qFull popN adopted pending done workerState` every 5 s.
 - **Other gdb tools** in `scripts/xbox/tools`:
   - `gdbthrow.py` catches every C++ throw.
   - `gdbstack.py` resolves the call chain at a bug check.
@@ -430,7 +462,7 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
 - **Memory** is no longer the limit at 2 chunks (20-35 MB free). Remaining candidates:
   - keep fewer chunks resident and lean on the hard disk (`T:` or the `Z:` utility drive) for evicted chunks;
   - DXT-compressed textures.
-- **Remaining hitches:** short 50-100 ms frames, mostly while new terrain is generated or saved (`chunkUnload`), plus chunk meshing and mob ticks. Next steps, all behaviour-exact:
+- **Remaining hitches:** short 50-100 ms frames, mostly `chunkUnload` (see Performance work: adoption, population and saves share that phase), entity ticks (~34 ms) and a render share not covered by the named sub-phases. The next measurement is to split `chunkUnload` into adopt / populate / requests / save / scan. Older candidates, all behaviour-exact:
   1. Split the atomic base-terrain step of chunk generation into sub-steps that finish within a few consecutive frames.
   2. Fast lighting chunk access (`PLATFORM_FAST_LIGHTING_CHUNK_ACCESS`, as on Wii).
   3. Hardware `sqrt` and a magic-number `floor_double` (x87 `__ftol2` changes the rounding mode twice per call).
@@ -609,6 +641,14 @@ These changes stabilized memory and boosted performance to ~50-60 FPS on real ha
 - **Crafting menu.** Layout and colours follow the Legacy Console Edition crafting scene at 1280x720, scaled to the GUI and drawn from rectangles (no 689x490 panel textures in RAM). Tab and base-type grouping comes from `scripts/xbox/make_crafting_groups.py`; tab icons and the arrow from `scripts/xbox/make_crafting_icons.py`.
 
 ---
+
+### Phase 10: split screen, performance builds and the OptiJuegos merge
+
+- **Split screen, Legacy style.** Player 2 got its own screens through a context swap (see section 6), its own attack/use cooldowns, name, skin and camera; RT mines and LT uses for player 2; the pause menu shows "Leave Game" for player 2.
+- **`assets.pak`.** Mounted from the XBE folder (`D:/`, not the drive-relative `D:assets.pak`).
+- **Background chunk pipeline.** Built step by step against console logs: the worker first starved (lower priority, no vsync slack), then deadlocked on a priority inversion in the SRW-lock shim (it now sleeps after spinning), then shared the biome generator's `IntCache` with the game thread. Trees arriving late, bare borders and falls into unloaded columns were fixed by publishing through `publishPreparedChunk`, hiding unpopulated far columns and generating the column under the player synchronously. Because it changes timing everywhere, it ships as a separate experimental build.
+- **Tools that don't work here.** LTCG (`/GL` + `/LTCG`) is impossible with the XDK linker (VC 7.1, LNK1262), and the modern linker pulls SSE2 CRT code the patcher cannot fix. Unity builds hit about 60 name clashes. Both were dropped.
+- **Upstream merge.** OptiJuegos main (bed respawn, double-free fix, creative tabs, world size, mods) came in through the test branch; the Xbox crafting menu was renamed `XboxCraftingScreen` so upstream's `LegacyCraftingScreen` could stay. Two upstream changes needed fixes on Xbox: freeing emptied sections (crash) and the chunk-save race that became visible with background saving.
 
 ## 11. Legal
 
