@@ -58,7 +58,10 @@ It provides:
 - saves on the title drive `T:` (`E:\TDATA\FFFF4F43`);
 - 480p (`default.xbe`) or 720p progressive (`OptiCraft_720p.xbe`, same program; needs component video and 720p enabled in the dashboard);
 - dashboard artwork and the title name "OptiCraft by xeodeo";
-- two-player split screen with independent screens per player;
+- two-player split screen with independent screens per player (second controller, START to join; Limited or Island worlds);
+- a console-style crafting menu (X, workbench) and Xbox controller icons in every menu hint;
+- experimental multiplayer against Minecraft 1.2.5 servers (`online-mode=false`) over the console's network;
+- the OptiJuegos additions: bed respawn, creative inventory with tabs, world size Infinite / Limited / Island, Stronghold Locator and Rei Minimap waypoints;
 - a normal build and an experimental performance build (chunks generated and loaded on a background thread: `OptiCraft_exp.xbe`, `OptiCraft_exp_720p.xbe`).
 
 It runs at about 60 FPS on the console at a 2-chunk render distance, with 28-33 MB of RAM free.

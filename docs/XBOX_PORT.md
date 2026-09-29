@@ -77,7 +77,7 @@ No Visual Studio IDE project is used and no Developer Command Prompt is needed. 
   - `xapilib`: Win32-like system API, threads, files, XInput.
   - `d3d8`, `d3dx8` and `xgraphics`: Direct3D 8 and texture swizzling.
   - `dsound`: DirectSound on the MCPX APU, including Dolby Digital.
-  - `xnet`: sockets, only for the debug network log.
+  - `xnet`: sockets for multiplayer and for the debug network log.
   - `xboxkrnl`: kernel.
 - **Libraries already in the project** (`external/`, `src/java/fdlibm`):
   - `stb_vorbis` (Ogg Vorbis decoding) and `stb_image` (PNG);
@@ -444,6 +444,8 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
   - The console takes its IP from the dashboard's network settings. Every line arrives as a UDP datagram and is also saved to `netlog.txt`.
   - This is how the real-console boot failures were found. The log stopped at the first `%f`, and later at `ceil`.
 - **Crash screen:** an unexpected C++ exception logs `crash: <what()>` and holds a red screen. Without it the title would exit and the Xbox would reboot it, wiping the in-memory log.
+- **Crash log for everything else** (`src/xbox/system/XboxCrashLog.cpp`, installed first thing in `main`): an access violation on any thread, or a C++ exception escaping a worker thread (network reader/writer, music, chunk worker), never reaches the red screen and used to freeze the console silently, with the audio looping its last buffer. `SetUnhandledExceptionFilter` and `std::set_terminate` now log the thread (MAIN/worker), exception code, faulting and map address, registers and code-looking stack words, then park the thread so the log still gets out. This is how the multiplayer freeze was found: the held-item renderer read an `ItemStack` the server's inventory packets had already freed (fixed in `ItemRenderer.cpp` with `isHeldByInventory`).
+- **Network time limits** (`src/xbox/system/XboxNetwork.cpp`): connecting is non-blocking with a 4 s limit (a silent server no longer blocks the menu), and a socket that neither receives nor accepts data for 45 s is treated as dead instead of being polled forever. A 1.2.5 server sends keep-alives every few seconds.
 - **Performance reporting:** Every 5 seconds, an `xbox.perf` report logs FPS, present time, render phases, ticks, lighting, and chunk load/save times. An `xbox.mem` report logs free memory, display lists, `vbPools` size, and texture memory.
 - **Out of memory** logs `out of memory: free=<KB>` and returns to the menu.
 - **Watchdog** (log builds): `xbox.watchdog main stuck 2000ms phase=<phase> subphase=<subphase> frame=<n> pending=<n> freeKB=<n>`, repeated every 5 s while the main thread stays stuck. A crash instead prints `crash: unhandled exception ... at <eip> (map address <addr>)` with registers and a raw stack; resolve the addresses against `OptiCraft.exe.map` of the same build.
