@@ -14,15 +14,23 @@ volatile int_t g_mainPendingCount = 0;
 
 static PlatformThread s_watchdogThread;
 
+// exit() destroys s_watchdogThread, whose destructor joins it; an endless loop
+// there hung "Salir" forever. Statics die in reverse order, so this one (made
+// after the thread) raises the flag first and the join returns within 500 ms.
+static volatile bool s_watchdogStop = false;
+static struct WatchdogStopOnExit { ~WatchdogStopOnExit() { s_watchdogStop = true; } } s_watchdogStopOnExit;
+
 static void* WatchdogThreadFunc(void*)
 {
     int_t lastFrame = g_mainFrameCount;
     int stuckTimeMs = 0;
     bool stuck = false;
 
-    while (true)
+    while (!s_watchdogStop)
     {
         PlatformCompat::delay(500);
+        if (s_watchdogStop)
+            break;
         int_t currentFrame = g_mainFrameCount;
         
         // Do not warn during early frames or if there's no world (loading)
