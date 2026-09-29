@@ -3,6 +3,7 @@
 #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 
 #include "java/Type.h"
+#include "platform/Input.h"
 
 class GuiContainer;
 class Slot;
@@ -20,13 +21,17 @@ public:
         int_t displayHeight = 0;
     };
 
-    static ContainerSlotNavigator& instance();
+    static ContainerSlotNavigator& instance(int padPort = -1);
+
+    int getPadPort() const { return m_padPort; }
+    void setPadPort(int port) { m_padPort = port; }
 
     void notifyOpen(GuiContainer *screen, const Layout &layout);
     void notifyClosed(const GuiContainer *screen);
     bool isActive() const { return screen != nullptr; }
 
     void tick();
+    void tickWithInput(const PlatformTextInputSnapshot &pad);
 
     Slot *selectedSlot() const { return selected; }
     bool controllerSelectionActive() const { return controllerActive && selected != nullptr; }
@@ -55,6 +60,7 @@ private:
     bool pendingPrimary = false;
     bool pendingSecondary = false;
     int nextRepeatMs = 0;
+    int m_padPort = 0;
 };
 
 #endif // PS2_PLATFORM || WII_PLATFORM

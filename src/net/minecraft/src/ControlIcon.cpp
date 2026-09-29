@@ -119,12 +119,14 @@ void drawControlIcon(Minecraft *mc, ControlIcon icon, int_t x, int_t y)
     v1 = (icon.cell / 4 + 1) * 0.25f - 0.5f / h;
 #endif
     mc->renderEngine->bindTexture(icon.texture);
+    renderDisable(RenderCapability::DepthTest);
     renderEnable(RenderCapability::Texture2D);
     renderEnable(RenderCapability::Blend);
     renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
     renderColor4f(1, 1, 1, 1);
     Tessellator &t = Tessellator::instance;
     t.startDrawingQuads();
+    t.setColorRGBA_F(1.0f, 1.0f, 1.0f, 1.0f);
     t.addVertexWithUV(x, y + 12, 0, u0, v1);
     t.addVertexWithUV(x + 12, y + 12, 0, u1, v1);
     t.addVertexWithUV(x + 12, y, 0, u1, v0);

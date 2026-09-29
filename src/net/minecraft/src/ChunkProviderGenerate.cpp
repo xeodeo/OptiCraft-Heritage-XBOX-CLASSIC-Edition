@@ -820,6 +820,27 @@ TerrainNoiseBuffer &ChunkProviderGenerate::initializeNoiseField(TerrainNoiseBuff
 			averageMinHeight /= totalWeight;
 			averageMaxHeight = averageMaxHeight * 0.9f + 0.1f;
 			averageMinHeight = (averageMinHeight * 4.0f - 1.0f) / 8.0f;
+			if (worldObj != nullptr && worldObj->isIslandWorld())
+			{
+				const double blockX = static_cast<double>((x + localX) * 4);
+				const double blockZ = static_cast<double>((z + localZ) * 4);
+				const double dist = std::sqrt(blockX * blockX + blockZ * blockZ);
+				if (dist < 88.0)
+				{
+					if (averageMaxHeight > 0.2f)
+						averageMaxHeight *= 1.25f;
+					averageMinHeight += 0.25f;
+				}
+				else if (dist < 118.0)
+				{
+					const double t = (dist - 88.0) / 30.0;
+					averageMinHeight = (averageMinHeight + 0.25f) * (1.0 - t) + (-1.0f) * t;
+				}
+				else
+				{
+					averageMinHeight = -1.0f;
+				}
+			}
 
 			terrain_noise_real_t heightNoise = field_4181_h[static_cast<std::size_t>(biomeNoiseIndex)] / static_cast<terrain_noise_real_t>(8000.0);
 			if (heightNoise < static_cast<terrain_noise_real_t>(0.0))
@@ -841,11 +862,15 @@ TerrainNoiseBuffer &ChunkProviderGenerate::initializeNoiseField(TerrainNoiseBuff
 			}
 			++biomeNoiseIndex;
 
+			const terrain_noise_real_t heightVarianceScale = (worldObj != nullptr && worldObj->isIslandWorld())
+				? static_cast<terrain_noise_real_t>(0.32)
+				: static_cast<terrain_noise_real_t>(0.2);
+
 			for (int_t localY = 0; localY < height; ++localY)
 			{
 				terrain_noise_real_t minHeight = static_cast<terrain_noise_real_t>(averageMinHeight);
 				const terrain_noise_real_t maxHeight = static_cast<terrain_noise_real_t>(averageMaxHeight);
-				minHeight += heightNoise * static_cast<terrain_noise_real_t>(0.2);
+				minHeight += heightNoise * heightVarianceScale;
 				minHeight = minHeight * static_cast<terrain_noise_real_t>(height) / static_cast<terrain_noise_real_t>(16.0);
 				const terrain_noise_real_t center = static_cast<terrain_noise_real_t>(height) / static_cast<terrain_noise_real_t>(2.0) + minHeight * static_cast<terrain_noise_real_t>(4.0);
 				terrain_noise_real_t verticalOffset = (static_cast<terrain_noise_real_t>(localY) - center) * static_cast<terrain_noise_real_t>(12.0) / maxHeight;
@@ -931,6 +956,14 @@ void ChunkProviderGenerate::populate(IChunkProvider *ichunkprovider, int_t i, in
 		const int_t z = JavaArithmetic::intAdd(JavaArithmetic::intAdd(blockZ, rand.nextInt(16)), 8);
 		if (y < 63 || rand.nextInt(10) == 0)
 			WorldGenLakes(Block::lavaStill->blockID).generate(worldObj, rand, x, y, z);
+	}
+#else
+	if (worldObj != nullptr && worldObj->isIslandWorld() && !villageGenerated && rand.nextInt(12) == 0)
+	{
+		const int_t x = JavaArithmetic::intAdd(JavaArithmetic::intAdd(blockX, rand.nextInt(16)), 8);
+		const int_t y = rand.nextInt(60) + 64;
+		const int_t z = JavaArithmetic::intAdd(JavaArithmetic::intAdd(blockZ, rand.nextInt(16)), 8);
+		WorldGenLakes(Block::waterStill->blockID).generate(worldObj, rand, x, y, z);
 	}
 #endif
 

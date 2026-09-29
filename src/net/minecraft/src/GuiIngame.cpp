@@ -45,6 +45,9 @@
 #if PLATFORM_PC_LEGACY || defined(PS2_PLATFORM)
 #include "pc/render/PcLegacyHudCachePolicy.h"
 #endif
+#if defined(PS2_PLATFORM)
+#include "ps2/render/Ps2Draw2D.h"
+#endif
 #if PLATFORM_PC_LEGACY
 #include "GLAllocation.h"
 #include "pc/tuning/PcLegacyTuning.h"
@@ -127,6 +130,9 @@ namespace
 
 	void finishOverlayGLState()
 	{
+#if defined(PS2_PLATFORM)
+		ps2_draw_2d_flush_pending();
+#endif
 		renderMatrixMode(RenderMatrixMode::Texture);
 		renderLoadIdentity();
 		renderMatrixMode(RenderMatrixMode::ModelView);
@@ -831,19 +837,22 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 	drawTexturedModalRect((sw / 2 - 91 - 1) + inv->currentItem * 20, hudHeight - 22 - 1, 0, 22, 24, 22);
 #endif
 
-	renderBindTexture(mc->renderEngine->getTexture("/gui/icons.png"));
-	renderEnable(RenderCapability::Blend);
-	renderBlendFunc(RenderBlendFactor::OneMinusDstColor, RenderBlendFactor::OneMinusSrcColor);
+	if (!showDebug)
+	{
+		renderBindTexture(mc->renderEngine->getTexture("/gui/icons.png"));
+		renderEnable(RenderCapability::Blend);
+		renderBlendFunc(RenderBlendFactor::OneMinusDstColor, RenderBlendFactor::OneMinusSrcColor);
 #if PLATFORM_PC_LEGACY
-	pcLegacyRenderCrosshair(sw, sh);
+		pcLegacyRenderCrosshair(sw, sh);
 #elif defined(PS2_PLATFORM)
-	ps2RenderCrosshair(sw, sh);
+		ps2RenderCrosshair(sw, sh);
 #else
-	drawTexturedModalRect(sw / 2 - 7, sh / 2 - 7, 0, 0, 16, 16);
+		drawTexturedModalRect(sw / 2 - 7, sh / 2 - 7, 0, 0, 16, 16);
 #endif
-	renderDisable(RenderCapability::Blend);
-	renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
-	renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		renderDisable(RenderCapability::Blend);
+		renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
+		renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	}
 
 	renderBossHealth();
 

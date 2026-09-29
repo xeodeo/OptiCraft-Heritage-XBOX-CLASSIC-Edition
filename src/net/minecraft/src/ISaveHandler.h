@@ -22,5 +22,6 @@ public:
 	virtual void saveWorldInfo(WorldInfo *worldinfo) = 0;
 	virtual std::string getMapFile(const jstring &name) = 0;
 	virtual std::string getSaveDirectoryName() const = 0;
+	virtual std::string getSaveDirectory() const { return ""; }
 	virtual bool isReadOnly() const { return false; }
 };

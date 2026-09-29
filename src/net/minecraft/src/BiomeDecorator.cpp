@@ -309,17 +309,84 @@ bool BiomeDecorator::advanceDecoration()
                 }
                 nextStage(DecorationStage::TreeSetup); break;
             case DecorationStage::TreeSetup:
-                treeCount = treesPerChunk;
-                if (PLATFORM_POPULATE_TREES_PER_CHUNK_MAX >= 0 && treeCount > PLATFORM_POPULATE_TREES_PER_CHUNK_MAX)
-                    treeCount = PLATFORM_POPULATE_TREES_PER_CHUNK_MAX;
-                if (randomGenerator->nextInt(10) == 0) ++treeCount;
+                if (currentWorld != nullptr && currentWorld->isIslandWorld())
+                {
+                    // MCPE 0.6.0 / Pocket Edition classic tree distribution:
+                    // In MCPE 0.6.0, every terrestrial biome has natural tree coverage.
+                    // Balanced for PS2 performance while capturing the authentic MCPE landscape.
+                    if (biome == BiomeGenBase::forest || biome == BiomeGenBase::forestHills)
+                    {
+                        // Dense forest (6 to 8 trees per chunk)
+                        treeCount = 6 + randomGenerator->nextInt(3);
+                    }
+                    else if (biome == BiomeGenBase::taiga || biome == BiomeGenBase::taigaHills)
+                    {
+                        // Taiga pine forest (6 to 8 trees per chunk)
+                        treeCount = 6 + randomGenerator->nextInt(3);
+                    }
+                    else if (biome == BiomeGenBase::jungle || biome == BiomeGenBase::jungleHills)
+                    {
+                        // Jungle grove (7 to 9 trees per chunk)
+                        treeCount = 7 + randomGenerator->nextInt(3);
+                    }
+                    else if (biome == BiomeGenBase::swampland)
+                    {
+                        // Swamp with vines (2 to 3 trees per chunk)
+                        treeCount = 2 + (randomGenerator->nextInt(2) == 0 ? 1 : 0);
+                    }
+                    else if (biome == BiomeGenBase::extremeHills || biome == BiomeGenBase::extremeHillsEdge)
+                    {
+                        // MCPE 0.6.0 classic alpine slopes: 1 to 2 trees per chunk
+                        treeCount = 1 + (randomGenerator->nextInt(2) == 0 ? 1 : 0);
+                    }
+                    else if (biome == BiomeGenBase::plains)
+                    {
+                        // MCPE 0.6.0 / Beta scattered trees across plains (50% 1 tree, 20% 2 trees, 30% 0 trees)
+                        const int_t roll = randomGenerator->nextInt(10);
+                        if (roll < 5)
+                            treeCount = 1;
+                        else if (roll < 7)
+                            treeCount = 2;
+                        else
+                            treeCount = 0;
+                    }
+                    else if (biome == BiomeGenBase::icePlains || biome == BiomeGenBase::iceMountains)
+                    {
+                        // Cold snow plains: 30% chance of 1 tree
+                        treeCount = (randomGenerator->nextInt(10) < 3) ? 1 : 0;
+                    }
+                    else if (treesPerChunk > 0)
+                    {
+                        treeCount = std::min<int_t>(treesPerChunk, 6);
+                    }
+                    else
+                    {
+                        treeCount = 0;
+                    }
+                }
+                else
+                {
+                    treeCount = treesPerChunk;
+                    if (PLATFORM_POPULATE_TREES_PER_CHUNK_MAX >= 0 && treeCount > PLATFORM_POPULATE_TREES_PER_CHUNK_MAX)
+                        treeCount = PLATFORM_POPULATE_TREES_PER_CHUNK_MAX;
+                    if (randomGenerator->nextInt(10) == 0) ++treeCount;
+                }
                 nextStage(DecorationStage::Trees); break;
             case DecorationStage::Trees:
                 if (decorationIndex < treeCount)
                 {
                     const int_t x = JavaArithmetic::intAdd(JavaArithmetic::intAdd(chunk_X, randomGenerator->nextInt(16)), 8);
                     const int_t z = JavaArithmetic::intAdd(JavaArithmetic::intAdd(chunk_Z, randomGenerator->nextInt(16)), 8);
-                    WorldGenerator *generator = biome->getRandomWorldGenForTrees(*randomGenerator);
+                    BiomeGenBase *treeBiome = biome;
+                    if (currentWorld != nullptr && currentWorld->isIslandWorld() &&
+                        (biome == BiomeGenBase::plains || biome == BiomeGenBase::extremeHills || biome == BiomeGenBase::extremeHillsEdge))
+                    {
+                        // In MCPE 0.6.0, plains and hills have a mix of oak (75%) and birch (25%)
+                        if (randomGenerator->nextInt(4) == 0 && BiomeGenBase::forest != nullptr)
+                            treeBiome = BiomeGenBase::forest;
+                    }
+
+                    WorldGenerator *generator = treeBiome != nullptr ? treeBiome->getRandomWorldGenForTrees(*randomGenerator) : nullptr;
                     if (generator != nullptr)
                     {
                         generator->setScale(1.0, 1.0, 1.0);
@@ -334,7 +401,8 @@ bool BiomeDecorator::advanceDecoration()
                         platformProfileTreeGenerator(treeStart, accessStart, generator);
 #endif
                     }
-                    biome->releaseWorldGenForTrees(generator);
+                    if (treeBiome != nullptr)
+                        treeBiome->releaseWorldGenForTrees(generator);
                     ++decorationIndex; return false;
                 }
                 nextStage(DecorationStage::BigMushrooms); break;
@@ -348,13 +416,23 @@ bool BiomeDecorator::advanceDecoration()
                 }
                 nextStage(DecorationStage::YellowFlowers); break;
             case DecorationStage::YellowFlowers:
-                if (decorationIndex < flowersPerChunk)
                 {
-                    const int_t x = JavaArithmetic::intAdd(JavaArithmetic::intAdd(chunk_X, randomGenerator->nextInt(16)), 8);
-                    const int_t y = randomGenerator->nextInt(128);
-                    const int_t z = JavaArithmetic::intAdd(JavaArithmetic::intAdd(chunk_Z, randomGenerator->nextInt(16)), 8);
-                    plantYellowGen->generate(currentWorld, *randomGenerator, x, y, z);
-                    decorationStage = DecorationStage::RedFlowers; return false;
+                    int_t maxFlowers = flowersPerChunk;
+                    if (currentWorld != nullptr && currentWorld->isIslandWorld())
+                    {
+                        if (biome == BiomeGenBase::extremeHills || biome == BiomeGenBase::extremeHillsEdge)
+                            maxFlowers = 2; // MCPE 0.6.0 mountain wildflowers
+                        else if (biome == BiomeGenBase::plains)
+                            maxFlowers = 4;
+                    }
+                    if (decorationIndex < maxFlowers)
+                    {
+                        const int_t x = JavaArithmetic::intAdd(JavaArithmetic::intAdd(chunk_X, randomGenerator->nextInt(16)), 8);
+                        const int_t y = randomGenerator->nextInt(128);
+                        const int_t z = JavaArithmetic::intAdd(JavaArithmetic::intAdd(chunk_Z, randomGenerator->nextInt(16)), 8);
+                        plantYellowGen->generate(currentWorld, *randomGenerator, x, y, z);
+                        decorationStage = DecorationStage::RedFlowers; return false;
+                    }
                 }
                 nextStage(DecorationStage::Grass); break;
             case DecorationStage::RedFlowers:
@@ -367,15 +445,26 @@ bool BiomeDecorator::advanceDecoration()
                 }
                 ++decorationIndex; decorationStage = DecorationStage::YellowFlowers; return false;
             case DecorationStage::Grass:
-                if (decorationIndex < grassPerChunk &&
-                    (PLATFORM_POPULATE_GRASS_PER_CHUNK_MAX < 0 || decorationIndex < PLATFORM_POPULATE_GRASS_PER_CHUNK_MAX))
                 {
-                    const int_t x = JavaArithmetic::intAdd(JavaArithmetic::intAdd(chunk_X, randomGenerator->nextInt(16)), 8);
-                    const int_t y = randomGenerator->nextInt(128);
-                    const int_t z = JavaArithmetic::intAdd(JavaArithmetic::intAdd(chunk_Z, randomGenerator->nextInt(16)), 8);
-                    WorldGenerator *generator = biome->func_48410_b(*randomGenerator);
-                    if (generator != nullptr) generator->generate(currentWorld, *randomGenerator, x, y, z);
-                    ++decorationIndex; return false;
+                    int_t maxGrass = grassPerChunk;
+                    if (currentWorld != nullptr && currentWorld->isIslandWorld())
+                    {
+                        if (biome == BiomeGenBase::extremeHills || biome == BiomeGenBase::extremeHillsEdge)
+                            maxGrass = 4; // MCPE 0.6.0 mountain grass
+                        else if (biome == BiomeGenBase::plains)
+                            maxGrass = 8;
+                    }
+                    if (decorationIndex < maxGrass &&
+                        ((currentWorld != nullptr && currentWorld->isIslandWorld()) ||
+                         PLATFORM_POPULATE_GRASS_PER_CHUNK_MAX < 0 || decorationIndex < PLATFORM_POPULATE_GRASS_PER_CHUNK_MAX))
+                    {
+                        const int_t x = JavaArithmetic::intAdd(JavaArithmetic::intAdd(chunk_X, randomGenerator->nextInt(16)), 8);
+                        const int_t y = randomGenerator->nextInt(128);
+                        const int_t z = JavaArithmetic::intAdd(JavaArithmetic::intAdd(chunk_Z, randomGenerator->nextInt(16)), 8);
+                        WorldGenerator *generator = biome->func_48410_b(*randomGenerator);
+                        if (generator != nullptr) generator->generate(currentWorld, *randomGenerator, x, y, z);
+                        ++decorationIndex; return false;
+                    }
                 }
                 nextStage(DecorationStage::DeadBushes); break;
             case DecorationStage::DeadBushes:

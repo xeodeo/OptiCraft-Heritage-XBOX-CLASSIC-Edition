@@ -20,6 +20,7 @@ protected:
 
 public:
 	void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
+	bool isJavaUiKeyboardNavigationEnabled() const override;
 
 private:
 	int_t getLeftEdge() const;

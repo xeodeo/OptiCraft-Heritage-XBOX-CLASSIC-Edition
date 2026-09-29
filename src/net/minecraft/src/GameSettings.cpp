@@ -148,6 +148,7 @@ void GameSettings::setDefaults()
     controllerDeadzone = 0.20f;
     wiiDeflicker = true;
     widescreen = ConsoleAspectRatio::getDefaultWidescreen();
+    splitscreenVertical = false;
     field_22275_C = false;
     smoothCamera = false;
     field_22273_E = false;
@@ -443,25 +444,35 @@ void GameSettings::setOptionFloatValue(const EnumOptions *enumoptions, float f)
         fovSetting = f;
     if (enumoptions == EnumOptions::BRIGHTNESS)
     {
-        ofBrightness = f;
-        updateWorldLightLevels();
+        if (ofBrightness != f)
+        {
+            ofBrightness = f;
+            updateWorldLightLevels();
+        }
     }
     if (enumoptions == EnumOptions::CLOUD_HEIGHT)
         ofCloudsHeight = f;
     if (enumoptions == EnumOptions::AO_LEVEL)
     {
-        ofAoLevel = f;
-        ambientOcclusion = (ofAoLevel > 0.0f);
-        invalidateChunkMeshes();
+        if (ofAoLevel != f)
+        {
+            ofAoLevel = f;
+            ambientOcclusion = (ofAoLevel > 0.0f);
+            invalidateChunkMeshes();
+        }
     }
     if (enumoptions == EnumOptions::RENDER_DISTANCE_FINE)
     {
         const int_t maxRenderDistance = Config::getMaxRenderDistanceFine();
-        ofRenderDistanceFine = 32 + (int_t)(f * (float)(maxRenderDistance - 32));
-        ofRenderDistanceFine = (ofRenderDistanceFine >> 4) << 4;
-        ofRenderDistanceFine = Config::limit(ofRenderDistanceFine, 32, maxRenderDistance);
-        platformGameSettingsUpdateRenderDistanceFromFine(ofRenderDistanceFine, renderDistance);
-        reloadChunkRenderers();
+        int_t newDistance = 32 + (int_t)(f * (float)(maxRenderDistance - 32));
+        newDistance = (newDistance >> 4) << 4;
+        newDistance = Config::limit(newDistance, 32, maxRenderDistance);
+        if (newDistance != ofRenderDistanceFine)
+        {
+            ofRenderDistanceFine = newDistance;
+            platformGameSettingsUpdateRenderDistanceFromFine(ofRenderDistanceFine, renderDistance);
+            reloadChunkRenderers();
+        }
     }
     saveOptions();
 }
@@ -549,12 +560,19 @@ void GameSettings::setOptionValue(const EnumOptions *enumoptions, int_t i)
     if (enumoptions == EnumOptions::AMBIENT_OCCLUSION)
     {
         ambientOcclusion = !ambientOcclusion;
+#if PLATFORM_PS2
+        ofAoLevel = ambientOcclusion ? 0.25f : 0.0f;
+#else
+        ofAoLevel = ambientOcclusion ? 1.0f : 0.0f;
+#endif
         invalidateChunkMeshes();
     }
 #if PLATFORM_HAS_ASPECT_RATIO_OPTION
     if (enumoptions == EnumOptions::ASPECT_RATIO)
         widescreen = !widescreen;
 #endif
+    if (enumoptions == EnumOptions::SPLITSCREEN_LAYOUT)
+        splitscreenVertical = !splitscreenVertical;
     if (enumoptions == EnumOptions::FOG_FANCY)
     {
         if (ofFogOff)
@@ -863,7 +881,9 @@ std::string GameSettings::getKeyBinding(const EnumOptions *enumoptions)
 {
     std::string s = enumoptions == EnumOptions::ASPECT_RATIO
         ? uiText("Aspect Ratio") + ": "
-        : uiText(translateKey(enumoptions->getEnumString())) + ": ";
+        : (enumoptions == EnumOptions::SPLITSCREEN_LAYOUT
+            ? uiText("Split Screen") + ": "
+            : uiText(translateKey(enumoptions->getEnumString())) + ": ");
     if (enumoptions->getEnumFloat())
     {
         float f = getOptionFloatValue(enumoptions);
@@ -932,6 +952,8 @@ std::string GameSettings::getKeyBinding(const EnumOptions *enumoptions)
     }
     if (enumoptions == EnumOptions::ASPECT_RATIO)
         return s + (widescreen ? "16:9" : "4:3");
+    if (enumoptions == EnumOptions::SPLITSCREEN_LAYOUT)
+        return s + (splitscreenVertical ? uiText("Vertical") : uiText("Horizontal"));
 
     if (enumoptions == EnumOptions::FOG_FANCY)
         return s + (ofFogOff ? uiText("OFF") : (ofFogFancy ? uiText("Fancy") : uiText("Fast")));

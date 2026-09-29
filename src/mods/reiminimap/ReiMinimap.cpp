@@ -1,10 +1,12 @@
 #include "ReiMinimap.h"
+#include "GuiWaypointManager.h"
 #include "Minecraft.h"
 #include "GuiIngame.h"
 #include "FontRenderer.h"
 #include "RenderEngine.h"
 #include "EntityPlayerSP.h"
 #include "World.h"
+#include "WorldInfo.h"
 #include "Chunk.h"
 #include "Block.h"
 #include "Material.h"
@@ -16,6 +18,7 @@
 #include "java/File.h"
 #include "java/BufferedImage.h"
 #include "SoundManager.h"
+#include "ISaveHandler.h"
 
 #include <cmath>
 #include <algorithm>
@@ -27,6 +30,22 @@
 #endif
 
 static const int_t MAP_RES = 64;
+
+static const int_t WAYPOINT_PALETTE[] = {
+    0x00FF88, // Mint / Emerald (Default Spawn)
+    0xFF2222, // Vibrant Red
+    0x2288FF, // Bright Blue
+    0xFFFF00, // Vibrant Yellow
+    0xFF22FF, // Magenta / Pink
+    0x00FFFF, // Cyan / Aqua
+    0xFF8800, // Orange
+    0xAA00FF, // Deep Purple
+    0x77FF00, // Lime Green
+    0xFF4488, // Coral Rose
+    0xFFFFFF, // Pure White
+    0x00A8FF  // Sky Blue
+};
+static const size_t NUM_PALETTE_COLORS = sizeof(WAYPOINT_PALETTE) / sizeof(WAYPOINT_PALETTE[0]);
 
 static void drawColoredRect(int_t x1, int_t y1, int_t x2, int_t y2, int_t color)
 {
@@ -60,22 +79,35 @@ ReiMinimap &ReiMinimap::getInstance()
 ReiMinimap::ReiMinimap()
     : m_mc(nullptr)
     , m_enabled(false)
-    , m_mapTextureId(-1)
-    , m_lastPlayerX(-999999)
-    , m_lastPlayerZ(-999999)
     , m_updateTicks(0)
     , m_initialized(false)
-    , m_waypointComboWasPressed(false)
-    , m_toastTimer(0)
 {
+    m_mapTextureId[0] = -1;
+    m_mapTextureId[1] = -1;
+    m_lastPlayerX[0] = -999999;
+    m_lastPlayerZ[0] = -999999;
+    m_lastPlayerX[1] = -999999;
+    m_lastPlayerZ[1] = -999999;
+    m_waypointComboWasPressed[0] = false;
+    m_waypointComboWasPressed[1] = false;
+    m_waypointMenuComboWasPressed[0] = false;
+    m_waypointMenuComboWasPressed[1] = false;
+    m_toastTimer[0] = 0;
+    m_toastTimer[1] = 0;
 }
 
 ReiMinimap::~ReiMinimap()
 {
-    if (m_mapTextureId >= 0 && m_mc != nullptr && m_mc->renderEngine != nullptr)
+    if (m_mc != nullptr && m_mc->renderEngine != nullptr)
     {
-        m_mc->renderEngine->deleteTexture(m_mapTextureId);
-        m_mapTextureId = -1;
+        for (int i = 0; i < 2; ++i)
+        {
+            if (m_mapTextureId[i] >= 0)
+            {
+                m_mc->renderEngine->deleteTexture(m_mapTextureId[i]);
+                m_mapTextureId[i] = -1;
+            }
+        }
     }
 }
 
@@ -90,54 +122,150 @@ void ReiMinimap::init(Minecraft *mc)
 
     if (m_mc != nullptr && m_mc->renderEngine != nullptr)
     {
-        m_mapTextureId = m_mc->renderEngine->allocateAndSetupTexture(m_mapImage.get());
+        m_mapTextureId[0] = m_mc->renderEngine->allocateAndSetupTexture(m_mapImage.get());
+        m_mapTextureId[1] = m_mc->renderEngine->allocateAndSetupTexture(m_mapImage.get());
     }
 
     loadWaypoints();
     m_initialized = true;
-    MC_LOG_INFO("mods", "Rei's Minimap initialized with texture ID %d\n", m_mapTextureId);
+    MC_LOG_INFO("mods", "Rei's Minimap initialized with texture IDs %d, %d\n", m_mapTextureId[0], m_mapTextureId[1]);
 }
 
 void ReiMinimap::update()
 {
-    if (!m_enabled || m_mc == nullptr || m_mc->thePlayer == nullptr || m_mc->theWorld == nullptr)
+    if (!m_enabled || m_mc == nullptr || m_mc->theWorld == nullptr)
         return;
 
+    // Detect world switch / entering a world
+    std::string curDir;
+    if (m_mc->theWorld->getSaveHandler() != nullptr)
+        curDir = m_mc->theWorld->getSaveHandler()->getSaveDirectory();
+    if (curDir != m_currentWorldDir)
+    {
+        m_currentWorldDir = curDir;
+        loadWaypoints();
+        m_lastPlayerX[0] = -999999;
+        m_lastPlayerZ[0] = -999999;
+        m_lastPlayerX[1] = -999999;
+        m_lastPlayerZ[1] = -999999;
+    }
+
     m_updateTicks++;
-    if (m_toastTimer > 0)
-        m_toastTimer--;
+    for (int i = 0; i < 2; ++i)
+    {
+        if (m_toastTimer[i] > 0)
+            m_toastTimer[i]--;
+    }
+
+    EntityPlayerSP *p1 = m_mc->thePlayerOne ? m_mc->thePlayerOne : m_mc->thePlayer;
+    EntityPlayerSP *p2 = m_mc->thePlayer2;
+    const bool isSplit = (m_mc->isSplitScreenActive() && p2 != nullptr);
 
 #if PLATFORM_PS2
-    const Ps2PadSnapshot &pad = ps2PadGetSnapshot(0);
-    bool comboDown = (pad.held & PS2_PAD_TRIANGLE) != 0 && (pad.held & PS2_PAD_UP) != 0;
-    if (comboDown && !m_waypointComboWasPressed)
+    // Check Pad 0 (Player 1) combo (Triangle + D-Pad Up)
+    if (p1 != nullptr)
     {
-        int_t px = static_cast<int_t>(std::floor(m_mc->thePlayer->posX));
-        int_t py = static_cast<int_t>(std::floor(m_mc->thePlayer->posY));
-        int_t pz = static_cast<int_t>(std::floor(m_mc->thePlayer->posZ));
-        char nameBuf[32];
-        std::snprintf(nameBuf, sizeof(nameBuf), "Waypoint %u", static_cast<unsigned>(m_waypoints.size() + 1));
-        addWaypoint(nameBuf, px, py, pz, 0xFFFF00);
+        const Ps2PadSnapshot &pad0 = ps2PadGetSnapshot(0);
+        bool combo0 = (pad0.held & PS2_PAD_TRIANGLE) != 0 && (pad0.held & PS2_PAD_UP) != 0;
+        if (combo0 && !m_waypointComboWasPressed[0])
+        {
+            int_t px = static_cast<int_t>(std::floor(p1->posX));
+            int_t py = static_cast<int_t>(std::floor(p1->posY));
+            int_t pz = static_cast<int_t>(std::floor(p1->posZ));
+            char nameBuf[32];
+            std::snprintf(nameBuf, sizeof(nameBuf), isSplit ? "P1 Waypoint %u" : "Waypoint %u", static_cast<unsigned>(m_waypoints.size() + 1));
+            addWaypoint(nameBuf, px, py, pz);
 
-        m_toastMessage = "Waypoint saved!";
-        m_toastTimer = 60; // 3 seconds on screen
-        if (m_mc->sndManager != nullptr)
-            m_mc->sndManager->playSoundFX("random.orb", 1.0f, 1.0f);
+            m_toastMessage[0] = "Waypoint saved!";
+            m_toastTimer[0] = 60;
+            if (m_mc->sndManager != nullptr)
+                m_mc->sndManager->playSoundFX("random.orb", 1.0f, 1.0f);
+        }
+        m_waypointComboWasPressed[0] = combo0;
+
+        // Check Pad 0 (Player 1) combo (Triangle + D-Pad Down) to open Waypoint Manager
+        bool menuCombo0 = (pad0.held & PS2_PAD_TRIANGLE) != 0 && (pad0.held & PS2_PAD_DOWN) != 0;
+        if (menuCombo0 && !m_waypointMenuComboWasPressed[0] && m_mc->currentScreen == nullptr)
+        {
+            if (isSplit)
+            {
+                if (m_mc->isPlayerScreenActive(0))
+                    m_mc->closePlayerScreen(0);
+                else
+                    m_mc->displayPlayerScreen(0, new GuiWaypointManager(0));
+            }
+            else
+            {
+                ps2SetMenuPad(0);
+                ps2SetMenuOwnerPad(0);
+                m_mc->displayGuiScreen(new GuiWaypointManager(0));
+            }
+        }
+        m_waypointMenuComboWasPressed[0] = menuCombo0;
     }
-    m_waypointComboWasPressed = comboDown;
+
+    // Check Pad 1 (Player 2) combo (Triangle + D-Pad Up) if split screen is active
+    if (isSplit && p2 != nullptr)
+    {
+        const Ps2PadSnapshot &pad1 = ps2PadGetSnapshot(1);
+        bool combo1 = (pad1.held & PS2_PAD_TRIANGLE) != 0 && (pad1.held & PS2_PAD_UP) != 0;
+        if (combo1 && !m_waypointComboWasPressed[1])
+        {
+            int_t px = static_cast<int_t>(std::floor(p2->posX));
+            int_t py = static_cast<int_t>(std::floor(p2->posY));
+            int_t pz = static_cast<int_t>(std::floor(p2->posZ));
+            char nameBuf[32];
+            std::snprintf(nameBuf, sizeof(nameBuf), "P2 Waypoint %u", static_cast<unsigned>(m_waypoints.size() + 1));
+            addWaypoint(nameBuf, px, py, pz);
+
+            m_toastMessage[1] = "Waypoint saved!";
+            m_toastTimer[1] = 60;
+            if (m_mc->sndManager != nullptr)
+                m_mc->sndManager->playSoundFX("random.orb", 1.0f, 1.0f);
+        }
+        m_waypointComboWasPressed[1] = combo1;
+
+        // Check Pad 1 (Player 2) combo (Triangle + D-Pad Down) to open Waypoint Manager
+        bool menuCombo1 = (pad1.held & PS2_PAD_TRIANGLE) != 0 && (pad1.held & PS2_PAD_DOWN) != 0;
+        if (menuCombo1 && !m_waypointMenuComboWasPressed[1] && m_mc->currentScreen == nullptr)
+        {
+            if (m_mc->isPlayerScreenActive(1))
+                m_mc->closePlayerScreen(1);
+            else
+                m_mc->displayPlayerScreen(1, new GuiWaypointManager(1));
+        }
+        m_waypointMenuComboWasPressed[1] = menuCombo1;
+    }
 #endif
 
-    int_t px = static_cast<int_t>(std::floor(m_mc->thePlayer->posX));
-    int_t pz = static_cast<int_t>(std::floor(m_mc->thePlayer->posZ));
-
-    // Update map texture if moved or every 10 ticks
-    if (px != m_lastPlayerX || pz != m_lastPlayerZ || m_updateTicks >= 10)
+    // Update Player 1 texture
+    if (p1 != nullptr)
     {
-        m_updateTicks = 0;
-        m_lastPlayerX = px;
-        m_lastPlayerZ = pz;
-        updateMapTexture();
+        int_t px = static_cast<int_t>(std::floor(p1->posX));
+        int_t pz = static_cast<int_t>(std::floor(p1->posZ));
+        if (px != m_lastPlayerX[0] || pz != m_lastPlayerZ[0] || m_updateTicks >= 10)
+        {
+            m_lastPlayerX[0] = px;
+            m_lastPlayerZ[0] = pz;
+            updateMapTexture(0, p1);
+        }
     }
+
+    // Update Player 2 texture if split-screen is active
+    if (isSplit && p2 != nullptr)
+    {
+        int_t px2 = static_cast<int_t>(std::floor(p2->posX));
+        int_t pz2 = static_cast<int_t>(std::floor(p2->posZ));
+        if (px2 != m_lastPlayerX[1] || pz2 != m_lastPlayerZ[1] || m_updateTicks >= 10)
+        {
+            m_lastPlayerX[1] = px2;
+            m_lastPlayerZ[1] = pz2;
+            updateMapTexture(1, p2);
+        }
+    }
+
+    if (m_updateTicks >= 10)
+        m_updateTicks = 0;
 }
 
 int_t ReiMinimap::getBlockColor(int_t blockId, int_t height, int_t northHeight)
@@ -220,16 +348,17 @@ int_t ReiMinimap::getBlockColor(int_t blockId, int_t height, int_t northHeight)
     return (r & 0xFF) | ((g & 0xFF) << 8) | ((b & 0xFF) << 16) | 0xFF000000;
 }
 
-void ReiMinimap::updateMapTexture()
+void ReiMinimap::updateMapTexture(int_t playerIndex, EntityPlayer *player)
 {
-    if (m_mc == nullptr || m_mc->thePlayer == nullptr || m_mc->theWorld == nullptr || !m_mapImage)
+    if (m_mc == nullptr || player == nullptr || m_mc->theWorld == nullptr || !m_mapImage)
+        return;
+    if (playerIndex < 0 || playerIndex >= 2 || m_mapTextureId[playerIndex] < 0)
         return;
 
-    int_t playerX = static_cast<int_t>(std::floor(m_mc->thePlayer->posX));
-    int_t playerZ = static_cast<int_t>(std::floor(m_mc->thePlayer->posZ));
+    int_t playerX = static_cast<int_t>(std::floor(player->posX));
+    int_t playerZ = static_cast<int_t>(std::floor(player->posZ));
     World *world = m_mc->theWorld;
 
-    // Caché local para evitar miles de llamadas redundantes a getChunkFromBlockCoords
     Chunk *cachedChunk = nullptr;
     int_t cachedChunkX = 0x7FFFFFFF;
     int_t cachedChunkZ = 0x7FFFFFFF;
@@ -244,7 +373,6 @@ void ReiMinimap::updateMapTexture()
             int_t wx = playerX + (dx - MAP_RES / 2);
             int_t chunkX = wx >> 4;
 
-            // Solo consulta el mundo si cambiamos de frontera de chunk (máximo ~25 consultas en vez de 4.096)
             if (cachedChunk == nullptr || chunkX != cachedChunkX || chunkZ != cachedChunkZ)
             {
                 cachedChunk = world->getChunkFromBlockCoords(wx, wz);
@@ -262,7 +390,6 @@ void ReiMinimap::updateMapTexture()
                 int_t y = chunk->getHeightValue(lx, lz) + 1;
                 int_t blockId = 0;
 
-                // Walk down to find the highest non-air solid/liquid block
                 while (y > 1)
                 {
                     blockId = chunk->getBlockID(lx, y - 1, lz);
@@ -277,7 +404,6 @@ void ReiMinimap::updateMapTexture()
                     y--;
                 }
 
-                // Si wz - 1 pertenece al mismo chunk (el 93.75% de las veces), lee directamente sin consultar al world
                 int_t northHeight = (lz > 0) ? chunk->getHeightValue(lx, lz - 1) : world->getHeightValue(wx, wz - 1);
                 int_t col = getBlockColor(blockId, y, northHeight);
 
@@ -297,31 +423,49 @@ void ReiMinimap::updateMapTexture()
 
     m_mapImage->setRGB(0, 0, MAP_RES, MAP_RES, m_pixelData.data());
 
-    if (m_mapTextureId >= 0 && m_mc->renderEngine != nullptr)
+    if (m_mapTextureId[playerIndex] >= 0 && m_mc->renderEngine != nullptr)
     {
-        m_mc->renderEngine->setupTexture(m_mapImage.get(), m_mapTextureId);
+        m_mc->renderEngine->setupTexture(m_mapImage.get(), m_mapTextureId[playerIndex]);
     }
 }
 
 void ReiMinimap::render(GuiIngame *, int_t screenWidth, int_t, float_t)
 {
-    if (!m_enabled || m_mc == nullptr || m_mc->thePlayer == nullptr || m_mapTextureId < 0)
+    if (!m_enabled || m_mc == nullptr || m_mc->thePlayer == nullptr)
+        return;
+
+    const bool isSplit = (m_mc->isSplitScreenActive() && m_mc->thePlayer2 != nullptr);
+    int_t playerIndex = 0;
+    EntityPlayer *curPlayer = m_mc->thePlayer;
+    if (isSplit && m_mc->thePlayer == m_mc->thePlayer2)
+    {
+        playerIndex = 1;
+        curPlayer = m_mc->thePlayer2;
+    }
+    else if (m_mc->thePlayerOne != nullptr)
+    {
+        curPlayer = m_mc->thePlayerOne;
+    }
+    if (curPlayer == nullptr)
+        curPlayer = m_mc->thePlayer;
+
+    if (m_mapTextureId[playerIndex] < 0)
         return;
 
     renderDisable(RenderCapability::DepthTest);
 
-    // First frame initialization if not yet updated
-    if (m_lastPlayerX == -999999)
+    // Initial update if needed
+    if (m_lastPlayerX[playerIndex] == -999999)
     {
-        m_lastPlayerX = static_cast<int_t>(std::floor(m_mc->thePlayer->posX));
-        m_lastPlayerZ = static_cast<int_t>(std::floor(m_mc->thePlayer->posZ));
-        updateMapTexture();
+        m_lastPlayerX[playerIndex] = static_cast<int_t>(std::floor(curPlayer->posX));
+        m_lastPlayerZ[playerIndex] = static_cast<int_t>(std::floor(curPlayer->posZ));
+        updateMapTexture(playerIndex, curPlayer);
     }
 
-    // Position: Top-right corner with 6px margin
-    const int_t mapSize = 64;
-    const int_t posX = screenWidth - mapSize - 6;
-    const int_t posY = 6;
+    // Adaptive map sizing: 64px for single player, 48px for split-screen half-viewports
+    const int_t mapSize = isSplit ? 48 : 64;
+    const int_t posX = isSplit ? (screenWidth - mapSize - 4) : (screenWidth - mapSize - 6);
+    const int_t posY = isSplit ? 4 : 6;
 
     // Background panel & border
     drawColoredRect(posX - 1, posY - 1, posX + mapSize + 1, posY + mapSize + 1, 0xA0000000);
@@ -330,12 +474,12 @@ void ReiMinimap::render(GuiIngame *, int_t screenWidth, int_t, float_t)
     drawColoredRect(posX - 2, posY - 2, posX - 1, posY + mapSize + 2, 0xFF555555);
     drawColoredRect(posX + mapSize + 1, posY - 2, posX + mapSize + 2, posY + mapSize + 2, 0xFF555555);
 
-    // Draw the 64x64 dynamic map texture
+    // Draw the dynamic map texture for this player
     renderEnable(RenderCapability::Texture2D);
     renderEnable(RenderCapability::Blend);
     renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
     renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    renderBindTexture(m_mapTextureId);
+    renderBindTexture(m_mapTextureId[playerIndex]);
 
     Tessellator *tess = &Tessellator::instance;
     tess->startDrawingQuads();
@@ -346,7 +490,7 @@ void ReiMinimap::render(GuiIngame *, int_t screenWidth, int_t, float_t)
     tess->addVertexWithUV(posX,           posY,           0.0, 0.0, 0.0);
     tess->draw();
 
-    // Cardinal direction markers
+    // Cardinal direction markers (N, S, W, E)
     FontRenderer *fr = m_mc->fontRenderer;
     if (fr != nullptr)
     {
@@ -356,33 +500,76 @@ void ReiMinimap::render(GuiIngame *, int_t screenWidth, int_t, float_t)
         fr->drawStringWithShadow("E", posX + mapSize - 7, posY + mapSize / 2 - 4, 0xAAAAAA);
     }
 
-    // Waypoints rendering (only within visible minimap bounds)
-    int_t px = static_cast<int_t>(std::floor(m_mc->thePlayer->posX));
-    int_t pz = static_cast<int_t>(std::floor(m_mc->thePlayer->posZ));
-    const int_t maxDist = 28;
+    // Center and scaling
+    const float_t cx = posX + mapSize / 2.0f;
+    const float_t cy = posY + mapSize / 2.0f;
+    int_t px = static_cast<int_t>(std::floor(curPlayer->posX));
+    int_t pz = static_cast<int_t>(std::floor(curPlayer->posZ));
 
+    const float_t visibleBlockRadius = MAP_RES / 2.0f; // 32 blocks
+    const float_t mapPixelRadius = mapSize / 2.0f;
+    const float_t scale = mapPixelRadius / visibleBlockRadius;
+    const float_t maxBlockDist = visibleBlockRadius - 3.0f;
+    const float_t borderR = mapPixelRadius - 3.5f;
+
+    // Render Waypoints
     for (const auto &wp : m_waypoints)
     {
         if (!wp.enabled) continue;
-        int_t rdx = wp.x - px;
-        int_t rdz = wp.z - pz;
-        if (rdx >= -maxDist && rdx <= maxDist && rdz >= -maxDist && rdz <= maxDist)
+        float_t dx = static_cast<float_t>(wp.x - px);
+        float_t dz = static_cast<float_t>(wp.z - pz);
+
+        if (std::abs(dx) <= maxBlockDist && std::abs(dz) <= maxBlockDist)
         {
-            int_t wxScreen = posX + mapSize / 2 + rdx;
-            int_t wzScreen = posY + mapSize / 2 + rdz;
-            // Draw 4x4 waypoint with 2x2 colored center and 1px dark border
+            // Waypoint is inside minimap bounds: draw standard dot
+            int_t wxScreen = static_cast<int_t>(cx + dx * scale);
+            int_t wzScreen = static_cast<int_t>(cy + dz * scale);
             drawColoredRect(wxScreen - 2, wzScreen - 2, wxScreen + 2, wzScreen + 2, 0xFF000000);
             drawColoredRect(wxScreen - 1, wzScreen - 1, wxScreen + 1, wzScreen + 1, 0xFF000000 | wp.color);
+        }
+        else
+        {
+            // Waypoint is OUTSIDE the minimap: stay on border with directional arrow pointing towards it!
+            float_t maxAbs = std::max(std::abs(dx), std::abs(dz));
+            float_t bx = cx + (dx / maxAbs) * borderR;
+            float_t by = cy + (dz / maxAbs) * borderR;
+
+            float_t angleRad = std::atan2(dz, dx);
+            float_t angleDeg = angleRad * (180.0f / 3.14159265f);
+
+            // Draw directional pointer on the border
+            renderPushMatrix();
+            renderTranslate(bx, by, 0.0f);
+            renderRotate(angleDeg + 90.0f, 0.0f, 0.0f, 1.0f);
+            renderDisable(RenderCapability::Texture2D);
+
+            // Outer dark outline arrow
+            tess->startDrawingQuads();
+            tess->setColorOpaque_I(0x000000);
+            tess->addVertex(-3.5,  2.5, 0.0);
+            tess->addVertex( 3.5,  2.5, 0.0);
+            tess->addVertex( 0.0, -4.5, 0.0);
+            tess->addVertex( 0.0, -4.5, 0.0);
+            tess->draw();
+
+            // Inner colored arrow
+            tess->startDrawingQuads();
+            tess->setColorOpaque_I(0xFF000000 | wp.color);
+            tess->addVertex(-2.5,  1.5, 0.0);
+            tess->addVertex( 2.5,  1.5, 0.0);
+            tess->addVertex( 0.0, -3.5, 0.0);
+            tess->addVertex( 0.0, -3.5, 0.0);
+            tess->draw();
+
+            renderEnable(RenderCapability::Texture2D);
+            renderPopMatrix();
         }
     }
 
     // Player arrow in center
-    const int_t cx = posX + mapSize / 2;
-    const int_t cy = posY + mapSize / 2;
-
     renderPushMatrix();
-    renderTranslate(static_cast<float_t>(cx), static_cast<float_t>(cy), 0.0f);
-    renderRotate(m_mc->thePlayer->rotationYaw + 180.0f, 0.0f, 0.0f, 1.0f);
+    renderTranslate(cx, cy, 0.0f);
+    renderRotate(curPlayer->rotationYaw + 180.0f, 0.0f, 0.0f, 1.0f);
     renderDisable(RenderCapability::Texture2D);
 
     tess->startDrawingQuads();
@@ -399,34 +586,67 @@ void ReiMinimap::render(GuiIngame *, int_t screenWidth, int_t, float_t)
     // Coordinates display below minimap
     if (fr != nullptr)
     {
-        int_t py = static_cast<int_t>(std::floor(m_mc->thePlayer->posY));
+        int_t py = static_cast<int_t>(std::floor(curPlayer->posY));
         char coordBuf[48];
         std::snprintf(coordBuf, sizeof(coordBuf), "X:%d Y:%d Z:%d", px, py, pz);
         int_t strW = fr->getStringWidth(coordBuf);
-        fr->drawStringWithShadow(coordBuf, posX + (mapSize - strW) / 2, posY + mapSize + 4, 0xFFFFFF);
+        fr->drawStringWithShadow(coordBuf, posX + (mapSize - strW) / 2, posY + mapSize + (isSplit ? 2 : 4), 0xFFFFFF);
 
         // On-screen notification toast (e.g. when adding a waypoint)
-        if (m_toastTimer > 0 && !m_toastMessage.empty())
+        if (m_toastTimer[playerIndex] > 0 && !m_toastMessage[playerIndex].empty())
         {
-            int_t toastW = fr->getStringWidth(m_toastMessage);
+            int_t toastW = fr->getStringWidth(m_toastMessage[playerIndex]);
             int_t toastX = posX + (mapSize - toastW) / 2;
-            int_t toastY = posY + mapSize + 16;
+            int_t toastY = posY + mapSize + (isSplit ? 12 : 16);
             drawColoredRect(toastX - 3, toastY - 2, toastX + toastW + 3, toastY + 10, 0xC0000000);
-            fr->drawStringWithShadow(m_toastMessage, toastX, toastY, 0x55FF55);
+            fr->drawStringWithShadow(m_toastMessage[playerIndex], toastX, toastY, 0x55FF55);
         }
     }
 
     renderEnable(RenderCapability::DepthTest);
 }
 
+int_t ReiMinimap::getNextWaypointColor() const
+{
+    return WAYPOINT_PALETTE[m_waypoints.size() % NUM_PALETTE_COLORS];
+}
+
 void ReiMinimap::addWaypoint(const std::string &name, int_t x, int_t y, int_t z, int_t color)
 {
+    if (color < 0)
+        color = getNextWaypointColor();
     m_waypoints.push_back({ name, x, y, z, color, true });
     saveWaypoints();
 }
 
+void ReiMinimap::toggleWaypoint(size_t index)
+{
+    if (index < m_waypoints.size())
+    {
+        m_waypoints[index].enabled = !m_waypoints[index].enabled;
+        saveWaypoints();
+    }
+}
+
+void ReiMinimap::removeWaypoint(size_t index)
+{
+    if (index < m_waypoints.size())
+    {
+        m_waypoints.erase(m_waypoints.begin() + index);
+        saveWaypoints();
+    }
+}
+
 std::string ReiMinimap::getWaypointsFilePath() const
 {
+    if (m_mc != nullptr && m_mc->theWorld != nullptr && m_mc->theWorld->getSaveHandler() != nullptr)
+    {
+        std::string saveDir = m_mc->theWorld->getSaveHandler()->getSaveDirectory();
+        if (!saveDir.empty())
+        {
+            return PlatformStorage::join(saveDir, "waypoints.txt");
+        }
+    }
     File *dir = Minecraft::getMinecraftDir();
     if (dir != nullptr)
         return PlatformStorage::join(dir->toString(), "waypoints.txt");
@@ -440,7 +660,17 @@ void ReiMinimap::loadWaypoints()
     std::vector<unsigned char> bytes;
     if (!PlatformStorage::readFile(path, bytes) || bytes.empty())
     {
-        m_waypoints.push_back({ "Spawn", 0, 64, 0, 0x00FF88, true });
+        if (m_mc != nullptr && m_mc->theWorld != nullptr && m_mc->theWorld->getWorldInfo() != nullptr)
+        {
+            int_t sx = m_mc->theWorld->getWorldInfo()->getSpawnX();
+            int_t sy = m_mc->theWorld->getWorldInfo()->getSpawnY();
+            int_t sz = m_mc->theWorld->getWorldInfo()->getSpawnZ();
+            m_waypoints.push_back({ "Spawn", sx, sy, sz, WAYPOINT_PALETTE[0], true });
+        }
+        else
+        {
+            m_waypoints.push_back({ "Spawn", 0, 64, 0, WAYPOINT_PALETTE[0], true });
+        }
         return;
     }
 
@@ -481,7 +711,7 @@ void ReiMinimap::loadWaypoints()
         int_t x = std::atoi(line.substr(p1 + 1, p2 - p1 - 1).c_str());
         int_t y = std::atoi(line.substr(p2 + 1, p3 - p2 - 1).c_str());
         int_t z = std::atoi(line.substr(p3 + 1, p4 - p3 - 1).c_str());
-        int_t color = (p5 != std::string::npos) ? std::atoi(line.substr(p4 + 1, p5 - p4 - 1).c_str()) : 0x00FF88;
+        int_t color = (p4 != std::string::npos && p5 != std::string::npos) ? std::atoi(line.substr(p4 + 1, p5 - p4 - 1).c_str()) : WAYPOINT_PALETTE[m_waypoints.size() % NUM_PALETTE_COLORS];
         bool en = (p5 != std::string::npos) ? (line.substr(p5 + 1) == "1" || line.substr(p5 + 1) == "true") : true;
 
         m_waypoints.push_back({ name, x, y, z, color, en });
@@ -497,4 +727,4 @@ void ReiMinimap::saveWaypoints()
         content += wp.name + ":" + std::to_string(wp.x) + ":" + std::to_string(wp.y) + ":" + std::to_string(wp.z) + ":" + std::to_string(wp.color) + ":" + (wp.enabled ? "1" : "0") + "\n";
     }
     PlatformStorage::writeFile(path, content.data(), content.size());
-};
+}

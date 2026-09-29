@@ -56,10 +56,14 @@ public:
     // are migrated to direct 1.2.5 biome temperature/rainfall lookups.
     virtual std::vector<BiomeGenBase *> &getBiomeBlock(int_t x, int_t z, int_t width, int_t height);
 
+    bool isLimitedWorld() const { return limitedWorld; }
+    void setLimitedWorld(bool limited) { limitedWorld = limited; }
+
     BiomeNoiseBuffer temperature;
     BiomeNoiseBuffer humidity;
 
 protected:
+    bool limitedWorld = false;
     static int_t checkedBiomeAreaCount(int_t width, int_t height);
 
     // Single point where a biome id area is produced. Every biome-derived value in
@@ -83,9 +87,10 @@ protected:
     TerrainNoiseBuffer fastContinentField;
     TerrainNoiseBuffer fastTemperatureField;
     TerrainNoiseBuffer fastHumidityField;
+#endif
+
     std::vector<int_t> fastBiomeIds;
     std::vector<int_t> fastCoarseBiomeIds;
-#endif
 
     std::shared_ptr<GenLayer> genBiomes;
     std::shared_ptr<GenLayer> biomeIndexLayer;

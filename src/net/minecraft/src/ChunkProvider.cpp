@@ -1425,11 +1425,13 @@ bool ChunkProvider::unload100OldestChunks()
 	{
 		int_t pendingCount = 0, completedCount = 0;
 		long_t workerMs = 0;
+#if PLATFORM_ASYNC_CHUNK_GENERATION
 		if (asyncGenerationScheduler != nullptr)
 		{
 			asyncGenerationScheduler->queueSizes(pendingCount, completedCount);
 			workerMs = asyncGenerationScheduler->getAndResetWorkerTimeNs() / 1000000;
 		}
+#endif
 		MC_LOG_INFO("xbox.async", "workerMs=%d sync=%d async=%d queued=%d qFull=%d popN=%d adopted=%d pending=%d done=%d\n",
 			(int_t)workerMs, (int_t)stat_sync, (int_t)stat_async, (int_t)stat_alreadyQueued, (int_t)stat_queueFull, (int_t)stat_popNeighbour, (int_t)stat_adopted, (int_t)pendingCount, (int_t)completedCount);
 		stat_sync = 0;

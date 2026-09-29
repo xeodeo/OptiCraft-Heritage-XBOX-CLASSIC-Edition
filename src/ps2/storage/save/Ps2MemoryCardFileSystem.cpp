@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cstdint>
 #include <limits>
+#include <mutex>
 
 #include <fcntl.h>
 #include <libmc.h>
@@ -36,6 +37,7 @@
 
 namespace
 {
+    std::recursive_mutex s_mcIoMutex;
     unsigned char s_bounce[16384] __attribute__((aligned(64)));
     sceMcTblGetDir s_dirEntries[48] __attribute__((aligned(64)));
 
@@ -65,6 +67,7 @@ namespace
 
     bool mkdirCardPath(const std::string& cardPath)
     {
+        std::lock_guard<std::recursive_mutex> lock(s_mcIoMutex);
         for (std::size_t i = 1; i <= cardPath.size(); ++i)
         {
             if (i != cardPath.size() && cardPath[i] != '/')
@@ -81,6 +84,7 @@ namespace
 
     bool readWithLibMc(const std::string& path, std::vector<unsigned char>& out)
     {
+        std::lock_guard<std::recursive_mutex> lock(s_mcIoMutex);
         const std::string cardPath = toCardPath(path);
         const int request = mcOpen(0, 0, cardPath.c_str(), FIO_O_RDONLY);
         if (request < 0)
@@ -150,6 +154,7 @@ namespace
 
     bool writeWithLibMc(const std::string& path, const void* data, std::size_t length, bool append)
     {
+        std::lock_guard<std::recursive_mutex> lock(s_mcIoMutex);
         const std::string cardPath = toCardPath(path);
         mkdirCardPath(PlatformStorage::parent(cardPath));
 
@@ -243,8 +248,14 @@ bool readFile(const std::string& path, std::vector<unsigned char>& out)
     return ok;
 }
 
+std::recursive_mutex &getMcIoMutex()
+{
+    return s_mcIoMutex;
+}
+
 std::int64_t getFileSize(const std::string& path)
 {
+    std::lock_guard<std::recursive_mutex> lock(s_mcIoMutex);
     const std::string cardPath = toCardPath(path);
     const int request = mcOpen(0, 0, cardPath.c_str(), FIO_O_RDONLY);
     if (request < 0)
@@ -268,6 +279,7 @@ bool readFileRange(const std::string& path, std::size_t offset, void* out, std::
     if (length == 0)
         return true;
 
+    std::lock_guard<std::recursive_mutex> lock(s_mcIoMutex);
     const std::string cardPath = toCardPath(path);
     const int request = mcOpen(0, 0, cardPath.c_str(), FIO_O_RDONLY);
     if (request < 0)
@@ -310,6 +322,7 @@ bool readFileRange(const std::string& path, std::size_t offset, void* out, std::
 
 bool exists(const std::string& path)
 {
+    std::lock_guard<std::recursive_mutex> lock(s_mcIoMutex);
     const std::string cardPath = toCardPath(path);
     const int request = mcOpen(0, 0, cardPath.c_str(), FIO_O_RDONLY);
     if (request < 0)
@@ -324,6 +337,7 @@ bool exists(const std::string& path)
 
 bool removeFile(const std::string& path)
 {
+    std::lock_guard<std::recursive_mutex> lock(s_mcIoMutex);
     const std::string cardPath = toCardPath(path);
     mcDelete(0, 0, cardPath.c_str());
     return mcWait() >= 0;
@@ -333,6 +347,7 @@ bool listEntries(const std::string& path, std::vector<std::string>& out)
 {
     out.clear();
 
+    std::lock_guard<std::recursive_mutex> lock(s_mcIoMutex);
     // Every other operation in this file goes through libmc (mcOpen/mcRead/
     // mcWrite/...) rather than newlib's POSIX opendir/readdir glue, for the
     // same reason the disc code stopped trusting that glue: it misreports on

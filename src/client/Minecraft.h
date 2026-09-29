@@ -74,6 +74,7 @@ public:
     void shutdown();
 
     void displayGuiScreen(GuiScreen *guiscreen);
+    void scheduleGuiScreenDeletion(GuiScreen *screen);
     void purgeOwnedGuiScreens(); // free abandoned menu screens the Java GC would have collected
     void displayInGameMenu();
     void setIngameFocus();
@@ -124,8 +125,6 @@ public:
     bool isScreenOwnedByPlayer2() const;
     void setScreenOwnedByPlayer2(bool val);
     bool isSplitScreenActive() const;
-    void setSplitScreenActive(bool val);
-
     // Split screen, Legacy style: each player has its own screen. The one of
     // the player that is not "in context" waits in otherPlayerScreen. Entering
     // player 2's context swaps it (and the owned-screen list, thePlayer,
@@ -150,6 +149,16 @@ public:
     // Player 2 is holding RT on a block: player 1's idle "not attacking"
     // tick must not reset the shared block-breaking progress.
     bool player2Mining = false;
+    void setSplitScreenActive(bool val);
+
+    void displayPlayerScreen(int playerIndex, GuiScreen *screen);
+    GuiScreen *getPlayerScreen(int playerIndex) const;
+    void closePlayerScreen(int playerIndex);
+    bool isPlayerScreenActive(int playerIndex) const;
+    float getPlayerCursorX(int playerIndex) const;
+    float getPlayerCursorY(int playerIndex) const;
+    void setPlayerCursor(int playerIndex, float x, float y);
+    void resetPlayerCursor(int playerIndex, float defaultX, float defaultY);
 
     void clickMouse(int_t i, bool flag);
     void clickMouse(int_t i);
@@ -230,6 +239,11 @@ public:
     EntityPlayerSP *contextSavedPlayer = nullptr;
     int_t otherLeftClickCounter = 0;
     int_t otherRightClickDelayTimer = 0;
+    GuiScreen *playerScreens[2];
+    float playerCursorX[2];
+    float playerCursorY[2];
+    bool playerCursorInitialized[2];
+    int ignorePauseMenuTicks;
 #if !PLATFORM_PS2
     SDL_Window *window;
 #endif

@@ -168,7 +168,7 @@ bool ChunkProviderLoadOrGenerate::canChunkExist(int_t i, int_t j)
 	const int_t maxZ = JavaArithmetic::intAdd(curChunkY, chunkLoadRadius);
 	if (i >= minX && j >= minZ && i <= maxX && j <= maxZ)
 		return true;
-#if PLATFORM_PS2
+#if PLATFORM_ENTITY_CHUNK_RETENTION
 	return worldObj != nullptr && worldObj->isChunkRetainedByEntity(i, j);
 #else
 	return false;
@@ -182,7 +182,7 @@ long_t ChunkProviderLoadOrGenerate::currentWorldTime() const
 
 bool ChunkProviderLoadOrGenerate::isOutsideUnloadRadius(int_t i, int_t j) const
 {
-#if PLATFORM_PS2
+#if PLATFORM_ENTITY_CHUNK_RETENTION
 	if (worldObj != nullptr && worldObj->isChunkRetainedByEntity(i, j))
 		return false;
 #endif

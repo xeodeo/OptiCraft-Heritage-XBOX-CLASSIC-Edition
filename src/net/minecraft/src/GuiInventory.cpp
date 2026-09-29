@@ -15,12 +15,17 @@
 #include "PlayerController.h"
 #include "GuiContainerCreative.h"
 #include "Minecraft.h"
+#include "GameSettings.h"
+#include "KeyBinding.h"
+#include "net/minecraft/src/legacy/LegacyCraftingScreen.h"
+#include "pc/lwjgl/Keyboard.h"
 #include "platform/RenderAPI.h"
 #include <cmath>
 
 
 GuiInventory::GuiInventory(EntityPlayer *player)
-	: GuiContainer(player->inventorySlots)
+	: GuiContainer(player->inventorySlots, false, player)
+	, inventoryPlayer(player)
 	, xSize_lo(0.0f)
 	, ySize_lo(0.0f)
 {
@@ -33,21 +38,31 @@ void GuiInventory::initGui()
 	for (GuiButton *button : controlList)
 		delete button;
 	controlList.clear();
+	EntityPlayer *p = inventoryPlayer ? inventoryPlayer : (mc ? mc->thePlayer : nullptr);
 	if (mc->playerController->isInCreativeMode())
 	{
-		mc->displayGuiScreen(new GuiContainerCreative(mc->thePlayer));
+		if (mc != nullptr && mc->isSplitScreenActive())
+			mc->displayPlayerScreen(getOwnerPlayerIndex(), new GuiContainerCreative(p ? p : mc->thePlayer));
+		else
+			mc->displayGuiScreen(new GuiContainerCreative(p ? p : mc->thePlayer));
 		return;
 	}
 
 	GuiContainer::initGui();
-	if (!mc->thePlayer->getActivePotionEffects().empty())
+	if (p != nullptr && !p->getActivePotionEffects().empty())
 		guiLeft = 160 + (width - xSize - 200) / 2;
 }
 
 void GuiInventory::updateScreen()
 {
-	if (mc->playerController->isInCreativeMode())
-		mc->displayGuiScreen(new GuiContainerCreative(mc->thePlayer));
+	if (mc != nullptr && mc->playerController != nullptr && mc->playerController->isInCreativeMode())
+	{
+		EntityPlayer *p = inventoryPlayer ? inventoryPlayer : (mc ? mc->thePlayer : nullptr);
+		if (mc->isSplitScreenActive())
+			mc->displayPlayerScreen(getOwnerPlayerIndex(), new GuiContainerCreative(p ? p : mc->thePlayer));
+		else
+			mc->displayGuiScreen(new GuiContainerCreative(p ? p : mc->thePlayer));
+	}
 }
 
 void GuiInventory::drawGuiContainerForegroundLayer()
@@ -88,9 +103,18 @@ void GuiInventory::drawGuiContainerBackgroundLayer(float_t partialTick)
 	renderScale(-scale, scale, scale);
 	renderRotate(180.0f, 0.0f, 0.0f, 1.0f);
 
-	float_t savedYawOffset = mc->thePlayer->renderYawOffset;
-	float_t savedYaw       = mc->thePlayer->rotationYaw;
-	float_t savedPitch     = mc->thePlayer->rotationPitch;
+	EntityPlayer *renderPlayer = inventoryPlayer ? inventoryPlayer : mc->thePlayer;
+	if (renderPlayer == nullptr)
+	{
+		renderPopMatrix();
+		RenderHelper::disableStandardItemLighting();
+		renderDisable(RenderCapability::RescaleNormal);
+		return;
+	}
+
+	float_t savedYawOffset = renderPlayer->renderYawOffset;
+	float_t savedYaw       = renderPlayer->rotationYaw;
+	float_t savedPitch     = renderPlayer->rotationPitch;
 	float_t f5 = (float_t)(guiX + 51) - xSize_lo;
 	float_t f6 = (float_t)((guiY + 75) - 50) - ySize_lo;
 
@@ -99,20 +123,20 @@ void GuiInventory::drawGuiContainerBackgroundLayer(float_t partialTick)
 	renderRotate(-135.0f, 0.0f, 1.0f, 0.0f);
 	renderRotate(-(float_t)std::atan(f6 / 40.0f) * 20.0f, 1.0f, 0.0f, 0.0f);
 
-	mc->thePlayer->renderYawOffset = (float_t)std::atan(f5 / 40.0f) * 20.0f;
-	mc->thePlayer->rotationYaw     = (float_t)std::atan(f5 / 40.0f) * 40.0f;
-	mc->thePlayer->rotationPitch   = -(float_t)std::atan(f6 / 40.0f) * 20.0f;
-	mc->thePlayer->rotationYawHead = mc->thePlayer->rotationYaw;
-	mc->thePlayer->entityBrightness = 1.0f;
+	renderPlayer->renderYawOffset = (float_t)std::atan(f5 / 40.0f) * 20.0f;
+	renderPlayer->rotationYaw     = (float_t)std::atan(f5 / 40.0f) * 40.0f;
+	renderPlayer->rotationPitch   = -(float_t)std::atan(f6 / 40.0f) * 20.0f;
+	renderPlayer->rotationYawHead = renderPlayer->rotationYaw;
+	renderPlayer->entityBrightness = 1.0f;
 
-	renderTranslate(0.0f, mc->thePlayer->yOffset, 0.0f);
+	renderTranslate(0.0f, renderPlayer->yOffset, 0.0f);
 	RenderManager::instance->playerViewY = 180.0f;
-	RenderManager::instance->renderEntityWithPosYaw(mc->thePlayer, 0.0, 0.0, 0.0, 0.0f, 1.0f);
+	RenderManager::instance->renderEntityWithPosYaw(renderPlayer, 0.0, 0.0, 0.0, 0.0f, 1.0f);
 
-	mc->thePlayer->entityBrightness = 0.0f;
-	mc->thePlayer->renderYawOffset  = savedYawOffset;
-	mc->thePlayer->rotationYaw      = savedYaw;
-	mc->thePlayer->rotationPitch    = savedPitch;
+	renderPlayer->entityBrightness = 0.0f;
+	renderPlayer->renderYawOffset  = savedYawOffset;
+	renderPlayer->rotationYaw      = savedYaw;
+	renderPlayer->rotationPitch    = savedPitch;
 
 	renderPopMatrix();
 	RenderHelper::disableStandardItemLighting();
@@ -121,7 +145,10 @@ void GuiInventory::drawGuiContainerBackgroundLayer(float_t partialTick)
 
 void GuiInventory::displayDebuffEffects()
 {
-	std::vector<PotionEffect *> effects = mc->thePlayer->getActivePotionEffects();
+	EntityPlayer *effPlayer = inventoryPlayer ? inventoryPlayer : mc->thePlayer;
+	if (effPlayer == nullptr)
+		return;
+	std::vector<PotionEffect *> effects = effPlayer->getActivePotionEffects();
 	if (effects.empty())
 		return;
 
@@ -174,4 +201,24 @@ void GuiInventory::actionPerformed(GuiButton *button)
 	{
 		mc->displayGuiScreen(new GuiStats(this, mc->statFileWriter));
 	}
+}
+
+void GuiInventory::keyTyped(char_t c, int_t key)
+{
+	if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI)
+	{
+		if (key == mc->gameSettings->keyBindInventory->keyCode || key == lwjgl::Keyboard::KEY_C)
+		{
+			EntityPlayer *p = inventoryPlayer ? inventoryPlayer : mc->thePlayer;
+			if (p != nullptr)
+			{
+				if (mc->isSplitScreenActive())
+					mc->displayPlayerScreen(getOwnerPlayerIndex(), new LegacyCraftingScreen(p->inventory, p->worldObj, 0, 0, 0, true, p));
+				else
+					mc->displayGuiScreen(new LegacyCraftingScreen(p->inventory, p->worldObj, 0, 0, 0, true, p));
+				return;
+			}
+		}
+	}
+	GuiContainer::keyTyped(c, key);
 }

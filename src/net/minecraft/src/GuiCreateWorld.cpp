@@ -32,6 +32,7 @@ GuiCreateWorld::GuiCreateWorld(GuiScreen *parent)
     , worldTypeButton(nullptr)
     , worldSizeButton(nullptr)
     , limitedWorld(false)
+    , islandWorld(false)
     , seed("")
     , localizedNewWorldText(StatCollector::translateToLocal("selectWorld.newWorld"))
     , worldTypeIndex(0)
@@ -121,9 +122,18 @@ void GuiCreateWorld::updateButtonText()
         const bool isEs = (tr != nullptr && tr->getCurrentLanguage().rfind("es_", 0) == 0);
         if (limitedWorld)
         {
-            worldSizeButton->displayString = isEs
-                ? "Tamaño: Clásico 256x256"
-                : "World Size: Classic 256x256";
+            if (islandWorld)
+            {
+                worldSizeButton->displayString = isEs
+                    ? "Tamaño: Isla (256x256)"
+                    : "World Size: Island (256x256)";
+            }
+            else
+            {
+                worldSizeButton->displayString = isEs
+                    ? "Tamaño: Antiguo (256x256)"
+                    : "World Size: Old (256x256)";
+            }
         }
         else
         {
@@ -215,7 +225,7 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
             type = WorldType::worldTypes[worldTypeIndex];
         }
 
-        WorldSettings settings(worldSeed, gameType, generateStructures, hardcore, type, limitedWorld);
+        WorldSettings settings(worldSeed, gameType, generateStructures, hardcore, type, limitedWorld, islandWorld);
         mc->startWorld(folderName, textboxWorldName->getText(), &settings);
         mc->displayGuiScreen(nullptr);
     }
@@ -232,7 +242,15 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
     }
     else if (button->id == 7)
     {
-        limitedWorld = !limitedWorld;
+        if (!limitedWorld) {
+            limitedWorld = true;
+            islandWorld = false;
+        } else if (!islandWorld) {
+            islandWorld = true;
+        } else {
+            limitedWorld = false;
+            islandWorld = false;
+        }
         updateButtonText();
     }
     else if (button->id == 2)

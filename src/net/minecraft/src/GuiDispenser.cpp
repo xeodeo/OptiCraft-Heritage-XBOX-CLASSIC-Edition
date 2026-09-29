@@ -8,8 +8,8 @@
 #include "StatCollector.h"
 #include "platform/RenderAPI.h"
 
-GuiDispenser::GuiDispenser(InventoryPlayer *player, TileEntityDispenser *dispenser)
-	: GuiContainer(new ContainerDispenser(player, dispenser), true)
+GuiDispenser::GuiDispenser(InventoryPlayer *player, TileEntityDispenser *dispenser, EntityPlayer *entityPlayer)
+	: GuiContainer(new ContainerDispenser(player, dispenser), true, (entityPlayer != nullptr) ? entityPlayer : (player != nullptr ? player->player : nullptr))
 {
 }
 

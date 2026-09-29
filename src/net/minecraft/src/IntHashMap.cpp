@@ -62,7 +62,10 @@ void IntHashMap::addKey(int_t key, void *value)
 	for (IntHashMapEntry *entry = slots[slot]; entry != nullptr; entry = entry->nextEntry)
 	{
 		if (entry->hashEntry == key)
+		{
 			entry->valueEntry = value;
+			return;
+		}
 	}
 
 	++versionStamp;

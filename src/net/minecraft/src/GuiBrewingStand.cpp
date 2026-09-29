@@ -9,8 +9,8 @@
 #include "TileEntityBrewingStand.h"
 #include "platform/RenderAPI.h"
 
-GuiBrewingStand::GuiBrewingStand(InventoryPlayer *inventory, TileEntityBrewingStand *brewingStandIn)
-    : GuiContainer(new ContainerBrewingStand(inventory, brewingStandIn), true)
+GuiBrewingStand::GuiBrewingStand(InventoryPlayer *inventory, TileEntityBrewingStand *brewingStandIn, EntityPlayer *entityPlayer)
+    : GuiContainer(new ContainerBrewingStand(inventory, brewingStandIn), true, (entityPlayer != nullptr) ? entityPlayer : (inventory != nullptr ? inventory->player : nullptr))
     , brewingStand(brewingStandIn)
 {
 }

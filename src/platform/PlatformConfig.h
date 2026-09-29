@@ -88,8 +88,12 @@
 #  define PLATFORM_DIRECT_ANALOG_MOVEMENT PLATFORM_PS2
 #endif
 
+// Experimental performance build only (CMake XBOX_ASYNC_CHUNK_IO=ON):
+// chunk generation/load on a background thread and chunk NBT serialized
+// on the IO thread. Off everywhere else, so the normal build keeps the
+// original synchronous chunk path.
 #ifndef XBOX_ASYNC_CHUNK_IO
-#  define XBOX_ASYNC_CHUNK_IO 1
+#  define XBOX_ASYNC_CHUNK_IO 0
 #endif
 
 #ifndef PLATFORM_ASYNC_CHUNK_GENERATION

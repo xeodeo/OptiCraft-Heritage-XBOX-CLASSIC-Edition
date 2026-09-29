@@ -38,6 +38,7 @@ option(XBOX_ENABLE_SOUND "Enable the DirectSound backend" OFF)
 option(XBOX_ENABLE_NETWORK "Experimental: multiplayer over XNet TCP (Minecraft 1.2.5 servers)" OFF)
 option(XBOX_AUTOPILOT "Test build: replay a scripted controller from D:/autopilot.txt (never deployed)" OFF)
 option(XBOX_LIMIT_MEMORY "Limit the title to the retail 64 MB even on 128 MB dev kits / xemu" ON)
+option(XBOX_ASYNC_CHUNK_IO "Experimental performance build: chunk generation and load on a background thread" OFF)
 set(MC_LOG_LEVEL "0" CACHE STRING "Unified diagnostic verbosity: 0=off, 1=info, 2=debug, 3=trace")
 set_property(CACHE MC_LOG_LEVEL PROPERTY STRINGS 0 1 2 3)
 set(XBOX_TITLE_NAME "OptiCraft by xeodeo" CACHE STRING "Title name embedded in the XBE")
@@ -156,6 +157,7 @@ target_compile_definitions(OptiCraft PRIVATE
     $<$<NOT:$<BOOL:${XBOX_ENABLE_NETWORK}>>:NO_NETWORK>
     MC_LOG_LEVEL=${MC_LOG_LEVEL}
     XBOX_AUTOPILOT=$<BOOL:${XBOX_AUTOPILOT}>
+    XBOX_ASYNC_CHUNK_IO=$<BOOL:${XBOX_ASYNC_CHUNK_IO}>
     # With /arch:SSE (no SSE2) the UCRT evaluates floats in x87 precision and
     # typedefs float_t/double_t as long double, which clashes with the Java
     # primitive aliases in src/java/Type.h. _M_FP_FAST selects the plain

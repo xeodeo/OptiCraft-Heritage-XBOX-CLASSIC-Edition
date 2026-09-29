@@ -174,7 +174,7 @@ void EntityWolf::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 
 bool EntityWolf::canDespawn()
 {
-	return isWolfAngry();
+	return isWolfAngry() && !isWolfTamed();
 }
 
 jstring EntityWolf::getLivingSound()

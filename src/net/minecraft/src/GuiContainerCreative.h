@@ -4,6 +4,8 @@
 
 class EntityPlayer;
 class InventoryBasic;
+class ItemStack;
+class RenderItem;
 
 // net.minecraft.src.GuiContainerCreative
 class GuiContainerCreative : public GuiContainer
@@ -14,10 +16,14 @@ public:
     void updateScreen() override;
     void initGui() override;
     void handleMouseInput() override;
+    void mouseClicked(int_t mouseX, int_t mouseY, int_t button) override;
+    void keyTyped(char_t c, int_t key) override;
     void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
     Slot *getControllerNavigationTarget(Slot *selected, int_t dirX, int_t dirY) override;
+    bool scrollRows(int_t direction);
 
     static InventoryBasic *getInventory();
+    void setCategory(int_t tabIndex);
 
 protected:
     void handleMouseClick(Slot *slot, int_t slotId, int_t button, bool shift) override;
@@ -26,10 +32,13 @@ protected:
     void actionPerformed(GuiButton *button) override;
 
 private:
-    bool scrollRows(int_t direction);
+    void drawCategoryTabs(int_t guiLeft, int_t guiTop);
+    void drawCreativeTabTooltip(const char *text, int_t x, int_t y);
 
     static InventoryBasic inventory;
     float_t currentScroll;
     bool isScrolling;
     bool wasClicking;
+    static ItemStack *s_tabIcons[6];
+    static RenderItem *creativeItemRenderer;
 };

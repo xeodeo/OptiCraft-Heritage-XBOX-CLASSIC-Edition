@@ -1,4 +1,5 @@
 #include "GuiScreen.h"
+#include <cmath>
 #include "SoundManager.h"
 #include "GameSettings.h"
 #include "GuiButton.h"
@@ -18,6 +19,9 @@
 #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 #include "VirtualKeyboard.h"
 #include "ContainerSlotNavigator.h"
+#include "GuiContainer.h"
+#include "GuiContainerCreative.h"
+#include "Slot.h"
 #endif
 
 // Minecraft forward-included via header chain
@@ -36,28 +40,32 @@ namespace
 // screens were written for this -- legacyHoveredButton() and the create-world
 // screen already have PLATFORM_WII pointer branches that this used to keep
 // permanently switched off.
-bool menuPointerInputSuppressed(Minecraft *mc)
+bool menuPointerInputSuppressed(Minecraft *mc, const GuiScreen *screen = nullptr)
 {
+	const GuiScreen *target = (screen != nullptr) ? screen : (mc != nullptr ? mc->currentScreen : nullptr);
 #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
-	if (mc != nullptr && mc->currentScreen != nullptr && mc->currentScreen->suppressesPlatformPointerInput())
+	if (target != nullptr && target->suppressesPlatformPointerInput())
 		return true;
 #endif
 #if PLATFORM_PS2 || PLATFORM_XBOX
 	return mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI &&
-	       (mc->currentScreen == nullptr || !mc->currentScreen->allowsPlatformPointerInput());
+	       (target == nullptr || !target->allowsPlatformPointerInput());
 #elif PLATFORM_WII
 	(void)mc;
+	(void)target;
 	return !platformMenuPointerActive();
 #else
 	(void)mc;
+	(void)target;
 	return false;
 #endif
 }
 
-bool menuCursorSuppressed(Minecraft *mc)
+bool menuCursorSuppressed(Minecraft *mc, const GuiScreen *screen = nullptr)
 {
+	const GuiScreen *target = (screen != nullptr) ? screen : (mc != nullptr ? mc->currentScreen : nullptr);
 #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
-	if (mc != nullptr && mc->currentScreen != nullptr && mc->currentScreen->suppressesPlatformPointerInput())
+	if (target != nullptr && target->suppressesPlatformPointerInput())
 		return true;
 #endif
 #if PLATFORM_PS2 || PLATFORM_XBOX
@@ -65,18 +73,21 @@ bool menuCursorSuppressed(Minecraft *mc)
 		return true;
 	if (mc == nullptr || mc->gameSettings == nullptr || !mc->gameSettings->legacyUI)
 		return false;
-	if (mc->currentScreen == nullptr || !mc->currentScreen->allowsPlatformPointerInput())
+	if (target == nullptr || !target->allowsPlatformPointerInput())
 		return true;
 	// Keep the D-pad slot cursor visible until the first pointer-motion event
 	// clears its selection in GuiContainer::mouseMovedOrUp().
-	return ContainerSlotNavigator::instance().controllerSelectionActive();
+	const int pIdx = target->getOwnerPlayerIndex();
+	return ContainerSlotNavigator::instance(pIdx).controllerSelectionActive();
 #elif PLATFORM_WII
 	// Drawn only while the pointer is the active owner, so the cursor is not left
 	// sitting on screen through a D-pad-driven menu.
 	(void)mc;
+	(void)target;
 	return !platformMenuCursorVisible() || !platformMenuPointerActive();
 #else
 	(void)mc;
+	(void)target;
 	return false;
 #endif
 }
@@ -94,7 +105,20 @@ GuiScreen::GuiScreen()
 	, selectedButton(nullptr)
 	, keyboardSelectedControlIndex(-1)
 	, focusedTextField(nullptr)
+	, m_ownerPlayerIndex(-1)
 {
+}
+
+int GuiScreen::getOwnerPlayerIndex() const
+{
+	if (m_ownerPlayerIndex >= 0)
+		return m_ownerPlayerIndex;
+	if (mc != nullptr)
+	{
+		if (mc->isScreenOwnedByPlayer2() || mc->inPlayer2Context())
+			return 1;
+	}
+	return 0;
 }
 
 GuiScreen::~GuiScreen()
@@ -111,8 +135,8 @@ void GuiScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 {
 	if (isJavaUiKeyboardNavigationEnabled())
 		syncKeyboardSelection();
-	const bool suppressPointerInput = menuPointerInputSuppressed(mc);
-	const bool suppressCursor = menuCursorSuppressed(mc);
+	const bool suppressPointerInput = menuPointerInputSuppressed(mc, this);
+	const bool suppressCursor = menuCursorSuppressed(mc, this);
 	const bool suppressMouseHover = keyboardSelectedControlIndex >= 0 && isJavaUiKeyboardNavigationEnabled();
 	const int_t effectiveMouseX = suppressPointerInput || suppressMouseHover ? -10000 : mouseX;
 	const int_t effectiveMouseY = suppressPointerInput || suppressMouseHover ? -10000 : mouseY;
@@ -258,6 +282,20 @@ void GuiScreen::initGui()
 void GuiScreen::handleInput()
 {
 	handleSpecializedMenuInput();
+	if (mc != nullptr)
+	{
+		if (mc->currentScreen != nullptr && mc->currentScreen != this)
+			return;
+		if (mc->currentScreen != this && mc->getPlayerScreen(0) != this && mc->getPlayerScreen(1) != this)
+			return;
+	}
+#if PLATFORM_PS2 || PLATFORM_WII
+	if (mc != nullptr && mc->isSplitScreenActive() && (this == mc->getPlayerScreen(0) || this == mc->getPlayerScreen(1)))
+	{
+		handleSplitscreenPlayerInput();
+		return;
+	}
+#endif
 #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	// Console GUI helpers consume the platform snapshot here, after the native
 	// backend has published this frame's controller state and before queued
@@ -266,15 +304,16 @@ void GuiScreen::handleInput()
 	// Minecraft screen classes.
 	VirtualKeyboard::instance().tick();
 	if (!platformTextInputExclusive())
-		ContainerSlotNavigator::instance().tick();
+		ContainerSlotNavigator::instance(getOwnerPlayerIndex()).tick();
 #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	handleConsoleJavaUiNavigation();
 #endif
 #endif
-	// Split screen: player 2's screen reads only its own controller; the
-	// mouse/keyboard queues belong to player 1.
-	if (mc != nullptr && mc->inPlayer2Context())
+	if (getOwnerPlayerIndex() == 1 || (mc != nullptr && mc->inPlayer2Context()))
+	{
+		// Player 2 local screen uses direct Pad 1 inputs only; do not consume Pad 0 lwjgl events
 		return;
+	}
 	while (lwjgl::Mouse::next()) handleMouseInput();
 	while (lwjgl::Keyboard::next()) handleKeyboardInput();
 }
@@ -638,4 +677,138 @@ void GuiScreen::confirmClicked(bool confirmed, int_t id)
 
 void GuiScreen::selectNextField()
 {
+}
+
+void GuiScreen::handleSplitscreenPlayerInput()
+{
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+	const int pIdx = getOwnerPlayerIndex();
+	if (mc == nullptr || pIdx < 0 || pIdx >= 2)
+		return;
+
+	ContainerSlotNavigator &navigator = ContainerSlotNavigator::instance(pIdx);
+
+	// Read input snapshot EXACTLY ONCE this frame
+	const PlatformTextInputSnapshot input = platformTextInputSnapshot(pIdx);
+	if (!input.connected)
+		return;
+
+	// Forward input snapshot to navigator
+	if (!platformTextInputExclusive())
+		navigator.tickWithInput(input);
+
+	// Left stick moves personal cursor
+	const PlatformGamepadSnapshot pad = platformGamepadSnapshot(pIdx);
+	if (pad.connected)
+	{
+		const float ax = pad.leftX;
+		const float ay = pad.leftY;
+		if (std::abs(ax) > 0.15f || std::abs(ay) > 0.15f)
+		{
+			navigator.notePointerActivity();
+			const float speed = 5.0f;
+			float curX = mc->getPlayerCursorX(pIdx) + ax * speed;
+			float curY = mc->getPlayerCursorY(pIdx) + ay * speed;
+			if (curX < 0.0f) curX = 0.0f;
+			if (curY < 0.0f) curY = 0.0f;
+			if (curX > static_cast<float>(width)) curX = static_cast<float>(width);
+			if (curY > static_cast<float>(height)) curY = static_cast<float>(height);
+			mc->setPlayerCursor(pIdx, curX, curY);
+		}
+	}
+
+	const int curMouseX = static_cast<int>(mc->getPlayerCursorX(pIdx));
+	const int curMouseY = static_cast<int>(mc->getPlayerCursorY(pIdx));
+
+	GuiContainer *gc = dynamic_cast<GuiContainer *>(this);
+	GuiContainerCreative *gcc = dynamic_cast<GuiContainerCreative *>(this);
+	if (gcc != nullptr)
+	{
+		static float s_bumperScrollTimer[2] = { 0.0f, 0.0f };
+		if (input.held & (PLATFORM_TEXT_PREV_PAGE | PLATFORM_TEXT_NEXT_PAGE))
+		{
+			bool fire = (input.pressed & (PLATFORM_TEXT_PREV_PAGE | PLATFORM_TEXT_NEXT_PAGE)) != 0;
+			s_bumperScrollTimer[pIdx] -= 0.05f;
+			if (s_bumperScrollTimer[pIdx] <= 0.0f)
+			{
+				fire = true;
+				s_bumperScrollTimer[pIdx] = 0.15f;
+			}
+			if (fire)
+			{
+				gcc->scrollRows((input.held & PLATFORM_TEXT_PREV_PAGE) ? -1 : 1);
+			}
+		}
+		else
+		{
+			s_bumperScrollTimer[pIdx] = 0.0f;
+		}
+
+		static float s_stickScrollTimer[2] = { 0.0f, 0.0f };
+		if (pad.connected && std::abs(pad.rightY) > 0.35f)
+		{
+			s_stickScrollTimer[pIdx] -= 0.05f;
+			if (s_stickScrollTimer[pIdx] <= 0.0f)
+			{
+				s_stickScrollTimer[pIdx] = 0.15f;
+				gcc->scrollRows(pad.rightY < 0.0f ? -1 : 1);
+			}
+		}
+		else
+		{
+			s_stickScrollTimer[pIdx] = 0.0f;
+		}
+	}
+
+	static bool s_crossHeld[2] = { false, false };
+	static bool s_squareHeld[2] = { false, false };
+
+	// 1. Cross (Primary action / Left click: pickup stack, place stack, click button)
+	if (input.pressed & PLATFORM_TEXT_TYPE)
+	{
+		s_crossHeld[pIdx] = true;
+		mouseClicked(curMouseX, curMouseY, 0);
+	}
+	else if (s_crossHeld[pIdx] && !(input.held & PLATFORM_TEXT_TYPE))
+	{
+		s_crossHeld[pIdx] = false;
+		mouseMovedOrUp(curMouseX, curMouseY, 0);
+	}
+
+	// 2. Square (Secondary action / Right click: split stack, take half, place 1)
+	if (input.pressed & PLATFORM_TEXT_BACK)
+	{
+		s_squareHeld[pIdx] = true;
+		mouseClicked(curMouseX, curMouseY, 1);
+	}
+	else if (s_squareHeld[pIdx] && !(input.held & PLATFORM_TEXT_BACK))
+	{
+		s_squareHeld[pIdx] = false;
+		mouseMovedOrUp(curMouseX, curMouseY, 1);
+	}
+
+	// 3. Triangle (Quick move / Shift-click)
+	if (input.pressed & PLATFORM_TEXT_SHIFT)
+	{
+		if (gc != nullptr)
+		{
+			Slot *slot = nullptr;
+			if (navigator.controllerSelectionActive())
+				slot = navigator.selectedSlot();
+			if (slot == nullptr)
+				slot = gc->getSlotAtPosition(curMouseX, curMouseY);
+
+			if (slot != nullptr)
+			{
+				gc->handleMouseClick(slot, slot->slotNumber, 0, true);
+			}
+		}
+	}
+
+	// 4. Circle or Start (Close personal inventory screen)
+	if (input.pressed & (PLATFORM_TEXT_CLOSE | PLATFORM_TEXT_ENTER))
+	{
+		mc->closePlayerScreen(pIdx);
+	}
+#endif
 }

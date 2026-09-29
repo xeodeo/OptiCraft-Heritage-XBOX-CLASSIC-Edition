@@ -3,14 +3,17 @@
 #include "IInventory.h"
 #include "InventoryLargeChest.h"
 #include "InventoryBasic.h"
+#include "InventoryPlayer.h"
 #include "FontRenderer.h"
 #include "RenderEngine.h"
 #include "Minecraft.h"
 #include "StatCollector.h"
 #include "platform/RenderAPI.h"
 
-GuiChest::GuiChest(IInventory *upper, IInventory *lower)
-	: GuiContainer(new ContainerChest(upper, lower, (dynamic_cast<InventoryLargeChest *>(lower) != nullptr || dynamic_cast<InventoryBasic *>(lower) != nullptr)), true)
+GuiChest::GuiChest(IInventory *upper, IInventory *lower, EntityPlayer *player)
+	: GuiContainer(new ContainerChest(upper, lower, (dynamic_cast<InventoryLargeChest *>(lower) != nullptr || dynamic_cast<InventoryBasic *>(lower) != nullptr)),
+	               true,
+	               (player != nullptr) ? player : (dynamic_cast<InventoryPlayer *>(upper) ? dynamic_cast<InventoryPlayer *>(upper)->player : nullptr))
 	, upperChestInventory(upper)
 	, lowerChestInventory(lower)
 	, inventoryRows(0)

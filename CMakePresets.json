@@ -178,6 +178,28 @@
         "XBOX_BIN_SUBDIR": "xbox-public",
         "XBOX_DEPLOY_DIR": ""
       }
+    },
+    {
+      "name": "xbox-release-exp",
+      "inherits": "xbox-release",
+      "displayName": "Xbox experimental performance (test)",
+      "description": "Test build with network log and chunk generation/load on a background thread; output in bin/xbox-exp.",
+      "binaryDir": "${sourceDir}/build/xbox-release-exp",
+      "cacheVariables": {
+        "XBOX_ASYNC_CHUNK_IO": "ON",
+        "XBOX_BIN_SUBDIR": "xbox-exp"
+      }
+    },
+    {
+      "name": "xbox-public-exp",
+      "inherits": "xbox-public",
+      "displayName": "Xbox experimental performance release",
+      "description": "Public build (no network log) with chunk generation/load on a background thread; output in bin/xbox-public-exp.",
+      "binaryDir": "${sourceDir}/build/xbox-public-exp",
+      "cacheVariables": {
+        "XBOX_ASYNC_CHUNK_IO": "ON",
+        "XBOX_BIN_SUBDIR": "xbox-public-exp"
+      }
     }
   ],
   "buildPresets": [
@@ -252,6 +274,14 @@
     {
       "name": "xbox-public",
       "configurePreset": "xbox-public"
+    },
+    {
+      "name": "xbox-release-exp",
+      "configurePreset": "xbox-release-exp"
+    },
+    {
+      "name": "xbox-public-exp",
+      "configurePreset": "xbox-public-exp"
     }
   ]
 }

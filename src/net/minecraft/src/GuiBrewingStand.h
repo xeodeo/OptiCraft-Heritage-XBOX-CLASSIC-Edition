@@ -9,7 +9,7 @@ class TileEntityBrewingStand;
 class GuiBrewingStand : public GuiContainer
 {
 public:
-    GuiBrewingStand(InventoryPlayer *inventory, TileEntityBrewingStand *brewingStand);
+    GuiBrewingStand(InventoryPlayer *inventory, TileEntityBrewingStand *brewingStand, EntityPlayer *entityPlayer = nullptr);
 
 protected:
     void drawGuiContainerForegroundLayer() override;

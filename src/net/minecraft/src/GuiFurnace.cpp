@@ -8,8 +8,8 @@
 #include "StatCollector.h"
 #include "platform/RenderAPI.h"
 
-GuiFurnace::GuiFurnace(InventoryPlayer *player, TileEntityFurnace *furnace)
-	: GuiContainer(new ContainerFurnace(player, furnace), true)
+GuiFurnace::GuiFurnace(InventoryPlayer *player, TileEntityFurnace *furnace, EntityPlayer *entityPlayer)
+	: GuiContainer(new ContainerFurnace(player, furnace), true, (entityPlayer != nullptr) ? entityPlayer : (player != nullptr ? player->player : nullptr))
 	, furnaceInventory(furnace)
 {
 }

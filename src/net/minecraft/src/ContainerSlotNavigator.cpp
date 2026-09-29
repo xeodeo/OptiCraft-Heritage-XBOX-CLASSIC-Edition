@@ -7,6 +7,7 @@
 #include "Container.h"
 #include "GuiContainer.h"
 #include "Slot.h"
+#include "Minecraft.h"
 #include "platform/ConsoleInputClock.h"
 #include "platform/Input.h"
 
@@ -23,31 +24,15 @@ int_t absInt(int_t value)
 }
 }
 
-namespace
+ContainerSlotNavigator& ContainerSlotNavigator::instance(int padPort)
 {
-// The container-navigation flag stops player 1's stick pointer; player 2's
-// screens (Xbox split screen) must leave it alone.
-bool steersMenuPointer()
-{
-#ifdef XBOX_PLATFORM
-    return platformMenuPad() == 0;
-#else
-    return true;
-#endif
-}
-}
-
-ContainerSlotNavigator& ContainerSlotNavigator::instance()
-{
-#ifdef XBOX_PLATFORM
-    // Split screen: each player's container screen keeps its own selection;
-    // platformMenuPad() is the player whose screen is being run.
     static ContainerSlotNavigator s_navigators[2];
-    return s_navigators[platformMenuPad() == 1 ? 1 : 0];
-#else
-    static ContainerSlotNavigator s_navigator;
-    return s_navigator;
-#endif
+    if (padPort < 0)
+        padPort = platformMenuPad();
+    if (padPort < 0 || padPort >= 2)
+        padPort = 0;
+    s_navigators[padPort].m_padPort = padPort;
+    return s_navigators[padPort];
 }
 
 void ContainerSlotNavigator::notifyOpen(GuiContainer *guiContainer, const Layout &guiLayout)
@@ -55,8 +40,7 @@ void ContainerSlotNavigator::notifyOpen(GuiContainer *guiContainer, const Layout
     if (guiContainer == nullptr)
         return;
 
-    if (steersMenuPointer())
-        platformSetContainerNavigationActive(true);
+    platformSetContainerNavigationActive(true);
     if (screen != guiContainer)
     {
         screen = guiContainer;
@@ -84,7 +68,7 @@ void ContainerSlotNavigator::notifyClosed(const GuiContainer *guiContainer)
     pendingPrimary = false;
     pendingSecondary = false;
     nextRepeatMs = 0;
-    if (steersMenuPointer())
+    if (!instance(0).isActive() && !instance(1).isActive())
         platformSetContainerNavigationActive(false);
 }
 
@@ -147,8 +131,16 @@ void ContainerSlotNavigator::moveMenuCursorToSelection()
     const int_t guiX = layout.guiLeft + selected->xDisplayPosition + SLOT_CENTER;
     const int_t guiY = layout.guiTop + selected->yDisplayPosition + SLOT_CENTER;
     ignorePointerMotionOnce = platformMenuPointerActive();
-    platformSetMenuCursor(guiX * layout.displayWidth / layout.screenWidth,
-                          guiY * layout.displayHeight / layout.screenHeight);
+    if (m_padPort == 0)
+    {
+        platformSetMenuCursor(guiX * layout.displayWidth / layout.screenWidth,
+                              guiY * layout.displayHeight / layout.screenHeight);
+    }
+    Minecraft *mc = Minecraft::getMinecraft();
+    if (mc != nullptr)
+    {
+        mc->setPlayerCursor(m_padPort, static_cast<float>(guiX), static_cast<float>(guiY));
+    }
 }
 
 void ContainerSlotNavigator::notePointerSlot(Slot *slot)
@@ -226,6 +218,14 @@ Slot *ContainerSlotNavigator::pickSlot(int_t originX, int_t originY, int_t dirX,
 
 void ContainerSlotNavigator::tick()
 {
+    if (!isActive() || screen == nullptr || screen->inventorySlots == nullptr || screen->inventorySlots->slots.empty())
+        return;
+
+    tickWithInput(platformTextInputSnapshot(m_padPort));
+}
+
+void ContainerSlotNavigator::tickWithInput(const PlatformTextInputSnapshot &pad)
+{
     if (!isActive() || screen->inventorySlots == nullptr || screen->inventorySlots->slots.empty())
         return;
 
@@ -239,39 +239,34 @@ void ContainerSlotNavigator::tick()
         clearControllerSelection();
 #endif
 
-    const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     if (!pad.connected)
         return;
+
+    Minecraft *mc = Minecraft::getMinecraft();
+    const bool splitScreen = (mc != nullptr && mc->isSplitScreenActive());
 
     const unsigned int keyLeft = PLATFORM_TEXT_LEFT;
     const unsigned int keyRight = PLATFORM_TEXT_RIGHT;
     const unsigned int keyUp = PLATFORM_TEXT_UP;
     const unsigned int keyDown = PLATFORM_TEXT_DOWN;
 
-    // The confirm buttons also arrive as synthesized mouse clicks at the
-    // cursor, and GuiContainer::mouseClicked drops that edge only while the
-    // controller owns the selection. While the pointer is an active input and
-    // the D-pad has not taken over since its last motion, the click belongs to
-    // the pointed slot: claiming it here sent every press to the D-pad slot
-    // (the first slot of a fresh screen) instead. GameCube and Classic only
-    // expose that mouse edge while their left-stick cursor owns the container.
-    const bool pointerOwnsClick = platformMenuPointerActive() && !controllerActive;
-    if (!pointerOwnsClick && (pad.pressed & PLATFORM_TEXT_TYPE) != 0)
+    // In splitscreen, clicks are processed directly in handleSplitscreenPlayerInput()
+    // rather than deferred to drawScreen().
+    if (!splitScreen)
     {
-        activateControllerSelection();
-        if (controllerSelectionActive())
-            pendingPrimary = true;
-    }
-    // Secondary click (split stack / place one) on BACK: Square on PS2, B on
-    // a GameCube pad, Classic Controller or Wiimote. The Wiimote's B also
-    // reaches here as mouse button 1 through the pointer; GuiContainer::
-    // mouseClicked drops that edge while the controller owns the selection,
-    // the same way it does for A, so the slot is not clicked twice.
-    if (!pointerOwnsClick && (pad.pressed & PLATFORM_TEXT_BACK) != 0)
-    {
-        activateControllerSelection();
-        if (controllerSelectionActive())
-            pendingSecondary = true;
+        const bool pointerOwnsClick = platformMenuPointerActive() && !controllerActive;
+        if (!pointerOwnsClick && (pad.pressed & PLATFORM_TEXT_TYPE) != 0)
+        {
+            activateControllerSelection();
+            if (controllerSelectionActive())
+                pendingPrimary = true;
+        }
+        if (!pointerOwnsClick && (pad.pressed & PLATFORM_TEXT_BACK) != 0)
+        {
+            activateControllerSelection();
+            if (controllerSelectionActive())
+                pendingSecondary = true;
+        }
     }
 
     int_t dirX = 0;

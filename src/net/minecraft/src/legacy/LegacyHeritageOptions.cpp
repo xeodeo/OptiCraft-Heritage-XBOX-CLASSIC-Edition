@@ -30,8 +30,9 @@ constexpr int_t BUTTON_ALTERNATIVE_CONTROLS = 601;
 constexpr int_t BUTTON_DEADZONE = 602;
 constexpr int_t BUTTON_DONE = 600;
 constexpr int_t BUTTON_EDIT_PLAYER_NAME = 606;
-constexpr int_t BUTTON_LEGACY_CRAFTING = 607;
+constexpr int_t BUTTON_SPLITSCREEN_LAYOUT = 607;
 constexpr int_t BUTTON_EDIT_PLAYER_NAME2 = 608;
+constexpr int_t BUTTON_LEGACY_CRAFTING = 609;
 
 }
 
@@ -54,6 +55,9 @@ void LegacyHeritageOptions::initGui()
 {
     int_t rowCount = 5; // player name label, player name field, Legacy UI, Legacy Look, Done
 #if PLATFORM_HAS_ASPECT_RATIO_OPTION
+    ++rowCount;
+#endif
+#if PLATFORM_PS2
     ++rowCount;
 #endif
 #ifdef WII_PLATFORM
@@ -103,6 +107,11 @@ void LegacyHeritageOptions::initGui()
 #if PLATFORM_HAS_ASPECT_RATIO_OPTION
     controlList.push_back(new LegacyGuiButton(BUTTON_ASPECT_RATIO, x, legacyLayout.rowY(row++), w, h,
         settings->getKeyBinding(EnumOptions::ASPECT_RATIO)));
+#endif
+
+#if PLATFORM_PS2
+    controlList.push_back(new LegacyGuiButton(BUTTON_SPLITSCREEN_LAYOUT, x, legacyLayout.rowY(row++), w, h,
+        settings->getKeyBinding(EnumOptions::SPLITSCREEN_LAYOUT)));
 #endif
 
     legacyUiCheckbox = new LegacyOptionCheckbox(BUTTON_LEGACY_UI, x, legacyLayout.rowY(row++), w, h,
@@ -241,6 +250,14 @@ void LegacyHeritageOptions::actionPerformed(GuiButton *button)
         return;
     }
 #endif
+
+    if (button->id == BUTTON_SPLITSCREEN_LAYOUT)
+    {
+        settings->setOptionValue(EnumOptions::SPLITSCREEN_LAYOUT, 1);
+        button->displayString = settings->getKeyBinding(EnumOptions::SPLITSCREEN_LAYOUT);
+        settings->saveOptions();
+        return;
+    }
 
     if (button->id == BUTTON_LEGACY_UI)
     {

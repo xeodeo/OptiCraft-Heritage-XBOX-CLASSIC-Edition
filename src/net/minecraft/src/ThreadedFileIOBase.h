@@ -22,6 +22,7 @@ public:
 
 	void queueIO(IThreadedFileIO *task);
 	void waitForFinish();
+	void cancelTask(IThreadedFileIO *task);
 
 private:
 	ThreadedFileIOBase();
@@ -30,6 +31,7 @@ private:
 
 	std::vector<IThreadedFileIO *> threadedIOQueue;
 	std::unordered_set<IThreadedFileIO *> requeueRequested;
+	IThreadedFileIO *activeTask;
 	std::mutex queueMutex;
 	std::condition_variable queueCondition;
 	std::condition_variable finishCondition;

@@ -636,10 +636,10 @@ void World::generateSpawnPoint()
 
     if (isLimitedWorld())
     {
-        if (spawnX < -100) spawnX = -100;
-        else if (spawnX > 100) spawnX = 100;
-        if (spawnZ < -100) spawnZ = -100;
-        else if (spawnZ > 100) spawnZ = 100;
+        if (spawnX < -64) spawnX = -64;
+        else if (spawnX > 64) spawnX = 64;
+        if (spawnZ < -64) spawnZ = -64;
+        else if (spawnZ > 64) spawnZ = 64;
     }
 
 #if defined(PS2_PLATFORM)
@@ -1068,9 +1068,14 @@ bool World::isChunkRequiredByRetainedEntity(int_t chunkX, int_t chunkZ) const
         if (entity == nullptr || entity->isDead || entity->getChunkRetentionRadius() < 0)
             continue;
 
-        const int_t entityChunkX = MathHelper::floor_double(entity->posX / 16.0);
-        const int_t entityChunkZ = MathHelper::floor_double(entity->posZ / 16.0);
-        if (chunkX == entityChunkX && chunkZ == entityChunkZ)
+        // The whole retention square, not just the entity's own chunk: an
+        // entity only ticks when the chunks PLATFORM_PLAYER_UPDATE_CHUNK_RANGE_BLOCKS
+        // around it exist, so the ender dragon froze whenever its neighbours
+        // were missing.
+        const int_t radius = entity->getChunkRetentionRadius();
+        const long_t dx = static_cast<long_t>(chunkX) - static_cast<long_t>(MathHelper::floor_double(entity->posX / 16.0));
+        const long_t dz = static_cast<long_t>(chunkZ) - static_cast<long_t>(MathHelper::floor_double(entity->posZ / 16.0));
+        if (dx >= -radius && dx <= radius && dz >= -radius && dz <= radius)
             return true;
     }
 #else
@@ -3579,10 +3584,19 @@ void World::ensureEntityChunkRetention(Entity *entity)
     if (entity == nullptr || entity->isDead || entity->getChunkRetentionRadius() < 0)
         return;
 
+    // Load the entity's chunk and its retention neighbours (3x3 for the
+    // dragon) so it can keep ticking; see isChunkRequiredByRetainedEntity.
+    const int_t radius = entity->getChunkRetentionRadius();
     const int_t chunkX = MathHelper::floor_double(entity->posX / 16.0);
     const int_t chunkZ = MathHelper::floor_double(entity->posZ / 16.0);
-    if (!chunkExists(chunkX, chunkZ))
-        getChunkFromChunkCoords(chunkX, chunkZ);
+    for (int_t dx = -radius; dx <= radius; ++dx)
+    {
+        for (int_t dz = -radius; dz <= radius; ++dz)
+        {
+            if (!chunkExists(chunkX + dx, chunkZ + dz))
+                getChunkFromChunkCoords(chunkX + dx, chunkZ + dz);
+        }
+    }
 #else
     (void)entity;
 #endif
@@ -6171,6 +6185,11 @@ WorldInfo* World::getWorldInfo()
 bool World::isLimitedWorld() const
 {
     return worldInfo != nullptr && worldInfo->isLimitedWorld();
+}
+
+bool World::isIslandWorld() const
+{
+    return worldInfo != nullptr && worldInfo->isIslandWorld();
 }
 
 

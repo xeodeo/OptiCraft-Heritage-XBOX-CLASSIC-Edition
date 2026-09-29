@@ -9,7 +9,7 @@
 ThreadedFileIOBase ThreadedFileIOBase::threadedIOInstance;
 
 ThreadedFileIOBase::ThreadedFileIOBase() :
-	writeQueuedCounter(0), savedIOCounter(0), isThreadWaiting(false), stopping(false),
+	activeTask(nullptr), writeQueuedCounter(0), savedIOCounter(0), isThreadWaiting(false), stopping(false),
 	worker(&ThreadedFileIOBase::run, this)
 {
 }
@@ -53,14 +53,20 @@ void ThreadedFileIOBase::processQueue()
 		{
 			std::lock_guard<std::mutex> guard(queueMutex);
 			if (stopping || index >= threadedIOQueue.size())
+			{
+				activeTask = nullptr;
 				return;
+			}
 			task = threadedIOQueue[index];
+			activeTask = task;
 			waiting = isThreadWaiting;
 		}
 
 		const bool hasMore = task != nullptr && task->writeNextIO();
 		{
 			std::lock_guard<std::mutex> guard(queueMutex);
+			activeTask = nullptr;
+			finishCondition.notify_all();
 			if (index < threadedIOQueue.size() && threadedIOQueue[index] == task)
 			{
 				if (!hasMore)
@@ -122,7 +128,29 @@ void ThreadedFileIOBase::waitForFinish()
 	queueCondition.notify_one();
 	finishCondition.wait(lock, [this]
 	{
-		return stopping || writeQueuedCounter == savedIOCounter;
+		return stopping || (writeQueuedCounter == savedIOCounter && activeTask == nullptr);
 	});
 	isThreadWaiting = false;
+}
+
+void ThreadedFileIOBase::cancelTask(IThreadedFileIO *task)
+{
+	if (task == nullptr)
+		return;
+
+	std::unique_lock<std::mutex> lock(queueMutex);
+	requeueRequested.erase(task);
+	auto it = std::remove(threadedIOQueue.begin(), threadedIOQueue.end(), task);
+	if (it != threadedIOQueue.end())
+	{
+		std::ptrdiff_t removedCount = std::distance(it, threadedIOQueue.end());
+		threadedIOQueue.erase(it, threadedIOQueue.end());
+		savedIOCounter += static_cast<long long>(removedCount);
+		finishCondition.notify_all();
+	}
+
+	finishCondition.wait(lock, [this, task]
+	{
+		return stopping || activeTask != task;
+	});
 }

@@ -2,10 +2,13 @@
 
 #include "platform/Log.h"
 #include "ps2/storage/save/McSavePS2.h"
+#include "ps2/storage/save/Ps2MemoryCardFileSystem.h"
 #include <libmc.h>
+#include <mutex>
 #include <stdio.h>
 
 bool ps2_mc_is_formatted() {
+    std::lock_guard<std::recursive_mutex> lock(Ps2MemoryCardFileSystem::getMcIoMutex());
     int type = 0, free_space = 0, format = 0;
     mcGetInfo(0, 0, &type, &free_space, &format);
     int cmd = 0, result = -1;
@@ -15,6 +18,7 @@ bool ps2_mc_is_formatted() {
 }
 
 bool ps2_mc_format_start() {
+    std::lock_guard<std::recursive_mutex> lock(Ps2MemoryCardFileSystem::getMcIoMutex());
     int ret = mcFormat(0, 0);
     if (ret < 0) {
         MC_LOG_ERROR("save", "[PS2] mcFormat start failed: %d\n", ret);
@@ -24,6 +28,7 @@ bool ps2_mc_format_start() {
 }
 
 int ps2_mc_format_poll(int* result_out) {
+    std::lock_guard<std::recursive_mutex> lock(Ps2MemoryCardFileSystem::getMcIoMutex());
     int cmd = 0, result = -1;
     int sync = mcSync(MC_NOWAIT, &cmd, &result);
     if (sync == 1) {
@@ -40,3 +45,4 @@ int ps2_mc_format_poll(int* result_out) {
 }
 
 #endif // PS2_PLATFORM
+

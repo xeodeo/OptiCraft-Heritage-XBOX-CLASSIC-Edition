@@ -209,6 +209,8 @@ void GameSettings::loadOptions()
 					key == "options.aspectRatio" || key == "options.aspectratio")
 					widescreen = value == "true";
 #endif
+				if (key == "splitscreenVertical")
+					splitscreenVertical = (value == "true");
 				for (int_t i = 0; i < (int_t)keyBindings.size(); i++)
 				{
 					if (key == "key_" + keyBindings[i]->keyDescription)
@@ -425,6 +427,7 @@ void GameSettings::saveOptions()
 	knownKeys.insert("options.aspectRatio");
 	knownKeys.insert("options.aspectratio");
 #endif
+	knownKeys.insert("splitscreenVertical");
 	platformGameSettingsAddKnownKeys(knownKeys);
 	for (KeyBinding *binding : keyBindings)
 		knownKeys.insert("key_" + binding->keyDescription);
@@ -494,6 +497,7 @@ void GameSettings::saveOptions()
 #if PLATFORM_HAS_ASPECT_RATIO_OPTION
 	printwriter << "widescreen:" << (widescreen ? "true" : "false") << "\n";
 #endif
+	printwriter << "splitscreenVertical:" << (splitscreenVertical ? "true" : "false") << "\n";
 	for (int_t i = 0; i < (int_t)keyBindings.size(); i++)
 		printwriter << "key_" << keyBindings[i]->keyDescription << ":" << keyBindings[i]->keyCode << "\n";
 	// --- OptiFine (mipmaps excluded) ---

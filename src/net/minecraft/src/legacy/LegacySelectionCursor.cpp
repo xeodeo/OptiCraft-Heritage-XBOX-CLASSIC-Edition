@@ -38,6 +38,7 @@ static void drawLegacyProceduralCursor(int_t centerX, int_t centerY, int_t size,
     const int_t cx = centerX;
     const int_t cy = centerY;
 
+    renderDisable(RenderCapability::DepthTest);
     renderEnable(RenderCapability::Blend);
     renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
     renderDisable(RenderCapability::Texture2D);
@@ -47,6 +48,7 @@ static void drawLegacyProceduralCursor(int_t centerX, int_t centerY, int_t size,
     // 1. Black outer cross and ring outline
     renderColor4f(0.0f, 0.0f, 0.0f, 1.0f);
     tess->startDrawingQuads();
+    tess->setColorRGBA_F(0.0f, 0.0f, 0.0f, 1.0f);
     emitQuad(tess, cx - 2, cy - r, cx + 2, cy + r, zLevel);
     emitQuad(tess, cx - r, cy - 2, cx + r, cy + 2, zLevel);
     emitQuad(tess, cx - 4, cy - 4, cx + 4, cy + 4, zLevel);
@@ -55,6 +57,7 @@ static void drawLegacyProceduralCursor(int_t centerX, int_t centerY, int_t size,
     // 2. White cross arms and surrounding ring
     renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     tess->startDrawingQuads();
+    tess->setColorRGBA_F(1.0f, 1.0f, 1.0f, 1.0f);
     emitQuad(tess, cx - 1, cy - r + 1, cx + 1, cy - 3, zLevel);
     emitQuad(tess, cx - 1, cy + 3, cx + 1, cy + r - 1, zLevel);
     emitQuad(tess, cx - r + 1, cy - 1, cx - 3, cy + 1, zLevel);
@@ -69,6 +72,7 @@ static void drawLegacyProceduralCursor(int_t centerX, int_t centerY, int_t size,
     // 3. Inner black square surrounding transparent center hole
     renderColor4f(0.0f, 0.0f, 0.0f, 1.0f);
     tess->startDrawingQuads();
+    tess->setColorRGBA_F(0.0f, 0.0f, 0.0f, 1.0f);
     emitQuad(tess, cx - 2, cy - 2, cx + 2, cy - 1, zLevel);
     emitQuad(tess, cx - 2, cy + 1, cx + 2, cy + 2, zLevel);
     emitQuad(tess, cx - 2, cy - 1, cx - 1, cy + 1, zLevel);

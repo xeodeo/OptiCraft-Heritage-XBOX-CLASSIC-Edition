@@ -84,6 +84,7 @@ public:
 	static EnumOptions *AF_LEVEL;
 	static EnumOptions *RENDER_DISTANCE_FINE;
 	static EnumOptions *RENDER_BACKEND;
+	static EnumOptions *SPLITSCREEN_LAYOUT;
 
 	static EnumOptions *getEnumOptions(int_t i);
 

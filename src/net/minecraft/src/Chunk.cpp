@@ -909,10 +909,17 @@ bool Chunk::setBlockIDWithMetadata(int_t i, int_t j, int_t k, int_t l, int_t i1)
 
 	++blockSectionRevision[j >> 4];
 	isModified = true;
+#if !PLATFORM_XBOX
+	// Xbox keeps the emptied section, as Minecraft 1.2.5 does: callers such as
+	// the random block tick hold section pointers across setBlock, and freeing
+	// it here left them reading deleted memory (crash in
+	// World::updateBlocksAndPlayCaveSounds). Empty sections are still skipped
+	// when the chunk is saved and dropped when it is loaded again.
 	if (l == 0 && section != nullptr && section->getIsEmpty())
 	{
 		clearBlockStorage(j >> 4);
 	}
+#endif
 #if PLATFORM_SAVE_RUNTIME_CHUNK_EDITS_ON_UNLOAD
 	if (worldObj == nullptr || !worldObj->isPopulationFastPathChunk(this))
 		markRuntimeSaveRequired();

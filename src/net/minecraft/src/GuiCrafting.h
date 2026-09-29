@@ -9,7 +9,7 @@ class World;
 class GuiCrafting : public GuiContainer
 {
 public:
-	GuiCrafting(InventoryPlayer *player, World *world, int_t x, int_t y, int_t z);
+	GuiCrafting(InventoryPlayer *player, World *world, int_t x, int_t y, int_t z, EntityPlayer *entityPlayer = nullptr);
 
 	void onGuiClosed() override;
 

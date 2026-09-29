@@ -2,6 +2,7 @@
 
 #include "platform/Log.h"
 #include "ps2/storage/save/Ps2MemoryCard.h"
+#include "ps2/storage/save/Ps2MemoryCardFileSystem.h"
 #include "ps2/system/Ps2Iop.h"
 
 #include <cstdio>
@@ -60,6 +61,7 @@ namespace Ps2MemoryCard
 
 bool probeWritable()
 {
+    std::lock_guard<std::recursive_mutex> lock(Ps2MemoryCardFileSystem::getMcIoMutex());
     const char* probeDirectory = "/__MCPEPROBE";
     const char* probeFile = "/__MCPEPROBE/p.bin";
 
@@ -119,6 +121,7 @@ bool probeWritable()
 
 bool initialize()
 {
+    std::lock_guard<std::recursive_mutex> lock(Ps2MemoryCardFileSystem::getMcIoMutex());
     Ps2Iop::initFileServices();
     Ps2Iop::ensureRomModule(Ps2Iop::RomModule::MemoryCardManager);
     Ps2Iop::ensureRomModule(Ps2Iop::RomModule::MemoryCardServer);
@@ -159,6 +162,7 @@ bool initialize()
 
 bool isFormatted()
 {
+    std::lock_guard<std::recursive_mutex> lock(Ps2MemoryCardFileSystem::getMcIoMutex());
     return s_format == MC_FORMATTED;
 }
 

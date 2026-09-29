@@ -61,6 +61,9 @@
 #include "platform/ExtendedProfiler.h"
 #include "Profiler.h"
 #include "platform/RenderTerrainAPI.h"
+#if PLATFORM_PS2
+#include "ps2/input/Ps2PadState.h"
+#endif
 
 // GLU replacement para gluPerspective
 #include <algorithm>
@@ -320,8 +323,10 @@ EntityRenderer::EntityRenderer(Minecraft* minecraft)
     fogColorBlue = 0.0f;
     fogColor2 = 0.0f;
     fogColor1 = 0.0f;
-    fovModifierHand = 1.0f;
-    fovModifierHandPrev = 1.0f;
+    fovModifierHand[0] = 1.0f;
+    fovModifierHand[1] = 1.0f;
+    fovModifierHandPrev[0] = 1.0f;
+    fovModifierHandPrev[1] = 1.0f;
     lightmapTexture = -1;
     lightmapColors.assign(256, static_cast<int_t>(0xff000000u));
     lightmapUpdateNeeded = true;
@@ -553,12 +558,21 @@ void EntityRenderer::enableLightmap(double)
 void EntityRenderer::updateRenderer()
 {
     updateTorchFlicker();
-    float targetFovMultiplier = 1.0f;
-    EntityPlayerSP *player = dynamic_cast<EntityPlayerSP *>(mc->renderViewEntity != nullptr ? mc->renderViewEntity : mc->thePlayer);
-    if (player != nullptr)
-        targetFovMultiplier = player->getFOVMultiplier();
-    fovModifierHandPrev = fovModifierHand;
-    fovModifierHand += (targetFovMultiplier - fovModifierHand) * 0.5f;
+    // Player 1 FOV smoothing
+    float targetFovMultiplier1 = 1.0f;
+    EntityPlayerSP *player1 = dynamic_cast<EntityPlayerSP *>(mc->thePlayerOne ? mc->thePlayerOne : mc->thePlayer);
+    if (player1 != nullptr)
+        targetFovMultiplier1 = player1->getFOVMultiplier();
+    fovModifierHandPrev[0] = fovModifierHand[0];
+    fovModifierHand[0] += (targetFovMultiplier1 - fovModifierHand[0]) * 0.5f;
+
+    // Player 2 FOV smoothing
+    float targetFovMultiplier2 = 1.0f;
+    EntityPlayerSP *player2 = dynamic_cast<EntityPlayerSP *>(mc->thePlayer2);
+    if (player2 != nullptr)
+        targetFovMultiplier2 = player2->getFOVMultiplier();
+    fovModifierHandPrev[1] = fovModifierHand[1];
+    fovModifierHand[1] += (targetFovMultiplier2 - fovModifierHand[1]) * 0.5f;
 
     // Interpolacion de niebla
     fogColor2 = fogColor1;
@@ -704,7 +718,8 @@ float EntityRenderer::getFOVModifier(float partialTicks, bool applyFovModifiers)
     if (applyFovModifiers)
     {
         fov += mc->gameSettings->fovSetting * 40.0f;
-        fov *= fovModifierHandPrev + (fovModifierHand - fovModifierHandPrev) * partialTicks;
+        const int pIdx = (mc->thePlayer2 != nullptr && mc->renderViewEntity == mc->thePlayer2) ? 1 : 0;
+        fov *= fovModifierHandPrev[pIdx] + (fovModifierHand[pIdx] - fovModifierHandPrev[pIdx]) * partialTicks;
     }
 
     // OptiFine 1.2.5 HD C6 (lr.java): hold the configured zoom binding,
@@ -859,7 +874,7 @@ void EntityRenderer::orientCamera(float partialTicks)
                       -1.0f, 0.0f, 0.0f);
         }
     }
-    else if (mc->gameSettings->thirdPersonView)
+    else if (mc->gameSettings->thirdPersonView && !mc->isSplitScreenActive())
     {
 #if PLATFORM_FLOAT_VERTEX_MATH
         float camDist = prevCameraDistance + (cameraDistance - prevCameraDistance) * partialTicks;
@@ -992,11 +1007,19 @@ void EntityRenderer::setupCameraTransform(float partialTicks, int anaglyphPass)
         mc->displayWidth, mc->displayHeight, mc->gameSettings->widescreen);
 #endif
 #if defined(PS2_PLATFORM)
-    if (mc->isSplitScreenActive() && mc->thePlayer2 != nullptr && mc->gameSettings->widescreen)
+    if (mc->isSplitScreenActive() && mc->thePlayer2 != nullptr)
     {
-        projectionAspect *= 2.0;
+        const bool verticalSplit = mc->gameSettings != nullptr && mc->gameSettings->splitscreenVertical;
+        if (mc->gameSettings->widescreen)
+        {
+            if (verticalSplit)
+                projectionAspect *= 0.5;
+            else
+                projectionAspect *= 2.0;
+        }
     }
 #endif
+    currentProjectionAspect = static_cast<float>(projectionAspect);
     
     renderMatrixMode(RenderMatrixMode::Projection);
     renderLoadIdentity();
@@ -1077,22 +1100,6 @@ void EntityRenderer::renderHand(float partialTicks, int anaglyphPass)
     if (debugViewDirection > 0)
         return;
 
-    // [WII 16:9] Utiliza projectionAspect idéntico al de la cámara del mundo para que la mano
-    // en primera persona no sufra ensanchamiento visual en modo panorámico.
-#if PLATFORM_FLOAT_VERTEX_MATH
-    float projectionAspect = static_cast<float>(ConsoleAspectRatio::getProjectionAspect(
-        mc->displayWidth, mc->displayHeight, mc->gameSettings->widescreen));
-#else
-    double projectionAspect = ConsoleAspectRatio::getProjectionAspect(
-        mc->displayWidth, mc->displayHeight, mc->gameSettings->widescreen);
-#endif
-#if defined(PS2_PLATFORM)
-    if (mc->isSplitScreenActive() && mc->thePlayer2 != nullptr && mc->gameSettings->widescreen)
-    {
-        projectionAspect *= 2.0;
-    }
-#endif
-
     renderMatrixMode(RenderMatrixMode::Projection);
     renderLoadIdentity();
 
@@ -1109,7 +1116,7 @@ void EntityRenderer::renderHand(float partialTicks, int anaglyphPass)
     }
 
     perspectiveGL(getFOVModifier(partialTicks, false),
-                  projectionAspect,
+                  currentProjectionAspect,
                   PLATFORM_NEAR_PLANE, farPlaneDistance * 2.0f);
 
     if (mc->playerController != nullptr && mc->playerController->func_35643_e())
@@ -1265,7 +1272,7 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
         if (cameraDt > PLATFORM_DIRECT_CAMERA_MAX_DT) cameraDt = PLATFORM_DIRECT_CAMERA_MAX_DT;
 
         const PlatformGamepadSnapshot pad = platformGamepadSnapshot(0);
-        if (pad.connected)
+        if (pad.connected && !mc->isPlayerScreenActive(0))
         {
             const float rx = pad.rightX;
             const float ry = pad.rightY;
@@ -1294,7 +1301,7 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
         if (mc->isSplitScreenActive() && mc->thePlayer2 != nullptr)
         {
             const PlatformGamepadSnapshot pad2 = platformGamepadSnapshot(1);
-            if (pad2.connected)
+            if (pad2.connected && !mc->isPlayerScreenActive(1))
             {
                 const float rx2 = pad2.rightX;
                 const float ry2 = pad2.rightY;
@@ -1481,9 +1488,11 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
 #endif
         renderClear(RenderClearMask::Depth);  // 256 = GL_DEPTH_BUFFER_BIT
 
-        XBOX_FRAME_SLOT_BEGIN(xboxScreen);
+#if PLATFORM_PS2
+        ps2SetMenuPad(mc->isScreenOwnedByPlayer2() ? 1 : 0);
+#endif
         mc->currentScreen->drawScreen(scaledMouseX, scaledMouseY, partialTicks);
-        XBOX_FRAME_SLOT_END(3, xboxScreen);
+
 
 #if PLATFORM_HAS_VIRTUAL_KEYBOARD
         // On-screen keyboard overlay (drawn on top of the focused text screen).
@@ -1496,6 +1505,9 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
         {
             mc->currentScreen->guiParticles->renderParticles(partialTicks);
         }
+#if PLATFORM_PS2
+        ps2SetMenuPad(0);
+#endif
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2
         platformProfileDrawCategory(PlatformDrawCategory::Gui, screenDrawStart);
 #endif
@@ -1512,7 +1524,9 @@ void EntityRenderer::renderSplitScreen(float partialTicks, int64_t renderTimeLim
 
     const int fullW = mc->displayWidth;
     const int fullH = mc->displayHeight;
-    const int halfH = fullH / 2;
+    const bool verticalSplit = mc->gameSettings != nullptr && mc->gameSettings->splitscreenVertical;
+    const int viewW = verticalSplit ? (fullW / 2) : fullW;
+    const int viewH = verticalSplit ? fullH : (fullH / 2);
 
     MovingObjectPosition *hr1 = nullptr;
 
@@ -1521,13 +1535,15 @@ void EntityRenderer::renderSplitScreen(float partialTicks, int64_t renderTimeLim
         EntityPlayerSP *lp = (i == 0) ? p1 : p2;
         mc->thePlayer = lp;
         mc->renderViewEntity = lp;
-        mc->displayHeight = halfH;
-        viewportOffsetY = i * halfH;
+        mc->displayWidth = viewW;
+        mc->displayHeight = viewH;
+        viewportOffsetX = verticalSplit ? (i * viewW) : 0;
+        viewportOffsetY = verticalSplit ? 0 : (i * viewH);
 
         if (itemRenderer != nullptr)
             itemRenderer->refreshItem();
 
-        renderViewport(0, viewportOffsetY, fullW, halfH);
+        renderViewport(viewportOffsetX, viewportOffsetY, viewW, viewH);
 
         getMouseOver(partialTicks);
         if (i == 0)
@@ -1544,10 +1560,7 @@ void EntityRenderer::renderSplitScreen(float partialTicks, int64_t renderTimeLim
 
         renderWorld(partialTicks, renderTimeLimitNano);
 
-        // This player's own screen (Legacy-style split screen): each one is
-        // sized for and drawn inside its half.
-        GuiScreen *screen = (i == 0) ? mc->player1Screen() : mc->player2Screen();
-        if (!mc->gameSettings->hideGUI || screen != nullptr)
+        if (!mc->gameSettings->hideGUI || mc->currentScreen != nullptr || mc->getPlayerScreen(i) != nullptr)
         {
             setupOverlayRendering();
             ScaledResolution scaledResolution(mc->gameSettings, mc->displayWidth, mc->displayHeight);
@@ -1562,26 +1575,46 @@ void EntityRenderer::renderSplitScreen(float partialTicks, int64_t renderTimeLim
             if (i == 1)
                 scaledMouseX = scaledMouseY = -1000;   // player 2 has no pointer
 
-            mc->ingameGUI->renderGameOverlay(partialTicks, screen != nullptr, scaledMouseX, scaledMouseY);
+            GuiScreen *pScreen = mc->getPlayerScreen(i);
+            const bool hasScreen = (mc->currentScreen != nullptr || pScreen != nullptr);
+            mc->ingameGUI->renderGameOverlay(partialTicks, hasScreen,
+                                             scaledMouseX, scaledMouseY);
 
-            if (screen != nullptr)
+            if (pScreen != nullptr)
             {
 #if PLATFORM_GUI_FORCE_DEPTH_DISABLED
                 renderDisable(RenderCapability::DepthTest);
 #endif
                 renderClear(RenderClearMask::Depth);
-                if (i == 1)
-                    mc->enterPlayer2Context();
-                screen->drawScreen(scaledMouseX, scaledMouseY, partialTicks);
-                if (screen->guiParticles != nullptr)
-                    screen->guiParticles->renderParticles(partialTicks);
-                if (i == 1)
-                    mc->leavePlayer2Context();
+
+#if PLATFORM_PS2
+                ps2SetMenuPad(i);
+#endif
+                const int curMouseX = static_cast<int>(mc->getPlayerCursorX(i));
+                const int curMouseY = static_cast<int>(mc->getPlayerCursorY(i));
+#if PLATFORM_XBOX
+                if (i == 1) mc->enterPlayer2Context();
+#endif
+                pScreen->drawScreen(curMouseX, curMouseY, partialTicks);
+
+                if (pScreen->guiParticles != nullptr)
+                {
+                    pScreen->guiParticles->renderParticles(partialTicks);
+                }
+#if PLATFORM_XBOX
+                if (i == 1) mc->leavePlayer2Context();
+#endif
             }
         }
     }
 
+#if PLATFORM_PS2
+    ps2SetMenuPad(0);
+#endif
+
+    viewportOffsetX = 0;
     viewportOffsetY = 0;
+    mc->displayWidth = fullW;
     mc->displayHeight = fullH;
     mc->thePlayer = entryPlayer;
     mc->renderViewEntity = p1;
@@ -1589,13 +1622,21 @@ void EntityRenderer::renderSplitScreen(float partialTicks, int64_t renderTimeLim
 
     renderViewport(0, 0, fullW, fullH);
 
-    // Render 2px black horizontal split divider bar
+    // Render 2px black divider bar between player viewports
     setupOverlayRendering();
     ScaledResolution fullResolution(mc->gameSettings, fullW, fullH);
     int guiW = fullResolution.getScaledWidth();
     int guiH = fullResolution.getScaledHeight();
-    int midY = guiH / 2;
-    Gui::drawRect(0, midY - 1, guiW, midY + 1, 0xFF000000);
+    if (verticalSplit)
+    {
+        int midX = guiW / 2;
+        Gui::drawRect(midX - 1, 0, midX + 1, guiH, 0xFF000000);
+    }
+    else
+    {
+        int midY = guiH / 2;
+        Gui::drawRect(0, midY - 1, guiW, midY + 1, 0xFF000000);
+    }
 }
 
 void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano)
@@ -1675,7 +1716,7 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
             }
         }
         
-        renderViewport(0, viewportOffsetY, mc->displayWidth, mc->displayHeight);
+        renderViewport(viewportOffsetX, viewportOffsetY, mc->displayWidth, mc->displayHeight);
         
         updateFogColor(partialTicks);
 
@@ -2420,7 +2461,7 @@ void EntityRenderer::renderRainSnow(float partialTicks)
 void EntityRenderer::setupOverlayRendering()
 {
     ScaledResolution scaledResolution(mc->gameSettings, mc->displayWidth, mc->displayHeight);
-	renderViewport(0, viewportOffsetY, mc->displayWidth, mc->displayHeight);
+	renderViewport(viewportOffsetX, viewportOffsetY, mc->displayWidth, mc->displayHeight);
 
     // Note for the Wii port: disabling GL_LIGHTING and GL_FOG here was tried, on
     // the theory that the native console lit pipeline (two colour channels, no normals in

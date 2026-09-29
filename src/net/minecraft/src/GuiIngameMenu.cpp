@@ -167,7 +167,9 @@ void GuiIngameMenu::actionPerformed(GuiButton *button)
 	if (button->id == 1 && mc->inPlayer2Context())
 	{
 		mc->displayGuiScreen(nullptr);
+#if PLATFORM_XBOX
 		XboxSplitScreen::requestLeave();
+#endif
 		return;
 	}
 	if (button->id == 1)

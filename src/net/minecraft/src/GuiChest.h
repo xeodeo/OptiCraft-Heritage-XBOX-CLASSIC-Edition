@@ -8,7 +8,7 @@ class IInventory;
 class GuiChest : public GuiContainer
 {
 public:
-	GuiChest(IInventory *upper, IInventory *lower);
+	GuiChest(IInventory *upper, IInventory *lower, EntityPlayer *player = nullptr);
 
 protected:
 	void drawGuiContainerForegroundLayer() override;

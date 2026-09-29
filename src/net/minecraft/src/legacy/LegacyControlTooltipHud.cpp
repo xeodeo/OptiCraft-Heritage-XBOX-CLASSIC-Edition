@@ -116,7 +116,7 @@ struct PromptRow
     }
 };
 
-PromptRow s_row;
+PromptRow s_rows[2];
 
 // True when the cached row can be drawn as it stands. The labels are read into
 // the row either way, so a miss leaves them already refreshed for the rebuild.
@@ -223,6 +223,9 @@ void drawRow(FontRenderer *font, PromptRow &row)
     if (visiblePromptCount(row.texts, PROMPT_COUNT) <= 0)
         return;
 
+    renderDisable(RenderCapability::DepthTest);
+    renderEnable(RenderCapability::Texture2D);
+
 #if PLATFORM_PS2 && PS2_CACHE_LEGACY_HINT_TEXT
     if (!row.capturedValid)
         (void)captureRow(font, row);
@@ -245,6 +248,9 @@ void LegacyControlTooltipHud::render(Minecraft *mc, int_t screenWidth, int_t scr
 
     const GameSettings &settings = *mc->gameSettings;
     FontRenderer *font = mc->fontRenderer;
+
+    const int playerIndex = (mc->isSplitScreenActive() && mc->thePlayer == mc->thePlayer2) ? 1 : 0;
+    PromptRow &s_row = s_rows[playerIndex];
 
     if (!refreshRowKey(mc, settings, font, s_row, screenWidth, screenHeight))
     {

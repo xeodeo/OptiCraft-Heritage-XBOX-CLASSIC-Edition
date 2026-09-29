@@ -229,6 +229,14 @@ void updateMenu(const Ps2PadSnapshot& primary, bool specializedMenuNavigation) {
         if (stickScroll <= 0.0f) { stickScroll = interval; lwjgl::Mouse::detail::pushWheel(rsv < 0.0f ? 1 : -1, cx, cy); }
     } else stickScroll = 0.0f;
 
+    static float bumperScroll = 0.0f;
+    if (p.held & (PAD_L1 | PAD_R1)) {
+        bool fire = (p.pressed & (PAD_L1 | PAD_R1)) != 0;
+        bumperScroll -= dt;
+        if (bumperScroll <= 0.0f) { fire = true; bumperScroll = 0.15f; }
+        if (fire) lwjgl::Mouse::detail::pushWheel((p.held & PAD_L1) ? 1 : -1, cx, cy);
+    } else bumperScroll = 0.0f;
+
     if (!specializedMenuNavigation)
     {
         if (p.pressed & PAD_CROSS) lwjgl::Mouse::detail::pushButton(0, true, cx, cy);
@@ -302,7 +310,7 @@ void updateGameplay(const Ps2PadSnapshot& p) {
     if (p.released & PAD_SELECT) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_F3, false);
 
     // Gameplay does not use text/menu latches. Clear them so they do not leak into menus.
-    ps2PadClearLatchedPressed();
+    ps2PadClearLatchedPressed(0);
 }
 }
 
@@ -311,7 +319,7 @@ void update(bool inMenu, bool specializedMenuNavigation) {
     const Ps2PadSnapshot& primary = ps2PadGetSnapshot(0);
     if (inMenu && !s_previousMenu) {
         releaseGameplayKeys();
-        ps2PadClearLatchedPressed();
+        ps2PadClearLatchedPressed(0);
         Ps2Pointer::enterMenu();
         MC_LOG_DEBUG("input", "[PS2] menu entered: specialized=%d pad=%d\n",
                      specializedMenuNavigation ? 1 : 0, primary.connected ? 1 : 0);
@@ -319,7 +327,7 @@ void update(bool inMenu, bool specializedMenuNavigation) {
     if (!inMenu && s_previousMenu) {
         s_cameraWarmup = CAMERA_WARMUP_FRAMES;
         lwjgl::Mouse::clearDeltas();
-        ps2PadClearLatchedPressed();
+        ps2PadClearLatchedPressed(0);
         Ps2Pointer::leaveMenu();
         MC_LOG_INFO("input", "[PS2] camera warmup: dropping stale mouse deltas\n");
     }

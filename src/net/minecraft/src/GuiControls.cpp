@@ -131,3 +131,8 @@ void GuiControls::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 	}
 	GuiScreen::drawScreen(mouseX, mouseY, partialTick);
 }
+
+bool GuiControls::isJavaUiKeyboardNavigationEnabled() const
+{
+	return buttonId < 0 && GuiScreen::isJavaUiKeyboardNavigationEnabled();
+}
