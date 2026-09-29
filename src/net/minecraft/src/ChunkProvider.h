@@ -72,6 +72,7 @@ public:
 	std::vector<SpawnListEntry> *getPossibleCreatures(const EnumCreatureType &type, int_t x, int_t y, int_t z) override;
 	ChunkPosition *findClosestStructure(World *world, const jstring &name, int_t x, int_t y, int_t z) override;
 	int_t   getLoadedChunkCount() const override { return (int_t)chunkMap.size(); }
+	bool    hasPendingAsyncWork() const;
 	std::uint32_t getChunkTopologyVersion() const override { return chunkTopologyVersion; }
 	bool isChunkPopulationPending(int_t i, int_t j) const override;
 	std::vector<Chunk *> getLoadedChunksSnapshot() const override { return chunkList; }

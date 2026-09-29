@@ -1399,10 +1399,14 @@ bool ChunkProvider::unload100OldestChunks()
 	if (JavaArithmetic::longSub(currentTimeMs, stat_lastLog) >= 5000LL)
 	{
 		int_t pendingCount = 0, completedCount = 0;
+		long_t workerMs = 0;
 		if (asyncGenerationScheduler != nullptr)
+		{
 			asyncGenerationScheduler->queueSizes(pendingCount, completedCount);
-		MC_LOG_INFO("xbox.async", "sync=%d async=%d queued=%d qFull=%d popN=%d adopted=%d pending=%d done=%d\n",
-			(int_t)stat_sync, (int_t)stat_async, (int_t)stat_alreadyQueued, (int_t)stat_queueFull, (int_t)stat_popNeighbour, (int_t)stat_adopted, (int_t)pendingCount, (int_t)completedCount);
+			workerMs = asyncGenerationScheduler->getAndResetWorkerTimeNs() / 1000000;
+		}
+		MC_LOG_INFO("xbox.async", "workerMs=%d sync=%d async=%d queued=%d qFull=%d popN=%d adopted=%d pending=%d done=%d\n",
+			(int_t)workerMs, (int_t)stat_sync, (int_t)stat_async, (int_t)stat_alreadyQueued, (int_t)stat_queueFull, (int_t)stat_popNeighbour, (int_t)stat_adopted, (int_t)pendingCount, (int_t)completedCount);
 		stat_sync = 0;
 		stat_async = 0;
 		stat_alreadyQueued = 0;
@@ -1689,3 +1693,16 @@ void ChunkProvider::removeEntityFromLoadedChunks(Entity *entity)
 
 
 
+
+bool ChunkProvider::hasPendingAsyncWork() const
+{
+#if PLATFORM_ASYNC_CHUNK_GENERATION
+	if (asyncGenerationScheduler == nullptr)
+		return false;
+	int_t pending = 0, completed = 0;
+	asyncGenerationScheduler->queueSizes(pending, completed);
+	return pending > 0;
+#else
+	return false;
+#endif
+}

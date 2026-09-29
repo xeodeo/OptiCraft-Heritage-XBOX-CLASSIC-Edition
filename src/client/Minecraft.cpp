@@ -1068,6 +1068,19 @@ void Minecraft::run()
                 }
 
                 checkGLError("Post render");
+
+#if PLATFORM_ASYNC_CHUNK_GENERATION
+                if (theWorld != nullptr && theWorld->getIChunkProvider() != nullptr)
+                {
+                    if (ChunkProvider* p = dynamic_cast<ChunkProvider*>(theWorld->getIChunkProvider()))
+                    {
+                        if (p->hasPendingAsyncWork())
+                        {
+                            PlatformCompat::delay(1);
+                        }
+                    }
+                }
+#endif
                 i++;
                 // With two players on one console a pause menu (either one's)
                 // must not stop the other player, as on the Legacy editions.

@@ -329,15 +329,17 @@ bool WorldRenderer::pcLegacyBuildRendererStep(int_t blockBudget)
             if ((sourceAvailability & sourceBit) != 0u)
                 continue;
 
-            worldObj->getChunkFromChunkCoords(ccx, ccz);
-            ++requestedDependencies;
-            pcLegacyStepDidWork = true;
-            if (requestedDependencies >= PC_LEGACY_RENDERER_DEPENDENCY_REQUESTS_PER_STEP)
-                return false;
+            Chunk* neighbor = worldObj->getChunkFromChunkCoords(ccx, ccz);
+            if (neighbor != nullptr && !neighbor->isEmptyChunk())
+            {
+                // Synchronously generated!
+            }
+            // If it returned a blankChunk, it is pending async generation.
+            // Do NOT stall this mesher queue waiting for it. The mesher will proceed
+            // without this neighbor. When the neighbor finally loads, it will flag
+            // this chunk for re-meshing anyway.
         }
     }
-    if (requestedDependencies > 0)
-        return false;
 
     if (!pcLegacyBuildActive)
     {

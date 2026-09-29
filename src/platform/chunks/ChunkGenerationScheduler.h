@@ -69,6 +69,7 @@ public:
     void complete(int_t x, int_t z);
     bool isWorkingOn(int_t x, int_t z) const;
     void queueSizes(int_t& pending, int_t& completed) const;
+    long_t getAndResetWorkerTimeNs();
 
 private:
     static std::uint64_t key(int_t x, int_t z);

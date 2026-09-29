@@ -6,6 +6,7 @@
 #include "net/minecraft/src/Chunk.h"
 #include "net/minecraft/src/IChunkProvider.h"
 #include "net/minecraft/src/ChunkProviderGenerate.h"
+#include "java/System.h"
 #include "net/minecraft/src/IntCache.h"
 #include "net/minecraft/src/McRegionChunkLoader.h"
 #include "net/minecraft/src/NBTTagCompound.h"
@@ -32,6 +33,7 @@ struct ChunkGenerationScheduler::Impl
     std::condition_variable wake;
     std::atomic_bool stop{false};
     PlatformThread thread;
+    std::atomic<long_t> workerTimeNs{0};
 };
 
 std::uint64_t ChunkGenerationScheduler::key(int_t x, int_t z)
@@ -218,6 +220,15 @@ bool ChunkGenerationScheduler::isWorkingOn(int_t x, int_t z) const
 #endif
 }
 
+
+long_t ChunkGenerationScheduler::getAndResetWorkerTimeNs()
+{
+#if PLATFORM_ASYNC_CHUNK_GENERATION
+    return impl_->workerTimeNs.exchange(0);
+#else
+    return 0;
+#endif
+}
 void ChunkGenerationScheduler::queueSizes(int_t& pending, int_t& completed) const
 {
 #if PLATFORM_ASYNC_CHUNK_GENERATION
@@ -290,6 +301,8 @@ void ChunkGenerationScheduler::runWorker()
             impl_->worker.pop_front();
 #endif
         }
+
+        const long_t stepStartNs = System::nanoTime();
 
         if (impl_->regionLoader != nullptr)
         {
@@ -375,6 +388,8 @@ void ChunkGenerationScheduler::runWorker()
         result.chunk = generated;
         std::lock_guard<std::mutex> guard(impl_->mutex);
         impl_->results.push_back(std::move(result));
+
+        impl_->workerTimeNs += (System::nanoTime() - stepStartNs);
     }
 
 #if PLATFORM_WII
