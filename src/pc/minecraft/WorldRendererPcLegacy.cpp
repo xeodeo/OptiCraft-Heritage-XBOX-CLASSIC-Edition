@@ -27,10 +27,7 @@
 #include "platform/PlatformTuning.h"
 #include "pc/tuning/PcLegacyTuning.h"
 #include "platform/RenderAPI.h"
-#if MC_LOG_LEVEL > 0
 #include "xbox/system/XboxWatchdog.h"
-#include "net/minecraft/src/ChunkProvider.h"
-#endif
 
 namespace
 {
@@ -334,17 +331,21 @@ bool WorldRenderer::pcLegacyBuildRendererStep(int_t blockBudget)
                 continue;
 
             XBOX_WATCHDOG_SUBPHASE("pcLegacyBuildStep", "getChunkFromChunkCoords");
-            Chunk* neighbor = worldObj->getChunkFromChunkCoords(ccx, ccz);
+            Chunk *neighbor = worldObj->getChunkFromChunkCoords(ccx, ccz);
+            ++requestedDependencies;
+            // Building against a missing column bakes air and wrong light into
+            // this section's border, and nothing rebuilds it once the column
+            // arrives, so wait for it as the stable build did. A column still
+            // pending on the async worker comes back blank: that was no real
+            // work, so the mesh budget moves on to other renderers meanwhile.
             if (neighbor != nullptr && !neighbor->isEmptyChunk())
-            {
-                // Synchronously generated!
-            }
-            // If it returned a blankChunk, it is pending async generation.
-            // Do NOT stall this mesher queue waiting for it. The mesher will proceed
-            // without this neighbor. When the neighbor finally loads, it will flag
-            // this chunk for re-meshing anyway.
+                pcLegacyStepDidWork = true;
+            if (requestedDependencies >= PC_LEGACY_RENDERER_DEPENDENCY_REQUESTS_PER_STEP)
+                return false;
         }
     }
+    if (requestedDependencies > 0)
+        return false;
 
     if (!pcLegacyBuildActive)
     {

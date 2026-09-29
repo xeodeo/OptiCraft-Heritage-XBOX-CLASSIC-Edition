@@ -12,9 +12,7 @@
 #include <intrin.h>
 #include <mmintrin.h>
 #include "platform/Log.h"
-#if MC_LOG_LEVEL > 0
 #include "xbox/system/XboxWatchdog.h"
-#endif
 #include "platform/Diagnostics.h"
 
 void xboxRenderMemoryStats(long* listKB, long* lists, long* textureKB, long* textures);

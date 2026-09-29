@@ -121,7 +121,7 @@ ChunkGenerationScheduler::RequestStatus ChunkGenerationScheduler::requestDetaile
     const std::uint64_t k = key(x, z);
     std::unique_lock<std::mutex> lock(impl_->mutex, std::try_to_lock);
     if (!lock.owns_lock())
-        return RequestStatus::AlreadyQueued; // Avoid blocking main thread
+        return RequestStatus::QueueFull; // Busy: retry next tick (never recorded as queued)
 
     if (impl_->queued.count(k) != 0)
         return RequestStatus::AlreadyQueued;

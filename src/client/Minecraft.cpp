@@ -3,9 +3,7 @@
 #include "net/minecraft/src/WorldInfo.h"
 #include "client/Minecraft.h"
 #include "platform/Log.h"
-#if MC_LOG_LEVEL > 0
 #include "xbox/system/XboxWatchdog.h"
-#endif
 #include "platform/ConsoleAspectRatio.h"
 #include "platform/PlatformTuning.h"
 #include "platform/PlatformCompat.h"
@@ -890,9 +888,7 @@ void Minecraft::run()
 
     PLATFORM_BOOT_LOG(PLATFORM_BOOT_PREFIX " run() begin\n");
 
-#if MC_LOG_LEVEL > 0
     XboxWatchdog_Init();
-#endif
 
     try
     {
@@ -925,7 +921,7 @@ void Minecraft::run()
 
         while (running)
         {
-#if MC_LOG_LEVEL > 0
+#if XBOX_WATCHDOG_ENABLED
             g_mainFrameCount++;
             g_mainPhase = "frameBegin";
             g_mainSubphase = "-";
@@ -1089,7 +1085,7 @@ void Minecraft::run()
 
                 checkGLError("Post render");
 
-#if PLATFORM_ASYNC_CHUNK_GENERATION
+#if PLATFORM_ASYNC_CHUNK_GENERATION && PLATFORM_XBOX
                 if (theWorld != nullptr && theWorld->getIChunkProvider() != nullptr)
                 {
                     if (ChunkProvider* p = dynamic_cast<ChunkProvider*>(theWorld->getIChunkProvider()))

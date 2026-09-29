@@ -960,7 +960,15 @@ Chunk *ChunkProvider::provideChunk(int_t i, int_t j)
 			if (!critical && asyncGenerationScheduler != nullptr && asyncGenerationScheduler->active())
 			{
 				if (asyncRequestedChunks.count(key) != 0)
-					return blankChunk; // Avoid repeatedly asking the scheduler
+				{
+					// Avoid repeatedly asking the scheduler. A job the worker
+					// dropped without a result (dispatch filter, failed
+					// generation) is no longer queued there: forget it and ask
+					// again, or the column would stay blank for good.
+					if (asyncGenerationScheduler->isWorkingOn(i, j))
+						return blankChunk;
+					asyncRequestedChunks.erase(key);
+				}
 
 				const ChunkRequestStatus requestStatus = requestChunkDetailed(i, j);
 				if (requestStatus == ChunkRequestStatus::Accepted)

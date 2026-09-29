@@ -1,6 +1,6 @@
 #include "XboxWatchdog.h"
 
-#if MC_LOG_LEVEL > 0
+#if XBOX_WATCHDOG_ENABLED
 
 #include "platform/Log.h"
 #include "platform/PlatformCompat.h"

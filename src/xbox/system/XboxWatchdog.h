@@ -1,8 +1,17 @@
 #pragma once
 #include <cstdint>
 #include "java/Type.h"
+#include "platform/PlatformConfig.h"
 
-#if MC_LOG_LEVEL > 0
+// Only the Xbox log builds carry the watchdog. Everywhere else (xbox-public,
+// PC, Wii, PS2) the macros below compile to nothing.
+#if PLATFORM_XBOX && MC_LOG_LEVEL > 0
+#  define XBOX_WATCHDOG_ENABLED 1
+#else
+#  define XBOX_WATCHDOG_ENABLED 0
+#endif
+
+#if XBOX_WATCHDOG_ENABLED
 
 extern const char* volatile g_mainPhase;
 extern const char* volatile g_mainSubphase;
