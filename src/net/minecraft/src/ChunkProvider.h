@@ -143,6 +143,10 @@ private:
 	bool  generationCenterInitialized;
 #endif
 
+#if PLATFORM_ASYNC_CHUNK_GENERATION
+	std::unordered_set<std::uint64_t> asyncRequestedChunks;
+#endif
+
 	std::unordered_set<std::uint64_t>       droppedChunksSet;
 	Chunk                                *blankChunk;       // field_28064_b
 	IChunkProvider                       *chunkProvider;

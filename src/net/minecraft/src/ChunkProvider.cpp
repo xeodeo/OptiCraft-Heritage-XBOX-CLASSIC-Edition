@@ -447,6 +447,7 @@ bool ChunkProvider::drainAsyncGeneratedChunks(int_t budget)
 			break;
 
 		const std::uint64_t key = chunkKey(result.x, result.z);
+		asyncRequestedChunks.erase(key);
 		const bool wanted = chunkMap.count(key) == 0
 			&& (worldObj == nullptr || worldObj->findingSpawnPoint || canChunkExist(result.x, result.z));
 
@@ -498,24 +499,7 @@ bool ChunkProvider::drainAsyncGeneratedChunks(int_t budget)
 			stat_adopted++;
 #endif
 			published = true;
-			chunkMap[key] = chunk;
-			markChunkTopologyChanged();
-			chunkList.push_back(chunk);
-			chunk->lastAccessTick = currentWorldTime();
-			if (chunk != blankChunk)
-			{
-				chunk->onChunkLoadData();
-				chunk->onChunkLoad();
-				notifyChunkPublished(chunk);
-#if PLATFORM_DEFERRED_POPULATE
-				const int_t westX = JavaArithmetic::intSub(result.x, 1);
-				const int_t northZ = JavaArithmetic::intSub(result.z, 1);
-				enqueuePopulate(result.x, result.z);
-				enqueuePopulate(westX, result.z);
-				enqueuePopulate(result.x, northZ);
-				enqueuePopulate(westX, northZ);
-#endif
-			}
+			publishPreparedChunk(result.x, result.z, chunk);
 		}
 
 		delete result.chunk;
@@ -527,7 +511,7 @@ bool ChunkProvider::drainAsyncGeneratedChunks(int_t budget)
 
 void ChunkProvider::publishPreparedChunk(int_t i, int_t j, Chunk *chunk)
 {
-	if (chunk == nullptr)
+	if (chunk == nullptr || chunk == blankChunk)
 		return;
 
 	const std::uint64_t key = chunkKey(i, j);
@@ -539,12 +523,8 @@ void ChunkProvider::publishPreparedChunk(int_t i, int_t j, Chunk *chunk)
 	chunk->onChunkLoad();
 
 #if PLATFORM_BOUNDED_WORLD
-	if (chunk != blankChunk)
-		notifyChunkPublished(chunk);
+	notifyChunkPublished(chunk);
 #endif
-
-	if (chunk == blankChunk)
-		return;
 
 	const int_t eastX = JavaArithmetic::intAdd(i, 1);
 	const int_t westX = JavaArithmetic::intSub(i, 1);
@@ -965,9 +945,13 @@ Chunk *ChunkProvider::provideChunk(int_t i, int_t j)
 			// published on a later tick.
 			if (!critical && asyncGenerationScheduler != nullptr && asyncGenerationScheduler->active())
 			{
+				if (asyncRequestedChunks.count(key) != 0)
+					return blankChunk; // Avoid repeatedly asking the scheduler
+
 				const ChunkRequestStatus requestStatus = requestChunkDetailed(i, j);
 				if (requestStatus == ChunkRequestStatus::Accepted)
 				{
+					asyncRequestedChunks.insert(key);
 #if MC_LOG_LEVEL > 0
 					stat_async++;
 #endif
@@ -975,6 +959,7 @@ Chunk *ChunkProvider::provideChunk(int_t i, int_t j)
 				}
 				else if (requestStatus == ChunkRequestStatus::AlreadyQueued)
 				{
+					asyncRequestedChunks.insert(key);
 #if MC_LOG_LEVEL > 0
 					stat_alreadyQueued++;
 #endif

@@ -74,6 +74,14 @@ namespace
                     cachedChunkZ = chunkZ;
                     cacheValid = true;
                     cachedChunk = world->getChunkIfExists(chunkX, chunkZ);
+#if PLATFORM_ASYNC_CHUNK_GENERATION
+                    if (cachedChunk == nullptr)
+                    {
+                        cachedChunk = world->getChunkFromChunkCoords(chunkX, chunkZ);
+                        if (cachedChunk != nullptr && cachedChunk->isEmptyChunk())
+                            cachedChunk = nullptr;
+                    }
+#endif
                 }
 
                 if (cachedChunk == nullptr)
