@@ -27,6 +27,9 @@
 #include "platform/PlatformTuning.h"
 #include "pc/tuning/PcLegacyTuning.h"
 #include "platform/RenderAPI.h"
+#if MC_LOG_LEVEL > 0
+#include "xbox/system/XboxWatchdog.h"
+#endif
 
 namespace
 {
@@ -329,6 +332,7 @@ bool WorldRenderer::pcLegacyBuildRendererStep(int_t blockBudget)
             if ((sourceAvailability & sourceBit) != 0u)
                 continue;
 
+            XBOX_WATCHDOG_SUBPHASE("pcLegacyBuildStep", "getChunkFromChunkCoords");
             Chunk* neighbor = worldObj->getChunkFromChunkCoords(ccx, ccz);
             if (neighbor != nullptr && !neighbor->isEmptyChunk())
             {

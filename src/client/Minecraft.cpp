@@ -3,6 +3,9 @@
 #include "net/minecraft/src/WorldInfo.h"
 #include "client/Minecraft.h"
 #include "platform/Log.h"
+#if MC_LOG_LEVEL > 0
+#include "xbox/system/XboxWatchdog.h"
+#endif
 #include "platform/ConsoleAspectRatio.h"
 #include "platform/PlatformTuning.h"
 #include "platform/PlatformCompat.h"
@@ -887,6 +890,10 @@ void Minecraft::run()
 
     PLATFORM_BOOT_LOG(PLATFORM_BOOT_PREFIX " run() begin\n");
 
+#if MC_LOG_LEVEL > 0
+    XboxWatchdog_Init();
+#endif
+
     try
     {
         startGame();
@@ -918,6 +925,11 @@ void Minecraft::run()
 
         while (running)
         {
+#if MC_LOG_LEVEL > 0
+            g_mainFrameCount++;
+            g_mainPhase = "frameBegin";
+            g_mainSubphase = "-";
+#endif
             try
             {
                 const long_t clientFrameStartNs = System::nanoTime();
@@ -972,13 +984,17 @@ void Minecraft::run()
                 renderEnable(RenderCapability::Texture2D);
 
                 const long_t clientLightingStartNs = System::nanoTime();
+                XBOX_WATCHDOG_PHASE("light");
                 if (theWorld != nullptr)
                     theWorld->updatingLighting();
                 ClientProfiler::lighting(System::nanoTime() - clientLightingStartNs);
 
                 const long_t swapStartNs = System::nanoTime();
                 if (!lwjgl::Keyboard::isKeyDown(0x41))
+                {
+                    XBOX_WATCHDOG_PHASE("display_normal");
                     lwjgl::Display::update();
+                }
                 ClientProfiler::displayUpdate(System::nanoTime() - swapStartNs);
                 const long_t swapEndNs = System::nanoTime();
                 cpuGpuSwapNs += swapEndNs - swapStartNs;
@@ -998,6 +1014,7 @@ void Minecraft::run()
                         validateProcessHeap("before world render");
 
                     const long_t clientRenderStartNs = System::nanoTime();
+                    XBOX_WATCHDOG_PHASE("render");
                     entityRenderer->updateCameraAndRender(timer->renderPartialTicks);
                     clientRenderNs = System::nanoTime() - clientRenderStartNs;
                     ClientProfiler::render(clientRenderNs);
@@ -1051,7 +1068,10 @@ void Minecraft::run()
                 renderSubmitFrame();
 
                 if (lwjgl::Keyboard::isKeyDown(0x41))
+                {
+                    XBOX_WATCHDOG_PHASE("display_held");
                     lwjgl::Display::update();
+                }
 
                 screenshotListener();
 
@@ -1980,6 +2000,7 @@ void Minecraft::runTick()
             {
                 joinPlayerCounter = 0;
                 clientPhaseStartNs = System::nanoTime();
+                XBOX_WATCHDOG_PHASE("joinChunks");
                 theWorld->joinEntityInSurroundings(thePlayer);
                 ClientProfiler::tickPhase("joinChunks", System::nanoTime() - clientPhaseStartNs);
             }
@@ -1994,6 +2015,7 @@ void Minecraft::runTick()
         if (!isGamePaused)
         {
             clientPhaseStartNs = System::nanoTime();
+            XBOX_WATCHDOG_PHASE("erTick");
             entityRenderer->updateRenderer();
             ClientProfiler::tickPhase("erTick", System::nanoTime() - clientPhaseStartNs);
         }
@@ -2004,6 +2026,7 @@ void Minecraft::runTick()
             if (theWorld->field_27172_i > 0)
                 theWorld->field_27172_i--;
             clientPhaseStartNs = System::nanoTime();
+            XBOX_WATCHDOG_PHASE("entities");
             theWorld->updateEntities();
             ClientProfiler::tickPhase("entities", System::nanoTime() - clientPhaseStartNs);
 #if defined(PS2_PLATFORM)
@@ -2016,6 +2039,7 @@ void Minecraft::runTick()
         {
             theWorld->setAllowedMobSpawns(theWorld->difficultySetting > 0, true);
             clientPhaseStartNs = System::nanoTime();
+            XBOX_WATCHDOG_PHASE("worldTick");
             theWorld->tick();
             ClientProfiler::tickPhase("worldTick", System::nanoTime() - clientPhaseStartNs);
         }

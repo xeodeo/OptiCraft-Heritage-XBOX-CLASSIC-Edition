@@ -12,6 +12,9 @@
 #include <intrin.h>
 #include <mmintrin.h>
 #include "platform/Log.h"
+#if MC_LOG_LEVEL > 0
+#include "xbox/system/XboxWatchdog.h"
+#endif
 #include "platform/Diagnostics.h"
 
 void xboxRenderMemoryStats(long* listKB, long* lists, long* textureKB, long* textures);
@@ -77,6 +80,7 @@ void swapBuffers() {
     const unsigned long long presentStart = __rdtsc();
 #endif
     if (g_pD3DDevice) {
+        XBOX_WATCHDOG_SUBPHASE("Display::update", "Present");
         // 30 FPS option (limitFramerate 2): at least two vblanks between
         // presents. Waiting here, instead of switching the presentation
         // interval, takes effect (and reverts) immediately.
@@ -139,6 +143,7 @@ void swapBuffers() {
 }
 
 void update(bool doProcessMessages) {
+    XBOX_WATCHDOG_PHASE("Display::update");
     swapBuffers();
     if (doProcessMessages)
         processMessages();
