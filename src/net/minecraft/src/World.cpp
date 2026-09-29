@@ -636,10 +636,10 @@ void World::generateSpawnPoint()
 
     if (isLimitedWorld())
     {
-        if (spawnX < -100) spawnX = -100;
-        else if (spawnX > 100) spawnX = 100;
-        if (spawnZ < -100) spawnZ = -100;
-        else if (spawnZ > 100) spawnZ = 100;
+        if (spawnX < -64) spawnX = -64;
+        else if (spawnX > 64) spawnX = 64;
+        if (spawnZ < -64) spawnZ = -64;
+        else if (spawnZ > 64) spawnZ = 64;
     }
 
 #if defined(PS2_PLATFORM)
@@ -6171,6 +6171,11 @@ WorldInfo* World::getWorldInfo()
 bool World::isLimitedWorld() const
 {
     return worldInfo != nullptr && worldInfo->isLimitedWorld();
+}
+
+bool World::isIslandWorld() const
+{
+    return worldInfo != nullptr && worldInfo->isIslandWorld();
 }
 
 

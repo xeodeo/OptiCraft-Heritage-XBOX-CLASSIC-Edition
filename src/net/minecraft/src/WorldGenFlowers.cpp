@@ -15,7 +15,8 @@ bool WorldGenFlowers::generate(World *world, Random &random, int_t i, int_t j, i
 	// plantBlockId is fixed for the generator's lifetime; the cast was inside
 	// the loop, once per attempt.
 	BlockFlower *flower = dynamic_cast<BlockFlower *>(Block::blocksList[plantBlockId]);
-	for (int_t l = 0; l < PLATFORM_FLOWER_PLACEMENT_ATTEMPTS; l++)
+	const int_t maxAttempts = (world != nullptr && world->isIslandWorld()) ? 48 : PLATFORM_FLOWER_PLACEMENT_ATTEMPTS;
+	for (int_t l = 0; l < maxAttempts; l++)
 	{
 		int_t i1 = random.nextIntOffset(i, 8);
 		int_t j1 = random.nextIntOffset(j, 4);

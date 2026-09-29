@@ -9,7 +9,7 @@ class TileEntityDispenser;
 class GuiDispenser : public GuiContainer
 {
 public:
-	GuiDispenser(InventoryPlayer *player, TileEntityDispenser *dispenser);
+	GuiDispenser(InventoryPlayer *player, TileEntityDispenser *dispenser, EntityPlayer *entityPlayer = nullptr);
 
 protected:
 	void drawGuiContainerForegroundLayer() override;

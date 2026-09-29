@@ -9,8 +9,8 @@
 #include "EntityPlayerSP.h"
 #include "platform/RenderAPI.h"
 
-GuiCrafting::GuiCrafting(InventoryPlayer *player, World *world, int_t x, int_t y, int_t z)
-	: GuiContainer(new ContainerWorkbench(player, world, x, y, z), true)
+GuiCrafting::GuiCrafting(InventoryPlayer *player, World *world, int_t x, int_t y, int_t z, EntityPlayer *entityPlayer)
+	: GuiContainer(new ContainerWorkbench(player, world, x, y, z), true, (entityPlayer != nullptr) ? entityPlayer : (player != nullptr ? player->player : nullptr))
 {
 }
 

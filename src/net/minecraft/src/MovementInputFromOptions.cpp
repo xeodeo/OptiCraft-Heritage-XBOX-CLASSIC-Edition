@@ -52,20 +52,30 @@ void MovementInputFromOptions::updatePlayerMoveState(EntityPlayer *entityplayer)
     moveStrafe = 0.0f;
     moveForward = 0.0f;
 
+    Minecraft *minecraft = Minecraft::getMinecraft();
+
     if (padPort == 0)
     {
-        if (gameSettings->keyBindForward->pressed) moveForward++;
-        if (gameSettings->keyBindBack->pressed) moveForward--;
-        if (gameSettings->keyBindLeft->pressed) moveStrafe++;
-        if (gameSettings->keyBindRight->pressed) moveStrafe--;
-        jump = gameSettings->keyBindJump->pressed;
-        sneak = gameSettings->keyBindSneak->pressed;
+        if (minecraft != nullptr && minecraft->isPlayerScreenActive(0))
+        {
+            jump = false;
+            sneak = false;
+        }
+        else
+        {
+            if (gameSettings->keyBindForward->pressed) moveForward++;
+            if (gameSettings->keyBindBack->pressed) moveForward--;
+            if (gameSettings->keyBindLeft->pressed) moveStrafe++;
+            if (gameSettings->keyBindRight->pressed) moveStrafe--;
+            jump = gameSettings->keyBindJump->pressed;
+            sneak = gameSettings->keyBindSneak->pressed;
+        }
     }
     else
     {
 #ifdef PS2_PLATFORM
         const Ps2PadSnapshot &ps2Snap = ps2PadGetSnapshot(1);
-        if (ps2Snap.connected)
+        if (ps2Snap.connected && !(minecraft != nullptr && minecraft->isPlayerScreenActive(1)))
         {
             jump = (ps2Snap.held & PS2_PAD_CROSS) != 0;
             sneak = (ps2Snap.held & PS2_PAD_R3) != 0;
@@ -112,9 +122,12 @@ void MovementInputFromOptions::updatePlayerMoveState(EntityPlayer *entityplayer)
 
 #if PLATFORM_DIRECT_ANALOG_MOVEMENT
     const PlatformGamepadSnapshot pad = platformGamepadSnapshot(padPort);
-    Minecraft *minecraft = Minecraft::getMinecraft();
     bool gameplayInput = true;
-    if (minecraft != nullptr && minecraft->currentScreen != nullptr)
+    if (minecraft != nullptr && minecraft->isPlayerScreenActive(padPort))
+    {
+        gameplayInput = false;
+    }
+    else if (minecraft != nullptr && minecraft->currentScreen != nullptr)
     {
         if (minecraft->currentScreen->doesGuiPauseGame())
         {

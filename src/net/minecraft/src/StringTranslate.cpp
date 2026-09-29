@@ -231,6 +231,14 @@ std::string StringTranslate::translateUi(const std::string &english)
         ? "..." : (english.size() >= 2 && english.compare(english.size() - 2, 2, ": ") == 0 ? ": " : "");
     if (!suffix.empty())
         return translateUi(english.substr(0, english.size() - suffix.size())) + suffix;
+    if (currentLanguage.rfind("es_", 0) == 0)
+    {
+        if (english == "Split Screen") return "Pantalla dividida";
+        if (english == "Horizontal") return "Horizontal";
+        if (english == "Vertical") return "Vertical";
+        if (english == "Toggle") return "Alternar";
+        if (english == "Delete") return "Eliminar";
+    }
     return english;
 }
 

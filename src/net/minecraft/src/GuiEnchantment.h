@@ -14,7 +14,7 @@ class World;
 class GuiEnchantment : public GuiContainer
 {
 public:
-    GuiEnchantment(InventoryPlayer *inventory, World *world, int_t x, int_t y, int_t z);
+    GuiEnchantment(InventoryPlayer *inventory, World *world, int_t x, int_t y, int_t z, EntityPlayer *entityPlayer = nullptr);
     ~GuiEnchantment() override;
 
     void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;

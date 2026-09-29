@@ -1,9 +1,9 @@
 #include "WorldSettings.h"
 
 WorldSettings::WorldSettings(int64_t worldSeed, int_t type, bool featuresEnabled,
-                             bool hardcore, WorldType *worldType, bool limited) :
+                             bool hardcore, WorldType *worldType, bool limited, bool island) :
 	seed(worldSeed), gameType(type), mapFeaturesEnabled(featuresEnabled),
-	hardcoreEnabled(hardcore), terrainType(worldType), limitedWorld(limited)
+	hardcoreEnabled(hardcore), terrainType(worldType), limitedWorld(limited), islandWorld(island)
 {
 }
 
@@ -35,5 +35,10 @@ WorldType *WorldSettings::getTerrainType() const
 bool WorldSettings::isLimitedWorld() const
 {
 	return limitedWorld;
+}
+
+bool WorldSettings::isIslandWorld() const
+{
+	return islandWorld;
 }
 

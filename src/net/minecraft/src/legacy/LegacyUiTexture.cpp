@@ -60,6 +60,8 @@ void legacyDrawUiTexture(int_t texture, int_t x, int_t y, int_t width, int_t hei
     if (texture < 0 || width <= 0 || height <= 0)
         return;
 
+    renderDisable(RenderCapability::DepthTest);
+    renderEnable(RenderCapability::Texture2D);
     renderBindTexture(texture);
     renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     renderEnable(RenderCapability::Blend);
@@ -67,6 +69,7 @@ void legacyDrawUiTexture(int_t texture, int_t x, int_t y, int_t width, int_t hei
 
     Tessellator *tess = &Tessellator::instance;
     tess->startDrawingQuads();
+    tess->setColorRGBA_F(1.0f, 1.0f, 1.0f, 1.0f);
     tess->setColorOpaque_I(0xffffff);
     tess->addVertexWithUV(x, y + height, zLevel, 0.0, 1.0);
     tess->addVertexWithUV(x + width, y + height, zLevel, 1.0, 1.0);
@@ -91,6 +94,8 @@ void legacyDrawUiTextureNineSlice(int_t texture, int_t x, int_t y, int_t width, 
     const double ux[4] = { 0.0, (double)border / spriteWidth, 1.0 - (double)border / spriteWidth, 1.0 };
     const double uy[4] = { 0.0, (double)border / spriteHeight, 1.0 - (double)border / spriteHeight, 1.0 };
 
+    renderDisable(RenderCapability::DepthTest);
+    renderEnable(RenderCapability::Texture2D);
     renderBindTexture(texture);
     renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     renderEnable(RenderCapability::Blend);
@@ -98,6 +103,7 @@ void legacyDrawUiTextureNineSlice(int_t texture, int_t x, int_t y, int_t width, 
 
     Tessellator *tess = &Tessellator::instance;
     tess->startDrawingQuads();
+    tess->setColorRGBA_F(1.0f, 1.0f, 1.0f, 1.0f);
     tess->setColorOpaque_I(0xffffff);
     for (int_t row = 0; row < 3; ++row)
     {

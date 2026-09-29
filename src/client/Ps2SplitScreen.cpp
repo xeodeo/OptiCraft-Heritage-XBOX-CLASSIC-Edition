@@ -6,11 +6,14 @@
 #include "net/minecraft/src/EntityPlayerSP.h"
 #include "net/minecraft/src/World.h"
 #include "net/minecraft/src/WorldInfo.h"
+#include "net/minecraft/src/NBTTagCompound.h"
 #include "net/minecraft/src/WorldProvider.h"
 #include "net/minecraft/src/Session.h"
 #include "net/minecraft/src/MovementInputFromOptions.h"
+#include "net/minecraft/src/GameSettings.h"
 #include "net/minecraft/src/skin/SkinManager.h"
 #include "net/minecraft/src/GuiInventory.h"
+#include "net/minecraft/src/GuiContainerCreative.h"
 #include "net/minecraft/src/GuiIngame.h"
 #include "net/minecraft/src/InventoryPlayer.h"
 #include "net/minecraft/src/FoodStats.h"
@@ -20,7 +23,11 @@
 #include "net/minecraft/src/StringTranslate.h"
 #include "net/minecraft/src/MovingObjectPosition.h"
 #include "platform/Input.h"
+#if defined(PS2_PLATFORM)
 #include "ps2/input/Ps2PadState.h"
+#elif defined(XBOX_PLATFORM)
+#include "xbox/input/XboxPad.h"
+#endif
 
 #include <cmath>
 
@@ -29,6 +36,59 @@ namespace Ps2SplitScreen
 
 static constexpr float SPLITSCREEN_MAX_DIST = 32.0f;
 static Session s_sessionP2("Player 2", "");
+
+// ── Platform abstraction ──────────────────────────────────────────────────
+// In tick() we use PS2_PAD_* constants throughout. On Xbox we alias
+// them onto the corresponding XboxPad snapshot fields/bits.
+#if defined(XBOX_PLATFORM)
+
+// Button aliases: PS2 -> Xbox (from ENCARGO §Parte B)
+//   Cross->A, Circle->B, Square->X, Triangle->Y
+//   L1/R1->White/Black,  L2/R2->LT/RT
+//   R3->RIGHT_THUMB, Start->START, Select->BACK
+static constexpr unsigned short PS2_PAD_CROSS    = XBOX_PAD_A;
+static constexpr unsigned short PS2_PAD_CIRCLE   = XBOX_PAD_B;
+static constexpr unsigned short PS2_PAD_SQUARE   = XBOX_PAD_X;
+static constexpr unsigned short PS2_PAD_TRIANGLE = XBOX_PAD_Y;
+static constexpr unsigned short PS2_PAD_L1       = XBOX_PAD_WHITE;
+static constexpr unsigned short PS2_PAD_R1       = XBOX_PAD_BLACK;
+static constexpr unsigned short PS2_PAD_L2       = XBOX_PAD_LT;
+static constexpr unsigned short PS2_PAD_R2       = XBOX_PAD_RT;
+static constexpr unsigned short PS2_PAD_R3       = XBOX_PAD_RIGHT_THUMB;
+static constexpr unsigned short PS2_PAD_START    = XBOX_PAD_START;
+static constexpr unsigned short PS2_PAD_SELECT   = XBOX_PAD_BACK;
+
+// Snapshot wrapper (same fields as Ps2PadSnapshot)
+struct Ps2PadSnapshot {
+    bool  connected;
+    float leftX, leftY, rightX, rightY;
+    unsigned short held, pressed, released;
+};
+
+static Ps2PadSnapshot ps2PadGetSnapshot(int port)
+{
+    const XboxPadSnapshot &x = XboxPad::playerSnapshot(port);
+    Ps2PadSnapshot s;
+    s.connected = x.connected;
+    s.leftX     = x.leftX;   s.leftY  = x.leftY;
+    s.rightX    = x.rightX;  s.rightY = x.rightY;
+    s.held      = x.held;
+    s.pressed   = x.pressed;
+    s.released  = x.released;
+    return s;
+}
+
+// leavePlayer2: menu pad routing
+static void platformSetMenuPad(int port)     { XboxPad::setMenuPlayer(port); }
+static void platformClearMenuPad()           { XboxPad::setMenuPlayer(0); }
+
+#else  // PS2_PLATFORM
+
+static void platformSetMenuPad(int port)     { ps2SetMenuPad(port); ps2SetMenuOwnerPad(port); }
+static void platformClearMenuPad()           { ps2SetMenuPad(0); ps2SetMenuOwnerPad(-1); }
+
+#endif // XBOX_PLATFORM / PS2_PLATFORM
+// ── End platform abstraction ──────────────────────────────────────────────
 
 static bool isSpanishLanguage()
 {
@@ -50,9 +110,9 @@ void joinPlayer2(Minecraft *mc)
         if (mc->ingameGUI != nullptr)
         {
             if (isSpanishLanguage())
-                mc->ingameGUI->addChatMessage("\xc2\xa7" "c[Pantalla Dividida] Solo disponible en mundos Clasicos (256x256).");
+                mc->ingameGUI->addChatMessage("\xc2\xa7" "c[Pantalla Dividida] Solo disponible en mundos Antiguos (256x256).");
             else
-                mc->ingameGUI->addChatMessage("\xc2\xa7" "c[Split-Screen] Only available in Classic (256x256) worlds.");
+                mc->ingameGUI->addChatMessage("\xc2\xa7" "c[Split-Screen] Only available in Old (256x256) worlds.");
         }
         return;
     }
@@ -70,20 +130,57 @@ void joinPlayer2(Minecraft *mc)
         p2->setEntityTexture(skinP2);
     }
 
-    p2->setLocationAndAngles(
-        mc->thePlayer->posX + 1.0,
-        mc->thePlayer->posY,
-        mc->thePlayer->posZ + 1.0,
-        mc->thePlayer->rotationYaw,
-        mc->thePlayer->rotationPitch
-    );
+    bool loadedSavedData = false;
+    if (mc->theWorld != nullptr && mc->theWorld->getWorldInfo() != nullptr)
+    {
+        NBTTagCompound *p2Tag = mc->theWorld->getWorldInfo()->getPlayer2NBTTagCompound();
+        if (p2Tag != nullptr)
+        {
+            p2->readFromNBT(p2Tag);
+            loadedSavedData = true;
+            if (!skinP2.empty())
+            {
+                p2->skinUrl = "";
+                p2->setEntityTexture(skinP2);
+            }
+        }
+    }
 
-    p2->capabilities = mc->thePlayer->capabilities;
+    if (!loadedSavedData)
+    {
+        p2->setLocationAndAngles(
+            mc->thePlayer->posX + 1.0,
+            mc->thePlayer->posY,
+            mc->thePlayer->posZ + 1.0,
+            mc->thePlayer->rotationYaw,
+            mc->thePlayer->rotationPitch
+        );
+        p2->capabilities = mc->thePlayer->capabilities;
+    }
+    else
+    {
+        double dx = p2->posX - mc->thePlayer->posX;
+        double dz = p2->posZ - mc->thePlayer->posZ;
+        double distSq = dx * dx + dz * dz;
+        if (p2->dimension != mc->thePlayer->dimension || distSq > (SPLITSCREEN_MAX_DIST * SPLITSCREEN_MAX_DIST))
+        {
+            p2->dimension = mc->thePlayer->dimension;
+            p2->setLocationAndAngles(
+                mc->thePlayer->posX + 1.0,
+                mc->thePlayer->posY,
+                mc->thePlayer->posZ + 1.0,
+                mc->thePlayer->rotationYaw,
+                mc->thePlayer->rotationPitch
+            );
+        }
+    }
 
     mc->theWorld->spawnEntityInWorld(p2);
 
     mc->thePlayer2 = p2;
     mc->setSplitScreenActive(true);
+    if (mc->gameSettings != nullptr)
+        mc->gameSettings->thirdPersonView = 0;
 
     if (mc->sndManager != nullptr)
         mc->sndManager->playSoundFX("random.levelup", 1.0f, 1.0f);
@@ -93,12 +190,20 @@ void joinPlayer2(Minecraft *mc)
         if (isSpanishLanguage())
         {
             mc->ingameGUI->addChatMessage("\xc2\xa7" "a[P2] Jugador 2 conectado!");
+#if defined(XBOX_PLATFORM)
+            mc->ingameGUI->addChatMessage("\xc2\xa7" "b[P2] [A] Saltar | [Click Derecho] Agachar | [X] Inventario");
+#else
             mc->ingameGUI->addChatMessage("\xc2\xa7" "b[P2] [X] Saltar | [R3] Agachar | [Cuadrado] Inventario");
+#endif
         }
         else
         {
             mc->ingameGUI->addChatMessage("\xc2\xa7" "a[P2] Player 2 connected!");
+#if defined(XBOX_PLATFORM)
+            mc->ingameGUI->addChatMessage("\xc2\xa7" "b[P2] [A] Jump | [Right Stick] Sneak | [X] Inventory");
+#else
             mc->ingameGUI->addChatMessage("\xc2\xa7" "b[P2] [X] Jump | [R3] Sneak | [Square] Inventory");
+#endif
         }
     }
 }
@@ -108,8 +213,18 @@ void leavePlayer2(Minecraft *mc)
     if (mc == nullptr)
         return;
 
+    // 1. Close Player 2 screen first while player instance is still valid
+    if (mc->getPlayerScreen(1) != nullptr)
+        mc->closePlayerScreen(1);
+
     if (mc->thePlayer2 != nullptr)
     {
+        if (mc->theWorld != nullptr && mc->theWorld->getWorldInfo() != nullptr)
+        {
+            NBTTagCompound *p2Tag = new NBTTagCompound();
+            mc->thePlayer2->writeToNBT(p2Tag);
+            mc->theWorld->getWorldInfo()->setPlayer2NBTTagCompound(p2Tag);
+        }
         if (mc->theWorld != nullptr)
             mc->theWorld->detachEntityForWorldChange(mc->thePlayer2);
         delete mc->thePlayer2;
@@ -123,8 +238,7 @@ void leavePlayer2(Minecraft *mc)
 
     mc->setSplitScreenActive(false);
     mc->setScreenOwnedByPlayer2(false);
-    ps2SetMenuPad(0);
-    ps2SetMenuOwnerPad(-1);
+    platformClearMenuPad();
 }
 
 void tick(Minecraft *mc)
@@ -155,6 +269,9 @@ void tick(Minecraft *mc)
     // Auto-respawn if Player 2 is dead
     if (p2->isDead || p2->getHealth() <= 0)
     {
+        if (mc->isPlayerScreenActive(1))
+            mc->closePlayerScreen(1);
+
         p2->isDead = false;
         p2->deathTime = 0;
         p2->setHealth(20);
@@ -188,53 +305,52 @@ void tick(Minecraft *mc)
         return;
     }
 
+    // Personal screen closing for Player 2
+    if (mc->isPlayerScreenActive(1))
+    {
+        if (tickPressed & (PS2_PAD_CIRCLE | PS2_PAD_START))
+        {
+            mc->closePlayerScreen(1);
+            return;
+        }
+        return;
+    }
+
     // START button (Pause menu)
     if ((tickPressed & PS2_PAD_START) && mc->currentScreen == nullptr)
     {
         mc->setScreenOwnedByPlayer2(true);
-        ps2SetMenuPad(1);
-        ps2SetMenuOwnerPad(1);
+        platformSetMenuPad(1);
         mc->displayInGameMenu();
         return;
     }
 
-    // Hotbar selection
-    if (p2->inventory != nullptr)
+    // Square button: Open P2 Inventory independently
+    if (tickPressed & PS2_PAD_SQUARE)
+    {
+        if (mc->currentScreen == nullptr && !mc->isPlayerScreenActive(1))
+        {
+            if (mc->playerController != nullptr && mc->playerController->isInCreativeMode())
+                mc->displayPlayerScreen(1, new GuiContainerCreative(p2));
+            else
+                mc->displayPlayerScreen(1, new GuiInventory(p2));
+            return;
+        }
+    }
+
+    // Hotbar selection and item dropping (only when no menu is open for Player 2)
+    if (p2->inventory != nullptr && mc->currentScreen == nullptr && !mc->isPlayerScreenActive(1))
     {
         if (tickPressed & PS2_PAD_R1)
             p2->inventory->currentItem = (p2->inventory->currentItem + 1) % 9;
         if (tickPressed & PS2_PAD_L1)
             p2->inventory->currentItem = (p2->inventory->currentItem + 8) % 9;
-        if (mc->currentScreen == nullptr && (tickPressed & PS2_PAD_TRIANGLE))
+        if (tickPressed & PS2_PAD_TRIANGLE)
             p2->dropOneItem();
     }
 
-    // Square button: Open P2 Inventory
-    if (tickPressed & PS2_PAD_SQUARE)
-    {
-        if (mc->currentScreen == nullptr)
-        {
-            mc->setScreenOwnedByPlayer2(true);
-            mc->thePlayer = p2;
-            ps2SetMenuPad(1);
-            ps2SetMenuOwnerPad(1);
-            mc->displayGuiScreen(new GuiInventory(p2));
-            return;
-        }
-        else if (!mc->isScreenOwnedByPlayer2())
-        {
-            if (mc->ingameGUI != nullptr)
-            {
-                if (isSpanishLanguage())
-                    mc->ingameGUI->addChatMessage("\xc2\xa7" "c[P2] Turno ocupado por Jugador 1");
-                else
-                    mc->ingameGUI->addChatMessage("\xc2\xa7" "c[P2] Menu in use by Player 1");
-            }
-        }
-    }
-
     // Skip world interaction while a menu is open
-    if (mc->currentScreen != nullptr)
+    if (mc->currentScreen != nullptr || mc->isPlayerScreenActive(1))
         return;
 
     // Build / Attack / Use actions for Player 2
@@ -262,8 +378,7 @@ void tick(Minecraft *mc)
     if (mc->currentScreen != nullptr)
     {
         mc->setScreenOwnedByPlayer2(true);
-        ps2SetMenuPad(1);
-        ps2SetMenuOwnerPad(1);
+        platformSetMenuPad(1);
         // Leave mc->thePlayer as p2 so the screen operates on Player 2!
         mc->objectMouseOver = hr1;
         return;

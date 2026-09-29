@@ -1,6 +1,7 @@
 #ifdef PS2_PLATFORM
 
 #include "ps2/render/Ps2Viewport.h"
+#include "ps2/render/Ps2Draw2D.h"
 
 #include <gsKit.h>
 #include <gsMisc.h>
@@ -35,6 +36,8 @@ void ps2_viewport_set(int x, int y, int width, int height)
 {
     if (gsGlobal == nullptr)
         return;
+
+    ps2_draw_2d_flush_pending();
 
     s_x = x;
     s_y = y;

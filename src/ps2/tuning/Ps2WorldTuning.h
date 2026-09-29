@@ -669,22 +669,9 @@
 //                               never stands on (or falls through) un-generated air.
 //                               1 = the 3x3 the player stands and collides in.
 //                               0 = ONLY the chunk the player is in is forced
-//                               synchronous; the surrounding ring streams at
-//                               GENERATE_CHUNKS_PER_TICK. This is the key knob for
-//                               the ~1s border-cross freeze: at radius 1 the whole
-//                               new leading row (3 chunks) generates in one tick; at
-//                               radius 0 the chunk being entered already exists from
-//                               the previous frame's 3x3, so a normal walk generates
-//                               0 sync chunks and the freeze disappears. Trade-off:
-//                               sprinting into un-generated land briefly shows a bare
-//                               edge until it streams in (no fall -- collision still
-//                               force-generates the chunk under the player).
-//   - GENERATE_CHUNKS_PER_TICK: max *non-critical* chunks generated per world tick.
-//                               The outer cache ring streams in this many per tick;
-//                               over-budget requests get the blank (air) chunk this
-//                               tick and are retried next tick. 0 = no throttle
-//                               (vanilla synchronous behaviour).
-#define PS2_GENERATE_SYNC_RADIUS 0
+//                               synchronous. Setting to 1 prevents falling into void
+//                               when walking/sprinting across chunk boundaries before async generation.
+#define PS2_GENERATE_SYNC_RADIUS 1
 #define PS2_GENERATE_CHUNKS_PER_TICK 1
 #define PS2_INCREMENTAL_CHUNK_GENERATION 1
 #define PS2_GENERATION_STEPS_PER_TICK    16

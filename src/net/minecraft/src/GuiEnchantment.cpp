@@ -31,8 +31,8 @@ ModelBook &getBookModel()
 }
 }
 
-GuiEnchantment::GuiEnchantment(InventoryPlayer *inventory, World *world, int_t x, int_t y, int_t z)
-    : GuiContainer(new ContainerEnchantment(inventory, world, x, y, z), true)
+GuiEnchantment::GuiEnchantment(InventoryPlayer *inventory, World *world, int_t x, int_t y, int_t z, EntityPlayer *entityPlayer)
+    : GuiContainer(new ContainerEnchantment(inventory, world, x, y, z), true, (entityPlayer != nullptr) ? entityPlayer : (inventory != nullptr ? inventory->player : nullptr))
     , containerEnchantment(static_cast<ContainerEnchantment *>(inventorySlots))
     , tickCount(0)
     , pageFlip(0.0f)
@@ -77,7 +77,9 @@ void GuiEnchantment::updateScreen()
 void GuiEnchantment::mouseClicked(int_t mouseX, int_t mouseY, int_t button)
 {
     GuiContainer::mouseClicked(mouseX, mouseY, button);
-    if (button != 0 || containerEnchantment == nullptr || mc == nullptr || mc->thePlayer == nullptr)
+    EntityPlayer *p = getContainerPlayer();
+    if (p == nullptr && mc != nullptr) p = mc->thePlayer;
+    if (button != 0 || containerEnchantment == nullptr || mc == nullptr || p == nullptr)
         return;
 
     const int_t guiX = (width - xSize) / 2;
@@ -87,7 +89,7 @@ void GuiEnchantment::mouseClicked(int_t mouseX, int_t mouseY, int_t button)
         const int_t relativeX = mouseX - (guiX + 60);
         const int_t relativeY = mouseY - (guiY + 14 + 19 * option);
         if (relativeX >= 0 && relativeY >= 0 && relativeX < 108 && relativeY < 19 &&
-            containerEnchantment->enchantItem(mc->thePlayer, option))
+            containerEnchantment->enchantItem(p, option))
         {
             mc->playerController->sendEnchantPacket(containerEnchantment->windowId, option);
         }
@@ -197,7 +199,9 @@ void GuiEnchantment::drawGuiContainerBackgroundLayer(float_t partialTick)
             continue;
         }
 
-        const bool affordable = mc->thePlayer->experienceLevel >= level || mc->thePlayer->capabilities.isCreativeMode;
+        EntityPlayer *p = getContainerPlayer();
+        if (p == nullptr && mc != nullptr) p = mc->thePlayer;
+        const bool affordable = p != nullptr && (p->experienceLevel >= level || p->capabilities.isCreativeMode);
         int_t nameColor = 0x685e4a;
         int_t levelColor = 0x80ff20;
         if (!affordable)

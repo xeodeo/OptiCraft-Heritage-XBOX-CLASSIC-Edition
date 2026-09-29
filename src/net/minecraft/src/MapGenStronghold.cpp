@@ -6,6 +6,7 @@
 #include "ChunkCoordIntPair.h"
 #include "ChunkPosition.h"
 #include "ComponentStrongholdStairs2.h"
+#include "StructureBoundingBox.h"
 #include "StructureStart.h"
 #include "StructureStrongholdStart.h"
 #include "World.h"
@@ -54,6 +55,30 @@ void MapGenStronghold::ensureStructureCoords()
 
 	Random strongholdRandom;
 	strongholdRandom.setSeed(worldObj->getRandomSeed());
+
+	if (worldObj->isIslandWorld())
+	{
+		// Limited / Old world is 256x256 blocks (chunks -8 to 7, blocks -128 to 127).
+		// Place exactly 1 Stronghold near the center (chunks -2 to 1, blocks -32 to 31).
+		const double angle = strongholdRandom.nextDouble() * 3.14159265358979323846 * 2.0;
+		const double distance = 0.5 + strongholdRandom.nextDouble() * 1.5;
+		int_t chunkX = javaRoundToInt(JavaMath::cos(angle) * distance);
+		int_t chunkZ = javaRoundToInt(JavaMath::sin(angle) * distance);
+		if (chunkX < -2) chunkX = -2;
+		if (chunkX > 1) chunkX = 1;
+		if (chunkZ < -2) chunkZ = -2;
+		if (chunkZ > 1) chunkZ = 1;
+
+		delete structureCoords[0];
+		structureCoords[0] = new ChunkCoordIntPair(chunkX, chunkZ);
+		delete structureCoords[1];
+		structureCoords[1] = nullptr;
+		delete structureCoords[2];
+		structureCoords[2] = nullptr;
+		ranBiomeCheck = true;
+		return;
+	}
+
 	double angle = strongholdRandom.nextDouble() * 3.14159265358979323846 * 2.0;
 
 	for (std::size_t index = 0; index < structureCoords.size(); ++index)
@@ -107,7 +132,8 @@ std::vector<ChunkPosition *> MapGenStronghold::getStructureCoordinates()
 
 StructureStart *MapGenStronghold::getStructureStart(int_t chunkX, int_t chunkZ)
 {
-	for (;;)
+	StructureStart *fallbackStart = nullptr;
+	for (int_t attempt = 0; attempt < 40; ++attempt)
 	{
 		StructureStrongholdStart *start = new StructureStrongholdStart(worldObj, rand, chunkX, chunkZ);
 		const std::vector<StructureComponent *> &components = start->getComponents();
@@ -115,8 +141,37 @@ StructureStart *MapGenStronghold::getStructureStart(int_t chunkX, int_t chunkZ)
 		{
 			ComponentStrongholdStairs2 *stairs = static_cast<ComponentStrongholdStairs2 *>(components.front());
 			if (stairs != nullptr && stairs->portalRoom != nullptr)
-				return start;
+			{
+				if (worldObj != nullptr && worldObj->isIslandWorld())
+				{
+					StructureBoundingBox *bb = start->getBoundingBox();
+					if (bb != nullptr && bb->minX >= -110 && bb->maxX <= 110 &&
+					    bb->minZ >= -110 && bb->maxZ <= 110)
+					{
+						if (fallbackStart != nullptr)
+							delete fallbackStart;
+						return start;
+					}
+					if (fallbackStart == nullptr)
+					{
+						fallbackStart = start;
+						continue;
+					}
+				}
+				else
+				{
+					if (fallbackStart != nullptr)
+						delete fallbackStart;
+					return start;
+				}
+			}
 		}
 		delete start;
 	}
+
+	if (fallbackStart != nullptr)
+		return fallbackStart;
+
+	// Absolute fallback: a single standard stronghold start with stairs
+	return new StructureStrongholdStart(worldObj, rand, chunkX, chunkZ);
 }

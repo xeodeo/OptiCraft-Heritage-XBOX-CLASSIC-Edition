@@ -222,7 +222,12 @@ int_t BiomeGenBase::getSkyColorByTemp(float value)
 {
     value /= 3.0f;
     value = std::max(-1.0f, std::min(1.0f, value));
+#if PLATFORM_PS2
+    // Console sky tone: richer, slightly deeper blue hue for retro console look
+    return hsbToRgb(222.0f / 360.0f - value * 0.05f, 0.58f + value * 0.1f, 1.0f);
+#else
     return hsbToRgb(224.0f / 360.0f - value * 0.05f, 0.5f + value * 0.1f, 1.0f);
+#endif
 }
 
 WorldGenerator *BiomeGenBase::getRandomWorldGenForTrees(Random &random)
@@ -239,8 +244,21 @@ void BiomeGenBase::releaseWorldGenForTrees(WorldGenerator *generator)
 
 bool BiomeGenBase::isReusableWorldGenForTrees(const WorldGenerator *generator) const
 {
-    return generator == worldGenTrees || generator == worldGenBigTree ||
-           generator == worldGenForest || generator == worldGenSwamp;
+    if (generator == nullptr)
+        return true;
+    if (generator == worldGenTrees || generator == worldGenBigTree ||
+        generator == worldGenForest || generator == worldGenSwamp)
+        return true;
+    for (int_t i = 0; i < BIOME_REGISTRY_SIZE; ++i)
+    {
+        BiomeGenBase *b = biomeList[i];
+        if (b != nullptr && (generator == b->worldGenTrees || generator == b->worldGenBigTree ||
+                             generator == b->worldGenForest || generator == b->worldGenSwamp))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 WorldGenerator *BiomeGenBase::func_48410_b(Random &)

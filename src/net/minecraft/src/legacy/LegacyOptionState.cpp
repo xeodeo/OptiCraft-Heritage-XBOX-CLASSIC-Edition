@@ -30,7 +30,12 @@ bool legacySmoothLightingChecked(float_t aoLevel)
 
 float_t legacySmoothLightingToggleValue(float_t aoLevel)
 {
+#if PLATFORM_PS2
+    // 25% smooth lighting for PS2 provides console aesthetic while keeping vertex budget low
+    return legacySmoothLightingChecked(aoLevel) ? 0.0f : 0.25f;
+#else
     return legacySmoothLightingChecked(aoLevel) ? 0.0f : 1.0f;
+#endif
 }
 
 std::string legacyRenderDistanceLabel(int_t fineDistanceBlocks)

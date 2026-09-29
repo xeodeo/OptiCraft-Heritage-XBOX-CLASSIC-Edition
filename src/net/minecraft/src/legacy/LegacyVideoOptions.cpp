@@ -45,7 +45,7 @@ void LegacyVideoOptions::initGui()
 #if PLATFORM_WII
     const int_t rowCount = 7;
 #elif PLATFORM_PS2
-    const int_t rowCount = 6;
+    const int_t rowCount = 7;
 #else
     const int_t rowCount = 8;
 #endif
@@ -66,15 +66,19 @@ void LegacyVideoOptions::initGui()
     controlList.push_back(smoothLightingCheckbox);
     controlList.push_back(viewBobbingCheckbox);
 
-#if !(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+#if !PLATFORM_WII
     cloudsCheckbox = new LegacyOptionCheckbox(BUTTON_CLOUDS, x, legacyLayout.rowY(row++), w, h,
         uiText("Render Clouds"), legacyCloudsChecked(settings->ofClouds));
-    fogCheckbox = new LegacyOptionCheckbox(BUTTON_FOG, x, legacyLayout.rowY(row++), w, h,
-        uiText("Fog"), legacyFogChecked(settings->ofFogOff));
     controlList.push_back(cloudsCheckbox);
-    controlList.push_back(fogCheckbox);
 #else
     cloudsCheckbox = nullptr;
+#endif
+
+#if !(PLATFORM_PS2 || PLATFORM_WII)
+    fogCheckbox = new LegacyOptionCheckbox(BUTTON_FOG, x, legacyLayout.rowY(row++), w, h,
+        uiText("Fog"), legacyFogChecked(settings->ofFogOff));
+    controlList.push_back(fogCheckbox);
+#else
     fogCheckbox = nullptr;
 #endif
 

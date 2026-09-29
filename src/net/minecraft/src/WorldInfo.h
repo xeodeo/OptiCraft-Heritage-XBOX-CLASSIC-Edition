@@ -25,7 +25,7 @@ public:
 	NBTTagCompound *getNBTTagCompoundWithPlayers(const std::vector<EntityPlayer *> &list);
 
 private:
-	void updateTagCompound(NBTTagCompound *nbttagcompound, NBTTagCompound *nbttagcompound1);
+	void updateTagCompound(NBTTagCompound *nbttagcompound, NBTTagCompound *nbttagcompound1, NBTTagCompound *nbttagcompound2 = nullptr);
 
 public:
 	long_t getRandomSeed();
@@ -36,6 +36,7 @@ public:
 	long_t getWorldTime();
 	long_t getSizeOnDisk();
 	NBTTagCompound *getPlayerNBTTagCompound();
+	NBTTagCompound *getPlayer2NBTTagCompound();
 	int_t getDimension();
 	void setSpawnX(int_t i);
 	void setSpawnY(int_t i);
@@ -43,6 +44,7 @@ public:
 	void setWorldTime(long_t l);
 	void setSizeOnDisk(long_t l);
 	void setPlayerNBTTagCompound(NBTTagCompound *nbttagcompound);
+	void setPlayer2NBTTagCompound(NBTTagCompound *nbttagcompound);
 	void setSpawn(int_t i, int_t j, int_t k);
 	void setSpawnPosition(int_t i, int_t j, int_t k);
 	jstring getWorldName();
@@ -68,6 +70,8 @@ public:
 	void setTerrainType(WorldType *type);
 	bool isLimitedWorld() const;
 	void setLimitedWorld(bool flag);
+	bool isIslandWorld() const;
+	void setIslandWorld(bool flag);
 
 private:
 	long_t randomSeed;
@@ -79,6 +83,7 @@ private:
 	long_t lastTimePlayed;
 	long_t sizeOnDisk;
 	NBTTagCompound *playerTag;
+	NBTTagCompound *player2Tag;
 	int_t dimension;
 	jstring levelName;
 	int_t saveVersion;
@@ -90,4 +95,5 @@ private:
 	bool thundering;
 	int_t thunderTime;
 	bool limitedWorld;
+	bool islandWorld;
 };

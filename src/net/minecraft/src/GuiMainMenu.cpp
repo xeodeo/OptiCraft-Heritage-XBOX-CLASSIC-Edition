@@ -248,6 +248,11 @@ void GuiMainMenu::activateLegacySelection()
 
 void GuiMainMenu::initGui()
 {
+    // arregla el bug del f3 al salir del mundo
+    // sin desactivar el debuginfo, ahora al llegar aqui lo desactiva
+    if (mc->gameSettings->showDebugInfo)
+        mc->gameSettings->showDebugInfo = false;
+
     if (viewportTexture >= 0)
         mc->renderEngine->deleteTexture(viewportTexture);
     viewportTexture = -1;

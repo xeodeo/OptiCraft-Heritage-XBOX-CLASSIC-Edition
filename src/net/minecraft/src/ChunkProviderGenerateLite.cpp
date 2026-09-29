@@ -31,6 +31,7 @@
 #include "Block.h"
 #include "java/Random.h"
 
+#include <cmath>
 #include <cstring>
 
 namespace
@@ -319,7 +320,42 @@ void ChunkProviderGenerate::generateTerrainHeightmap(int_t i, int_t j, byte_t *a
 				shape00, shape10, shape01, shape11, fractionX, fractionZ);
 
 			float detail = 0.0f;
-			int_t h = (int_t)noise->surfaceYPrepared(l, k, biome, detail);
+			float rawHeight = noise->surfaceYPrepared(l, k, biome, detail);
+			int_t h = (int_t)rawHeight;
+			if (worldObj != nullptr && worldObj->isIslandWorld())
+			{
+				const int_t worldBlockX = JavaArithmetic::intAdd(chunkBlockX, l);
+				const int_t worldBlockZ = JavaArithmetic::intAdd(chunkBlockZ, k);
+				const float dx = static_cast<float>(worldBlockX);
+				const float dz = static_cast<float>(worldBlockZ);
+				const float dist = std::sqrt(dx * dx + dz * dz);
+
+				if (dist < 88.0f)
+				{
+					// Central island: elevate terrestrial ground to Y=68..74 (MCPE 0.6.0 authentic elevation)
+					// and ensure interior land stays above sea level (63).
+					if (biome.baseHeight >= 0.0f)
+					{
+						rawHeight += 4.5f;
+						if (rawHeight < 64.0f)
+							rawHeight = 64.0f + (rawHeight - 60.0f) * 0.25f;
+					}
+				}
+				else if (dist < 118.0f)
+				{
+					// Coastal slope down to beach (Y=64..65) and shallow water
+					const float t = (dist - 88.0f) / 30.0f;
+					const float targetLand = rawHeight + 4.5f * (1.0f - t);
+					const float targetOcean = 54.0f + detail * 2.0f;
+					rawHeight = targetLand * (1.0f - t) + targetOcean * t;
+				}
+				else
+				{
+					// Outer perimeter: ocean floor submerged at Y=52..56 under Y=63 water
+					rawHeight = 52.0f + detail * 2.0f;
+				}
+				h = (int_t)rawHeight;
+			}
 			if (h < 1)   h = 1;
 			if (h > 120) h = 120;
 

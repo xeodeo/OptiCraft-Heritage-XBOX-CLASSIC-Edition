@@ -76,6 +76,13 @@ bool next()
 	return true;
 }
 
+void clearEvents()
+{
+	while (!detail::s_queue.empty())
+		detail::s_queue.pop();
+	detail::s_current = {};
+}
+
 void enableRepeatEvents(bool repeat) { s_repeatEvents = repeat; }
 bool areRepeatEventsEnabled()        { return s_repeatEvents; }
 

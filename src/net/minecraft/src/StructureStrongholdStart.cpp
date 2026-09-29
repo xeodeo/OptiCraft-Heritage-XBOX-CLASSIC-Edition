@@ -29,5 +29,12 @@ StructureStrongholdStart::StructureStrongholdStart(
 	}
 
 	updateBoundingBox();
-	markAvailableHeight(world, random, 10);
+	if (world != nullptr && world->isIslandWorld())
+	{
+		markAvailableHeight(world, random, 26);
+	}
+	else
+	{
+		markAvailableHeight(world, random, 10);
+	}
 }

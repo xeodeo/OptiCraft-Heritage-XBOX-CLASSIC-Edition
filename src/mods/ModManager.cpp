@@ -8,6 +8,7 @@
 // Built-in mods
 #include "toomanyitems/TooManyItemsMod.h"
 #include "reiminimap/ReiMinimapMod.h"
+#include "strongholdlocator/StrongholdLocatorMod.h"
 
 #include <cstdio>
 
@@ -35,6 +36,12 @@ void ModManager::init(Minecraft *mcInstance)
 
     mc = mcInstance;
     initialized = true;
+
+    // Built-in internal debug mod: Stronghold Locator
+    if (getMod("strongholdlocator") == nullptr)
+    {
+        registerMod(std::make_unique<StrongholdLocatorMod>());
+    }
 
     // Scan and load installed .ochpack packages from the persistent game mods directory
     scanAndLoadPacks();
@@ -146,6 +153,10 @@ void ModManager::scanAndLoadPacks()
         {
             newMod = std::make_unique<ReiMinimapMod>();
         }
+        else if (pack.id == "strongholdlocator")
+        {
+            newMod = std::make_unique<StrongholdLocatorMod>();
+        }
         else
         {
             newMod = std::make_unique<DynamicMod>(pack);
@@ -225,6 +236,8 @@ bool ModManager::installModPack(const std::string &sourcePath, std::string &outE
             newMod = std::make_unique<TooManyItemsMod>();
         else if (info.id == "reiminimap")
             newMod = std::make_unique<ReiMinimapMod>();
+        else if (info.id == "strongholdlocator")
+            newMod = std::make_unique<StrongholdLocatorMod>();
         else
             newMod = std::make_unique<DynamicMod>(info);
 

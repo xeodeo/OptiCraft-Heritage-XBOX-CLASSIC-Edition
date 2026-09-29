@@ -23,10 +23,8 @@ public:
     void saveWorldInfo(WorldInfo *worldinfo) override;
     std::string getMapFile(const jstring &s) override;
     std::string getSaveDirectoryName() const override;
+    std::string getSaveDirectory() const override { return saveDirectory; }
     bool isReadOnly() const override { return readOnly; }
-
-protected:
-    const std::string& getSaveDirectory() const { return saveDirectory; }
 
 private:
     void writeSessionLock();

@@ -8,7 +8,7 @@
 
 void ThreadPollServers::start(const std::shared_ptr<ServerNBTStorage> &server)
 {
-#ifdef WII_PLATFORM
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
     run(server);
 #else
     std::thread(&ThreadPollServers::run, server).detach();

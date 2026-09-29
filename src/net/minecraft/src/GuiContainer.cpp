@@ -22,33 +22,74 @@
 #include "platform/RenderAPI.h"
 #include "platform/PlatformConfig.h"
 #include "pc/lwjgl/Keyboard.h"
+#include "pc/lwjgl/Mouse.h"
 #include <algorithm>
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(XBOX_PLATFORM)
 #include "ContainerSlotNavigator.h"
 #include "platform/Input.h"
 #endif
 
 RenderItem *GuiContainer::itemRenderer = new RenderItem();
 
-GuiContainer::GuiContainer(Container *container, bool ownsContainer)
+GuiContainer::GuiContainer(Container *container, bool ownsContainer, EntityPlayer *player)
 	: xSize(176)
 	, ySize(166)
 	, guiLeft(0)
 	, guiTop(0)
+	, m_containerPlayer(player)
 	, inventorySlots(container)
 	, ownsInventorySlots(ownsContainer)
 {
+	if (player != nullptr)
+	{
+		Minecraft *m = Minecraft::getMinecraft();
+		if (m != nullptr && player == m->thePlayer2)
+			m_ownerPlayerIndex = 1;
+		else
+			m_ownerPlayerIndex = 0;
+	}
+}
+
+EntityPlayer *GuiContainer::getContainerPlayer() const
+{
+	if (m_containerPlayer != nullptr)
+		return m_containerPlayer;
+	return mc ? mc->thePlayer : nullptr;
+}
+
+void GuiContainer::setContainerPlayer(EntityPlayer *player)
+{
+	m_containerPlayer = player;
+	if (player != nullptr)
+	{
+		Minecraft *m = Minecraft::getMinecraft();
+		if (m != nullptr && player == m->thePlayer2)
+			m_ownerPlayerIndex = 1;
+		else
+			m_ownerPlayerIndex = 0;
+	}
+}
+
+int GuiContainer::getOwnerPlayerIndex() const
+{
+	if (m_ownerPlayerIndex >= 0)
+		return m_ownerPlayerIndex;
+	if (m_containerPlayer != nullptr && mc != nullptr && m_containerPlayer == mc->thePlayer2)
+		return 1;
+	if (mc != nullptr && mc->isScreenOwnedByPlayer2())
+		return 1;
+	return 0;
 }
 
 GuiContainer::~GuiContainer()
 {
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(XBOX_PLATFORM)
 	// onGuiClosed() is the normal exit, but a container screen can also be
 	// destroyed while it is still the one the navigator points at (world change,
 	// shutdown), and that pointer is read from the pad poll rather than from a
 	// tick -- so it has to stop being live here too.
-	ContainerSlotNavigator::instance().notifyClosed(this);
+	ContainerSlotNavigator::instance(getOwnerPlayerIndex()).notifyClosed(this);
 #endif
 
 	if (ownsInventorySlots)
@@ -63,7 +104,9 @@ void GuiContainer::initGui()
 	GuiScreen::initGui();
 	guiLeft = (width - xSize) / 2;
 	guiTop = (height - ySize) / 2;
-	mc->thePlayer->craftingInventory = inventorySlots;
+	EntityPlayer *p = getContainerPlayer();
+	if (p != nullptr)
+		p->craftingInventory = inventorySlots;
 }
 
 void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
@@ -73,7 +116,7 @@ void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 	int_t guiY = guiTop;
 
 #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
-	ContainerSlotNavigator &navigator = ContainerSlotNavigator::instance();
+	ContainerSlotNavigator &navigator = ContainerSlotNavigator::instance(getOwnerPlayerIndex());
 	Slot *controllerSlot = nullptr;
 	if (mc->gameSettings != nullptr && mc->gameSettings->legacyUI)
 	{
@@ -95,10 +138,18 @@ void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 	}
 
 	Slot *selectedSlot = controllerSlot;
-	if (selectedSlot != nullptr && navigator.consumePrimaryClick())
-		handleMouseClick(selectedSlot, selectedSlot->slotNumber, 0, false);
-	if (selectedSlot != nullptr && navigator.consumeSecondaryClick())
-		handleMouseClick(selectedSlot, selectedSlot->slotNumber, 1, false);
+	if (mc == nullptr || !mc->isSplitScreenActive())
+	{
+		if (selectedSlot != nullptr && navigator.consumePrimaryClick())
+			handleMouseClick(selectedSlot, selectedSlot->slotNumber, 0, false);
+		if (selectedSlot != nullptr && navigator.consumeSecondaryClick())
+			handleMouseClick(selectedSlot, selectedSlot->slotNumber, 1, false);
+	}
+	else
+	{
+		navigator.consumePrimaryClick();
+		navigator.consumeSecondaryClick();
+	}
 #endif
 
 	drawGuiContainerBackgroundLayer(partialTick);
@@ -144,7 +195,8 @@ void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 		}
 	}
 
-	InventoryPlayer *inv = mc->thePlayer->inventory;
+	EntityPlayer *cp = getContainerPlayer();
+	InventoryPlayer *inv = (cp != nullptr) ? cp->inventory : mc->thePlayer->inventory;
 	if (inv->getItemStack() != nullptr)
 	{
 		int_t carriedX = mouseX - guiX - 8;
@@ -196,6 +248,10 @@ void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 				tooltipX = controllerSlot->xDisplayPosition + 22;
 				tooltipY = controllerSlot->yDisplayPosition - 10;
 			}
+			if (guiY + tooltipY + 24 > height)
+				tooltipY = height - guiY - 24;
+			if (guiY + tooltipY < 0)
+				tooltipY = -guiY;
 #endif
 			int_t tooltipHeight = 8;
 			if (information.size() > 1)
@@ -240,55 +296,6 @@ void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 	renderPopMatrix();
 	GuiScreen::drawScreen(mouseX, mouseY, partialTick);
 	ModManager::getInstance().onDrawContainer(this, mouseX, mouseY);
-
-	// Splitscreen Turn-Based Inventory Ownership Banner
-	// Displays high-visibility badge showing which player currently owns the active inventory screen
-	if (mc != nullptr && mc->theWorld != nullptr && (mc->theWorld->isLimitedWorld() || mc->isSplitScreenActive() || mc->isScreenOwnedByPlayer2()))
-	{
-		renderDisable(RenderCapability::Lighting);
-		renderDisable(RenderCapability::DepthTest);
-		renderEnable(RenderCapability::Blend);
-		renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
-
-		StringTranslate *tr = StringTranslate::getInstance();
-		const bool isEs = (tr != nullptr && tr->getCurrentLanguage().rfind("es_", 0) == 0);
-
-		const bool p2Turn = mc->isScreenOwnedByPlayer2();
-		std::string bannerText;
-		int textColor = 0;
-		int borderColor = 0;
-
-		if (p2Turn)
-		{
-			bannerText = isEs ? "[ TURNO ACTIVO: JUGADOR 2 - MANDO 2 ]" : "[ ACTIVE: PLAYER 2'S TURN - CONTROLLER 2 ]";
-			textColor = 0x55FFFF;
-			borderColor = 0xFF00AAFF;
-		}
-		else
-		{
-			bannerText = isEs ? "[ TURNO ACTIVO: JUGADOR 1 - MANDO 1 ]" : "[ ACTIVE: PLAYER 1'S TURN - CONTROLLER 1 ]";
-			textColor = 0xFFFFAA;
-			borderColor = 0xFFFFAA00;
-		}
-
-		const int_t textW = fontRenderer->getStringWidth(bannerText);
-		const int_t bannerH = 13;
-		int_t bannerY = guiTop - 16;
-		if (bannerY < 2)
-			bannerY = 2;
-		const int_t bannerX = (width - textW) / 2;
-
-		// Draw dark translucent badge background with crisp colored border
-		drawRect(bannerX - 6, bannerY - 2, bannerX + textW + 6, bannerY + bannerH - 1, 0xDD0A0A0A);
-		drawRect(bannerX - 7, bannerY - 3, bannerX + textW + 7, bannerY - 2, borderColor);
-		drawRect(bannerX - 7, bannerY + bannerH - 1, bannerX + textW + 7, bannerY + bannerH, borderColor);
-		drawRect(bannerX - 7, bannerY - 3, bannerX - 6, bannerY + bannerH, borderColor);
-		drawRect(bannerX + textW + 6, bannerY - 3, bannerX + textW + 7, bannerY + bannerH, borderColor);
-
-		fontRenderer->drawStringWithShadow(bannerText, bannerX, bannerY + 1, textColor);
-
-		renderDisable(RenderCapability::Blend);
-	}
 
 	renderEnable(RenderCapability::Lighting);
 	renderEnable(RenderCapability::DepthTest);
@@ -347,14 +354,19 @@ bool GuiContainer::getIsMouseOverSlot(Slot *slot, int_t mouseX, int_t mouseY)
 
 void GuiContainer::mouseClicked(int_t x, int_t y, int_t button)
 {
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
-	ContainerSlotNavigator &navigator = ContainerSlotNavigator::instance();
+#if PLATFORM_PS2 || PLATFORM_WII
+	ContainerSlotNavigator &navigator = ContainerSlotNavigator::instance(getOwnerPlayerIndex());
+	const bool pointerActive = platformMenuPointerActive();
 	// Console confirm buttons are exposed both as controller input and mouse
-	// clicks. When D-pad selection owns the inventory, ignore the synthesized
+	// clicks. When D-pad selection owns the inventory (and the user is not pointing
+	// with a hardware pointer like the Wii remote IR sensor), ignore the synthesized
 	// mouse edge so the selected slot is activated exactly once.
-	if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI
+	if (!pointerActive && !mc->isSplitScreenActive() && mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI
 	    && navigator.controllerSelectionActive() && (button == 0 || button == 1))
 		return;
+	Slot *controllerSlot = nullptr;
+	if (navigator.controllerSelectionActive() && !pointerActive)
+		controllerSlot = navigator.selectedSlot();
 	navigator.notePointerActivity();
 #endif
 	GuiScreen::mouseClicked(x, y, button);
@@ -363,13 +375,20 @@ void GuiContainer::mouseClicked(int_t x, int_t y, int_t button)
 
 	if (button == 0 || button == 1)
 	{
-		Slot *slot = getSlotAtPosition(x, y);
+		Slot *slot = nullptr;
+#if PLATFORM_PS2 || PLATFORM_WII
+		if (controllerSlot != nullptr)
+			slot = controllerSlot;
+#endif
+		if (slot == nullptr)
+			slot = getSlotAtPosition(x, y);
+
 		int_t guiX = guiLeft;
 		int_t guiY = guiTop;
 		bool outsideGui = x < guiX || y < guiY || x >= guiX + xSize || y >= guiY + ySize;
 		int_t slotId = -1;
 		if (slot != nullptr) slotId = slot->slotNumber;
-		if (outsideGui)      slotId = -999;
+		if (outsideGui && slot == nullptr) slotId = -999;
 		if (slotId != -1)
 		{
 			bool shift = slotId != -999 && (lwjgl::Keyboard::isKeyDown(42) || lwjgl::Keyboard::isKeyDown(54));
@@ -383,16 +402,18 @@ void GuiContainer::handleMouseClick(Slot *slot, int_t slotId, int_t button, bool
 {
 	if (slot != nullptr)
 		slotId = slot->slotNumber;
-	delete mc->playerController->windowClick(inventorySlots->windowId, slotId, button, shift, mc->thePlayer);
+	EntityPlayer *p = getContainerPlayer();
+	delete mc->playerController->windowClick(inventorySlots->windowId, slotId, button, shift, p ? p : mc->thePlayer);
 }
 
 void GuiContainer::mouseMovedOrUp(int_t x, int_t y, int_t button)
 {
 #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	// Button release is not pointer motion. Only actual movement should take
-	// authority away from the controller-selected slot.
-	if (button < 0)
-		ContainerSlotNavigator::instance().notePointerActivity();
+	// authority away from the controller-selected slot. Wheel and click events
+	// have dx=0 and dy=0 and must not clear the controller slot selection.
+	if (button < 0 && (lwjgl::Mouse::getEventDX() != 0 || lwjgl::Mouse::getEventDY() != 0))
+		ContainerSlotNavigator::instance(getOwnerPlayerIndex()).notePointerActivity();
 #endif
 	(void)x;
 	(void)y;
@@ -406,21 +427,27 @@ void GuiContainer::keyTyped(char_t c, int_t key)
 
 	if (key == 1 || key == mc->gameSettings->keyBindInventory->keyCode)
 	{
-		mc->thePlayer->closeScreen();
+		EntityPlayer *p = getContainerPlayer();
+		if (p != nullptr)
+			p->closeScreen();
+		else
+			mc->thePlayer->closeScreen();
 	}
 }
 
 void GuiContainer::onGuiClosed()
 {
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(XBOX_PLATFORM)
 	// Before the thePlayer guard below: the navigator has to be released even on
 	// the paths that return early here.
-	ContainerSlotNavigator::instance().notifyClosed(this);
+	ContainerSlotNavigator::instance(getOwnerPlayerIndex()).notifyClosed(this);
 #endif
 
-	if (mc->thePlayer == nullptr) return;
-	inventorySlots->onCraftGuiClosed(mc->thePlayer);
-	mc->playerController->closeWindow(inventorySlots->windowId, mc->thePlayer);
+	EntityPlayer *p = getContainerPlayer();
+	if (p == nullptr) p = mc->thePlayer;
+	if (p == nullptr) return;
+	inventorySlots->onCraftGuiClosed(p);
+	mc->playerController->closeWindow(inventorySlots->windowId, p);
 }
 
 bool GuiContainer::doesGuiPauseGame()
@@ -431,8 +458,10 @@ bool GuiContainer::doesGuiPauseGame()
 void GuiContainer::updateScreen()
 {
 	GuiScreen::updateScreen();
-	if (!mc->thePlayer->isEntityAlive() || mc->thePlayer->isDead)
+	EntityPlayer *p = getContainerPlayer();
+	if (p == nullptr) p = mc->thePlayer;
+	if (p != nullptr && (!p->isEntityAlive() || p->isDead))
 	{
-		mc->thePlayer->closeScreen();
+		p->closeScreen();
 	}
 }

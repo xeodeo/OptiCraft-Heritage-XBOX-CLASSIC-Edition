@@ -119,7 +119,7 @@ AnvilChunkLoader::AnvilChunkLoader(const std::string &worldDir, bool readOnlyVal
 
 AnvilChunkLoader::~AnvilChunkLoader()
 {
-    ThreadedFileIOBase::threadedIOInstance.waitForFinish();
+    ThreadedFileIOBase::threadedIOInstance.cancelTask(this);
     std::lock_guard<std::mutex> guard(pendingMutex);
     for (AnvilChunkLoaderPending *pending : pendingSaves)
         delete pending;

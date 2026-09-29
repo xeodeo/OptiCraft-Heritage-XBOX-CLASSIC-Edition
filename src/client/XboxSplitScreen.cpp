@@ -39,6 +39,7 @@
 #include "net/minecraft/src/GuiScreen.h"
 #include "net/minecraft/src/GuiContainerCreative.h"
 #include "net/minecraft/src/legacy/LegacyCraftingScreen.h"
+#include "net/minecraft/src/legacy/XboxCraftingScreen.h"
 #include "pc/lwjgl/Keyboard.h"
 #include "xbox/input/XboxPad.h"
 #include "platform/Log.h"
@@ -308,7 +309,7 @@ void tick(Minecraft *mc)
     if ((pressed & XBOX_PAD_X) && mc->gameSettings->legacyCrafting && mc->playerController != nullptr &&
         !mc->playerController->isInCreativeMode())
     {
-        asPlayer2(mc, [mc, p2]() { mc->displayGuiScreen(new LegacyCraftingScreen(p2)); });
+        asPlayer2(mc, [mc, p2]() { mc->displayGuiScreen(new XboxCraftingScreen(p2)); });
         return;
     }
     if (pressed & XBOX_PAD_B)

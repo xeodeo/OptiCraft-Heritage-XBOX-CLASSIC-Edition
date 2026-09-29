@@ -21,6 +21,8 @@
 #include "legacy/LegacyCraftingScreen.h"
 #include "platform/PlatformConfig.h"
 #include "GuiCrafting.h"
+#include "net/minecraft/src/legacy/LegacyCraftingScreen.h"
+#include "net/minecraft/src/legacy/XboxCraftingScreen.h"
 #include "GuiDispenser.h"
 #include "GuiEnchantment.h"
 #include "GuiEditSign.h"
@@ -293,6 +295,7 @@ void EntityPlayerSP::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 
 void EntityPlayerSP::closeScreen()
 {
+#if PLATFORM_XBOX
 	// Split screen: player 2's screen lives in its own context; closing it
 	// from outside (a container it can no longer use) must not close P1's.
 	if (this == mc->thePlayer2 && !mc->inPlayer2Context())
@@ -304,6 +307,22 @@ void EntityPlayerSP::closeScreen()
 		return;
 	}
 	EntityPlayer::closeScreen();
+#else
+	EntityPlayer::closeScreen();
+	if (mc != nullptr && mc->isSplitScreenActive())
+	{
+		if (this == mc->thePlayer2)
+		{
+			mc->closePlayerScreen(1);
+			return;
+		}
+		else if (mc->isPlayerScreenActive(0))
+		{
+			mc->closePlayerScreen(0);
+			return;
+		}
+	}
+#endif
 	mc->displayGuiScreen(nullptr);
 }
 
@@ -314,39 +333,86 @@ void EntityPlayerSP::displayGUIEditSign(TileEntitySign *tileentitysign)
 
 void EntityPlayerSP::displayGUIChest(IInventory *iinventory)
 {
-	mc->displayGuiScreen(new GuiChest(inventory, iinventory));
+	if (mc != nullptr && mc->isSplitScreenActive())
+	{
+		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
+		mc->displayPlayerScreen(pIdx, new GuiChest(inventory, iinventory, this));
+		return;
+	}
+	mc->displayGuiScreen(new GuiChest(inventory, iinventory, this));
 }
 
 void EntityPlayerSP::displayWorkbenchGUI(int_t i, int_t j, int_t k)
 {
-#if PLATFORM_XBOX
-	if (mc->gameSettings != nullptr && mc->gameSettings->legacyCrafting)
+	if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI)
 	{
-		mc->displayGuiScreen(new LegacyCraftingScreen(this, worldObj, i, j, k));
+		if (mc->isSplitScreenActive())
+		{
+			const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
+#if PLATFORM_XBOX
+			mc->displayPlayerScreen(pIdx, new XboxCraftingScreen(this, worldObj, i, j, k));
+			return;
+		}
+		mc->displayGuiScreen(new XboxCraftingScreen(this, worldObj, i, j, k));
+#else
+			mc->displayPlayerScreen(pIdx, new LegacyCraftingScreen(inventory, worldObj, i, j, k, false, this));
+			return;
+		}
+		mc->displayGuiScreen(new LegacyCraftingScreen(inventory, worldObj, i, j, k, false, this));
+#endif
 		return;
 	}
-#endif
-	mc->displayGuiScreen(new GuiCrafting(inventory, worldObj, i, j, k));
+	if (mc != nullptr && mc->isSplitScreenActive())
+	{
+		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
+		mc->displayPlayerScreen(pIdx, new GuiCrafting(inventory, worldObj, i, j, k, this));
+		return;
+	}
+	mc->displayGuiScreen(new GuiCrafting(inventory, worldObj, i, j, k, this));
 }
 
 void EntityPlayerSP::displayGUIFurnace(TileEntityFurnace *tileentityfurnace)
 {
-	mc->displayGuiScreen(new GuiFurnace(inventory, tileentityfurnace));
+	if (mc != nullptr && mc->isSplitScreenActive())
+	{
+		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
+		mc->displayPlayerScreen(pIdx, new GuiFurnace(inventory, tileentityfurnace, this));
+		return;
+	}
+	mc->displayGuiScreen(new GuiFurnace(inventory, tileentityfurnace, this));
 }
 
 void EntityPlayerSP::displayGUIDispenser(TileEntityDispenser *tileentitydispenser)
 {
-	mc->displayGuiScreen(new GuiDispenser(inventory, tileentitydispenser));
+	if (mc != nullptr && mc->isSplitScreenActive())
+	{
+		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
+		mc->displayPlayerScreen(pIdx, new GuiDispenser(inventory, tileentitydispenser, this));
+		return;
+	}
+	mc->displayGuiScreen(new GuiDispenser(inventory, tileentitydispenser, this));
 }
 
 void EntityPlayerSP::displayGUIEnchantment(int_t i, int_t j, int_t k)
 {
-	mc->displayGuiScreen(new GuiEnchantment(inventory, worldObj, i, j, k));
+	if (mc != nullptr && mc->isSplitScreenActive())
+	{
+		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
+		mc->displayPlayerScreen(pIdx, new GuiEnchantment(inventory, worldObj, i, j, k, this));
+		return;
+	}
+	mc->displayGuiScreen(new GuiEnchantment(inventory, worldObj, i, j, k, this));
 }
 
 void EntityPlayerSP::displayGUIBrewingStand(TileEntityBrewingStand *tileentitybrewingstand)
 {
-	mc->displayGuiScreen(new GuiBrewingStand(inventory, tileentitybrewingstand));
+	if (mc != nullptr && mc->isSplitScreenActive())
+	{
+		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
+		mc->displayPlayerScreen(pIdx, new GuiBrewingStand(inventory, tileentitybrewingstand, this));
+		return;
+	}
+	mc->displayGuiScreen(new GuiBrewingStand(inventory, tileentitybrewingstand, this));
 }
 
 void EntityPlayerSP::onCriticalHit(Entity *entity)

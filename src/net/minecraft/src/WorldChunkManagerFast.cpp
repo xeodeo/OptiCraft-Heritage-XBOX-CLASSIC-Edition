@@ -186,9 +186,33 @@ const std::vector<int_t> &WorldChunkManager::fastBiomeIdArea(int_t x, int_t z,
 	for (int_t s = 0; s < sampleCount; ++s)
 	{
 		const std::size_t sample = static_cast<std::size_t>(s);
-		const float continent = toUnitRange(static_cast<float>(fastContinentField[sample]));
+		float continent = toUnitRange(static_cast<float>(fastContinentField[sample]));
 		const float temperature = toUnitRange(static_cast<float>(fastTemperatureField[sample]));
 		const float humidity = toUnitRange(static_cast<float>(fastHumidityField[sample]));
+		if (limitedWorld)
+		{
+			const int_t sampleX = s / sampleHeight;
+			const int_t sampleZ = s % sampleHeight;
+			const int_t worldX = (cellX0 + sampleX) << BIOME_SAMPLE_SHIFT;
+			const int_t worldZ = (cellZ0 + sampleZ) << BIOME_SAMPLE_SHIFT;
+			const float dx = static_cast<float>(worldX);
+			const float dz = static_cast<float>(worldZ);
+			const float dist = std::sqrt(dx * dx + dz * dz);
+			if (dist < 92.0f)
+			{
+				continent = 0.50f + continent * 0.35f;
+			}
+			else if (dist < 118.0f)
+			{
+				const float t = (dist - 92.0f) / 26.0f;
+				const float land = 0.50f + continent * 0.35f;
+				continent = land * (1.0f - t) + 0.30f * t;
+			}
+			else
+			{
+				continent = 0.30f;
+			}
+		}
 		fastCoarseBiomeIds[sample] = selectBiomeId(continent, temperature, humidity);
 	}
 

@@ -4,11 +4,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <mutex>
 #include <string>
 #include <vector>
 
 namespace Ps2MemoryCardFileSystem
 {
+    std::recursive_mutex &getMcIoMutex();
     bool handles(const std::string& path);
     bool mkdirs(const std::string& path);
     bool writeFile(const std::string& path, const void* data, std::size_t length);

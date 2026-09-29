@@ -9,7 +9,7 @@ class TileEntityFurnace;
 class GuiFurnace : public GuiContainer
 {
 public:
-	GuiFurnace(InventoryPlayer *player, TileEntityFurnace *furnace);
+	GuiFurnace(InventoryPlayer *player, TileEntityFurnace *furnace, EntityPlayer *entityPlayer = nullptr);
 
 protected:
 	void drawGuiContainerForegroundLayer() override;
