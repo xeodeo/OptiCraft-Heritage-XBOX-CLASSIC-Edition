@@ -55,6 +55,9 @@ unsigned short consumePressed();
 void clearLatchedPressed();
 void clearLatchedPressed(int player);
 void latchPressed(unsigned short pressed);
+// White/Black presses since the last call, whoever consumed the menu presses
+// (tab switching read on a screen's tick).
+unsigned short consumePagePressed();
 }
 
 #endif // XBOX_PLATFORM

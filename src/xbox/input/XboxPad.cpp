@@ -32,6 +32,11 @@ XboxPadSnapshot s_players[2] = {{false, 0.0f, 0.0f, 0.0f, 0.0f, 0, 0, 0},
 int s_menuPlayer = 0;
 // Presses since the last consume, per player (each player's menus).
 unsigned short s_latched[2] = {0, 0};
+// White/Black presses kept apart until a screen takes them: the D-pad slot
+// navigator consumes the menu presses every frame, so a screen that reads
+// its tab keys on its 20 Hz tick (the creative inventory) never saw them.
+unsigned short s_pageLatched[2] = {0, 0};
+const unsigned short kPageButtons = XBOX_PAD_WHITE | XBOX_PAD_BLACK;
 
 float normalizeAxis(SHORT value);
 unsigned short buttonsFrom(const XINPUT_GAMEPAD& pad);
@@ -242,6 +247,7 @@ void poll()
 		s_snapshot.pressed = static_cast<unsigned short>(s_snapshot.held & ~previous);
 		s_snapshot.released = static_cast<unsigned short>(previous & ~s_snapshot.held);
 		s_latched[0] |= s_snapshot.pressed;
+		s_pageLatched[0] |= s_snapshot.pressed & kPageButtons;
 		s_players[0] = s_snapshot;
 		const unsigned short previous2 = s_players[1].held;
 		s_players[1].connected = s_autopilotHasP2;
@@ -251,6 +257,7 @@ void poll()
 		s_players[1].pressed = static_cast<unsigned short>(s_autopilotP2 & ~previous2);
 		s_players[1].released = static_cast<unsigned short>(previous2 & ~s_autopilotP2);
 		s_latched[1] |= s_players[1].pressed;
+		s_pageLatched[1] |= s_players[1].pressed & kPageButtons;
 		return;
 	}
 #endif
@@ -277,13 +284,25 @@ void poll()
 	s_snapshot.pressed = static_cast<unsigned short>(s_snapshot.held & ~previous);
 	s_snapshot.released = static_cast<unsigned short>(previous & ~s_snapshot.held);
 	if (source.connected)
+	{
 		s_latched[0] |= s_snapshot.pressed;
+		s_pageLatched[0] |= s_snapshot.pressed & kPageButtons;
+	}
 	else
+	{
 		s_latched[0] = 0;   // no controller: everything released once, then idle
+		s_pageLatched[0] = 0;
+	}
 	if (s_players[1].connected)
+	{
 		s_latched[1] |= s_players[1].pressed;
+		s_pageLatched[1] |= s_players[1].pressed & kPageButtons;
+	}
 	else
+	{
 		s_latched[1] = 0;
+		s_pageLatched[1] = 0;
+	}
 }
 
 const XboxPadSnapshot& playerSnapshot(int player)
@@ -326,6 +345,13 @@ void clearLatchedPressed(int player)
 void latchPressed(unsigned short pressed)
 {
 	s_latched[s_menuPlayer] |= pressed;
+}
+
+unsigned short consumePagePressed()
+{
+	const unsigned short pressed = s_pageLatched[s_menuPlayer];
+	s_pageLatched[s_menuPlayer] = 0;
+	return pressed;
 }
 
 } // namespace XboxPad

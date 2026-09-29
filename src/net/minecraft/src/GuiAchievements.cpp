@@ -18,6 +18,10 @@
 #include "platform/RenderAPI.h"
 #include "KeyBinding.h"
 #include "pc/lwjgl/Mouse.h"
+#include "platform/PlatformConfig.h"
+#if PLATFORM_XBOX
+#include "platform/Input.h"
+#endif
 #include "java/System.h"
 #include "java/Random.h"
 #include <cmath>
@@ -96,6 +100,23 @@ void GuiAchievements::updateScreen()
 
 void GuiAchievements::drawScreen(int_t i, int_t j, float_t f)
 {
+#if PLATFORM_XBOX
+	// The right stick drags the map, as holding the mouse button and moving
+	// does on PC (the left stick keeps the pointer for the tooltips).
+	const PlatformGamepadSnapshot pad = platformGamepadSnapshot(platformMenuPad());
+	if (pad.connected && (pad.rightX != 0.0f || pad.rightY != 0.0f))
+	{
+		const float_t speed = 6.0f;
+		targetScrollX += pad.rightX * speed;
+		targetScrollY += pad.rightY * speed;
+		if (targetScrollX < static_cast<float_t>(minScrollX)) targetScrollX = static_cast<float_t>(minScrollX);
+		if (targetScrollY < static_cast<float_t>(minScrollY)) targetScrollY = static_cast<float_t>(minScrollY);
+		if (targetScrollX >= static_cast<float_t>(maxScrollX)) targetScrollX = static_cast<float_t>(maxScrollX - 1);
+		if (targetScrollY >= static_cast<float_t>(maxScrollY)) targetScrollY = static_cast<float_t>(maxScrollY - 1);
+		scrollX = lastScrollX = targetScrollX;
+		scrollY = lastScrollY = targetScrollY;
+	}
+#endif
 	if (lwjgl::Mouse::isButtonDown(0))
 	{
 		int_t k  = (width  - bgWidth)  / 2;

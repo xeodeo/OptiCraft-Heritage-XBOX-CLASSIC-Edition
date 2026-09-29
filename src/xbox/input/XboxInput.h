@@ -13,6 +13,9 @@ void poll(bool inMenu, bool specializedMenuNavigation);
 void setMenuCursor(int x, int y);
 // Stick deadzone applied to every analog read (0.05 .. 0.35).
 float applyDeadzone(float value);
+// Player 1's Back + D-pad combo since the last call: 0 none, 1 save a
+// waypoint here (Up), 2 open the waypoint manager (Down).
+int consumeWaypointRequest();
 }
 
 #endif // XBOX_PLATFORM

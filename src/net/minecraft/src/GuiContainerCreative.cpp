@@ -35,6 +35,9 @@
 #include "ps2/input/Ps2PadKeyCodes.h"
 #include "ps2/input/Ps2PadState.h"
 #endif
+#if PLATFORM_XBOX
+#include "xbox/input/XboxPad.h"
+#endif
 
 InventoryBasic GuiContainerCreative::inventory("tmp", 72, false);
 ItemStack *GuiContainerCreative::s_tabIcons[6] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
@@ -119,9 +122,12 @@ void GuiContainerCreative::updateScreen()
         }
 #elif PLATFORM_XBOX
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
+    // Tabs from the separate White/Black latch: the slot navigator has already
+    // consumed this frame's menu presses by the time the screen ticks.
+    const unsigned short pagePressed = XboxPad::consumePagePressed();
     if (pad.connected)
     {
-        if (pad.pressed & PLATFORM_TEXT_PREV_PAGE)
+        if (pagePressed & XBOX_PAD_WHITE)
         {
             ContainerCreative *container = static_cast<ContainerCreative *>(inventorySlots);
             if (container != nullptr)
@@ -131,7 +137,7 @@ void GuiContainerCreative::updateScreen()
                     mc->sndManager->playSoundFX("random.click", 1.0f, 1.0f);
             }
         }
-        else if (pad.pressed & PLATFORM_TEXT_NEXT_PAGE)
+        else if (pagePressed & XBOX_PAD_BLACK)
         {
             ContainerCreative *container = static_cast<ContainerCreative *>(inventorySlots);
             if (container != nullptr)
@@ -243,6 +249,10 @@ void GuiContainerCreative::handleMouseClick(Slot *slot, int_t slotId, int_t butt
 
 void GuiContainerCreative::initGui()
 {
+#if PLATFORM_XBOX
+    // Drop White/Black presses made on an earlier screen.
+    (void)XboxPad::consumePagePressed();
+#endif
     if (!mc->playerController->isInCreativeMode())
     {
         EntityPlayer *p = getContainerPlayer();

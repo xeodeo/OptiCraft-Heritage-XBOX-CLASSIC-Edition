@@ -576,9 +576,30 @@ void AnvilChunkLoader::chunkTick()
 
 bool AnvilChunkLoader::copyPendingChunkData(const ChunkCoordIntPair &position, std::vector<byte_t> &out)
 {
-    std::lock_guard<std::mutex> guard(pendingMutex);
+    std::unique_lock<std::mutex> guard(pendingMutex);
     if (pendingCoordinates.find(position) == pendingCoordinates.end())
         return false;
+
+    // A queued (newer) save wins. Otherwise the only copy is the one the IO
+    // thread is writing: wait until it reaches the region file, which the
+    // caller then reads.
+    bool queued = false;
+    for (AnvilChunkLoaderPending *pending : pendingSaves)
+    {
+        if (pending != nullptr && pending->chunkPosition == position)
+        {
+            queued = true;
+            break;
+        }
+    }
+    if (!queued)
+    {
+        writingDone.wait(guard, [this, &position]
+        {
+            return writingPending == nullptr || !(writingPending->chunkPosition == position);
+        });
+        return false;
+    }
 
     for (AnvilChunkLoaderPending *pending : pendingSaves)
     {
@@ -689,11 +710,39 @@ bool AnvilChunkLoader::writeNextIO()
             return false;
         pending = pendingSaves.front();
         pendingSaves.erase(pendingSaves.begin());
-        if (pending != nullptr)
-            pendingCoordinates.erase(pending->chunkPosition);
+        writingPending = pending;
     }
 
     std::unique_ptr<AnvilChunkLoaderPending> ownedPending(pending);
+    // Once written, the coordinate stops being pending unless a newer save of
+    // the same chunk was queued meanwhile; a waiting load is then released.
+    struct WriteDone
+    {
+        AnvilChunkLoader *loader;
+        AnvilChunkLoaderPending *pending;
+        ~WriteDone()
+        {
+            {
+                std::lock_guard<std::mutex> guard(loader->pendingMutex);
+                if (pending != nullptr)
+                {
+                    bool newer = false;
+                    for (AnvilChunkLoaderPending *queued : loader->pendingSaves)
+                    {
+                        if (queued != nullptr && queued->chunkPosition == pending->chunkPosition)
+                        {
+                            newer = true;
+                            break;
+                        }
+                    }
+                    if (!newer)
+                        loader->pendingCoordinates.erase(pending->chunkPosition);
+                }
+                loader->writingPending = nullptr;
+            }
+            loader->writingDone.notify_all();
+        }
+    } writeDone{this, pending};
     try
     {
         if (ownedPending != nullptr && ownedPending->nbtRoot != nullptr)

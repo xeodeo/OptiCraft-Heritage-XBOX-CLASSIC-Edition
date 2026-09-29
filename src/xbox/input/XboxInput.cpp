@@ -43,6 +43,11 @@ bool s_previousMenu = false;
 // "drop item" in game): ignored by gameplay until released.
 unsigned int s_suppressedButtons = 0;
 int s_cameraWarmup = 0;
+// Back + D-pad in game: Up saves a waypoint, Down opens the waypoint manager
+// (the PS2 Triangle combos). Back alone still toggles the debug screen, on
+// release, so a combo does not also open it.
+bool s_backCombo = false;
+int s_waypointRequest = 0;
 int s_menuAnalogDirection = 0;
 float s_menuAnalogRepeat = 0.0f;
 
@@ -311,10 +316,25 @@ void updateGameplay(const XboxPadSnapshot& p)
 	// which action each drives (defaults in GameSettingsBackend_XBOX.cpp).
 	const float moveX = XboxInput::applyDeadzone(p.leftX);
 	const float moveY = XboxInput::applyDeadzone(p.leftY);
-	setKey(XBOX_KEY_DPAD_UP, moveY < -0.05f || (p.held & XBOX_PAD_DPAD_UP));
-	setKey(XBOX_KEY_DPAD_DOWN, moveY > 0.05f || (p.held & XBOX_PAD_DPAD_DOWN));
-	setKey(XBOX_KEY_DPAD_LEFT, moveX < -0.05f || (p.held & XBOX_PAD_DPAD_LEFT));
-	setKey(XBOX_KEY_DPAD_RIGHT, moveX > 0.05f || (p.held & XBOX_PAD_DPAD_RIGHT));
+	const bool backHeld = (p.held & XBOX_PAD_BACK) != 0;
+	if (p.pressed & XBOX_PAD_BACK)
+		s_backCombo = false;
+	if (backHeld && (p.pressed & XBOX_PAD_DPAD_UP))
+	{
+		s_waypointRequest = 1;
+		s_backCombo = true;
+	}
+	else if (backHeld && (p.pressed & XBOX_PAD_DPAD_DOWN))
+	{
+		s_waypointRequest = 2;
+		s_backCombo = true;
+	}
+	// The D-pad does not walk while it is part of a Back combo.
+	const unsigned short dpadHeld = backHeld ? 0 : p.held;
+	setKey(XBOX_KEY_DPAD_UP, moveY < -0.05f || (dpadHeld & XBOX_PAD_DPAD_UP));
+	setKey(XBOX_KEY_DPAD_DOWN, moveY > 0.05f || (dpadHeld & XBOX_PAD_DPAD_DOWN));
+	setKey(XBOX_KEY_DPAD_LEFT, moveX < -0.05f || (dpadHeld & XBOX_PAD_DPAD_LEFT));
+	setKey(XBOX_KEY_DPAD_RIGHT, moveX > 0.05f || (dpadHeld & XBOX_PAD_DPAD_RIGHT));
 	setKey(XBOX_KEY_A, (p.held & XBOX_PAD_A) != 0);
 	setKey(XBOX_KEY_B, (p.held & XBOX_PAD_B) != 0);
 	setKey(XBOX_KEY_X, (p.held & XBOX_PAD_X) != 0);
@@ -334,7 +354,15 @@ void updateGameplay(const XboxPadSnapshot& p)
 	if (p.pressed & XBOX_PAD_BLACK) lwjgl::Mouse::detail::pushWheel(-1, 0, 0);
 	if (p.pressed & XBOX_PAD_WHITE) lwjgl::Mouse::detail::pushWheel(1, 0, 0);
 	pushKeyEdge(p, XBOX_PAD_RIGHT_THUMB, lwjgl::Keyboard::KEY_F5);
-	pushKeyEdge(p, XBOX_PAD_BACK, lwjgl::Keyboard::KEY_F3);
+	if (p.released & XBOX_PAD_BACK)
+	{
+		if (!s_backCombo)
+		{
+			lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_F3, true);
+			lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_F3, false);
+		}
+		s_backCombo = false;
+	}
 
 	// Gameplay does not use the text/menu latch; keep it from leaking into menus.
 	XboxPad::clearLatchedPressed();
@@ -343,6 +371,13 @@ void updateGameplay(const XboxPadSnapshot& p)
 
 namespace XboxInput
 {
+int consumeWaypointRequest()
+{
+	const int request = s_waypointRequest;
+	s_waypointRequest = 0;
+	return request;
+}
+
 
 void initialize()
 {

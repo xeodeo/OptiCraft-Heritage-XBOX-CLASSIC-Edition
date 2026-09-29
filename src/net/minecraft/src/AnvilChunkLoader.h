@@ -1,5 +1,6 @@
 #pragma once
 
+#include <condition_variable>
 #include <mutex>
 #include <string>
 #include <unordered_set>
@@ -52,4 +53,11 @@ private:
     std::vector<AnvilChunkLoaderPending *> pendingSaves;
     std::unordered_set<ChunkCoordIntPair, ChunkCoordIntPairValueHash, ChunkCoordIntPairValueEqual> pendingCoordinates;
     std::mutex pendingMutex;
+    // The save the IO thread is serializing/writing right now. Its coordinate
+    // stays in pendingCoordinates until the region write lands, so the chunk
+    // never looks unsaved in between (a reload would read stale or missing
+    // data and the streaming provider would generate it again); a load of it
+    // waits on writingDone.
+    AnvilChunkLoaderPending *writingPending = nullptr;
+    std::condition_variable writingDone;
 };

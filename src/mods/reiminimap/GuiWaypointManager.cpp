@@ -354,7 +354,11 @@ void GuiWaypointManager::drawScreen(int_t mouseX, int_t mouseY, float_t partialT
     if (totalWaypoints == 0)
     {
         const std::string emptyMsg = isEs ? "No hay waypoints guardados" : "No waypoints saved";
+#if PLATFORM_XBOX
+        const std::string hintMsg = isEs ? "Manten Back + Arriba en el juego para agregar uno." : "Hold Back + Up in game to add one.";
+#else
         const std::string hintMsg = isEs ? "Usa Triangulo + Arriba para agregar uno." : "Press Triangle + Up to add one.";
+#endif
         drawCenteredString(fontRenderer, emptyMsg, panelX + panelW / 2, listY + 30, 0x888888);
         drawCenteredString(fontRenderer, hintMsg, panelX + panelW / 2, listY + 46, 0x555555);
     }

@@ -28,6 +28,9 @@
 #if PLATFORM_PS2
 #include "ps2/input/Ps2PadState.h"
 #endif
+#if PLATFORM_XBOX
+#include "xbox/input/XboxInput.h"
+#endif
 
 static const int_t MAP_RES = 64;
 
@@ -235,6 +238,28 @@ void ReiMinimap::update()
                 m_mc->displayPlayerScreen(1, new GuiWaypointManager(1));
         }
         m_waypointMenuComboWasPressed[1] = menuCombo1;
+    }
+#elif PLATFORM_XBOX
+    // Player 1: Back + D-pad Up saves a waypoint, Back + D-pad Down opens the
+    // manager (XboxInput reads the combo during gameplay).
+    const int waypointRequest = XboxInput::consumeWaypointRequest();
+    if (p1 != nullptr && waypointRequest == 1)
+    {
+        int_t px = static_cast<int_t>(std::floor(p1->posX));
+        int_t py = static_cast<int_t>(std::floor(p1->posY));
+        int_t pz = static_cast<int_t>(std::floor(p1->posZ));
+        char nameBuf[32];
+        std::snprintf(nameBuf, sizeof(nameBuf), isSplit ? "P1 Waypoint %u" : "Waypoint %u", static_cast<unsigned>(m_waypoints.size() + 1));
+        addWaypoint(nameBuf, px, py, pz);
+
+        m_toastMessage[0] = "Waypoint saved!";
+        m_toastTimer[0] = 60;
+        if (m_mc->sndManager != nullptr)
+            m_mc->sndManager->playSoundFX("random.orb", 1.0f, 1.0f);
+    }
+    else if (p1 != nullptr && waypointRequest == 2 && m_mc->currentScreen == nullptr)
+    {
+        m_mc->displayGuiScreen(new GuiWaypointManager(0));
     }
 #endif
 
