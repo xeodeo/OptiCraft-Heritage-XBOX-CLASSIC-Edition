@@ -69,10 +69,11 @@ std::vector<SaveFormatComparator *> AnvilSaveConverter::getSaveList()
             displayName = name;
 
         result.push_back(new SaveFormatComparator(name, displayName,
-                                                   info->getLastTimePlayed(), 0,
-                                                   info->getGameType(),
-                                                   saveVersion != getCurrentSaveVersion(),
-                                                   info->isHardcoreModeEnabled()));
+                                                info->getLastTimePlayed(), 0,
+                                                info->getGameType(),
+                                                saveVersion != getCurrentSaveVersion(),
+                                                info->isHardcoreModeEnabled(),
+                                                info->getSeed()));
     }
 
     return result;

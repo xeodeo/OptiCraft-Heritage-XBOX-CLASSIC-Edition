@@ -53,10 +53,16 @@ option(PS2_ENABLE_VU0_MESH_FINALIZE "Use asynchronous VIF0/VU0 micro mode for te
 # The STQ path is also faster: it batches 64 triangles per GIF packet.
 option(PS2_ENABLE_PERSPECTIVE_TEXTURES "Use PS2 STQ perspective-correct texture mapping in the fast draw path" ON)
 option(PS2_ENABLE_PSMT8 "Store game textures as 8-bit palettized PSMT8 + CT16 CLUT (halves texture VRAM/RAM)" ON)
+option(PS2_MERGE_WATER_TOPS "Experimental bounded still-water surface merging" OFF)
 option(PS2_RENDER_STATS "Enable verbose PS2 render statistics counters" OFF)
+option(PS2_OPTIMIZATION_VALIDATION "Enable low-overhead counters for validating PS2 optimization paths" OFF)
 option(PS2_REMOTE_DEBUG "Enable hardware remote debugging through ps2link/ps2client" OFF)
 option(PS2_ENABLE_SOUND "Enable PS2 audsrv ADPCM sound backend" ON)
 option(PS2_ENABLE_NETWORK "Enable PS2 TCP multiplayer through PS2SDK ps2ip/SMAP" ON)
+
+if(PS2_OPTIMIZATION_VALIDATION AND MC_LOG_LEVEL LESS 1)
+    message(WARNING "PS2_OPTIMIZATION_VALIDATION needs MC_LOG_LEVEL=1 or higher to emit summaries")
+endif()
 
 if(PS2_REMOTE_DEBUG AND CMAKE_BUILD_TYPE STREQUAL "Release")
     message(FATAL_ERROR "PS2_REMOTE_DEBUG requires a symbol-preserving build type; use the ps2-remote-debug preset")
@@ -329,6 +335,8 @@ target_compile_definitions(OptiCraft PRIVATE
     $<$<BOOL:${PS2_ENABLE_PERSPECTIVE_TEXTURES}>:PS2_ENABLE_PERSPECTIVE_TEXTURES>
     $<$<BOOL:${PS2_ENABLE_PSMT8}>:PS2_ENABLE_PSMT8>
     $<$<BOOL:${PS2_RENDER_STATS}>:PS2_RENDER_STATS>
+    $<$<BOOL:${PS2_OPTIMIZATION_VALIDATION}>:PS2_OPTIMIZATION_VALIDATION>
+    $<$<BOOL:${PS2_MERGE_WATER_TOPS}>:PS2_MERGE_WATER_TOPS>
     $<$<BOOL:${PS2_REMOTE_DEBUG}>:PS2_REMOTE_DEBUG>
     MC_LOG_LEVEL=${MC_LOG_LEVEL}
 )
@@ -372,8 +380,9 @@ target_link_libraries(OptiCraft
     patches pad mc vux
     $<$<BOOL:${PS2_ENABLE_SOUND}>:audsrv>
     z
-    $<$<BOOL:${PS2_ENABLE_NETWORK}>:ps2ip>
-    $<$<BOOL:${PS2_ENABLE_NETWORK}>:netman>
+    $<$<AND:$<BOOL:${PS2_ENABLE_NETWORK}>,$<BOOL:${PS2_REMOTE_DEBUG}>>:ps2ips>
+    $<$<AND:$<BOOL:${PS2_ENABLE_NETWORK}>,$<NOT:$<BOOL:${PS2_REMOTE_DEBUG}>>>:ps2ip>
+    $<$<AND:$<BOOL:${PS2_ENABLE_NETWORK}>,$<NOT:$<BOOL:${PS2_REMOTE_DEBUG}>>>:netman>
     kernel c
 )
 
@@ -398,8 +407,10 @@ target_link_options(OptiCraft PRIVATE
 )
 
 # Mirror the desktop build's predictable output location.
+set(PS2_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/bin/ps2" CACHE PATH
+    "PS2 executable and USB staging output directory")
 set_target_properties(OptiCraft PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/ps2"
+    RUNTIME_OUTPUT_DIRECTORY "${PS2_OUTPUT_DIR}"
 )
 
 # --- Post-link validation, size pass and packaging -----------------------------
@@ -420,7 +431,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT PS2_OBJCOPY)
     message(FATAL_ERROR "PS2 build: objcopy is required to strip and package a Release ELF")
 endif()
 
-set(PS2_USB_ROOT "${CMAKE_SOURCE_DIR}/bin/ps2/usb")
+set(PS2_USB_ROOT "${PS2_OUTPUT_DIR}/usb")
 set(PS2_APP_DIR  "${PS2_USB_ROOT}/MCBETA")
 set(_PS2_ELF_VALIDATOR "${CMAKE_SOURCE_DIR}/cmake/ps2_validate_elf.cmake")
 set(_PS2_LINKED_SIZE_REPORT "${CMAKE_BINARY_DIR}/OptiCraft.linked-size.txt")
@@ -480,24 +491,15 @@ add_custom_target(ps2-data
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_SOURCE_DIR}/data/resources_ps2" "${PS2_APP_DIR}/data/resources"
 
-    # Audio that is deliberately not shipped. This used to be about ELF size;
-    # now the cost is SPU2 memory, which is 2 MB and has no eviction here --
-    # ps2GetAdpcmSample() uploads a sample on first play and never unloads it.
-    #
-    #     newsound/ambient   1141 KB   cave ambience + rain/thunder beds
-    #     sound/loops         ~2 MB    C418 ocean/cave/bird loops
-    #
-    # Neither is reachable often enough to be worth that budget:
-    # World::updateBlocksAndPlayCaveSounds reseeds its counter to 6000-18000
-    # ticks (5-15 minutes), and PS2_SKIP_RAIN_SNOW already removes the weather
-    # the rain beds accompany. A missing sound is a graceful no-op, so this is
-    # now purely a deployment choice: copy the two folders into the install's
-    # data/resources tree and they play, at the cost of SPU2 space for the rest
-    # of the session.
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${PS2_APP_DIR}/data/resources/newsound/ambient"
+    # Keep rain/thunder now that PS2 precipitation is enabled. Removing all
+    # of ambient silently removed their sound-pool entries from assets.pak.
+    # Rain's four short samples total ~100 KB and are loaded on demand.
+    # Cave ambience and the much larger legacy loops remain excluded: audsrv's
+    # SPU2 sample cache has no eviction, so those can exhaust its 2 MB budget.
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${PS2_APP_DIR}/data/resources/newsound/ambient/cave"
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${PS2_APP_DIR}/data/resources/sound/loops"
 
-    # Last, so the two removals above are already reflected in the listing.
+    # Generate the listing after the exclusions above.
     # Ps2ResourceManifest reads this instead of enumerating data/resources at
     # runtime; see the header of ps2_resource_manifest.cmake for why a disc
     # cannot be asked what it contains.
@@ -516,6 +518,7 @@ if(PS2_ENABLE_SOUND)
     set(_AUDSRV_IRX "${PS2SDK}/iop/irx/audsrv.irx")
     if(EXISTS "${_AUDSRV_IRX}")
         add_custom_command(TARGET OptiCraft POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${PS2_APP_DIR}/data/irx"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                     "${_AUDSRV_IRX}" "${PS2_APP_DIR}/data/irx/audsrv.irx"
             COMMENT "Packaging ${PS2_APP_DIR}/data/irx/audsrv.irx"
@@ -526,11 +529,19 @@ if(PS2_ENABLE_SOUND)
     endif()
 endif()
 
-# PS2 TCP multiplayer uses the modern EE-side ps2ip stack. Package the three
-# IOP modules required by the Ethernet path next to the rest of the runtime
-# assets so Ps2IrxLoader can bring them up lazily when Multiplayer is opened.
+# Normal PS2 TCP multiplayer owns the EE-side ps2ip path and therefore ships
+# the Ethernet/NETMAN modules it initializes. Remote-debug builds reuse the
+# IOP-side PS2IP-NM stack already started by ps2link, but still need ps2ips.irx:
+# that module is the RPC server which exposes the resident IOP sockets to the
+# EE-side libps2ips client.
 if(PS2_ENABLE_NETWORK)
-    foreach(_PS2_NET_IRX IN ITEMS ps2dev9 netman smap)
+    if(PS2_REMOTE_DEBUG)
+        set(_PS2_NET_IRX_LIST ps2ips)
+    else()
+        set(_PS2_NET_IRX_LIST ps2dev9 netman smap)
+    endif()
+
+    foreach(_PS2_NET_IRX IN LISTS _PS2_NET_IRX_LIST)
         set(_PS2_NET_IRX_SOURCE "${PS2SDK}/iop/irx/${_PS2_NET_IRX}.irx")
         if(NOT EXISTS "${_PS2_NET_IRX_SOURCE}")
             message(FATAL_ERROR "PS2_ENABLE_NETWORK requires ${_PS2_NET_IRX_SOURCE}")
@@ -543,4 +554,5 @@ if(PS2_ENABLE_NETWORK)
             VERBATIM
         )
     endforeach()
+    unset(_PS2_NET_IRX_LIST)
 endif()

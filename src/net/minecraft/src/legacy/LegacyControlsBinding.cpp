@@ -138,6 +138,8 @@ std::vector<LegacyControlsBindingRow> legacyControlsRows(GameSettings *settings)
     rows.reserve(settings->keyBindings.size());
     for (int_t i = 0; i < static_cast<int_t>(settings->keyBindings.size()); ++i)
     {
+        if (settings->keyBindings[i] == settings->keyBindCrafting && !settings->legacyCrafting)
+            continue;
         LegacyControlsBindingRow row;
         row.kind = LegacyControlsBindingKind::KeyBinding;
         row.label = settings->getKeyBindingDescription(i);

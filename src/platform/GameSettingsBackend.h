@@ -22,5 +22,6 @@ bool platformGameSettingsAnaglyphValue(bool current, bool requested);
 bool platformGameSettingsLoadOption(GameSettings& settings, const std::string& key, const std::string& value);
 void platformGameSettingsFinalizeLoad(GameSettings& settings);
 void platformGameSettingsSyncControllerBindings(const GameSettings& settings);
+void platformGameSettingsApplyLegacyCrafting(GameSettings& settings);
 void platformGameSettingsAddKnownKeys(std::unordered_set<std::string>& keys);
 void platformGameSettingsWriteOptions(const GameSettings& settings, std::ostream& out);

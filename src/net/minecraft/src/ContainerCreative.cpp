@@ -17,6 +17,8 @@
 #include "Item.h"
 #include "ItemStack.h"
 #include "Slot.h"
+#include "Minecraft.h"
+#include "GameSettings.h"
 
 #include <cmath>
 
@@ -282,7 +284,17 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
     for (int_t col = 0; col < 9; ++col)
         addSlot(new Slot(player->inventory, col, 8 + col * 18, 184));
 
-    setCategory(CREATIVE_TAB_BUILDING);
+    Minecraft *mc = Minecraft::getMinecraft();
+    if (mc != nullptr && mc->gameSettings != nullptr && !mc->gameSettings->legacyCreative)
+    {
+        currentTab = CREATIVE_TAB_ALL;
+        itemList = masterList;
+        scrollTo(0.0f);
+    }
+    else
+    {
+        setCategory(CREATIVE_TAB_BUILDING);
+    }
 }
 
 ContainerCreative::~ContainerCreative()
@@ -305,6 +317,15 @@ ContainerCreative::~ContainerCreative()
 
 void ContainerCreative::setCategory(int_t tabIndex)
 {
+    Minecraft *mc = Minecraft::getMinecraft();
+    if (mc != nullptr && mc->gameSettings != nullptr && !mc->gameSettings->legacyCreative)
+    {
+        currentTab = CREATIVE_TAB_ALL;
+        itemList = masterList;
+        scrollTo(0.0f);
+        return;
+    }
+
     if (tabIndex < 0)
         tabIndex = 0;
     if (tabIndex >= CREATIVE_TAB_COUNT)

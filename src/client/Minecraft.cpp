@@ -2169,10 +2169,7 @@ void Minecraft::runTick()
                 {
                     if (playerController->isInCreativeMode())
                         displayPlayerScreen(0, new GuiContainerCreative(thePlayer));
-#if !PLATFORM_XBOX
-                    else if (gameSettings->legacyUI)
-                        displayPlayerScreen(0, new LegacyCraftingScreen(thePlayer->inventory, theWorld, 0, 0, 0, true, thePlayer));
-#endif
+
                     else
                         displayPlayerScreen(0, new GuiInventory(thePlayer));
                 }
@@ -2180,12 +2177,40 @@ void Minecraft::runTick()
             }
             if (playerController->isInCreativeMode())
                 displayGuiScreen(new GuiContainerCreative(thePlayer));
-#if !PLATFORM_XBOX
-            else if (gameSettings->legacyUI)
-                displayGuiScreen(new LegacyCraftingScreen(thePlayer->inventory, theWorld, 0, 0, 0, true, thePlayer));
-#endif
+
             else
                 displayGuiScreen(new GuiInventory(thePlayer));
+        }
+
+        while (gameSettings->keyBindCrafting != nullptr && gameSettings->keyBindCrafting->isPressed())
+        {
+            if (playerController->isInCreativeMode() || !gameSettings->legacyCrafting)
+                continue;
+#if !PLATFORM_XBOX
+            // Xbox split screen opens player 1's screens through the player
+            // context (displayGuiScreen below), not the PS2 per-player slots.
+            if (isSplitScreenActive())
+            {
+                if (isPlayerScreenActive(0))
+                    closePlayerScreen(0);
+                else
+                {
+#if PLATFORM_XBOX
+                    displayPlayerScreen(0, new XboxCraftingScreen(thePlayer));
+#else
+                    if (gameSettings->legacyUI)
+                        displayPlayerScreen(0, new LegacyCraftingScreen(thePlayer->inventory, theWorld, 0, 0, 0, true, thePlayer));
+#endif
+                }
+                continue;
+            }
+#endif
+#if PLATFORM_XBOX
+            displayGuiScreen(new XboxCraftingScreen(thePlayer));
+#else
+            if (gameSettings->legacyUI)
+                displayGuiScreen(new LegacyCraftingScreen(thePlayer->inventory, theWorld, 0, 0, 0, true, thePlayer));
+#endif
         }
 
         while (gameSettings->keyBindDrop->isPressed())
@@ -2312,6 +2337,11 @@ void Minecraft::runTick()
             effectRenderer->updateEffects();
             ClientProfiler::tickPhase("effects", System::nanoTime() - clientPhaseStartNs);
         }
+    }
+    else
+    {
+        if (sndManager != nullptr)
+            sndManager->playRandomMusicIfReady();
     }
 
     systemTime = System::currentTimeMillis();
@@ -2576,6 +2606,15 @@ void Minecraft::changeWorld2(World *world, const std::string &s)
 void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *entityplayer)
 {
     World *oldWorld = theWorld;
+#ifdef PS2_PLATFORM
+    // A remote world has no local chunks or level data to save. More importantly,
+    // forcing synchronous storage / threaded-I/O drains while the PS2 network stack
+    // is being torn down can stall the IOP during disconnect. Keep dirty stats in
+    // RAM and let the next normal sync point (or app shutdown) persist them.
+    const bool ps2MultiplayerExit = oldWorld != nullptr && oldWorld->multiplayerWorld && world == nullptr;
+#else
+    constexpr bool ps2MultiplayerExit = false;
+#endif
     EntityPlayerSP *transferredPlayer = entityplayer;
     if (transferredPlayer == nullptr && world != nullptr && world->multiplayerWorld)
         transferredPlayer = thePlayer;
@@ -2614,14 +2653,15 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
         oldWorld->detachEntityForWorldChange(transferredPlayer);
 
     statFileWriter->prepareStatsForSync();
-    statFileWriter->syncStats();
+    if (!ps2MultiplayerExit)
+        statFileWriter->syncStats();
     renderViewEntity = nullptr;
     loadingScreen->printText(s);
     loadingScreen->displayLoadingString("");
     const long_t loadScreenStart = System::currentTimeMillis();
     sndManager->playStreaming("", 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
-    if (oldWorld != nullptr)
+    if (oldWorld != nullptr && !ps2MultiplayerExit)
         oldWorld->saveWorldIndirectly(loadingScreen);
 
     theWorld = world;
@@ -2834,6 +2874,11 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
     else if (renderEngine != nullptr)
     {
         renderEngine->setBackgroundTextureLoadingEnabled(true);
+    }
+
+    if (world != nullptr && sndManager != nullptr)
+    {
+        sndManager->triggerMusicNow();
     }
 
 

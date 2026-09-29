@@ -278,6 +278,9 @@ void GuiMainMenu::initGui()
         else if (month == 1  && day == 1)  splashText = "Happy new year!";
     }
 
+    if (mc != nullptr && mc->sndManager != nullptr)
+        mc->sndManager->playRandomMusicIfReady();
+
     StringTranslate *tr = StringTranslate::getInstance();
     if (mc->gameSettings != nullptr && mc->gameSettings->legacyUI)
     {

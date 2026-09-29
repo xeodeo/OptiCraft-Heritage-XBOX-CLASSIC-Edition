@@ -10,6 +10,9 @@
 #include "net/minecraft/src/Config.h"
 #include "net/minecraft/src/ConnectedTextures.h"
 #include "net/minecraft/src/Block.h"
+#ifdef PS2_MERGE_WATER_TOPS
+#include "net/minecraft/src/CustomColorizer.h"
+#endif
 #include "net/minecraft/src/RenderBlocks.h"
 #include "net/minecraft/src/Tessellator.h"
 #include "net/minecraft/src/Chunk.h"
@@ -26,13 +29,18 @@
 
 #include "platform/Profiler.h"
 #include "platform/ExtendedProfiler.h"
+#include "platform/WorkProfiler.h"
 #include "platform/RenderTerrainStaging.h"
 #include "ps2/render/Ps2TerrainMesh.h"
 #include "ps2/render/Ps2BlockRenderInfo.h"
 #include "ps2/render/Ps2CubeFaceMask.h"
 #include "ps2/render/Ps2GreedyMesh.h"
+#ifdef PS2_MERGE_WATER_TOPS
+#include "ps2/render/Ps2WaterSurfaceMerge.h"
+#endif
 #include "ps2/render/Ps2MeshStagingPool.h"
 #include "ps2/render/Ps2SectionVisibility.h"
+#include "ps2/diagnostics/Ps2OptimizationValidation.h"
 
 namespace
 {
@@ -80,6 +88,93 @@ namespace
         const std::size_t target = ((required + growthInts - 1u) / growthInts) * growthInts;
         buffer.reserve(target);
     }
+
+#ifdef PS2_MERGE_WATER_TOPS
+    static int_t ps2SectionBlockIndex(int_t x, int_t y, int_t z)
+    {
+        return x | (z << 4) | (y << 8);
+    }
+
+    // Fast path for the interior of a flat source-water surface. The generic
+    // fluid renderer evaluates six faces, four interpolated corner heights and
+    // flow direction for every block, even though a deep, uninterrupted ocean
+    // source has only one visible face and all four heights are identical.
+    //
+    // Keep the predicate intentionally strict: section borders, shallow water,
+    // flowing water, coastlines and any surface with water above fall back to
+    // RenderBlocks unchanged. The emitted quad matches the vanilla still-water
+    // top layout, so the existing bounded 2x2 merge can consume it normally.
+    static bool ps2RenderFlatStillWaterTop(const Ps2MeshSectionCache *sectionCache,
+                                           ChunkCache &chunkcache, Tessellator *tessellator,
+                                           Block *block, int_t local,
+                                           int_t x, int_t y, int_t z)
+    {
+        if (sectionCache == nullptr || !sectionCache->valid ||
+            block == nullptr || block != Block::waterStill ||
+            Block::waterStill == nullptr || Block::waterMoving == nullptr)
+            return false;
+
+        const int_t lx = local & 15;
+        const int_t lz = (local >> 4) & 15;
+        const int_t ly = (local >> 8) & 15;
+        if (lx <= 0 || lx >= 15 || lz <= 0 || lz >= 15 || ly <= 0 || ly >= 15)
+            return false;
+
+        // Only source blocks use the static top texture and zero-flow UVs.
+        if (chunkcache.getBlockMetadata(x, y, z) != 0)
+            return false;
+
+        const int_t stillId = Block::waterStill->blockID;
+        const int_t movingId = Block::waterMoving->blockID;
+        const auto blockIdAt = [&](int_t sx, int_t sy, int_t sz) -> int_t {
+            return sectionCache->blockIds[static_cast<std::size_t>(
+                ps2SectionBlockIndex(sx, sy, sz))];
+        };
+
+        // A water block below guarantees the bottom face is hidden. Requiring a
+        // full 3x3 source-water neighborhood makes every corner height exactly
+        // the same as the generic renderer. No water may sit above any of those
+        // samples, otherwise getFluidHeight() would raise that corner to 1.0.
+        if (blockIdAt(lx, ly - 1, lz) != stillId)
+            return false;
+        for (int_t dz = -1; dz <= 1; ++dz)
+        {
+            for (int_t dx = -1; dx <= 1; ++dx)
+            {
+                if (blockIdAt(lx + dx, ly, lz + dz) != stillId)
+                    return false;
+                const int_t above = blockIdAt(lx + dx, ly + 1, lz + dz);
+                if (above == stillId || above == movingId)
+                    return false;
+            }
+        }
+
+        const int_t color = CustomColorizer::getFluidColor(block, &chunkcache, x, y, z);
+        const float red = (float)(color >> 16 & 0xff) / 255.0f;
+        const float green = (float)(color >> 8 & 0xff) / 255.0f;
+        const float blue = (float)(color & 0xff) / 255.0f;
+
+        const int_t tile = block->getBlockTextureFromSideAndMetadata(1, 0);
+        const tess_coord_t u0 = (tess_coord_t)((tile & 0xf) << 4) / 256.0f;
+        const tess_coord_t v0 = (tess_coord_t)(tile & 0xf0) / 256.0f;
+        const tess_coord_t u1 = u0 + (tess_coord_t)(16.0f / 256.0f);
+        const tess_coord_t v1 = v0 + (tess_coord_t)(16.0f / 256.0f);
+
+        // Four metadata-0 source samples produce the exact 8/9 surface height
+        // in RenderBlocks::getFluidHeight(). Use the same float ratio directly
+        // so this hot path does not repeat the weighted-height loop per block.
+        constexpr float kFlatSourceHeight = 8.0f / 9.0f;
+        const float topY = (float)y + kFlatSourceHeight;
+
+        tessellator->setBrightness(block->getMixedBrightnessForBlock(&chunkcache, x, y, z));
+        tessellator->setColorOpaque_F(red, green, blue);
+        tessellator->addVertexWithUV(x + 0, topY, z + 0, u0, v0);
+        tessellator->addVertexWithUV(x + 0, topY, z + 1, u0, v1);
+        tessellator->addVertexWithUV(x + 1, topY, z + 1, u1, v1);
+        tessellator->addVertexWithUV(x + 1, topY, z + 0, u1, v0);
+        return true;
+    }
+#endif
 
     static void logPackedFallbackStats()
     {
@@ -152,6 +247,28 @@ namespace
         if (!world->chunkExists(chunkX, chunkZ - 1)) mask |= kMissingNeighbourNorth;
         if (!world->chunkExists(chunkX, chunkZ + 1)) mask |= kMissingNeighbourSouth;
         return mask;
+    }
+
+    static inline bool ps2IsWaterBlockId(int_t id)
+    {
+        return (Block::waterStill != nullptr && id == Block::waterStill->blockID) ||
+               (Block::waterMoving != nullptr && id == Block::waterMoving->blockID);
+    }
+
+    static bool ps2IsFullyEnclosedWaterCell(const Ps2MeshSectionCache *sectionCache,
+                                            int_t local, int_t lx, int_t ly, int_t lz)
+    {
+        if (sectionCache == nullptr || !sectionCache->valid ||
+            lx <= 0 || lx >= 15 || ly <= 0 || ly >= 15 || lz <= 0 || lz >= 15)
+            return false;
+
+        const auto &ids = sectionCache->blockIds;
+        return ps2IsWaterBlockId(ids[static_cast<std::size_t>(local - 1)]) &&
+               ps2IsWaterBlockId(ids[static_cast<std::size_t>(local + 1)]) &&
+               ps2IsWaterBlockId(ids[static_cast<std::size_t>(local - 16)]) &&
+               ps2IsWaterBlockId(ids[static_cast<std::size_t>(local + 16)]) &&
+               ps2IsWaterBlockId(ids[static_cast<std::size_t>(local - 256)]) &&
+               ps2IsWaterBlockId(ids[static_cast<std::size_t>(local + 256)]);
     }
 
     static bool ps2OpaqueNeighbour(ChunkCache &cache, int_t x, int_t y, int_t z)
@@ -394,6 +511,9 @@ bool WorldRenderer::ps2BeginBuildState()
 
 	Chunk::isLit = false;
 	ps2BuildActive = true;
+#ifdef PS2_OPTIMIZATION_VALIDATION
+	Ps2OptimizationValidation::meshBuildStarted();
+#endif
 	ps2BuildPass = 0;
 	ps2BuildCursor = 0;
 	// Rebuilds are mostly relights/edits of the same section, so the new mesh
@@ -602,9 +722,15 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 		const long long ps2ProfileMeshPassStartNs = (long long)(PlatformCompat::getMonotonicMicros() * 1000ULL);
 #endif
 		int_t margin = 1;
+#if MC_LOG_LEVEL >= 2
+		const std::uint32_t ps2CacheSetupStart = platformProfileRenderPhaseBegin();
+#endif
 		ChunkCache chunkcache(worldObj, x0 - margin, y0 - margin, z0 - margin,
 		                                x1 + margin, y1 + margin, z1 + margin);
 		Ps2MeshSectionCache *ps2BuildSectionCache = ps2_mesh_staging_section_cache(ps2BuildStagingSlot);
+#if MC_LOG_LEVEL >= 2
+		platformProfileMeshWork(ps2CacheSetupStart, PlatformMeshWork::CacheSetup);
+#endif
 
 		bool stepDrew = false;
 #if PLATFORM_ENABLE_GREEDY_MESH
@@ -626,6 +752,9 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 		// twice.
 		if (allowOptiFineGreedyMesh && ps2BuildPass == 0 && ps2BuildGreedyFace < RENDER_TERRAIN_GREEDY_FACE_COUNT)
 		{
+#if MC_LOG_LEVEL >= 2
+			const std::uint32_t ps2GreedyWorkStart = platformProfileRenderPhaseBegin();
+#endif
 			if (ps2BuildSectionCache != nullptr &&
 				(!ps2BuildSectionCache->valid ||
 				 ps2BuildSectionCache->originX != x0 ||
@@ -638,60 +767,81 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 			const int_t slicesPerStep = PS2_GREEDY_SLICES_PER_STEP < 1
 				? 1
 				: (PS2_GREEDY_SLICES_PER_STEP > 16 ? 16 : PS2_GREEDY_SLICES_PER_STEP);
-			const int_t sliceBegin = ps2BuildGreedySlice;
-			int_t sliceEnd = sliceBegin + slicesPerStep;
-			if (sliceEnd > 16)
-				sliceEnd = 16;
-
-			int_t greedyX0 = x0;
-			int_t greedyY0 = y0;
-			int_t greedyZ0 = z0;
-			int_t greedyX1 = x1;
-			int_t greedyY1 = y1;
-			int_t greedyZ1 = z1;
-			if (ps2BuildGreedyFace <= 1)
-			{
-				greedyY0 = y0 + sliceBegin;
-				greedyY1 = y0 + sliceEnd;
-			}
-			else if (ps2BuildGreedyFace <= 3)
-			{
-				greedyZ0 = z0 + sliceBegin;
-				greedyZ1 = z0 + sliceEnd;
-			}
-			else
-			{
-				greedyX0 = x0 + sliceBegin;
-				greedyX1 = x0 + sliceEnd;
-			}
+			const int_t greedySliceLimit = std::min(16, ps2BuildGreedySlice + slicesPerStep);
 
 #if MC_LOG_LEVEL > 2
 			const std::uint32_t ps2GreedyStageStart = platformProfileRenderPhaseBegin();
 #endif
-			// The greedy path writes the canonical six-slot PS2 capture layout
-			// directly into the leased staging buffer. It no longer builds an
-			// eight-slot Tessellator stream only to copy/light it back into six slots.
+			// Build one independent plane at a time. Cheap planes can still consume
+			// the configured slices-per-step throughput, while an expensive plane
+			// yields once this updateRenderer() reaches the same elapsed-time bound
+			// used by the normal block scan. Greedy rectangles never span planes, so
+			// splitting the old multi-plane call does not change mesh output.
 			std::vector<int_t> &greedyRaw = ps2BuildBuffers()[0];
 			const Ps2GreedyRawTarget greedyTarget = { &greedyRaw, posX, posY, posZ };
-			const int_t faceVerts = ps2BuildSectionCache != nullptr && ps2BuildSectionCache->valid
-				? ps2_greedy_mesh_face_raw(chunkcache, ps2BuildGreedyFace,
-				                                 greedyX0, greedyY0, greedyZ0,
-				                                 greedyX1, greedyY1, greedyZ1,
-				                                 greedyTarget, *ps2BuildSectionCache)
-				: ps2_greedy_mesh_face_raw(chunkcache, ps2BuildGreedyFace,
-				                                 greedyX0, greedyY0, greedyZ0,
-				                                 greedyX1, greedyY1, greedyZ1,
-				                                 greedyTarget);
+			int_t faceVerts = 0;
+			while (ps2BuildGreedySlice < greedySliceLimit)
+			{
+				const int_t sliceBegin = ps2BuildGreedySlice;
+				const int_t sliceEnd = sliceBegin + 1;
+
+				int_t greedyX0 = x0;
+				int_t greedyY0 = y0;
+				int_t greedyZ0 = z0;
+				int_t greedyX1 = x1;
+				int_t greedyY1 = y1;
+				int_t greedyZ1 = z1;
+				if (ps2BuildGreedyFace <= 1)
+				{
+					greedyY0 = y0 + sliceBegin;
+					greedyY1 = y0 + sliceEnd;
+				}
+				else if (ps2BuildGreedyFace <= 3)
+				{
+					greedyZ0 = z0 + sliceBegin;
+					greedyZ1 = z0 + sliceEnd;
+				}
+				else
+				{
+					greedyX0 = x0 + sliceBegin;
+					greedyX1 = x0 + sliceEnd;
+				}
+
+				const int_t sliceVerts = ps2BuildSectionCache != nullptr && ps2BuildSectionCache->valid
+					? ps2_greedy_mesh_face_raw(chunkcache, ps2BuildGreedyFace,
+					                                 greedyX0, greedyY0, greedyZ0,
+					                                 greedyX1, greedyY1, greedyZ1,
+					                                 greedyTarget, *ps2BuildSectionCache)
+					: ps2_greedy_mesh_face_raw(chunkcache, ps2BuildGreedyFace,
+					                                 greedyX0, greedyY0, greedyZ0,
+					                                 greedyX1, greedyY1, greedyZ1,
+					                                 greedyTarget);
+				faceVerts += sliceVerts;
+				ps2BuildGreedySlice = sliceEnd;
+
+				if (ps2BuildGreedySlice >= 16)
+				{
+					ps2BuildGreedySlice = 0;
+					ps2BuildGreedyFace++;
+					break;
+				}
+
+				if (PLATFORM_CHUNK_BUILD_STEP_US > 0)
+				{
+					const long long elapsedNs =
+						(long long)(PlatformCompat::getMonotonicMicros() * 1000ULL) - ps2BuildStartNs;
+					if (elapsedNs >= (long long)PLATFORM_CHUNK_BUILD_STEP_US * 1000LL)
+						break;
+				}
+			}
+
 			stepDrew = faceVerts > 0;
+#if MC_LOG_LEVEL >= 2
+			platformProfileMeshWork(ps2GreedyWorkStart, PlatformMeshWork::Greedy);
+#endif
 #if MC_LOG_LEVEL > 2
 			platformProfileMeshStage(ps2GreedyStageStart, PlatformMeshStage::Greedy);
 #endif
-			ps2BuildGreedySlice = sliceEnd;
-			if (ps2BuildGreedySlice >= 16)
-			{
-				ps2BuildGreedySlice = 0;
-				ps2BuildGreedyFace++;
-			}
 
 			if (faceVerts > 0)
 			{
@@ -712,6 +862,9 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 			return false;
 		}
 #endif
+#if MC_LOG_LEVEL >= 2
+		const std::uint32_t ps2ScanSetupStart = platformProfileRenderPhaseBegin();
+#endif
 		RenderBlocks ps2Renderblocks(&chunkcache);
 		Tessellator *ps2Tessellator = &Tessellator::instance;
 		const ExtendedBlockStorage *ps2BuildSection = chunkcache.getResidentBlockStorageAt(x0, y0, z0);
@@ -721,7 +874,8 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 			: nullptr;
 		ps2Tessellator->startDrawingQuads();
 		ps2Tessellator->setTranslationD(-(double)posX, -(double)posY, -(double)posZ);
-#if MC_LOG_LEVEL > 2
+#if MC_LOG_LEVEL >= 2
+		platformProfileMeshWork(ps2ScanSetupStart, PlatformMeshWork::ScanSetup);
 		const std::uint32_t ps2BlockScanStart = platformProfileRenderPhaseBegin();
 #endif
 		while (ps2BuildCursor < totalBlocks && processed < blockBudget)
@@ -796,6 +950,24 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 			if (blockPass != ps2BuildPass)
 				continue;
 
+			// A fluid block completely surrounded by water cannot emit a face:
+			// BlockFluid::shouldSideBeRendered() rejects neighbours with the same
+			// material. Deep ocean sections contain thousands of these cells, and
+			// routing every one through RenderBlocks repeats six neighbour/material
+			// queries plus the fluid setup only to return false. The section cache
+			// gives us the exact same answer with six direct 16-bit loads. Keep
+			// section-edge cells on the generic path so cross-section/chunk borders,
+			// shorelines, flowing water and partially loaded neighbours preserve the
+			// existing behaviour.
+			if (ps2BuildPass == 1 && ps2IsWaterBlockId(id) &&
+				ps2IsFullyEnclosedWaterCell(ps2BuildSectionCache, local, lx, ly, lz))
+			{
+#ifdef PS2_OPTIMIZATION_VALIDATION
+				Ps2OptimizationValidation::enclosedWaterSkip();
+#endif
+				continue;
+			}
+
 			std::uint8_t exposedFaceMask = Ps2CubeFaceMask::kAllFaces;
 #if PLATFORM_SKIP_ENCLOSED_OPAQUE_CUBES || PLATFORM_FAST_SIMPLE_CUBE_RENDER
 			if (ps2BuildPass == 0 && renderInfo.simpleOpaqueCube)
@@ -813,11 +985,26 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 				stepDrew |= ps2Renderblocks.renderSimpleOpaqueCubePs2(block, x, y, z, exposedFaceMask);
 			else
 #endif
+#ifdef PS2_MERGE_WATER_TOPS
+			if (ps2BuildPass == 1 && block == Block::waterStill &&
+				ps2RenderFlatStillWaterTop(ps2BuildSectionCache, chunkcache, ps2Tessellator,
+					block, local, x, y, z))
+			{
+#ifdef PS2_OPTIMIZATION_VALIDATION
+				Ps2OptimizationValidation::flatWaterFastPath();
+#endif
+				stepDrew = true;
+			}
+			else
+#endif
 				stepDrew |= ps2Renderblocks.renderBlockByRenderType(block, x, y, z);
 		}
+#if MC_LOG_LEVEL >= 2
+		platformProfileMeshWork(ps2BlockScanStart, PlatformMeshWork::BlockScan);
+		const std::uint32_t ps2CaptureStart = platformProfileRenderPhaseBegin();
+#endif
 #if MC_LOG_LEVEL > 2
 		platformProfileMeshStage(ps2BlockScanStart, PlatformMeshStage::BlockScan);
-		const std::uint32_t ps2CaptureStart = platformProfileRenderPhaseBegin();
 #endif
 
 		// Static scratch: one build step runs per frame for the whole game, and a
@@ -849,6 +1036,33 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 			if (compactTerrainLayout && (stepRaw.size() % slots) == 0u &&
 				(size_t)stepVerts <= stepRaw.size() / slots)
 			{
+#ifdef PS2_MERGE_WATER_TOPS
+                if (ps2BuildPass == 1 && stepTex && stepCol &&
+                    stepMode == 7 && Block::waterStill != nullptr)
+                {
+                    const Ps2WaterMergeStats water = ps2MergeWaterTops(stepRaw,
+                        Block::waterStill->getBlockTextureFromSide(1),
+                        [&](int lx, int ly, int lz) {
+                            return chunkcache.getBlockId(posX+lx, posY+ly, posZ+lz) ==
+                                Block::waterStill->blockID &&
+                                chunkcache.getBlockMetadata(posX+lx, posY+ly, posZ+lz) == 0;
+                        });
+#ifdef PS2_OPTIMIZATION_VALIDATION
+                    Ps2OptimizationValidation::waterMerge((int)water.input, (int)water.eligible,
+                        (int)water.removed);
+#endif
+                    // Per-step merge statistics are intentionally trace-only. Level-2
+                    // profiling runs while terrain streams, and each PS2 log line flushes
+                    // stdout; keeping this at DEBUG made the diagnostic itself consume
+                    // mesh-budget time and slowed the backlog it was measuring.
+                    MC_LOG_TRACE("render", "[PS2] water merge: inputQuads=%u eligible=%u"
+                        " rejectShapeUvColor=%u rejectMaterial=%u runBoundaries=%u"
+                        " pairs=%u squares=%u removed=%u outputQuads=%u\n",
+                        water.input, water.eligible, water.rejectedShape, water.rejectedMaterial,
+                        water.boundaries, water.pairs, water.squares, water.removed,
+                        water.input-water.removed);
+                }
+#endif
 				stepVerts = (int_t)(stepRaw.size() / slots);
 				// Non-null: the build is active, so the lease is held.
 				std::vector<int_t> &dst = ps2BuildBuffers()[ps2BuildPass];
@@ -863,6 +1077,9 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 				stepVerticesBuilt += stepVerts;
 			}
 		}
+#if MC_LOG_LEVEL >= 2
+		platformProfileMeshWork(ps2CaptureStart, PlatformMeshWork::Capture);
+#endif
 #if MC_LOG_LEVEL > 2
 		platformProfileMeshStage(ps2CaptureStart, PlatformMeshStage::Capture);
 #endif
@@ -953,8 +1170,14 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 					if (raw > s_ps2OpaquePublishScratch.capacity())
 						s_ps2OpaquePublishScratch.reserve(raw);
 					s_ps2OpaquePublishScratch.resize(raw);
+#if MC_LOG_LEVEL >= 2
+					const std::uint32_t ps2FaceSortStart = platformProfileRenderPhaseBegin();
+#endif
 					s_ps2PublishHandedOver = renderTerrainCacheSortFaces(s_ps2PublishCache,
 						staging[0].data(), s_ps2OpaquePublishScratch.data(), (int_t)quads);
+#if MC_LOG_LEVEL >= 2
+					platformProfileMeshWork(ps2FaceSortStart, PlatformMeshWork::FaceSort);
+#endif
 				}
 			}
 #endif
@@ -965,15 +1188,27 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 			const size_t opaqueRawInts = s_ps2PublishHandedOver
 				? s_ps2OpaquePublishScratch.size()
 				: staging[0].size();
+#if MC_LOG_LEVEL >= 2
+			const std::uint32_t ps2PackStart = platformProfileRenderPhaseBegin();
+#endif
 			buildStatus = renderTerrainCacheBeginOpaqueBuild(s_ps2PublishCache,
 				opaqueRaw, opaqueRawInts, ps2BuildVertexCount[0], ps2BuildDrawMode[0],
 				ps2BuildHasTexture[0], ps2BuildHasColor[0], ps2BuildHasNormals[0],
 				publishDidWork);
+#if MC_LOG_LEVEL >= 2
+			platformProfileMeshWork(ps2PackStart, PlatformMeshWork::Pack);
+#endif
 		}
 		else
 		{
+#if MC_LOG_LEVEL >= 2
+			const std::uint32_t ps2PackStart = platformProfileRenderPhaseBegin();
+#endif
 			buildStatus = renderTerrainCacheContinueOpaqueBuild(s_ps2PublishCache,
 				publishDidWork);
+#if MC_LOG_LEVEL >= 2
+			platformProfileMeshWork(ps2PackStart, PlatformMeshWork::Pack);
+#endif
 		}
 
 		ps2StepDidWork = publishDidWork;
@@ -1009,12 +1244,21 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 			if (raw > s_ps2OpaquePublishScratch.capacity())
 				s_ps2OpaquePublishScratch.reserve(raw);
 			s_ps2OpaquePublishScratch.resize(raw);
+#if MC_LOG_LEVEL >= 2
+			const std::uint32_t ps2FaceSortStart = platformProfileRenderPhaseBegin();
+#endif
 			handedOver = renderTerrainCacheSortFaces(ps2TerrainCache,
 				staging[0].data(), s_ps2OpaquePublishScratch.data(), (int_t)quads);
+#if MC_LOG_LEVEL >= 2
+			platformProfileMeshWork(ps2FaceSortStart, PlatformMeshWork::FaceSort);
+#endif
 		}
 	}
 #endif
 
+#if MC_LOG_LEVEL >= 2
+	const std::uint32_t ps2CommitStart = platformProfileRenderPhaseBegin();
+#endif
 	// Linear scans instead of hash sets: a section's tile-entity list is a
 	// handful of entries at most, so the set allocation was pure overhead paid
 	// on every completed rebuild. The visible list changes only after the async
@@ -1109,6 +1353,9 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 	ps2StepDidWork = true;
 
 	const bool dirtyDuringBuild = ps2BuildDirtyDuringBuild;
+#ifdef PS2_OPTIMIZATION_VALIDATION
+	Ps2OptimizationValidation::meshBuildPublished(dirtyDuringBuild);
+#endif
 	isChunkLit = Chunk::isLit;
 	ps2MissingNeighbourMask = ::ps2MissingNeighbourMask(worldObj, posX, posZ);
 #if PLATFORM_CPU_SECTION_OCCLUSION
@@ -1122,7 +1369,14 @@ bool WorldRenderer::ps2BuildRendererStep(int_t blockBudget)
 #endif
 	isInitialized = true;
 	needsUpdate = dirtyDuringBuild;
+	// The player edit is now visible. Mutations recorded while building still
+	// need a follow-up, but must not inherit the edit's 32 ms urgent lane on
+	// every frame until lighting propagation settles.
+	urgentRebuild = false;
 	int ps2TotalVertices = ps2VertexCount[0] + ps2VertexCount[1];
+#if MC_LOG_LEVEL >= 2
+	platformProfileMeshWork(ps2CommitStart, PlatformMeshWork::Commit);
+#endif
 	platformProfileChunkBuild((long long)(PlatformCompat::getMonotonicMicros() * 1000ULL) - ps2BuildStartNs, ps2TotalVertices);
 	chunksUpdated++;
 #if MC_LOG_LEVEL > 2

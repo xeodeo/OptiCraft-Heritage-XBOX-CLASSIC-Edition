@@ -249,7 +249,7 @@ SoundManager::SoundManager() :
     soundVolume(0),
     options(nullptr),
     rand(),
-    ticksBeforeMusic(rand.nextInt(12000))
+    ticksBeforeMusic(rand.nextInt(100) + 40)
 {
 }
 
@@ -347,13 +347,13 @@ void SoundManager::addSound(const jstring &s, const std::string &file)
 
 void SoundManager::addStreaming(const jstring &s, const std::string &file)
 {
-    if (audioPathHasExtension(file, ".ogg") || audioPathHasExtension(file, ".wav"))
+    if (audioPathHasExtension(file, ".ogg") || audioPathHasExtension(file, ".wav") || audioPathHasExtension(file, ".pcm"))
         soundPoolStreaming.addSound(s, file);
 }
 
 void SoundManager::addMusic(const jstring &s, const std::string &file)
 {
-    if (audioPathHasExtension(file, ".ogg") || audioPathHasExtension(file, ".wav"))
+    if (audioPathHasExtension(file, ".ogg") || audioPathHasExtension(file, ".wav") || audioPathHasExtension(file, ".pcm"))
         soundPoolMusic.addSound(s, file);
 }
 
@@ -372,7 +372,7 @@ bool SoundManager::playMusicFileNow(const std::string &file)
     if (PcMusicStream::active())
         return false;
 
-    if (audioPathHasExtension(file, ".ogg"))
+    if (audioPathHasExtension(file, ".ogg") || audioPathHasExtension(file, ".pcm"))
     {
         if (s_musicChannel >= 0)
             stopChannel(s_musicChannel, AudioBus::Music);
@@ -393,7 +393,7 @@ bool SoundManager::playMusicFileNow(const std::string &file)
         s_musicChannel = channel;
     }
 
-    ticksBeforeMusic = rand.nextInt(12000) + 12000;
+    ticksBeforeMusic = rand.nextInt(1200) + 600;
     return true;
 }
 
@@ -422,11 +422,11 @@ void SoundManager::playRandomMusicIfReady()
     }
 
     SoundPoolEntry *entry = soundPoolMusic.getRandomSound();
-    ticksBeforeMusic = rand.nextInt(12000) + 12000;
+    ticksBeforeMusic = rand.nextInt(1200) + 600;
     if (entry == nullptr)
         return;
 
-    if (audioPathHasExtension(entry->soundUrl, ".ogg"))
+    if (audioPathHasExtension(entry->soundUrl, ".ogg") || audioPathHasExtension(entry->soundUrl, ".pcm"))
     {
         PcMusicStream::start(entry->soundUrl);
         s_musicChannel = -1;
@@ -466,7 +466,7 @@ void SoundManager::playStreaming(const jstring &s, float f, float f1, float f2, 
         if (s_musicChannel >= 0)
             stopChannel(s_musicChannel, AudioBus::Music);
         s_musicChannel = -1;
-        ticksBeforeMusic = rand.nextInt(12000) + 12000;
+        ticksBeforeMusic = rand.nextInt(1200) + 600;
 
         auto pcm = loadSound(entry->soundUrl, f4);
         s_streamingChannel = playPCM(std::move(pcm), 0.5f * attenuation, false, AudioBus::Streaming);

@@ -8,21 +8,23 @@ SaveFormatComparator::SaveFormatComparator(const std::string &fileName, const st
     sizeOnDisk_(sizeOnDisk),
     conversionRequired(needsConversion),
     gameType_(0),
-    hardcore_(false)
+    hardcore_(false),
+    seed_(0LL)
 {
 }
 
 
 SaveFormatComparator::SaveFormatComparator(const std::string &fileName, const std::string &displayName,
                                            long_t lastPlayed, long_t sizeOnDisk, int_t gameType,
-                                           bool needsConversion, bool hardcore) :
+                                           bool needsConversion, bool hardcore, int64_t seed) :
     fileName(fileName),
     displayName(displayName),
     lastTimePlayed(lastPlayed),
     sizeOnDisk_(sizeOnDisk),
     conversionRequired(needsConversion),
     gameType_(gameType),
-    hardcore_(hardcore)
+    hardcore_(hardcore),
+    seed_(seed)
 {
 }
 
@@ -44,4 +46,9 @@ int SaveFormatComparator::compareTo(const SaveFormatComparator &other) const
 bool SaveFormatComparator::operator<(const SaveFormatComparator &other) const
 {
     return compareTo(other) < 0;
+}
+
+int64_t SaveFormatComparator::getSeed() const
+{
+    return seed_;
 }

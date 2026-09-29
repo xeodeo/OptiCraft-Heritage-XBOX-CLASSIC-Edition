@@ -28,6 +28,9 @@
 // pulls in ps2/render/Ps2Tuning.h when PLATFORM_PS2 is set). It reached the PC build
 // transitively via ChunkProvider.h, which is luck rather than design.
 #include "platform/PlatformTuning.h"
+#if PLATFORM_PS2
+#include "ps2/diagnostics/Ps2OptimizationValidation.h"
+#endif
 #include "platform/PlatformCompat.h"
 #include "platform/ExtendedProfiler.h"
 #if PLATFORM_INCREMENTAL_TERRAIN_BUILD
@@ -545,9 +548,17 @@ void WorldRenderer::markDirty()
 		const int_t chunkX = JavaArithmetic::intShr(posX, 4);
 		const int_t chunkZ = JavaArithmetic::intShr(posZ, 4);
 		if (worldObj != nullptr && worldObj->isChunkPopulationPendingForRendering(chunkX, chunkZ))
+		{
 			ps2BuildDirtyDuringBuild = true;
+#ifdef PS2_OPTIMIZATION_VALIDATION
+			Ps2OptimizationValidation::meshDirtyCoalesced();
+#endif
+		}
 		else
 		{
+#ifdef PS2_OPTIMIZATION_VALIDATION
+			Ps2OptimizationValidation::meshDirtyRestarted();
+#endif
 #if MC_LOG_LEVEL > 2
 			platformProfileMeshReset(PlatformMeshResetReason::DirtyRestart);
 #endif
@@ -555,6 +566,10 @@ void WorldRenderer::markDirty()
 		}
 	}
 #else
+#ifdef PS2_OPTIMIZATION_VALIDATION
+	if (ps2BuildActive)
+		Ps2OptimizationValidation::meshDirtyRestarted();
+#endif
 #if MC_LOG_LEVEL > 2
 	if (ps2BuildActive)
 		platformProfileMeshReset(PlatformMeshResetReason::DirtyRestart);
@@ -600,6 +615,9 @@ void WorldRenderer::markDirtyFromLighting()
 	if (ps2BuildActive)
 	{
 		ps2BuildDirtyDuringBuild = true;
+#ifdef PS2_OPTIMIZATION_VALIDATION
+		Ps2OptimizationValidation::meshDirtyCoalesced();
+#endif
 		needsUpdate = true;
 		return;
 	}

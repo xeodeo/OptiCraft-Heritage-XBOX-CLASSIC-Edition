@@ -126,6 +126,12 @@ WorldClient::~WorldClient()
 void WorldClient::tick()
 {
 	setWorldTime(JavaArithmetic::longAdd(getWorldTime(), 1LL));
+#if PLATFORM_PS2
+	// This override does not run World::tick(). Advance the client-only weather
+	// interpolation once per tick, including expiration of lightning flashes.
+	// Do not run the base world's server-side weather timers or simulation.
+	updateWeather();
+#endif
 	int_t light = calculateSkylightSubtracted(1.0f);
 	if (light != skylightSubtracted)
 	{
@@ -218,6 +224,32 @@ void WorldClient::tick()
 	if (clientChunkProvider != nullptr)
 		clientChunkProvider->unload100OldestChunks();
 	updateBlocksAndPlayCaveSounds();
+#if PLATFORM_PS2 && PLATFORM_MP_DEFERRED_CHUNKS && MC_LOG_LEVEL >= 2
+	// Sample the actual working set without materializing missing chunks.
+	static unsigned int healthTicks = 0;
+	if (++healthTicks >= 100 && clientChunkProvider != nullptr &&
+		!playerEntities.empty() && playerEntities[0] != nullptr)
+	{
+		healthTicks = 0;
+		const int_t cx = MathHelper::floor_double(playerEntities[0]->posX / 16.0);
+		const int_t cz = MathHelper::floor_double(playerEntities[0]->posZ / 16.0);
+		int resident = 0, pending = 0, missing = 0;
+		for (int dz = -PLATFORM_CHUNK_CACHE_RADIUS; dz <= PLATFORM_CHUNK_CACHE_RADIUS; ++dz)
+		for (int dx = -PLATFORM_CHUNK_CACHE_RADIUS; dx <= PLATFORM_CHUNK_CACHE_RADIUS; ++dx)
+		{
+			if (clientChunkProvider->hasChunk(cx + dx, cz + dz)) { ++resident; continue; }
+			const auto entry = deferredChunks.find(ChunkCoordIntPair::chunkXZ2Long(cx + dx, cz + dz));
+			if (entry != deferredChunks.end() && !entry->second.compressed.empty()) ++pending;
+			else ++missing;
+		}
+		MC_LOG_DEBUG("net.chunk", "workingSet center=%d,%d resident=%d pending=%d missingBase=%d"
+			" cache=%zu bytes=%zu evicted=%lu promoted=%lu corrupt=%lu packets=%lu unloads=%lu rain=%d strength=%.3f\n",
+			(int)cx, (int)cz, resident, pending, missing, deferredChunks.size(), deferredChunkBytes,
+			(unsigned long)deferredChunkEvictions, (unsigned long)deferredChunkPromotions,
+			(unsigned long)deferredChunkCorruptions, sendQueue->getMapChunkCount(),
+			sendQueue->getPreChunkUnloadCount(), worldInfo->getRaining() ? 1 : 0, (double)rainingStrength);
+	}
+#endif
 }
 
 void WorldClient::invalidateBlockReceiveRegion(int_t minX, int_t minY, int_t minZ,
@@ -1008,7 +1040,10 @@ void WorldClient::addEntityToWorld(int_t entityId, Entity *entity)
 
 Entity *WorldClient::getEntityByID(int_t entityId)
 {
-	return static_cast<Entity *>(entityHash->lookup(entityId));
+	Entity *entity = entityHash != nullptr ? static_cast<Entity *>(entityHash->lookup(entityId)) : nullptr;
+	if (entity != nullptr)
+		return entity;
+	return World::getEntityByID(entityId);
 }
 
 Entity *WorldClient::removeEntityFromWorld(int_t entityId)

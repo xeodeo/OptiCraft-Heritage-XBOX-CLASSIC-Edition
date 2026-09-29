@@ -16,13 +16,14 @@
 
 namespace
 {
-constexpr int_t PROMPT_COUNT = 4;
+constexpr int_t PROMPT_COUNT = 5;
 
 std::string actionName(LegacyControlAction action)
 {
     switch (action)
     {
     case LegacyControlAction::Inventory: return uiText("Inventory");
+    case LegacyControlAction::Crafting: return uiText("Crafting");
     case LegacyControlAction::Drop: return uiText("Drop");
     case LegacyControlAction::Jump: return uiText("Jump");
     case LegacyControlAction::Attack: return uiText("Attack");
@@ -36,8 +37,9 @@ LegacyControlAction actionAt(int_t index)
     switch (index)
     {
     case 0: return LegacyControlAction::Inventory;
-    case 1: return LegacyControlAction::Jump;
-    case 2: return LegacyControlAction::Attack;
+    case 1: return LegacyControlAction::Crafting;
+    case 2: return LegacyControlAction::Jump;
+    case 3: return LegacyControlAction::Attack;
     default: return LegacyControlAction::Use;
     }
 }
@@ -145,7 +147,7 @@ void rebuildRow(const GameSettings &settings, FontRenderer *font, PromptRow &row
 {
     for (int_t i = 0; i < PROMPT_COUNT; ++i)
     {
-        row.texts[i] = row.icons[i].texture >= 0 ? actionName(actionAt(i)) : prompt(settings, actionAt(i));
+        row.texts[i] = row.labels[i].empty() ? "" : (row.icons[i].texture >= 0 ? actionName(actionAt(i)) : prompt(settings, actionAt(i)));
         row.x[i] = 0;
     }
 
@@ -165,7 +167,7 @@ void rebuildRow(const GameSettings &settings, FontRenderer *font, PromptRow &row
         return;
 
     int_t textWidth = contentWidth(font, row.texts, PROMPT_COUNT);
-    for (int_t i = 0; i < PROMPT_COUNT; ++i) if (row.icons[i].texture >= 0) textWidth += 15;
+    for (int_t i = 0; i < PROMPT_COUNT; ++i) if (!row.texts[i].empty() && row.icons[i].texture >= 0) textWidth += 15;
     const int_t availableWidth = std::max<int_t>(0, screenWidth - LEGACY_HINT_MARGIN * 2);
     int_t gap = LEGACY_HINT_GAP;
     if (visible > 1 && textWidth + gap * (visible - 1) > availableWidth)
@@ -261,6 +263,6 @@ void LegacyControlTooltipHud::render(Minecraft *mc, int_t screenWidth, int_t scr
     }
 
     for (int_t i = 0; i < PROMPT_COUNT; ++i)
-        if (s_row.icons[i].texture >= 0) drawControlIcon(mc, s_row.icons[i], s_row.x[i], s_row.y - 2);
+        if (!s_row.texts[i].empty() && s_row.icons[i].texture >= 0) drawControlIcon(mc, s_row.icons[i], s_row.x[i], s_row.y - 2);
     drawRow(font, s_row);
 }

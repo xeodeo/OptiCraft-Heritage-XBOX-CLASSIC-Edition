@@ -264,7 +264,7 @@
 //
 // A block change within this distance of the viewer marks the section urgent.
 // Urgent sections sort ahead of active builds and run to completion inside
-// their own wall-clock budget, before the shared 6 ms budget is spent. Two
+// their own wall-clock budget, before the shared 4 ms budget is spent. Two
 // sections (32 blocks) covers what the player can reach or is looking at.
 #define PS2_URGENT_MESH_DISTANCE_SQ 1024.0f
 // A dense section is ~10-20 ms; one frame of hitch on an edit is the trade
@@ -373,7 +373,7 @@
 // combinations (see the boot USABLE/DEAD probe), in which case the elapsed time
 // reads 0, the ceiling never trips, and PS2_MAX_RENDERER_UPDATES_PER_FRAME alone
 // governs exactly as it does today. Never make this the only limit.
-#define PS2_CHUNK_BUILD_BUDGET_MS 6
+#define PS2_CHUNK_BUILD_BUDGET_MS 4
 
 // Keep a short visible loading phase for normal local world entry, but spend it
 // on renderer warm-up rather than a blind sleep. The minimum is measured from
@@ -382,19 +382,32 @@
 #define PS2_LOAD_TERRAIN_MIN_MS 1200
 #define PS2_LOAD_TERRAIN_WARMUP_MS 2500
 
-// Per-renderer wall-clock slice. Disabled after the first runtime trial: the
-// startup sample completed 72 build calls with zero published vertices and no
-// terrain reached either render backend. The deterministic 512-block limit
-// below and the 6ms inter-renderer budget remain active, matching the last
-// known-good configuration while the inner slicing is redesigned.
-#define PS2_CHUNK_BUILD_STEP_US 0
-#define PS2_CHUNK_BUILD_TIME_CHECK_BLOCKS 32
+// Per-renderer wall-clock slice. The shared 4 ms budget is checked only
+// between renderer updates, so one dense 512-block step can otherwise overrun
+// the whole frame by itself. Measured 2026-09-25 while walking around the ocean:
+// the build phase averaged 6-10 ms but individual chunk-build samples still
+// reached 22-27 ms, coinciding with the 20-25 FPS oscillation. Check the
+// elapsed-time deadline every 8 scanned blocks so expensive special geometry
+// (notably stairs and fences) cannot overshoot by an entire 32-block group
+// before yielding. Cheap steps still consume the full 512-block batch,
+// preserving streaming throughput where the work is cheap. The published mesh
+// remains untouched until the incremental build completes.
+#define PS2_CHUNK_BUILD_STEP_US 4000
+#define PS2_CHUNK_BUILD_TIME_CHECK_BLOCKS 8
 
 // The PS2 renderer grid is 5x3x5 = 75 sections. The old cap of 64 silently
 // dropped the tail of the sorted list, so a section could stay invisible until
 // player movement re-sorted it into the first 64 entries. Keep a tiny amount of
 // headroom while covering the whole grid; frustum/pass tests still reject work.
 #define PS2_MAX_RENDERED_SECTIONS_PER_PASS 80
+
+// Dense underwater fog makes distant translucent terrain almost invisible, but
+// the normal section loop still submits every frustum-visible water section.
+// With the vanilla water fog density of 0.1, a point 32 blocks away contributes
+// only about 4% before blending with the fog colour. Cull only sections whose
+// nearest point is beyond that distance, and only while the normal dense-water
+// fog is active. Clear Water and Water Breathing deliberately bypass this cut.
+#define PS2_UNDERWATER_TRANSLUCENT_CULL_DISTANCE 32.0f
 
 // Chunk renderer meshing is the main source of PS2 hitching.  A full
 // 16x16x16 section build can take a visible chunk of one frame, so the PS2
@@ -480,25 +493,28 @@
 // after an edit (2026-09-16). Fast physics is a per-axis point test against
 // the block collision box; brightness is sampled every N ticks instead of
 // every frame; the destroy grid is per axis (2 -> 8 fragments, vanilla 4 ->
-// 64); the per-layer cap replaces vanilla's 4000.
+// 64); the per-layer cap replaces vanilla's 4000. Ocean profiling later
+// showed that a saturated particle workload can keep effects around 3-4 ms/tick
+// and push the GS queue above 80% even after chunk rebuilding has stopped. 128
+// keeps a visible burst while bounding both update work and particle draw cost.
 #define PS2_FAST_PARTICLE_PHYSICS 1
 #define PS2_PARTICLE_BRIGHTNESS_INTERVAL 4
 #define PS2_BLOCK_DESTROY_PARTICLE_GRID 2
-#define PS2_MAX_PARTICLES_PER_LAYER 256
-// The full rain/snow curtains are already disabled below, but vanilla still
-// spawns up to 100 ground-impact EntityRainFX objects every tick. Their average
-// lifetime keeps hundreds of alpha-tested quads alive around the camera; on the
-// PS2 that is enough to halve the frame rate over open water. Four attempts per
-// tick still provide a continuous splash effect (~80 new particles/second at
-// 20 TPS) while bounding both particle physics and GS overdraw.
-#define PS2_RAIN_SPLASH_PARTICLES_PER_TICK 4
+#define PS2_MAX_PARTICLES_PER_LAYER 128
+// Bound ground-impact particles separately from the weather curtains and sound.
+// Two attempts per tick (~40/second at 20 TPS) limit allocation and overdraw;
+// ambience still samples nearby surfaces when splashes/particles are disabled.
+#define PS2_RAIN_SPLASH_PARTICLES_PER_TICK 2
 // Entity::isBurning() draws a stack of heavily overlapping fire billboards. A
 // normal zombie produces about five layers with vanilla's 0.45 step. Keep three
 // broader-spaced layers on PS2: the silhouette remains covered, but fill-rate
 // and generic tessellator vertex work are reduced for every burning mob.
 #define PS2_ENTITY_FIRE_MAX_LAYERS 3
 #define PS2_ENTITY_FIRE_LAYER_STEP 0.70f
-#define PS2_SKIP_RAIN_SNOW 1
+#define PS2_SKIP_RAIN_SNOW 0
+// Full vanilla fast rain scans an 11x11 column square (fancy: 21x21). The PS2
+// keeps the same rain/snow quads and biome logic but caps the curtain to 9x9.
+#define PS2_RAIN_SNOW_RENDER_RANGE 4
 #define PS2_SKIP_CLOUDS 1
 #define PS2_SKIP_BLOCK_SELECTION_BOX 1
 // The star field is the one piece of sky geometry with a real RAM price. It has

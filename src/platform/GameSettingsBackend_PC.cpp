@@ -5,12 +5,31 @@
 #include "platform/PlatformConfig.h"
 #include "platform/PlatformTuning.h"
 
+#include "lwjgl/Keyboard.h"
 #include "net/minecraft/src/GameSettings.h"
+#include "net/minecraft/src/KeyBinding.h"
 #include "pc/render/PcRenderBackend.h"
+
+void platformGameSettingsApplyLegacyCrafting(GameSettings& settings)
+{
+	if (settings.keyBindCrafting != nullptr)
+	{
+		if (settings.legacyCrafting)
+		{
+			if (settings.keyBindCrafting->keyCode == 0)
+				settings.keyBindCrafting->keyCode = lwjgl::Keyboard::KEY_C;
+		}
+		else
+		{
+			settings.keyBindCrafting->keyCode = 0;
+		}
+	}
+}
 
 void platformGameSettingsInitialize(GameSettings& settings)
 {
 	settings.renderBackend = static_cast<int_t>(pcRenderBackendGetRequested());
+	platformGameSettingsApplyLegacyCrafting(settings);
 }
 void platformGameSettingsResetControlBindings(GameSettings&) {}
 int_t platformGameSettingsDefaultChunkUpdates() { return 1; }
@@ -87,6 +106,7 @@ void platformGameSettingsFinalizeLoad(GameSettings& settings)
 		backend = PcRenderBackendType::OpenGL;
 	settings.renderBackend = static_cast<int_t>(backend);
 	pcRenderBackendSetRequested(backend);
+	platformGameSettingsApplyLegacyCrafting(settings);
 }
 void platformGameSettingsSyncControllerBindings(const GameSettings&) {}
 void platformGameSettingsAddKnownKeys(std::unordered_set<std::string>& knownKeys)

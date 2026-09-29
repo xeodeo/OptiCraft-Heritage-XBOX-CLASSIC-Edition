@@ -27,13 +27,22 @@ void GuiControls::initGui()
 {
 	StringTranslate *tr = StringTranslate::getInstance();
 	int_t left = getLeftEdge();
+	displayedBindings.clear();
 	for (int_t j = 0; j < (int_t)options->keyBindings.size(); j++)
 	{
-		controlList.push_back(new GuiSmallButton(j,
-			left + (j % 2) * 160, height / 6 + 24 * (j >> 1),
+		if (options->keyBindings[j] == options->keyBindCrafting && !options->legacyCrafting)
+			continue;
+		displayedBindings.push_back(j);
+	}
+
+	for (int_t k = 0; k < (int_t)displayedBindings.size(); k++)
+	{
+		int_t j = displayedBindings[k];
+		controlList.push_back(new GuiSmallButton(k,
+			left + (k % 2) * 160, height / 6 + 24 * (k >> 1),
 			70, 20, options->getOptionDisplayString(j)));
 	}
-	int_t nextY = height / 6 + 24 * (((int_t)options->keyBindings.size() + 1) / 2);
+	int_t nextY = height / 6 + 24 * (((int_t)displayedBindings.size() + 1) / 2);
 #ifdef WII_PLATFORM
 	controlList.push_back(new GuiButton(201, width / 2 - 100, nextY, uiText("Wii Pad Bindings...")));
 	nextY += 24;
@@ -44,8 +53,8 @@ void GuiControls::initGui()
 
 void GuiControls::actionPerformed(GuiButton *button)
 {
-	for (int_t i = 0; i < (int_t)options->keyBindings.size(); i++)
-		controlList[i]->displayString = options->getOptionDisplayString(i);
+	for (int_t k = 0; k < (int_t)displayedBindings.size(); k++)
+		controlList[k]->displayString = options->getOptionDisplayString(displayedBindings[k]);
 
 	if (button->id == 200)
 	{
@@ -65,20 +74,22 @@ void GuiControls::actionPerformed(GuiButton *button)
 		return;
 	}
 #endif
-	if (button->id >= 0 && button->id < (int_t)options->keyBindings.size())
+	if (button->id >= 0 && button->id < (int_t)displayedBindings.size())
 	{
 		buttonId = button->id;
-		button->displayString = "> " + options->getOptionDisplayString(button->id) + " <";
+		int_t bindingIdx = displayedBindings[button->id];
+		button->displayString = "> " + options->getOptionDisplayString(bindingIdx) + " <";
 		platformSetPadRebindExclusive(true);
 	}
 }
 
 void GuiControls::keyTyped(char_t c, int_t key)
 {
-	if (buttonId >= 0)
+	if (buttonId >= 0 && buttonId < (int_t)displayedBindings.size())
 	{
-		options->setKeyBinding(buttonId, key);
-		controlList[buttonId]->displayString = options->getOptionDisplayString(buttonId);
+		int_t bindingIdx = displayedBindings[buttonId];
+		options->setKeyBinding(bindingIdx, key);
+		controlList[buttonId]->displayString = options->getOptionDisplayString(bindingIdx);
 		buttonId = -1;
 		platformSetPadRebindExclusive(false);
 	}
@@ -91,10 +102,11 @@ void GuiControls::keyTyped(char_t c, int_t key)
 
 void GuiControls::mouseClicked(int_t x, int_t y, int_t button)
 {
-	if (buttonId >= 0)
+	if (buttonId >= 0 && buttonId < (int_t)displayedBindings.size())
 	{
-		options->setKeyBinding(buttonId, -100 + button);
-		controlList[buttonId]->displayString = options->getOptionDisplayString(buttonId);
+		int_t bindingIdx = displayedBindings[buttonId];
+		options->setKeyBinding(bindingIdx, -100 + button);
+		controlList[buttonId]->displayString = options->getOptionDisplayString(bindingIdx);
 		buttonId = -1;
 		platformSetPadRebindExclusive(false);
 		return;
@@ -107,11 +119,13 @@ void GuiControls::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 	drawDefaultBackground();
 	drawCenteredString(fontRenderer, screenTitle, width / 2, 20, 0xffffff);
 	int_t left = getLeftEdge();
-	for (int_t l = 0; l < (int_t)options->keyBindings.size(); l++)
+	for (int_t k = 0; k < (int_t)displayedBindings.size(); k++)
 	{
+		int_t l = displayedBindings[k];
 		bool duplicate = false;
-		for (int_t other = 0; other < (int_t)options->keyBindings.size(); ++other)
+		for (int_t otherK = 0; otherK < (int_t)displayedBindings.size(); ++otherK)
 		{
+			int_t other = displayedBindings[otherK];
 			if (other != l && options->keyBindings[l]->keyCode == options->keyBindings[other]->keyCode)
 			{
 				duplicate = true;
@@ -119,15 +133,15 @@ void GuiControls::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 			}
 		}
 
-		if (buttonId == l)
-			controlList[l]->displayString = "\xc2\xa7" "f> " "\xc2\xa7" "e??? " "\xc2\xa7" "f<";
+		if (buttonId == k)
+			controlList[k]->displayString = "\xc2\xa7" "f> " "\xc2\xa7" "e??? " "\xc2\xa7" "f<";
 		else if (duplicate)
-			controlList[l]->displayString = std::string("\xc2\xa7" "c") + options->getOptionDisplayString(l);
+			controlList[k]->displayString = std::string("\xc2\xa7" "c") + options->getOptionDisplayString(l);
 		else
-			controlList[l]->displayString = options->getOptionDisplayString(l);
+			controlList[k]->displayString = options->getOptionDisplayString(l);
 
 		drawString(fontRenderer, options->getKeyBindingDescription(l),
-		           left + (l % 2) * 160 + 70 + 6, height / 6 + 24 * (l >> 1) + 7, -1);
+		           left + (k % 2) * 160 + 70 + 6, height / 6 + 24 * (k >> 1) + 7, -1);
 	}
 	GuiScreen::drawScreen(mouseX, mouseY, partialTick);
 }

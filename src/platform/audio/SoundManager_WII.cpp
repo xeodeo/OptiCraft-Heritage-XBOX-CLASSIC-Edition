@@ -676,7 +676,7 @@ bool SoundManager::loaded = false;
 
 SoundManager::SoundManager()
     : soundPoolSounds(), soundPoolStreaming(), soundPoolMusic(), soundVolume(0),
-      options(nullptr), rand(), ticksBeforeMusic(rand.nextInt(12000))
+      options(nullptr), rand(), ticksBeforeMusic(rand.nextInt(100) + 40)
 {
 }
 
@@ -764,7 +764,7 @@ bool SoundManager::playMusicFileNow(const std::string &file)
     if (!wiiStartStream(file, options->musicVolume, WiiStreamKind::Music))
         return false;
 
-    ticksBeforeMusic = rand.nextInt(12000) + 12000;
+    ticksBeforeMusic = rand.nextInt(1200) + 600;
     return true;
 }
 
@@ -785,7 +785,7 @@ void SoundManager::playRandomMusicIfReady()
     }
 
     SoundPoolEntry *entry = soundPoolMusic.getRandomSound();
-    ticksBeforeMusic = rand.nextInt(12000) + 12000;
+    ticksBeforeMusic = rand.nextInt(1200) + 600;
     if (!entry)
     {
 #if MC_LOG_LEVEL >= 2
@@ -826,7 +826,7 @@ void SoundManager::playStreaming(const jstring &s, float x, float y, float z, fl
 
     SoundPoolEntry *entry = soundPoolStreaming.getRandomSoundFromSoundPool(s);
     if (entry && wiiStartStream(entry->soundUrl, 0.5f * attenuation * options->soundVolume, WiiStreamKind::Streaming))
-        ticksBeforeMusic = rand.nextInt(12000) + 12000;
+        ticksBeforeMusic = rand.nextInt(1200) + 600;
 }
 
 void SoundManager::playSound(const jstring &s, float x, float y, float z, float volume, float)

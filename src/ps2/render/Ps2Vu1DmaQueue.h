@@ -103,6 +103,7 @@ public:
 
 private:
     static const int kPageCount = 2;
+
     static const int kPageQwords = 512;
 
     Ps2VifQword* writePage();

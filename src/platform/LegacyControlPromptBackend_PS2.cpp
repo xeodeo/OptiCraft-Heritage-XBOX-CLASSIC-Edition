@@ -23,6 +23,7 @@ std::string legacyControlPromptLabel(const GameSettings &settings, LegacyControl
     switch (action)
     {
     case LegacyControlAction::Inventory: return bindingLabel(settings.keyBindInventory);
+    case LegacyControlAction::Crafting: return settings.legacyCrafting ? bindingLabel(settings.keyBindCrafting) : std::string();
     case LegacyControlAction::Drop: return bindingLabel(settings.keyBindDrop);
     case LegacyControlAction::Jump: return bindingLabel(settings.keyBindJump);
     case LegacyControlAction::Attack: return "R2";

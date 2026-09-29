@@ -125,6 +125,8 @@ void platformGameSettingsSyncControllerBindings(const GameSettings& settings)
 	WiiButtonBindings::set(snapshot);
 }
 
+void platformGameSettingsApplyLegacyCrafting(GameSettings&) {}
+
 void platformGameSettingsAddKnownKeys(std::unordered_set<std::string>& keys)
 {
 	static const char* names[] = {

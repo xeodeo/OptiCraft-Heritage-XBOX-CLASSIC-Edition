@@ -53,15 +53,30 @@ void shutdown()
 	g_initialized = false;
 }
 
+#ifndef WPAD_CLASSIC_BUTTON_HOME
+#define WPAD_CLASSIC_BUTTON_HOME 0x0800
+#endif
+
 void waitForHome()
 {
 	if (!g_initialized)
 		initialize(g_pointerWidth, g_pointerHeight);
 	while (true)
 	{
+		PAD_ScanPads();
 		WPAD_ScanPads();
-		if (WPAD_ButtonsDown(0) & WPAD_BUTTON_HOME)
-			return;
+
+		for (int i = 0; i < 4; ++i)
+		{
+			const u32 gcDown = PAD_ButtonsDown(i);
+			if (gcDown & (PAD_BUTTON_START | PAD_BUTTON_A))
+				return;
+
+			const u32 wpadDown = WPAD_ButtonsDown(i);
+			if (wpadDown & (WPAD_BUTTON_HOME | WPAD_CLASSIC_BUTTON_HOME))
+				return;
+		}
+
 		VIDEO_WaitVSync();
 	}
 }

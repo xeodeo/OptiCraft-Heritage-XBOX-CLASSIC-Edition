@@ -344,7 +344,7 @@ void EntityPlayerSP::displayGUIChest(IInventory *iinventory)
 
 void EntityPlayerSP::displayWorkbenchGUI(int_t i, int_t j, int_t k)
 {
-	if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI)
+	if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI && mc->gameSettings->legacyCrafting)
 	{
 		if (mc->isSplitScreenActive())
 		{
@@ -430,7 +430,8 @@ void EntityPlayerSP::onEnchantmentCritical(Entity *entity)
 void EntityPlayerSP::onItemPickup(Entity *entity, int_t i)
 {
 	(void)i;
-	mc->effectRenderer->addEffect(new EntityPickupFX(mc->theWorld, entity, this, -0.5f));
+	if (mc != nullptr && mc->effectRenderer != nullptr && mc->theWorld != nullptr && entity != nullptr)
+		mc->effectRenderer->addEffect(new EntityPickupFX(mc->theWorld, entity, this, -0.5f));
 }
 
 int_t EntityPlayerSP::getPlayerArmorValue()

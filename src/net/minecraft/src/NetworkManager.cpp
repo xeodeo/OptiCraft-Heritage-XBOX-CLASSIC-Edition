@@ -231,7 +231,7 @@ bool NetworkManager::readPacket()
 					}
 				}
 
-#ifdef PS2_PLATFORM
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 				// Do not turn a normal server chunk burst into a disconnect. Holding
 				// this one already-decoded packet while the game thread drains the
 				// bounded queue applies TCP backpressure and caps the peak at the

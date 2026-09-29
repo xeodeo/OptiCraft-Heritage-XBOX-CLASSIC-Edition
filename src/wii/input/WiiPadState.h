@@ -21,6 +21,8 @@ enum WiiTextKey : std::uint32_t
 	WII_TEXT_SHIFT  = 1u << 7,
 	WII_TEXT_ENTER  = 1u << 8,
 	WII_TEXT_CLOSE  = 1u << 9,
+	WII_TEXT_PREV_PAGE = 1u << 10,
+	WII_TEXT_NEXT_PAGE = 1u << 11,
 };
 
 struct WiiTextInputSnapshot

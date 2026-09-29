@@ -13,6 +13,7 @@
 #include "ps2/render/Ps2TerrainMeshView.h"
 #include "ps2/render/Ps2TerrainRuntime.h"
 #include "ps2/render/Ps2Vu1Terrain.h"
+#include "ps2/diagnostics/Ps2OptimizationValidation.h"
 
 #ifdef PS2_RENDER_STATS
 #define PS2_TERRAIN_CLUSTER_STAT(expr) do { expr; } while (0)
@@ -132,6 +133,9 @@ Ps2TerrainDrawResult ps2_terrain_draw_section(const Ps2RendererFrame& frame,
                 rangeContext.fullyInside = fullyInside;
                 if (ps2_renderer_draw_prepared(mesh, rangeContext))
                 {
+#ifdef PS2_OPTIMIZATION_VALIDATION
+                    Ps2OptimizationValidation::terrainVu0Submit(batchVertices);
+#endif
                     result.nativeVertices += batchVertices;
                     emitted += batchVertices;
                     continue;
@@ -203,6 +207,9 @@ Ps2TerrainDrawResult ps2_terrain_draw_section(const Ps2RendererFrame& frame,
 				return;
 			}
 
+#ifdef PS2_OPTIMIZATION_VALIDATION
+			Ps2OptimizationValidation::terrainVu0Submit(batchVertices);
+#endif
 			result.nativeVertices += batchVertices;
 			emitted += batchVertices;
 		}
@@ -257,6 +264,9 @@ Ps2TerrainDrawResult ps2_terrain_draw_section(const Ps2RendererFrame& frame,
 			return;
 		}
 
+#ifdef PS2_OPTIMIZATION_VALIDATION
+		Ps2OptimizationValidation::terrainVu0Submit(totalVertexCount);
+#endif
 		result.nativeVertices += totalVertexCount;
 	};
 
@@ -286,9 +296,15 @@ Ps2TerrainDrawResult ps2_terrain_draw_section(const Ps2RendererFrame& frame,
             {
                 PS2_TERRAIN_CLUSTER_STAT(++s_clusterStats.vu1Ranges);
                 PS2_TERRAIN_CLUSTER_STAT(s_clusterStats.vu1Vertices += vu1.vertices);
+#ifdef PS2_OPTIMIZATION_VALIDATION
+                Ps2OptimizationValidation::terrainVu1Submit(vu1.vertices);
+#endif
                 result.nativeVertices += vu1.vertices;
                 return;
             }
+#ifdef PS2_OPTIMIZATION_VALIDATION
+            Ps2OptimizationValidation::terrainVu1Retry(vu1.status == PS2_VU1_TERRAIN_FATAL);
+#endif
             if (vu1.status == PS2_VU1_TERRAIN_FATAL)
             {
                 result.nativeVertices += vu1.vertices;
@@ -502,11 +518,17 @@ Ps2TerrainDrawResult ps2_terrain_draw_section(const Ps2RendererFrame& frame,
                         {
                             PS2_TERRAIN_CLUSTER_STAT(++s_clusterStats.vu1Ranges);
                             PS2_TERRAIN_CLUSTER_STAT(s_clusterStats.vu1Vertices += vu1.vertices);
+#ifdef PS2_OPTIMIZATION_VALIDATION
+                            Ps2OptimizationValidation::terrainVu1Submit(vu1.vertices);
+#endif
                             result.nativeVertices += vu1.vertices;
                             sliceCount = 0;
                             batchVertices = 0;
                             return true;
                         }
+#ifdef PS2_OPTIMIZATION_VALIDATION
+                        Ps2OptimizationValidation::terrainVu1Retry(vu1.status == PS2_VU1_TERRAIN_FATAL);
+#endif
                         s_currentVu1Retry = true;
                         if (vu1.status == PS2_VU1_TERRAIN_FATAL)
                         {

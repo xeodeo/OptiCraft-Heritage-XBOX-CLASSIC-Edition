@@ -2,13 +2,13 @@
 
 #ifdef PS2_PLATFORM
 
-#include <string>
+#include <cstdint>
 
 namespace Ps2Network
 {
 bool initialize();
 bool isReady();
-std::string localAddress();
+bool localAddressNetworkOrder(std::uint32_t &address);
 }
 
 #endif

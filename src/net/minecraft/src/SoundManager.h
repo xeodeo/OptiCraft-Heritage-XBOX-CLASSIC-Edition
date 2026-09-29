@@ -22,6 +22,7 @@ public:
 	void addStreaming(const jstring &s, const std::string &file);
 	void addMusic(const jstring &s, const std::string &file);
 	void playRandomMusicIfReady();
+	void triggerMusicNow() { ticksBeforeMusic = 0; playRandomMusicIfReady(); }
 	bool playMusicFileNow(const std::string &file);
 	void setListenerPosition(EntityLiving *entityliving, float f);
 	void playStreaming(const jstring &s, float f, float f1, float f2, float f3, float f4);

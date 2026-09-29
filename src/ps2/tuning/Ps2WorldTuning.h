@@ -32,11 +32,14 @@
 // With world particles on (PS2_SKIP_WORLD_PARTICLES 0) randomDisplayUpdates()
 // probes blocks around the player every tick to let torches, lava and portals
 // emit. Vanilla probes 1000 (6 RNG draws plus a block lookup each); it was the
-// 347 ms slowTick=randomDisplay spike on 2026-09-16. A quarter of the probes
-// keeps the ambient particles present at a quarter of the density.
+// 347 ms slowTick=randomDisplay spike on 2026-09-16. The first PS2 pass used
+// 250 probes, but ocean profiling later showed this phase still consuming about
+// 1.5-1.6 ms per rendered frame once a 20 FPS stretch made nearly every frame
+// carry a game tick. 128 probes preserve ambient torch/lava/portal particles
+// while giving the 30 FPS recovery path roughly another 0.7 ms of tick headroom.
 #define PS2_CACHE_RANDOM_DISPLAY_CHUNKS 1
 #define PS2_REUSE_RANDOM_DISPLAY_RNG 1
-#define PS2_RANDOM_DISPLAY_PROBES 250
+#define PS2_RANDOM_DISPLAY_PROBES 128
 
 // Resident chunks visited per world tick by updateBlocksAndPlayCaveSounds.
 //
@@ -141,6 +144,16 @@
 #define PS2_ENTITY_AI_FAR_RADIUS_BLOCKS  40.0f
 #define PS2_ENTITY_AI_MID_TICK_DIVISOR   2
 #define PS2_ENTITY_AI_FAR_TICK_DIVISOR   4
+
+// Remote mobs in multiplayer are server-authoritative, but vanilla still runs
+// their full local water/lava, movement and block-collision physics every tick
+// after applying network interpolation. Dense villages can therefore spend most
+// of the EE frame re-simulating entities whose position the server immediately
+// corrects. Keep interpolation, base entity timers and animation updates at 20
+// TPS, but refresh the expensive local living-physics path periodically. The
+// phase is staggered by entity ID so a crowd does not refresh on one tick.
+// Must stay a power of two; 1 restores the vanilla per-tick path.
+#define PS2_MULTIPLAYER_REMOTE_LIVING_PHYSICS_TICK_DIVISOR 8
 
 // Living entities beyond the visible terrain window are not worth submitting
 // through the expensive animated-model path. Frustum-exempt entities keep their
@@ -575,12 +588,15 @@
 // path. A single job remains atomic, so this cannot leave a half-updated box.
 #define PS2_LIGHTING_UPDATES_PER_FRAME 128 // vanilla 500
 // When the queue is at most QUEUE_MAX jobs at drain start it is interactive
-// work (a torch, a dug block), not streaming, and the drain may run BURST jobs
-// ignoring PS2_LIGHTING_BUDGET_US so the light settles in one frame. A torch is
-// ~1000 cells, ~1-2 ms with the direct section reads in MetadataChunkBlock.
+// work (a torch, a dug block), not streaming, and the drain may raise its job
+// cap to BURST. Keep a separate wall-clock ceiling for this path: an open-area
+// skylight column can make one "small" queue surprisingly expensive, and the
+// old unlimited burst produced 30-40 ms light spikes on hardware. 4 ms keeps
+// local edits responsive without letting lighting monopolize a 33.3 ms frame.
 #define PS2_LIGHTING_INTERACTIVE_QUEUE_MAX 256
 #define PS2_LIGHTING_INTERACTIVE_BURST     2048
-#define PS2_LIGHTING_BUDGET_US         2500
+#define PS2_LIGHTING_BUDGET_US             2500
+#define PS2_LIGHTING_INTERACTIVE_BUDGET_US 4000
 // Vanilla only probes the five newest jobs for overlap. Chunk generation on PS2
 // can enqueue tens of thousands of nearly-identical light boxes, so scan a
 // wider tail before allocating another MetadataChunkBlock. The hard cap prevents pathological propagation storms from consuming the
@@ -696,12 +712,12 @@
 // The individual ceilings were tuned one at a time, and on a frame that runs
 // a tick they stack: 8000 generation + 4000 populate + 2500 lighting + 3000
 // frame generation = 17.5 ms of streaming before the renderer starts, on top
-// of the 6 ms mesh budget. At 30 fps that is the frame. The next frame carries
+// of the 4 ms mesh budget. At 30 fps that is the frame. The next frame carries
 // no tick and pays 3 ms, which is the alternating hitch the player feels while
 // flying into new terrain.
 //
 // 8000 caps the world side at a quarter of a 30 fps frame. Together with
-// PS2_CHUNK_BUILD_BUDGET_MS the worst case is ~14 ms of streaming, against
+// PS2_CHUNK_BUILD_BUDGET_MS the worst case is ~12 ms of streaming, against
 // ~23 ms before, plus whatever an atomic step overshoots. Each drain still
 // runs at least one step per frame, so nothing starves; the queues just
 // spread over more frames. 0 restores the independent ceilings.

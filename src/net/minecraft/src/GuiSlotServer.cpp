@@ -74,13 +74,20 @@ void GuiSlotServer::drawSlot(int_t index, int_t x, int_t y, int_t, Tessellator *
         polled = server->polled;
 #ifdef PS2_PLATFORM
         constexpr int_t maxPollThreads = 1;
+        const long_t now = System::currentTimeMillis();
+        const bool retryDue = server->polled && server->lag == -1 &&
+                              server->nextPollTime > 0 && now >= server->nextPollTime;
 #else
         constexpr int_t maxPollThreads = 5;
+        constexpr bool retryDue = false;
 #endif
-        if (!server->polled && GuiMultiplayer::getThreadsPending() < maxPollThreads)
+        if ((!server->polled || retryDue) && GuiMultiplayer::getThreadsPending() < maxPollThreads)
         {
             server->polled = true;
             server->lag = -2;
+#ifdef PS2_PLATFORM
+            server->nextPollTime = 0;
+#endif
             server->motd.clear();
             server->playerCount.clear();
             polled = true;

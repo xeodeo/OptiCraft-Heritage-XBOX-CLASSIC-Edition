@@ -37,6 +37,7 @@ unsigned actionMask(const WiiButtonBindings::FamilySnapshot &bindings, LegacyCon
     switch (action)
     {
     case LegacyControlAction::Inventory: return bindings.inventory;
+    case LegacyControlAction::Crafting: return bindings.inventory;
     case LegacyControlAction::Drop: return bindings.drop;
     case LegacyControlAction::Jump: return bindings.jump;
     case LegacyControlAction::Attack: return bindings.attack;
@@ -46,8 +47,10 @@ unsigned actionMask(const WiiButtonBindings::FamilySnapshot &bindings, LegacyCon
 }
 }
 
-std::string legacyControlPromptLabel(const GameSettings &, LegacyControlAction action)
+std::string legacyControlPromptLabel(const GameSettings &settings, LegacyControlAction action)
 {
+    if (action == LegacyControlAction::Crafting && !settings.legacyCrafting)
+        return std::string();
     const WiiButtonBindings::Snapshot &snapshot = WiiButtonBindings::get();
     const WiiPadFamily family = activeFamily();
     const WiiButtonBindings::FamilySnapshot &bindings = familyBindings(snapshot, family);

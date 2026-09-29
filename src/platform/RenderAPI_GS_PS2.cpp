@@ -2,10 +2,14 @@
 
 
 #include "ps2/render/Ps2CaptureLayout.h"
+#include "ps2/diagnostics/Ps2OptimizationValidation.h"
 #include "ps2/render/Ps2LitCapture.h"
 #include "ps2/render/Ps2RenderApi.h"
 #include "ps2/render/Ps2RenderLighting.h"
 #include "ps2/render/Ps2NativeDraw.h"
+#include "ps2/render/Ps2GsQueue.h"
+#include "ps2/render/Ps2RenderContext.h"
+#include "ps2/render/Ps2RenderGsState.h"
 #include "ps2/render/Ps2PersistentMesh.h"
 #include "ps2/render/Ps2Texture.h"
 
@@ -548,12 +552,29 @@ bool renderDrawInterleaved(const RenderInterleavedMesh& mesh)
     // Per-vertex packed brightness already represents lightmap input for this
     // mesh. Keep the entity/current-coordinate CPU lightmap from multiplying it
     // a second time while the native draw consumes the pre-lit color array.
+#ifdef PS2_OPTIMIZATION_VALIDATION
+    const bool validationWeatherDraw = Ps2OptimizationValidation::weatherDrawActive();
+    const long validationQueueBefore = validationWeatherDraw ? ps2_gs_queue_used_bytes() : -1;
+#endif
+
     const bool suppressCpuLightmap = mesh.hasBrightness && s_lightmapEnabled;
     if (suppressCpuLightmap)
         ps2_render_set_lightmap_enabled(false);
     const bool drawn = ps2_native_draw_mesh(nativeMesh);
     if (suppressCpuLightmap)
         ps2_render_set_lightmap_enabled(true);
+#ifdef PS2_OPTIMIZATION_VALIDATION
+    if (validationWeatherDraw)
+    {
+        const Ps2RenderContext& context = ps2_render_context();
+        Ps2OptimizationValidation::weatherBackendBatch(
+            mesh.count, mesh.primitive == RenderPrimitive::Quads, drawn,
+            validationQueueBefore, ps2_gs_queue_used_bytes(),
+            mesh.hasTexture, mesh.hasColor, mesh.hasBrightness,
+            context.blend, context.alphaTest, static_cast<int>(context.alphaRef),
+            ps2_gs_state_depth_test_enabled(), ps2_gs_state_depth_mask_enabled(), context.cullFace);
+    }
+#endif
     return drawn;
 }
 

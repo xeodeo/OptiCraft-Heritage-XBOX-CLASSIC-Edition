@@ -13,6 +13,9 @@
 #include "Tessellator.h"
 #include "World.h"
 #include "platform/PlatformTuning.h"
+#if PLATFORM_PS2
+#include "ps2/diagnostics/Ps2OptimizationValidation.h"
+#endif
 #include "platform/RenderAPI.h"
 
 EffectRenderer::EffectRenderer(World *world, RenderEngine *renderengine)
@@ -33,7 +36,12 @@ void EffectRenderer::addEffect(EntityFX *entityfx)
 		return;
     int_t i = entityfx->getFXLayer();
     if ((int_t)fxLayers[i].size() >= PLATFORM_MAX_PARTICLES_PER_LAYER)
+    {
+#ifdef PS2_OPTIMIZATION_VALIDATION
+        Ps2OptimizationValidation::particleLayerCapEviction();
+#endif
         fxLayers[i].erase(fxLayers[i].begin());
+    }
 	fxLayers[i].emplace_back(entityfx);
 }
 
@@ -142,10 +150,13 @@ void EffectRenderer::clearEffects(World *world)
 
 void EffectRenderer::addBlockDestroyEffects(int_t i, int_t j, int_t k, int_t l, int_t i1)
 {
-    if (l == 0)
+    if (l <= 0 || l >= Block::BLOCK_REGISTRY_SIZE)
         return;
 
     Block *block = Block::blocksList[l];
+    if (block == nullptr)
+        return;
+
     int_t j1 = PLATFORM_BLOCK_DESTROY_PARTICLE_GRID;
 
     for (int k1 = 0; k1 < j1; k1++)
@@ -175,11 +186,17 @@ void EffectRenderer::addBlockDestroyEffects(int_t i, int_t j, int_t k, int_t l, 
 
 void EffectRenderer::addBlockHitEffects(int_t i, int_t j, int_t k, int_t l)
 {
+    if (worldObj == nullptr)
+        return;
+
     int_t i1 = worldObj->getBlockId(i, j, k);
-    if (i1 == 0)
+    if (i1 <= 0 || i1 >= Block::BLOCK_REGISTRY_SIZE)
         return;
 
     Block *block = Block::blocksList[i1];
+    if (block == nullptr)
+        return;
+
     float_t f = 0.1f;
 
     double d  = (double)i + rand.nextDouble() * (block->maxX - block->minX - (double)(f * 2.0f)) + (double)f + block->minX;

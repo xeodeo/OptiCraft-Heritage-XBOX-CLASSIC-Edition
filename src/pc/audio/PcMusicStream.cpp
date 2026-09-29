@@ -1,12 +1,16 @@
 #include "pc/audio/PcMusicStream.h"
 
 #include "pc/external/stb_vorbis.h"
+#include "platform/audio/AudioAssetFormat.h"
 #include "platform/audio/VorbisAssetOpen.h"
+#include "platform/storage/AssetPak.h"
 
 #include <algorithm>
 #include <array>
 #include <condition_variable>
 #include <cstddef>
+#include <cstdint>
+#include <cstdio>
 #include <mutex>
 #include <thread>
 
@@ -36,6 +40,21 @@ bool validateOgg(const std::string &path)
     const stb_vorbis_info info = stb_vorbis_get_info(vorbis);
     stb_vorbis_close(vorbis);
     return info.channels >= 1 && info.channels <= 2 && info.sample_rate == kOutputSampleRate;
+}
+
+bool validatePcm(const std::string &path)
+{
+    if (AssetPak::isPakPath(path))
+    {
+        std::uint32_t offset = 0, size = 0;
+        return AssetPak::locate(AssetPak::keyOf(path), &offset, &size) && size > 0 && (size & 1) == 0;
+    }
+    std::FILE *f = std::fopen(path.c_str(), "rb");
+    if (!f) return false;
+    std::fseek(f, 0, SEEK_END);
+    long size = std::ftell(f);
+    std::fclose(f);
+    return size > 0 && (size & 1) == 0;
 }
 
 void decoderThread(std::string path)
@@ -101,14 +120,127 @@ void decoderThread(std::string path)
     if (s_count == 0)
         s_running = false;
 }
+
+void decoderPcmThread(std::string path)
+{
+    std::FILE *file = nullptr;
+    std::size_t remainingBytes = 0;
+
+    if (AssetPak::isPakPath(path))
+    {
+        std::uint32_t dataOffset = 0;
+        std::uint32_t size = 0;
+        if (!AssetPak::locate(AssetPak::keyOf(path), &dataOffset, &size))
+        {
+            std::lock_guard<std::mutex> lock(s_mutex);
+            s_eof = true;
+            s_running = false;
+            return;
+        }
+        file = std::fopen(AssetPak::archivePath().c_str(), "rb");
+        if (file == nullptr || std::fseek(file, static_cast<long>(dataOffset), SEEK_SET) != 0)
+        {
+            if (file) std::fclose(file);
+            std::lock_guard<std::mutex> lock(s_mutex);
+            s_eof = true;
+            s_running = false;
+            return;
+        }
+        remainingBytes = size;
+    }
+    else
+    {
+        file = std::fopen(path.c_str(), "rb");
+        if (file == nullptr)
+        {
+            std::lock_guard<std::mutex> lock(s_mutex);
+            s_eof = true;
+            s_running = false;
+            return;
+        }
+        std::fseek(file, 0, SEEK_END);
+        remainingBytes = static_cast<std::size_t>(std::ftell(file));
+        std::fseek(file, 0, SEEK_SET);
+    }
+
+    constexpr std::size_t kChunkSamples = 2048;
+    std::array<std::int16_t, kChunkSamples> rawSamples{};
+    std::array<float, kChunkSamples * 4> stereo{};
+
+    while (remainingBytes >= sizeof(std::int16_t))
+    {
+        const std::size_t toRead = std::min(remainingBytes / sizeof(std::int16_t), kChunkSamples);
+        const std::size_t readCount = std::fread(rawSamples.data(), sizeof(std::int16_t), toRead, file);
+        if (readCount == 0)
+            break;
+
+        remainingBytes -= readCount * sizeof(std::int16_t);
+
+        const std::size_t inputFrames = readCount / 2;
+        // Convert 22050 stereo to 44100 stereo
+        for (std::size_t f = 0; f < inputFrames; ++f)
+        {
+            const float left = rawSamples[f * 2 + 0] / 32768.0f;
+            const float right = rawSamples[f * 2 + 1] / 32768.0f;
+            const std::size_t outBase = f * 4;
+            stereo[outBase + 0] = left;
+            stereo[outBase + 1] = right;
+            stereo[outBase + 2] = left;
+            stereo[outBase + 3] = right;
+        }
+
+        std::size_t source = 0;
+        const std::size_t sampleCount = inputFrames * 4;
+        while (source < sampleCount)
+        {
+            std::unique_lock<std::mutex> lock(s_mutex);
+            s_condition.wait(lock, [] { return s_stop || s_count < kRingSamples; });
+            if (s_stop)
+            {
+                std::fclose(file);
+                s_running = false;
+                return;
+            }
+
+            const std::size_t freeSamples = kRingSamples - s_count;
+            const std::size_t contiguous = std::min(freeSamples, kRingSamples - s_write);
+            const std::size_t copyCount = std::min(contiguous, sampleCount - source);
+            std::copy_n(stereo.data() + source, copyCount, s_ring.data() + s_write);
+            s_write = (s_write + copyCount) % kRingSamples;
+            s_count += copyCount;
+            source += copyCount;
+        }
+    }
+
+    std::fclose(file);
+    std::lock_guard<std::mutex> lock(s_mutex);
+    s_eof = true;
+    if (s_count == 0)
+        s_running = false;
+}
 }
 
 namespace PcMusicStream
 {
 bool start(const std::string &path)
 {
-    if (!validateOgg(path))
+    const bool isPcm = audioPathHasExtension(path, ".pcm");
+    const bool isOgg = audioPathHasExtension(path, ".ogg");
+
+    if (isPcm)
+    {
+        if (!validatePcm(path))
+            return false;
+    }
+    else if (isOgg)
+    {
+        if (!validateOgg(path))
+            return false;
+    }
+    else
+    {
         return false;
+    }
 
     stop();
     {
@@ -120,7 +252,11 @@ bool start(const std::string &path)
         s_eof = false;
         s_running = true;
     }
-    s_thread = std::thread(decoderThread, path);
+    s_thread = isPcm ? std::thread(decoderPcmThread, path) : std::thread(decoderThread, path);
+    {
+        std::unique_lock<std::mutex> lock(s_mutex);
+        s_condition.wait_for(lock, std::chrono::milliseconds(50), [] { return s_count >= 4096 || s_eof || s_stop; });
+    }
     return true;
 }
 

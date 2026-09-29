@@ -10,21 +10,28 @@
 #include <kernel.h>
 
 extern "C" {
-#include <netman.h>
+#ifdef PS2_REMOTE_DEBUG
+#include <ps2ips.h>
+#include <ps2ip_rpc.h>
+
+// libps2ips keeps this low-level configuration RPC internal instead of
+// exposing it through ps2ips.h. Read the ps2link-owned sm0 address so client
+// sockets can bind to the existing interface without replacing its config.
+int ps2ipc_ps2ip_getconfig(char *netif_name, t_ip_info *ip_info);
+#else
 #include <ps2ip.h>
+#endif
 }
 
 #include <atomic>
 #include <mutex>
-#include <string>
 
 namespace
 {
 PlatformMutex s_initMutex;
 std::atomic_bool s_ready{false};
 bool s_stackInitialized = false;
-unsigned long s_provisionalAddress = 0;
-std::string s_localAddress;
+std::uint32_t s_localAddressNetworkOrder = 0;
 
 void loadNetworkModules()
 {
@@ -43,21 +50,51 @@ void loadNetworkModules()
                 dev9, netman, smap);
 }
 
-std::string addressToString(unsigned long raw)
-{
-    // PS2 is little-endian while IPv4 is stored in network byte order; reading
-    // the low byte first produces the familiar dotted-quad representation.
-    return std::to_string((raw      ) & 0xff) + "." +
-           std::to_string((raw >>  8) & 0xff) + "." +
-           std::to_string((raw >> 16) & 0xff) + "." +
-           std::to_string((raw >> 24) & 0xff);
-}
-
 bool startStackAndDhcp()
 {
     if (s_stackInitialized)
         return true;
 
+#ifdef PS2_REMOTE_DEBUG
+    // ps2link already owns DEV9/SMAP and PS2IP-NM, but it does not load the
+    // ps2ips RPC socket server. Load only that bridge module; reloading the
+    // hardware/network stack would compete with ps2link and break remote I/O.
+    MC_LOG_INFO("network", "[PS2] loading ps2ips RPC bridge for ps2link stack\n");
+    McLog::flush();
+    const int ps2ips = Ps2IrxLoader::load("irx/ps2ips.irx", "host:ps2ips.irx");
+    if (ps2ips < 0)
+    {
+        // ps2ip_init() retries SIF RPC binding forever when no PS2IPS server is
+        // present. Fail here instead of freezing the multiplayer worker/UI.
+        MC_LOG_ERROR("network", "[PS2] ps2ips.irx unavailable; refusing blocking RPC bind\n");
+        return false;
+    }
+
+    MC_LOG_INFO("network", "[PS2] ps2ips RPC bridge loaded id=%d; binding EE client\n", ps2ips);
+    McLog::flush();
+    if (ps2ip_init() < 0)
+    {
+        MC_LOG_ERROR("network", "[PS2] ps2ips RPC initialization failed\n");
+        return false;
+    }
+
+    s_stackInitialized = true;
+    MC_LOG_INFO("network", "[PS2] ps2ips RPC client ready; preserving ps2link network config\n");
+
+    // Keep the exact network-order address returned by PS2IP-NM. Reusing the
+    // binary value avoids reparsing it through the incompatible EE inet_aton()
+    // path before the explicit client bind.
+    t_ip_info info{};
+    if (ps2ipc_ps2ip_getconfig(const_cast<char *>("sm0"), &info) > 0)
+        s_localAddressNetworkOrder = info.ipaddr.s_addr;
+    else
+    {
+        MC_LOG_WARN("network", "[PS2] failed to read ps2link sm0 configuration through ps2ips\n");
+    }
+
+    McLog::flush();
+    return true;
+#else
     loadNetworkModules();
 
     // ps2ipInit initializes NETMAN itself, then registers the EE-side lwIP
@@ -69,8 +106,6 @@ bool startStackAndDhcp()
     IP4_ADDR(&ip, 169, 254, 0, 1);
     IP4_ADDR(&mask, 255, 255, 0, 0);
     IP4_ADDR(&gateway, 0, 0, 0, 0);
-    s_provisionalAddress = ip.addr;
-
     MC_LOG_INFO("network", "[PS2] calling ps2ipInit\n");
     McLog::flush();
     if (ps2ipInit(&ip, &mask, &gateway) < 0)
@@ -80,9 +115,6 @@ bool startStackAndDhcp()
     }
 
     MC_LOG_INFO("network", "[PS2] ps2ipInit OK\n");
-    McLog::flush();
-    const int linkModeResult = NetManSetLinkMode(NETMAN_NETIF_ETH_LINK_MODE_AUTO);
-    MC_LOG_INFO("network", "[PS2] NetManSetLinkMode(AUTO) -> %d\n", linkModeResult);
     McLog::flush();
 
     t_ip_info info{};
@@ -110,6 +142,7 @@ bool startStackAndDhcp()
     MC_LOG_INFO("network", "[PS2] DHCP client started\n");
     McLog::flush();
     return true;
+#endif
 }
 }
 
@@ -133,48 +166,22 @@ bool initialize()
     if (!startStackAndDhcp())
         return false;
 
-    // Link negotiation + DHCP normally completes quickly on a LAN. This runs
-    // from the connection/ping worker, not the render thread, and is still
-    // bounded so an unplugged cable cannot leave a worker stuck forever.
-    // DHCP on the PS2 can take substantially longer than 10 seconds. In
-    // particular, lwIP enters DHCP_STATE_CHECKING after receiving the ACK and
-    // performs duplicate-address detection before committing the lease. The
-    // PCSX2 sockets backend can also take a while to bring SMAP/link up.
-    constexpr int kPollCount = 900;
-    constexpr int kPollDelayUs = 100000;
-    for (int i = 0; i < kPollCount; ++i)
-    {
-        const bool linkUp = NetManIoctl(NETMAN_NETIF_IOCTL_GET_LINK_STATUS,
-                                        nullptr, 0, nullptr, 0) ==
-                            NETMAN_NETIF_ETH_LINK_STATE_UP;
-        t_ip_info current{};
-        const bool haveConfig = ps2ip_getconfig(const_cast<char *>("sm0"), &current) != 0;
-        const bool dhcpBound = haveConfig && current.dhcp_enabled &&
-                               current.dhcp_status == DHCP_STATE_BOUND;
-        const bool haveLease = dhcpBound && current.ipaddr.s_addr != 0 &&
-                               current.ipaddr.s_addr != s_provisionalAddress;
-        if ((i % 10) == 0)
-        {
-            MC_LOG_INFO("network", "[PS2] net poll %d link=%d config=%d ip=%s dhcp=%d state=%d\n",
-                        i, linkUp ? 1 : 0, haveConfig ? 1 : 0,
-                        haveConfig ? addressToString(current.ipaddr.s_addr).c_str() : "n/a",
-                        haveConfig ? current.dhcp_enabled : -1,
-                        haveConfig ? current.dhcp_status : -1);
-            McLog::flush();
-        }
-        if (linkUp && haveLease)
-        {
-            s_localAddress = addressToString(current.ipaddr.s_addr);
-            s_ready.store(true, std::memory_order_release);
-            MC_LOG_INFO("network", "[PS2] network ready, DHCP address %s\n",
-                        s_localAddress.c_str());
-            return true;
-        }
-        DelayThread(kPollDelayUs);
-    }
+#ifndef PS2_REMOTE_DEBUG
+    // Leave DHCP alone while lwIP negotiates the lease. Repeated EE-side
+    // ps2ip_getconfig()/NETMAN RPCs during this window have caused intermittent
+    // IOP stalls on real hardware, including loss of PAD input. The network
+    // workers can safely wait here without blocking the render/input thread.
+    constexpr int kDhcpGracePeriodUs = 10000000;
+    DelayThread(kDhcpGracePeriodUs);
+#endif
 
-    MC_LOG_WARN("network", "[PS2] DHCP/link timeout after 90s; retry is allowed on the next connection\n");
-    return false;
+    s_ready.store(true, std::memory_order_release);
+#ifdef PS2_REMOTE_DEBUG
+    MC_LOG_INFO("network", "[PS2] ps2link shared network ready; enabling socket attempts\n");
+#else
+    MC_LOG_INFO("network", "[PS2] DHCP grace period complete; enabling socket attempts\n");
+#endif
+    return true;
 #endif
 }
 
@@ -183,10 +190,13 @@ bool isReady()
     return s_ready.load(std::memory_order_acquire);
 }
 
-std::string localAddress()
+bool localAddressNetworkOrder(std::uint32_t &address)
 {
     std::lock_guard<PlatformMutex> guard(s_initMutex);
-    return s_localAddress;
+    if (s_localAddressNetworkOrder == 0)
+        return false;
+    address = s_localAddressNetworkOrder;
+    return true;
 }
 }
 

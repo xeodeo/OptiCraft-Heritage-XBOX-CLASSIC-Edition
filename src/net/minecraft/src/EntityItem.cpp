@@ -16,6 +16,9 @@
 #include "NBTTagCompound.h"
 #include "World.h"
 #include "AxisAlignedBB.h"
+#if PLATFORM_PS2
+#include "ps2/diagnostics/Ps2OptimizationValidation.h"
+#endif
 
 EntityItem::EntityItem(World *world, double d, double d1, double d2, ItemStack *itemstack)
 	: Entity(world)
@@ -70,6 +73,37 @@ void EntityItem::onUpdate()
 	prevPosX = posX;
 	prevPosY = posY;
 	prevPosZ = posZ;
+
+#if PLATFORM_PS2
+	// Multiplayer item positions are server-authoritative. Once an item has
+	// settled, most client ticks only need the base environmental update plus
+	// pickup/despawn bookkeeping; repeating collision resolution every tick is
+	// redundant. Keep one full physics tick out of four so removed support or a
+	// server correction is reflected within 0.2 seconds at 20 TPS. Water/lava
+	// and any meaningful motion always stay on the full path.
+	if (worldObj->multiplayerWorld && onGround && !isInWater() && fire == 0)
+	{
+		const double horizontalMotionSq = motionX * motionX + motionZ * motionZ;
+		const bool nearlyStill = horizontalMotionSq <= 0.0001 &&
+		                         motionY >= -0.03 && motionY <= 0.03;
+		if (nearlyStill && (ticksExisted & 3) != 0)
+		{
+#ifdef PS2_OPTIMIZATION_VALIDATION
+			Ps2OptimizationValidation::multiplayerItemPhysics(true);
+#endif
+			if (++age >= 6000)
+			{
+				setEntityDead();
+			}
+			return;
+		}
+	}
+#endif
+
+#if defined(PS2_OPTIMIZATION_VALIDATION)
+	if (worldObj->multiplayerWorld)
+		Ps2OptimizationValidation::multiplayerItemPhysics(false);
+#endif
 	motionY -= 0.039999999105930328;
 	if (worldObj->getBlockMaterial(MathHelper::floor_double(posX), MathHelper::floor_double(posY), MathHelper::floor_double(posZ)) == Material::lava)
 	{
