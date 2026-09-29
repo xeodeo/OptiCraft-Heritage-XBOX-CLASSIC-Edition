@@ -25,7 +25,10 @@ static void* WatchdogThreadFunc(void*)
         PlatformCompat::delay(500);
         int_t currentFrame = g_mainFrameCount;
         
-        if (currentFrame == lastFrame)
+        // Do not warn during early frames or if there's no world (loading)
+        bool isLoading = (currentFrame < 100);
+
+        if (currentFrame == lastFrame && !isLoading)
         {
             stuckTimeMs += 500;
             if (stuckTimeMs == 2000)

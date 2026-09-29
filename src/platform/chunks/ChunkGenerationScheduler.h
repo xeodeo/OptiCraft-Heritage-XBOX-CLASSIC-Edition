@@ -70,6 +70,7 @@ public:
     bool isWorkingOn(int_t x, int_t z) const;
     void queueSizes(int_t& pending, int_t& completed) const;
     long_t getAndResetWorkerTimeNs();
+    const char* getWorkerState() const;
 
 private:
     static std::uint64_t key(int_t x, int_t z);

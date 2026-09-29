@@ -207,6 +207,20 @@ void ChunkProvider::setCurrentChunkOver(int_t i, int_t j)
 		{
 			generationMoveX = deltaX > 0 ? 1 : (deltaX < 0 ? -1 : 0);
 			generationMoveZ = deltaZ > 0 ? 1 : (deltaZ < 0 ? -1 : 0);
+#if PLATFORM_ASYNC_CHUNK_GENERATION
+			if (asyncGenerationScheduler != nullptr && asyncGenerationScheduler->active())
+			{
+				for (int_t dist = 1; dist <= 3; ++dist)
+				{
+					int_t anticipX = i + generationMoveX * dist;
+					int_t anticipZ = j + generationMoveZ * dist;
+					requestChunkDetailed(anticipX, anticipZ);
+					requestChunkDetailed(anticipX + 1, anticipZ);
+					requestChunkDetailed(anticipX, anticipZ + 1);
+					requestChunkDetailed(anticipX + 1, anticipZ + 1);
+				}
+			}
+#endif
 		}
 	}
 	else
@@ -955,6 +969,9 @@ Chunk *ChunkProvider::provideChunk(int_t i, int_t j)
 #if MC_LOG_LEVEL > 0
 					stat_async++;
 #endif
+					requestChunkDetailed(i + 1, j);
+					requestChunkDetailed(i, j + 1);
+					requestChunkDetailed(i + 1, j + 1);
 					return blankChunk;
 				}
 				else if (requestStatus == ChunkRequestStatus::AlreadyQueued)

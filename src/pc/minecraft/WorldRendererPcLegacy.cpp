@@ -29,6 +29,7 @@
 #include "platform/RenderAPI.h"
 #if MC_LOG_LEVEL > 0
 #include "xbox/system/XboxWatchdog.h"
+#include "net/minecraft/src/ChunkProvider.h"
 #endif
 
 namespace

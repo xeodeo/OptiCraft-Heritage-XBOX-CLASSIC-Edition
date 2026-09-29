@@ -1,6 +1,8 @@
 #include "platform/chunks/ChunkGenerationScheduler.h"
 
 #include "platform/PlatformCompat.h"
+#include "platform/Diagnostics.h"
+#include "platform/Log.h"
 #include "platform/PlatformTuning.h"
 #include "platform/Thread.h"
 #include "net/minecraft/src/Chunk.h"
@@ -34,6 +36,7 @@ struct ChunkGenerationScheduler::Impl
     std::atomic_bool stop{false};
     PlatformThread thread;
     std::atomic<long_t> workerTimeNs{0};
+    const char* volatile workerState = "idle";
 };
 
 std::uint64_t ChunkGenerationScheduler::key(int_t x, int_t z)
@@ -159,7 +162,8 @@ bool ChunkGenerationScheduler::dispatch(int_t budget, CoordinatePredicate predic
         if (predicate != nullptr && !predicate(context, coord.first, coord.second))
         {
             complete(coord.first, coord.second);
-            continue;
+            
+continue;
         }
 
         {
@@ -220,6 +224,15 @@ bool ChunkGenerationScheduler::isWorkingOn(int_t x, int_t z) const
 #endif
 }
 
+
+const char* ChunkGenerationScheduler::getWorkerState() const
+{
+#if PLATFORM_ASYNC_CHUNK_GENERATION
+    return impl_->workerState;
+#else
+    return "idle";
+#endif
+}
 
 long_t ChunkGenerationScheduler::getAndResetWorkerTimeNs()
 {
@@ -302,7 +315,10 @@ void ChunkGenerationScheduler::runWorker()
 #endif
         }
 
-        const long_t stepStartNs = System::nanoTime();
+        try
+        {
+            impl_->workerState = "generating";
+            const long_t stepStartNs = System::nanoTime();
 
         if (impl_->regionLoader != nullptr)
         {
@@ -328,7 +344,8 @@ void ChunkGenerationScheduler::runWorker()
                         result.kind = ResultKind::LoadedChunk;
                         std::lock_guard<std::mutex> guard(impl_->mutex);
                         impl_->results.push_back(std::move(result));
-                        continue;
+                        impl_->workerTimeNs += (System::nanoTime() - stepStartNs);
+continue;
                     }
                 }
 #endif
@@ -339,7 +356,8 @@ void ChunkGenerationScheduler::runWorker()
                 result.data = std::move(data);
                 std::lock_guard<std::mutex> guard(impl_->mutex);
                 impl_->results.push_back(std::move(result));
-                continue;
+                impl_->workerTimeNs += (System::nanoTime() - stepStartNs);
+continue;
             }
             if (loadStatus == ChunkLoadStatus::ReadError)
             {
@@ -349,7 +367,8 @@ void ChunkGenerationScheduler::runWorker()
                 result.kind = ResultKind::ReadError;
                 std::lock_guard<std::mutex> guard(impl_->mutex);
                 impl_->results.push_back(std::move(result));
-                continue;
+                impl_->workerTimeNs += (System::nanoTime() - stepStartNs);
+continue;
             }
         }
 
@@ -360,7 +379,9 @@ void ChunkGenerationScheduler::runWorker()
             if (!generator->generateAsyncChunkData(coord.first, coord.second, generatedData))
             {
                 complete(coord.first, coord.second);
-                continue;
+                
+impl_->workerTimeNs += (System::nanoTime() - stepStartNs);
+continue;
             }
 
             Result result;
@@ -370,7 +391,8 @@ void ChunkGenerationScheduler::runWorker()
             result.data = std::move(generatedData);
             std::lock_guard<std::mutex> guard(impl_->mutex);
             impl_->results.push_back(std::move(result));
-            continue;
+            impl_->workerTimeNs += (System::nanoTime() - stepStartNs);
+continue;
         }
 #endif
 
@@ -378,7 +400,9 @@ void ChunkGenerationScheduler::runWorker()
         if (generated == nullptr)
         {
             complete(coord.first, coord.second);
-            continue;
+            
+impl_->workerTimeNs += (System::nanoTime() - stepStartNs);
+continue;
         }
 
         Result result;
@@ -390,6 +414,11 @@ void ChunkGenerationScheduler::runWorker()
         impl_->results.push_back(std::move(result));
 
         impl_->workerTimeNs += (System::nanoTime() - stepStartNs);
+        }
+        catch (...) {
+            complete(coord.first, coord.second);
+            MC_LOG_ERROR("xbox.async", "Worker thread threw an exception on chunk %d, %d!\n", coord.first, coord.second);
+        }
     }
 
 #if PLATFORM_WII
