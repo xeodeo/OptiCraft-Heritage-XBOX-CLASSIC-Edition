@@ -2,6 +2,7 @@
 
 #include "GuiScreen.h"
 #include <string>
+#include <vector>
 
 class GameSettings;
 
@@ -33,4 +34,5 @@ protected:
 
 private:
 	int_t buttonId;
+	std::vector<int_t> displayedBindings;
 };

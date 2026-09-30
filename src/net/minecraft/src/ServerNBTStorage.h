@@ -21,5 +21,9 @@ public:
 	jstring motd;
 	long_t lag;
 	bool polled;
+#ifdef PS2_PLATFORM
+	long_t nextPollTime;
+	int_t pollRetryCount;
+#endif
 	mutable std::mutex stateMutex;
 };

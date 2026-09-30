@@ -103,19 +103,22 @@ void PlayerControllerMP::clickBlock(int_t i, int_t j, int_t k, int_t l)
 	{
 		netClientHandler->addToSendQueue(new Packet14BlockDig(0, i, j, k, l));
 		int_t i1 = mc->theWorld->getBlockId(i, j, k);
-		if (i1 > 0 && curBlockDamageMP == 0.0f)
-			Block::blocksList[i1]->onBlockClicked(mc->theWorld, i, j, k, mc->thePlayer);
-		if (i1 > 0 && Block::blocksList[i1]->blockStrength(mc->thePlayer) >= 1.0f)
-			sendBlockRemoved(i, j, k, l);
-		else
+		if (i1 > 0 && i1 < Block::BLOCK_REGISTRY_SIZE && Block::blocksList[i1] != nullptr)
 		{
-			isHittingBlock = true;
-			currentBlockX = i;
-			currentBlockY = j;
-			currentblockZ = k;
-			curBlockDamageMP = 0.0f;
-			prevBlockDamageMP = 0.0f;
-			field_9441_h = 0.0f;
+			if (curBlockDamageMP == 0.0f)
+				Block::blocksList[i1]->onBlockClicked(mc->theWorld, i, j, k, mc->thePlayer);
+			if (Block::blocksList[i1]->blockStrength(mc->thePlayer) >= 1.0f)
+				sendBlockRemoved(i, j, k, l);
+			else
+			{
+				isHittingBlock = true;
+				currentBlockX = i;
+				currentBlockY = j;
+				currentblockZ = k;
+				curBlockDamageMP = 0.0f;
+				prevBlockDamageMP = 0.0f;
+				field_9441_h = 0.0f;
+			}
 		}
 	}
 }
@@ -143,14 +146,19 @@ void PlayerControllerMP::sendBlockRemoving(int_t i, int_t j, int_t k, int_t l)
 	else if (i == currentBlockX && j == currentBlockY && k == currentblockZ)
 	{
 		int_t i1 = mc->theWorld->getBlockId(i, j, k);
-		if (i1 == 0)
+		if (i1 <= 0 || i1 >= Block::BLOCK_REGISTRY_SIZE)
 		{
 			isHittingBlock = false;
 			return;
 		}
 		Block *block = Block::blocksList[i1];
+		if (block == nullptr)
+		{
+			isHittingBlock = false;
+			return;
+		}
 		curBlockDamageMP += block->blockStrength(mc->thePlayer);
-		if (std::fmod(field_9441_h, 4.0f) == 0.0f && block != nullptr)
+		if (std::fmod(field_9441_h, 4.0f) == 0.0f)
 			mc->sndManager->playSound(block->stepSound->getStepSound(), (float)i + 0.5f, (float)j + 0.5f, (float)k + 0.5f, (block->stepSound->getVolume() + 1.0f) / 8.0f, block->stepSound->getPitch() * 0.5f);
 		field_9441_h++;
 		if (curBlockDamageMP >= 1.0f)
@@ -248,6 +256,8 @@ EntityPlayer *PlayerControllerMP::createPlayer(World *world)
 
 void PlayerControllerMP::attackEntity(EntityPlayer *entityplayer, Entity *entity)
 {
+	if (entityplayer == nullptr || entity == nullptr)
+		return;
 	syncCurrentPlayItem();
 	netClientHandler->addToSendQueue(new Packet7UseEntity(entityplayer->entityId, entity->entityId, 1));
 	entityplayer->attackTargetEntityWithCurrentItem(entity);
@@ -255,6 +265,8 @@ void PlayerControllerMP::attackEntity(EntityPlayer *entityplayer, Entity *entity
 
 void PlayerControllerMP::interactWithEntity(EntityPlayer *entityplayer, Entity *entity)
 {
+	if (entityplayer == nullptr || entity == nullptr)
+		return;
 	syncCurrentPlayItem();
 	netClientHandler->addToSendQueue(new Packet7UseEntity(entityplayer->entityId, entity->entityId, 0));
 	entityplayer->useCurrentItemOnEntity(entity);

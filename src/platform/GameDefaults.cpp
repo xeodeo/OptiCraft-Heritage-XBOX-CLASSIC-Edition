@@ -57,6 +57,8 @@ const PlatformGameDefaults& platformGameDefaults()
         d.sky = false;
         d.sunMoon = false;
         d.clouds = 3;
+#elif PLATFORM_PS2 || PLATFORM_WII
+        d.clouds = 3;
 #else
         d.clouds = 1;
 #endif

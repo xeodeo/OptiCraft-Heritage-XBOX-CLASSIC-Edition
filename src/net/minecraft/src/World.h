@@ -381,7 +381,7 @@ public:
 	std::vector<Entity *> &getEntitiesWithinAABBExcludingEntity(Entity *entity, AxisAlignedBB *axisalignedbb);
 	std::vector<Entity *> getEntitiesWithinAABB(const std::type_info &class1, AxisAlignedBB *axisalignedbb);
 	Entity *findNearestEntityWithinAABB(const std::type_info &class1, AxisAlignedBB *axisalignedbb, Entity *excludingEntity);
-	Entity *getEntityByID(int_t entityId);
+	virtual Entity *getEntityByID(int_t entityId);
 	std::vector<Entity *> &getLoadedEntityList();
 	// Java: func_698_b — chunk-modified notification when a TE state changes;
 	// fans out to every IWorldAccess listener.

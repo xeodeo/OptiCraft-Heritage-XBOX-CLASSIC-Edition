@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include <atomic>
+#include <delaythread.h>
 #include <cerrno>
 #include <cstring>
 #include <istream>
@@ -20,10 +21,73 @@
 #include <ostream>
 #include <streambuf>
 
+#ifdef PS2_REMOTE_DEBUG
+// The public ps2ips header exposes only init/deinit, but libps2ips also exports
+// these low-level EE-to-IOP socket RPC entry points.
+extern "C" {
+int ps2ipc_socket(int domain, int type, int protocol);
+int ps2ipc_bind(int s, const struct sockaddr *name, int namelen);
+int ps2ipc_connect(int s, const struct sockaddr *name, int namelen);
+int ps2ipc_recv(int s, void *mem, int len, unsigned int flags);
+int ps2ipc_send(int s, const void *data, int len, unsigned int flags);
+int ps2ipc_disconnect(int s);
+int ps2ipc_ioctl(int s, long cmd, void *argp);
+int ps2ipc_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen);
+int ps2ipc_setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen);
+}
+#endif
+
 namespace JavaNetwork
 {
 namespace
 {
+#ifdef PS2_REMOTE_DEBUG
+constexpr long kIopFionbio = 0x8004667eL; // _IOW('f', 126, unsigned long) on IOP.
+
+// ps2ips copies sockaddr_in verbatim to the IOP. Build dotted IPv4 literals
+// with the same byte layout as PS2SDK's IP4_ADDR macro; EE newlib inet_aton()
+// does not produce the wire-compatible representation required by this path.
+bool parseIopIpv4Literal(const std::string &text, in_addr &address)
+{
+    std::uint32_t octets[4]{};
+    std::size_t cursor = 0;
+
+    for (int index = 0; index < 4; ++index)
+    {
+        if (cursor >= text.size() || text[cursor] < '0' || text[cursor] > '9')
+            return false;
+
+        std::uint32_t value = 0;
+        do
+        {
+            value = value * 10u + static_cast<std::uint32_t>(text[cursor] - '0');
+            if (value > 255u)
+                return false;
+            ++cursor;
+        } while (cursor < text.size() && text[cursor] >= '0' && text[cursor] <= '9');
+
+        octets[index] = value;
+        if (index < 3)
+        {
+            if (cursor >= text.size() || text[cursor] != '.')
+                return false;
+            ++cursor;
+        }
+    }
+
+    if (cursor != text.size())
+        return false;
+
+    address.s_addr = octets[0]
+        | (octets[1] << 8)
+        | (octets[2] << 16)
+        | (octets[3] << 24);
+    return true;
+}
+
+#else
+constexpr int kSocketDontWait = MSG_DONTWAIT;
+#endif
 class Ps2Socket final : public Socket
 {
 public:
@@ -49,9 +113,25 @@ public:
         remoteAddress = host + ":" + std::to_string(port);
 
         sockaddr_in target{};
+#ifdef PS2_REMOTE_DEBUG
+        // ps2ips copies this 16-byte sockaddr verbatim to IOP lwIP.
+        target.sin_len = static_cast<unsigned char>(sizeof(target));
+#endif
         target.sin_family = AF_INET;
         target.sin_port = htons(static_cast<unsigned short>(port));
 
+#ifdef PS2_REMOTE_DEBUG
+        if (!parseIopIpv4Literal(host, target.sin_addr))
+        {
+            hostent *resolved = gethostbyname(host.c_str());
+            if (resolved == nullptr || resolved->h_addr_list == nullptr ||
+                resolved->h_addr_list[0] == nullptr)
+                return false;
+            std::memcpy(&target.sin_addr, resolved->h_addr_list[0], sizeof(target.sin_addr));
+        }
+
+        return connectRemote(target, host, port);
+#else
         if (inet_aton(host.c_str(), &target.sin_addr) == 0)
         {
             hostent *resolved = gethostbyname(host.c_str());
@@ -85,19 +165,58 @@ public:
         MC_LOG_INFO("network", "[PS2] TCP connected to %s:%d\n", host.c_str(), port);
         McLog::flush();
         return true;
+#endif
     }
 
     int read(char *buffer, int length) override
     {
-        const int socketFd = fd.load(std::memory_order_acquire);
-        if (socketFd < 0 || buffer == nullptr || length <= 0 ||
-            closing.load(std::memory_order_acquire))
+        if (buffer == nullptr || length <= 0)
             return -1;
 
-        const int count = static_cast<int>(::recv(socketFd, buffer, static_cast<std::size_t>(length), 0));
-        if (count > 0)
-            receivedBytes.fetch_add(static_cast<std::size_t>(count), std::memory_order_relaxed);
-        return count;
+        while (!closing.load(std::memory_order_acquire))
+        {
+            const int socketFd = fd.load(std::memory_order_acquire);
+            if (socketFd < 0)
+                return -1;
+
+#ifdef PS2_REMOTE_DEBUG
+            const int count = ps2ipc_recv(socketFd, buffer, length, 0);
+#else
+            const int count = static_cast<int>(::recv(socketFd, buffer,
+                                                      static_cast<std::size_t>(length),
+                                                      kSocketDontWait));
+#endif
+            if (count > 0)
+            {
+                receivedBytes.fetch_add(static_cast<std::size_t>(count), std::memory_order_relaxed);
+                return count;
+            }
+            if (count == 0)
+                return 0;
+#ifdef PS2_REMOTE_DEBUG
+            // ps2ips does not transport IOP errno for recv(). On a nonblocking
+            // socket, a negative result with no pending SO_ERROR is the normal
+            // would-block case. A pending asynchronous socket error is fatal.
+            const int socketError = remoteSocketError(socketFd);
+            if (socketError > 0)
+            {
+                MC_LOG_WARN("network", "[PS2] ps2ips recv failed fd=%d so_error=%d\n",
+                            socketFd, socketError);
+                closing.store(true, std::memory_order_release);
+                return -1;
+            }
+#else
+            if (errno != EAGAIN && errno != EWOULDBLOCK)
+                return count;
+#endif
+
+            // Keep recv cooperative on real hardware. A blocking recv() otherwise
+            // has to be interrupted with shutdown(), which can stall the PS2
+            // network stack during disconnect.
+            DelayThread(2000);
+        }
+
+        return -1;
     }
 
     bool write(const char *buffer, int length) override
@@ -114,12 +233,41 @@ public:
             const int socketFd = fd.load(std::memory_order_acquire);
             if (socketFd < 0 || closing.load(std::memory_order_acquire))
                 return false;
+#ifdef PS2_REMOTE_DEBUG
+            const int count = ps2ipc_send(socketFd, buffer + offset, length - offset, 0);
+#else
             const int count = static_cast<int>(::send(socketFd, buffer + offset,
-                                                      static_cast<std::size_t>(length - offset), 0));
-            if (count <= 0)
-                return false;
-            sentBytes.fetch_add(static_cast<std::size_t>(count), std::memory_order_relaxed);
-            offset += count;
+                                                      static_cast<std::size_t>(length - offset),
+                                                      kSocketDontWait));
+#endif
+            if (count > 0)
+            {
+                sentBytes.fetch_add(static_cast<std::size_t>(count), std::memory_order_relaxed);
+                offset += count;
+                continue;
+            }
+#ifdef PS2_REMOTE_DEBUG
+            if (count < 0)
+            {
+                const int socketError = remoteSocketError(socketFd);
+                if (socketError > 0)
+                {
+                    MC_LOG_WARN("network", "[PS2] ps2ips send failed fd=%d so_error=%d\n",
+                                socketFd, socketError);
+                    closing.store(true, std::memory_order_release);
+                    return false;
+                }
+                DelayThread(2000);
+                continue;
+            }
+#else
+            if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+            {
+                DelayThread(2000);
+                continue;
+            }
+#endif
+            return false;
         }
         return true;
     }
@@ -132,17 +280,17 @@ public:
 
     void interruptRead() override
     {
-        const int socketFd = fd.load(std::memory_order_acquire);
-        if (socketFd >= 0)
-            ::shutdown(socketFd, SHUT_RD);
+        // read() polls cooperatively, so marking the socket as closing is enough
+        // to wake the reader without a synchronous lwIP shutdown() call.
+        closing.store(true, std::memory_order_release);
     }
 
     void close() override
     {
+        // The NetworkManager joins the read/write threads before destroying this
+        // socket. Avoid shutdown() here: on real PS2 hardware it can stall the
+        // EE/IOP networking path at the exact moment the user disconnects.
         closing.store(true, std::memory_order_release);
-        const int socketFd = fd.load(std::memory_order_acquire);
-        if (socketFd >= 0)
-            ::shutdown(socketFd, SHUT_RDWR);
     }
 
     std::string getRemoteSocketAddress() const override { return remoteAddress; }
@@ -150,15 +298,113 @@ public:
     std::size_t getSentByteCount() const override { return sentBytes.load(std::memory_order_relaxed); }
 
 private:
+#ifdef PS2_REMOTE_DEBUG
+    static int remoteSocketError(int socketFd)
+    {
+        int socketError = 0;
+        socklen_t length = sizeof(socketError);
+        return ps2ipc_getsockopt(socketFd, SOL_SOCKET, SO_ERROR, &socketError, &length) < 0
+            ? -1
+            : socketError;
+    }
+
+    bool connectRemote(const sockaddr_in &target, const std::string &host, int port)
+    {
+        // Keep the IOP descriptor itself. libcglue wraps it in a separate EE fd
+        // and collapses negative ps2ips results to ENFILE, losing the socket's
+        // actual RPC state and error information.
+        const int newFd = ps2ipc_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (newFd < 0)
+        {
+            MC_LOG_WARN("network", "[PS2] ps2ips socket RPC failed\n");
+            return false;
+        }
+
+        fd.store(newFd, std::memory_order_release);
+
+        // The ps2link-owned PS2IP-NM stack is already configured on sm0. Bind
+        // this fresh client PCB to that known local address before connect() so
+        // lwIP does not have to infer the source interface from an unbound PCB.
+        // This is intentionally remote-debug-only; normal builds keep the
+        // application-owned ps2ip stack and its ordinary auto-bind behavior.
+        std::uint32_t localAddressNetworkOrder = 0;
+        if (!Ps2Network::localAddressNetworkOrder(localAddressNetworkOrder))
+        {
+            MC_LOG_WARN("network", "[PS2] ps2ips shared local address unavailable; cannot bind fd=%d\n",
+                        newFd);
+            releaseSocket();
+            return false;
+        }
+
+        sockaddr_in local{};
+        local.sin_len = static_cast<unsigned char>(sizeof(local));
+        local.sin_family = AF_INET;
+        local.sin_port = 0; // Let lwIP choose an ephemeral source port.
+        local.sin_addr.s_addr = localAddressNetworkOrder;
+
+        const int bindResult = ps2ipc_bind(
+            newFd, reinterpret_cast<const sockaddr *>(&local), sizeof(local));
+        if (bindResult < 0)
+        {
+            MC_LOG_WARN("network", "[PS2] ps2ips bind failed fd=%d result=%d\n",
+                        newFd, bindResult);
+            releaseSocket();
+            return false;
+        }
+
+        // The ps2link-owned PS2IP-NM stack requires the handshake while the
+        // socket is blocking. Enabling FIONBIO before connect() returns without
+        // emitting a SYN on hardware, so switch only established sockets to
+        // nonblocking mode for the Java stream implementation.
+        const int connectResult = ps2ipc_connect(
+            newFd, reinterpret_cast<const sockaddr *>(&target), sizeof(target));
+        if (connectResult < 0)
+        {
+            const int socketError = remoteSocketError(newFd);
+            MC_LOG_WARN("network",
+                        "[PS2] ps2ips blocking connect failed fd=%d result=%d so_error=%d\n",
+                        newFd, connectResult, socketError);
+            releaseSocket();
+            return false;
+        }
+
+        int nonBlocking = 1;
+        if (ps2ipc_ioctl(newFd, kIopFionbio, &nonBlocking) < 0)
+        {
+            MC_LOG_WARN("network",
+                        "[PS2] ps2ips FIONBIO failed after connect fd=%d\n", newFd);
+            releaseSocket();
+            return false;
+        }
+
+        return finishRemoteConnect(newFd, host, port);
+    }
+
+    bool finishRemoteConnect(int socketFd, const std::string &host, int port)
+    {
+        const int noDelay = 1;
+        if (ps2ipc_setsockopt(socketFd, IPPROTO_TCP, TCP_NODELAY,
+                              &noDelay, sizeof(noDelay)) < 0)
+            MC_LOG_DEBUG("network", "[PS2] ps2ips TCP_NODELAY unavailable fd=%d\n", socketFd);
+
+        MC_LOG_INFO("network", "[PS2] TCP connected to %s:%d via ps2ips fd=%d\n",
+                    host.c_str(), port, socketFd);
+        McLog::flush();
+        return true;
+    }
+#endif
+
     void releaseSocket()
     {
         closing.store(true, std::memory_order_release);
         const int socketFd = fd.exchange(-1, std::memory_order_acq_rel);
-        if (socketFd >= 0)
-        {
-            ::shutdown(socketFd, SHUT_RDWR);
-            ::close(socketFd);
-        }
+        if (socketFd < 0)
+            return;
+#ifdef PS2_REMOTE_DEBUG
+        (void)ps2ipc_disconnect(socketFd);
+#else
+        ::close(socketFd);
+#endif
     }
 
     std::atomic<int> fd{-1};

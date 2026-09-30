@@ -28,6 +28,8 @@
 #include "StepSound.h"
 #include "Vec3D.h"
 #include "World.h"
+#include "WorldInfo.h"
+#include "Chunk.h"
 
 int_t Entity::nextEntityID = 0;
 
@@ -527,6 +529,30 @@ void Entity::onEntityUpdate()
 	isFirstUpdate = false;
 }
 
+void Entity::onRemoteMultiplayerEntityUpdateLite()
+{
+	// Remote mobs are authoritative on the multiplayer server. On PS2 throttled
+	// ticks we still need the bookkeeping normally performed by onEntityUpdate(),
+	// but repeating water/lava material scans for every remote mob is redundant.
+	if (ridingEntity != nullptr && ridingEntity->isDead)
+	{
+		ridingEntity = nullptr;
+	}
+	++ticksExisted;
+	prevDistanceWalkedModified = distanceWalkedModified;
+	prevPosX = posX;
+	prevPosY = posY;
+	prevPosZ = posZ;
+	prevRotationPitch = rotationPitch;
+	prevRotationYaw = rotationYaw;
+	fire = 0;
+	if (posY < -64.0)
+	{
+		kill();
+	}
+	isFirstUpdate = false;
+}
+
 void Entity::setOnFireFromLava()
 {
 	if (!immuneToFire)
@@ -561,11 +587,19 @@ void Entity::moveEntity(double d, double d1, double d2)
 		posZ = (boundingBox->minZ + boundingBox->maxZ) / 2.0;
 		if (worldObj != nullptr && worldObj->isLimitedWorld())
 		{
-			constexpr double BOUNDARY = 127.5;
-			if (posX < -BOUNDARY) posX = -BOUNDARY;
-			else if (posX > BOUNDARY) posX = BOUNDARY;
-			if (posZ < -BOUNDARY) posZ = -BOUNDARY;
-			else if (posZ > BOUNDARY) posZ = BOUNDARY;
+			const double boundary = worldObj->getWorldInfo() != nullptr ? worldObj->getWorldInfo()->getLimitedWorldBoundary() : 127.5;
+			double clampedX = posX;
+			double clampedZ = posZ;
+			if (clampedX < -boundary) clampedX = -boundary;
+			else if (clampedX > boundary) clampedX = boundary;
+			if (clampedZ < -boundary) clampedZ = -boundary;
+			else if (clampedZ > boundary) clampedZ = boundary;
+			if (clampedX != posX || clampedZ != posZ)
+			{
+				boundingBox->offset(clampedX - posX, 0.0, clampedZ - posZ);
+				posX = clampedX;
+				posZ = clampedZ;
+			}
 		}
 		return;
 	}
@@ -585,6 +619,50 @@ void Entity::moveEntity(double d, double d1, double d2)
 	double d5 = d;
 	double d6 = d1;
 	double d7 = d2;
+
+	// Void drop protection for streaming / async chunk generation:
+	// If the chunk beneath the player is ungenerated or blank, freeze vertical drop.
+	// If the player is about to cross into an ungenerated chunk, prevent entry until loaded.
+	if (isPlayer() && worldObj != nullptr && !worldObj->findingSpawnPoint)
+	{
+		const int_t curChunkX = MathHelper::floor_double(posX) >> 4;
+		const int_t curChunkZ = MathHelper::floor_double(posZ) >> 4;
+		Chunk *curChunk = worldObj->getChunkIfExists(curChunkX, curChunkZ);
+		const bool curChunkEmpty = (curChunk == nullptr || curChunk->isEmptyChunk());
+
+		if (curChunkEmpty)
+		{
+			if (d1 < 0.0)
+			{
+				d1 = 0.0;
+				d6 = 0.0;
+				motionY = 0.0;
+			}
+		}
+		else
+		{
+			const int_t nextChunkX = MathHelper::floor_double(posX + d) >> 4;
+			const int_t nextChunkZ = MathHelper::floor_double(posZ + d2) >> 4;
+			if (nextChunkX != curChunkX || nextChunkZ != curChunkZ)
+			{
+				Chunk *targetChunk = worldObj->getChunkIfExists(nextChunkX, nextChunkZ);
+				Chunk *targetChunkX = (nextChunkX != curChunkX) ? worldObj->getChunkIfExists(nextChunkX, curChunkZ) : targetChunk;
+				Chunk *targetChunkZ = (nextChunkZ != curChunkZ) ? worldObj->getChunkIfExists(curChunkX, nextChunkZ) : targetChunk;
+				if ((targetChunk == nullptr || targetChunk->isEmptyChunk()) ||
+				    (targetChunkX == nullptr || targetChunkX->isEmptyChunk()) ||
+				    (targetChunkZ == nullptr || targetChunkZ->isEmptyChunk()))
+				{
+					d = 0.0;
+					d2 = 0.0;
+					d5 = 0.0;
+					d7 = 0.0;
+					motionX = 0.0;
+					motionZ = 0.0;
+					isCollidedHorizontally = true;
+				}
+			}
+		}
+	}
 	AxisAlignedBB *axisalignedbb = boundingBox->copy();
 	bool flag = onGround && isSneaking() && isPlayer();
 	if (flag)
@@ -777,13 +855,13 @@ void Entity::moveEntity(double d, double d1, double d2)
 	posZ = (boundingBox->minZ + boundingBox->maxZ) / 2.0;
 	if (worldObj != nullptr && worldObj->isLimitedWorld())
 	{
-		constexpr double BOUNDARY = 127.5;
+		const double boundary = worldObj->getWorldInfo() != nullptr ? worldObj->getWorldInfo()->getLimitedWorldBoundary() : 127.5;
 		double clampedX = posX;
 		double clampedZ = posZ;
-		if (clampedX < -BOUNDARY) { clampedX = -BOUNDARY; motionX = 0.0; isCollidedHorizontally = true; }
-		else if (clampedX > BOUNDARY) { clampedX = BOUNDARY; motionX = 0.0; isCollidedHorizontally = true; }
-		if (clampedZ < -BOUNDARY) { clampedZ = -BOUNDARY; motionZ = 0.0; isCollidedHorizontally = true; }
-		else if (clampedZ > BOUNDARY) { clampedZ = BOUNDARY; motionZ = 0.0; isCollidedHorizontally = true; }
+		if (clampedX < -boundary) { clampedX = -boundary; motionX = 0.0; isCollidedHorizontally = true; }
+		else if (clampedX > boundary) { clampedX = boundary; motionX = 0.0; isCollidedHorizontally = true; }
+		if (clampedZ < -boundary) { clampedZ = -boundary; motionZ = 0.0; isCollidedHorizontally = true; }
+		else if (clampedZ > boundary) { clampedZ = boundary; motionZ = 0.0; isCollidedHorizontally = true; }
 		if (clampedX != posX || clampedZ != posZ)
 		{
 			boundingBox->offset(clampedX - posX, 0.0, clampedZ - posZ);
@@ -794,6 +872,22 @@ void Entity::moveEntity(double d, double d1, double d2)
 	isCollidedHorizontally = d5 != d || d7 != d2;
 	isCollidedVertically = d6 != d1;
 	onGround = d6 != d1 && d6 < 0.0;
+	if (isPlayer() && worldObj != nullptr && !worldObj->findingSpawnPoint)
+	{
+		const int_t curChunkX = MathHelper::floor_double(posX) >> 4;
+		const int_t curChunkZ = MathHelper::floor_double(posZ) >> 4;
+		Chunk *curChunk = worldObj->getChunkIfExists(curChunkX, curChunkZ);
+		if (curChunk == nullptr || curChunk->isEmptyChunk())
+		{
+			if (motionY < 0.0)
+			{
+				motionY = 0.0;
+			}
+			isCollidedVertically = true;
+			onGround = true;
+			fallDistance = 0.0f;
+		}
+	}
 	isCollided = isCollidedHorizontally || isCollidedVertically;
 	updateFallState(d1, onGround);
 	if (d5 != d)

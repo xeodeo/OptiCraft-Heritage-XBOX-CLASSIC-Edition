@@ -39,8 +39,16 @@ WorldInfo::WorldInfo(NBTTagCompound *nbttagcompound)
 	raining = nbttagcompound->getBoolean("raining");
 	thunderTime = nbttagcompound->getInteger("thunderTime");
 	thundering = nbttagcompound->getBoolean("thundering");
-	limitedWorld = nbttagcompound->hasKey("limitedWorld") ? nbttagcompound->getBoolean("limitedWorld") : false;
-	islandWorld = nbttagcompound->hasKey("islandWorld") ? nbttagcompound->getBoolean("islandWorld") : limitedWorld;
+	if (nbttagcompound->hasKey("worldSizeType"))
+	{
+		worldSizeType = nbttagcompound->getInteger("worldSizeType");
+		limitedWorld = (worldSizeType != 0);
+	}
+	else
+	{
+		limitedWorld = nbttagcompound->hasKey("limitedWorld") ? nbttagcompound->getBoolean("limitedWorld") : false;
+		worldSizeType = limitedWorld ? 1 : 0;
+	}
 	playerTag = nullptr;
 	player2Tag = nullptr;
 	dimension = 0;
@@ -81,7 +89,7 @@ WorldInfo::WorldInfo(long_t l, const jstring &s)
 	thundering = false;
 	thunderTime = 0;
 	limitedWorld = false;
-	islandWorld = false;
+	worldSizeType = 0;
 }
 
 WorldInfo::WorldInfo(WorldSettings *settings, const jstring &s)
@@ -92,8 +100,8 @@ WorldInfo::WorldInfo(WorldSettings *settings, const jstring &s)
 	gameType = settings != nullptr ? settings->getGameType() : 0;
 	mapFeaturesEnabled = settings == nullptr || settings->isMapFeaturesEnabled();
 	hardcore = settings != nullptr && settings->getHardcoreEnabled();
-	limitedWorld = settings != nullptr && settings->isLimitedWorld();
-	islandWorld = settings != nullptr && settings->isIslandWorld();
+	worldSizeType = settings != nullptr ? settings->getWorldSizeType() : 0;
+	limitedWorld = (worldSizeType != 0);
 	levelName = s;
 	spawnX = 0;
 	spawnY = 0;
@@ -119,7 +127,7 @@ WorldInfo::WorldInfo(WorldInfo *worldinfo)
 	mapFeaturesEnabled = worldinfo->mapFeaturesEnabled;
 	hardcore = worldinfo->hardcore;
 	limitedWorld = worldinfo->limitedWorld;
-	islandWorld = worldinfo->islandWorld;
+	worldSizeType = worldinfo->worldSizeType;
 	spawnX = worldinfo->spawnX;
 	spawnY = worldinfo->spawnY;
 	spawnZ = worldinfo->spawnZ;
@@ -215,8 +223,8 @@ void WorldInfo::updateTagCompound(NBTTagCompound *nbttagcompound, NBTTagCompound
 	nbttagcompound->setInteger("thunderTime", thunderTime);
 	nbttagcompound->setBoolean("thundering", thundering);
 	nbttagcompound->setBoolean("hardcore", hardcore);
-	nbttagcompound->setBoolean("limitedWorld", limitedWorld);
-	nbttagcompound->setBoolean("islandWorld", islandWorld);
+	nbttagcompound->setBoolean("limitedWorld", worldSizeType != 0);
+	nbttagcompound->setInteger("worldSizeType", worldSizeType);
 	if (nbttagcompound1 != nullptr)
 	{
 		if (nbttagcompound1 == playerTag)
@@ -299,8 +307,31 @@ bool WorldInfo::isMapFeaturesEnabled() { return mapFeaturesEnabled; }
 bool WorldInfo::isHardcoreModeEnabled() { return hardcore; }
 WorldType *WorldInfo::getTerrainType() { return terrainType; }
 void WorldInfo::setTerrainType(WorldType *type) { terrainType = type != nullptr ? type : WorldType::DEFAULT; }
-bool WorldInfo::isLimitedWorld() const { return limitedWorld; }
-void WorldInfo::setLimitedWorld(bool flag) { limitedWorld = flag; }
-bool WorldInfo::isIslandWorld() const { return islandWorld; }
-void WorldInfo::setIslandWorld(bool flag) { islandWorld = flag; }
+bool WorldInfo::isLimitedWorld() const { return worldSizeType != 0; }
+void WorldInfo::setLimitedWorld(bool flag)
+{
+	limitedWorld = flag;
+	if (flag && worldSizeType == 0)
+		worldSizeType = 1;
+	else if (!flag)
+		worldSizeType = 0;
+}
+int_t WorldInfo::getWorldSizeType() const { return worldSizeType; }
+void WorldInfo::setWorldSizeType(int_t type)
+{
+	worldSizeType = type;
+	limitedWorld = (worldSizeType != 0);
+}
+int_t WorldInfo::getLimitedWorldMinChunk() const
+{
+	return worldSizeType == 2 ? -27 : -8;
+}
+int_t WorldInfo::getLimitedWorldMaxChunk() const
+{
+	return worldSizeType == 2 ? 26 : 7;
+}
+double WorldInfo::getLimitedWorldBoundary() const
+{
+	return worldSizeType == 2 ? 431.5 : 127.5;
+}
 

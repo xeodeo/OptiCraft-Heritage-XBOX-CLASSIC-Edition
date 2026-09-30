@@ -337,7 +337,7 @@ bool SoundManager::loaded = false;
 
 SoundManager::SoundManager()
     : soundPoolSounds(), soundPoolStreaming(), soundPoolMusic(), soundVolume(0),
-      options(nullptr), rand(), ticksBeforeMusic(rand.nextInt(12000))
+      options(nullptr), rand(), ticksBeforeMusic(rand.nextInt(100) + 40)
 {
 }
 
@@ -465,7 +465,7 @@ bool SoundManager::playMusicFileNow(const std::string &file)
     if (!ps2StartFileStream(file, s_ps2MusicVolume, 1.0f, Ps2StreamKind::Music))
         return false;
 
-    ticksBeforeMusic = rand.nextInt(12000) + 12000;
+    ticksBeforeMusic = rand.nextInt(1200) + 600;
     return true;
 }
 
@@ -490,7 +490,7 @@ void SoundManager::playRandomMusicIfReady()
     }
 
     SoundPoolEntry *entry = soundPoolMusic.getRandomSound();
-    ticksBeforeMusic = rand.nextInt(12000) + 12000;
+    ticksBeforeMusic = rand.nextInt(1200) + 600;
     if (entry == nullptr)
         return;
 
@@ -543,7 +543,7 @@ void SoundManager::playStreaming(const jstring &s, float x, float y, float z, fl
         ps2SilenceChannel(PS2_STREAMING_VOICE);
     s_ps2StreamingSample = nullptr;
 
-    ticksBeforeMusic = rand.nextInt(12000) + 12000;
+    ticksBeforeMusic = rand.nextInt(1200) + 600;
     ps2StartFileStream(entry->soundUrl, s_ps2SoundVolume,
                        0.5f * attenuation, Ps2StreamKind::Streaming);
 }

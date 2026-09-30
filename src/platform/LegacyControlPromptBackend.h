@@ -7,6 +7,7 @@ class GameSettings;
 enum class LegacyControlAction
 {
     Inventory,
+    Crafting,
     Drop,
     Jump,
     Attack,

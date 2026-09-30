@@ -34,6 +34,9 @@
 #include "Material.h"
 #include "MovingObjectPosition.h"
 #include "platform/PlatformTuning.h"
+#if PLATFORM_PS2
+#include "ps2/diagnostics/Ps2OptimizationValidation.h"
+#endif
 #include "NBTTagCompound.h"
 #include "StepSound.h"
 #include "Vec3D.h"
@@ -62,6 +65,27 @@ bool isEntityPushCollisionRelevant(const EntityLiving *entity)
             return true;
     }
     return false;
+}
+}
+#endif
+
+#if PLATFORM_MULTIPLAYER_REMOTE_LIVING_PHYSICS_TICK_DIVISOR > 1
+namespace
+{
+constexpr unsigned kRemoteLivingPhysicsDivisor = PLATFORM_MULTIPLAYER_REMOTE_LIVING_PHYSICS_TICK_DIVISOR;
+static_assert((kRemoteLivingPhysicsDivisor & (kRemoteLivingPhysicsDivisor - 1U)) == 0U,
+	"Remote living physics divisor must be a power of two");
+
+bool isRemoteMultiplayerLiving(const EntityLiving *entity)
+{
+	return entity != nullptr && entity->worldObj != nullptr &&
+		entity->worldObj->multiplayerWorld && entity->isMultiplayerEntity;
+}
+
+bool isRemoteLivingPhysicsTick(const EntityLiving *entity, int_t tick)
+{
+	const unsigned phase = static_cast<unsigned>(tick) + static_cast<unsigned>(entity->entityId);
+	return (phase & (kRemoteLivingPhysicsDivisor - 1U)) == 0U;
 }
 }
 #endif
@@ -577,13 +601,33 @@ void EntityLiving::playLivingSound()
 void EntityLiving::onEntityUpdate()
 {
 	prevSwingProgress = swingProgress;
-	Entity::onEntityUpdate();
+#if PLATFORM_MULTIPLAYER_REMOTE_LIVING_PHYSICS_TICK_DIVISOR > 1
+	const bool ps2RemoteLiving = isRemoteMultiplayerLiving(this);
+	const bool ps2FullRemotePhysics = !ps2RemoteLiving ||
+		isRemoteLivingPhysicsTick(this, JavaArithmetic::intAdd(ticksExisted, 1));
+#ifdef PS2_OPTIMIZATION_VALIDATION
+	if (ps2RemoteLiving)
+		Ps2OptimizationValidation::remoteLivingPhysics(ps2FullRemotePhysics);
+#endif
+	if (ps2RemoteLiving && !ps2FullRemotePhysics)
+	{
+		Entity::onRemoteMultiplayerEntityUpdateLite();
+	}
+	else
+#endif
+	{
+		Entity::onEntityUpdate();
+	}
 	if (isEntityAlive() && rand.nextInt(1000) < livingSoundTime++)
 	{
 		livingSoundTime = -getTalkInterval();
 		playLivingSound();
 	}
+#if PLATFORM_MULTIPLAYER_REMOTE_LIVING_PHYSICS_TICK_DIVISOR > 1
+	if (ps2FullRemotePhysics && isEntityAlive() && isEntityInsideOpaqueBlock())
+#else
 	if (isEntityAlive() && isEntityInsideOpaqueBlock())
+#endif
 	{
 		attackEntityFrom(DamageSource::inWall, 1);
 	}
@@ -592,27 +636,32 @@ void EntityLiving::onEntityUpdate()
 		fire = 0;
 	}
 	Potion::initPotions();
-	if (isEntityAlive() && isInsideOfMaterial(Material::water) && !canBreatheUnderwater() && !isPotionActive(Potion::waterBreathing))
+#if PLATFORM_MULTIPLAYER_REMOTE_LIVING_PHYSICS_TICK_DIVISOR > 1
+	if (!ps2RemoteLiving || ps2FullRemotePhysics)
+#endif
 	{
-		int_t currentAir = decreaseAirSupply(getAir());
-		setAir(currentAir);
-		if (currentAir == -20)
+		if (isEntityAlive() && isInsideOfMaterial(Material::water) && !canBreatheUnderwater() && !isPotionActive(Potion::waterBreathing))
 		{
-			setAir(0);
-			for (int_t i = 0; i < 8; i++)
+			int_t currentAir = decreaseAirSupply(getAir());
+			setAir(currentAir);
+			if (currentAir == -20)
 			{
-				float f  = rand.nextFloatDifference();
-				float f1 = rand.nextFloatDifference();
-				float f2 = rand.nextFloatDifference();
-				worldObj->spawnParticle("bubble", posX + (double)f, posY + (double)f1, posZ + (double)f2, motionX, motionY, motionZ);
+				setAir(0);
+				for (int_t i = 0; i < 8; i++)
+				{
+					float f  = rand.nextFloatDifference();
+					float f1 = rand.nextFloatDifference();
+					float f2 = rand.nextFloatDifference();
+					worldObj->spawnParticle("bubble", posX + (double)f, posY + (double)f1, posZ + (double)f2, motionX, motionY, motionZ);
+				}
+				attackEntityFrom(DamageSource::drown, 2);
 			}
-			attackEntityFrom(DamageSource::drown, 2);
+			fire = 0;
 		}
-		fire = 0;
-	}
-	else
-	{
-		setAir(maxAir);
+		else
+		{
+			setAir(maxAir);
+		}
 	}
 	cameraPitch = field_9328_R;
 	if (attackTime > 0)
@@ -771,6 +820,22 @@ void EntityLiving::onUpdate()
 	double d  = posX - prevPosX;
 	double d1 = posZ - prevPosZ;
 	float f  = MathHelper::sqrt_double(d * d + d1 * d1);
+#endif
+#if PLATFORM_MULTIPLAYER_REMOTE_LIVING_PHYSICS_TICK_DIVISOR > 1
+	// Remote multiplayer mobs still interpolate their server position every tick,
+	// but throttled ticks return from onLivingUpdate() before moveEntityWithHeading()
+	// can advance the limb animation. Reuse the movement magnitude already computed
+	// here so legs/arms remain visually smooth without restoring any expensive
+	// collision, water, lava, or local-physics work.
+	if (isRemoteMultiplayerLiving(this) && !isRemoteLivingPhysicsTick(this, ticksExisted))
+	{
+		field_705_Q = field_704_R;
+		float limbSpeed = f * 4.0f;
+		if (limbSpeed > 1.0f)
+			limbSpeed = 1.0f;
+		field_704_R += (limbSpeed - field_704_R) * 0.4f;
+		field_703_S += field_704_R;
+	}
 #endif
 	float f1 = renderYawOffset;
 	float f2 = 0.0f;
@@ -1433,20 +1498,36 @@ void EntityLiving::onLivingUpdate()
 		newPosRotationIncrements--;
 		setPosition(d, d1, d2);
 		setRotation(rotationYaw, rotationPitch);
-		const std::vector<AxisAlignedBB *> &list1 = worldObj->getCollidingBoundingBoxes(this, boundingBox->contract(0.03125, 0.0, 0.03125));
-		if (list1.size() > 0)
+#if PLATFORM_MULTIPLAYER_REMOTE_LIVING_PHYSICS_TICK_DIVISOR > 1
+		// Network movement arrives with three interpolation steps. Resolving block
+		// penetration on every intermediate step is expensive for crowds and the
+		// server will correct the final position anyway. Keep the query on the
+		// periodic full-physics tick and always on the final interpolation step.
+		const bool ps2RemoteInterpolation = isRemoteMultiplayerLiving(this);
+		const bool ps2ResolveInterpolationCollision = !ps2RemoteInterpolation ||
+			isRemoteLivingPhysicsTick(this, ticksExisted) || newPosRotationIncrements == 0;
+#ifdef PS2_OPTIMIZATION_VALIDATION
+		if (ps2RemoteInterpolation)
+			Ps2OptimizationValidation::remoteInterpolationQuery(ps2ResolveInterpolationCollision);
+#endif
+		if (ps2ResolveInterpolationCollision)
+#endif
 		{
-			double d4 = 0.0;
-			for (size_t j = 0; j < list1.size(); j++)
+			const std::vector<AxisAlignedBB *> &list1 = worldObj->getCollidingBoundingBoxes(this, boundingBox->contract(0.03125, 0.0, 0.03125));
+			if (list1.size() > 0)
 			{
-				AxisAlignedBB *axisalignedbb = list1[j];
-				if (axisalignedbb->maxY > d4)
+				double d4 = 0.0;
+				for (size_t j = 0; j < list1.size(); j++)
 				{
-					d4 = axisalignedbb->maxY;
+					AxisAlignedBB *axisalignedbb = list1[j];
+					if (axisalignedbb->maxY > d4)
+					{
+						d4 = axisalignedbb->maxY;
+					}
 				}
+				d1 += d4 - boundingBox->minY;
+				setPosition(d, d1, d2);
 			}
-			d1 += d4 - boundingBox->minY;
-			setPosition(d, d1, d2);
 		}
 	}
 	if (isMovementBlocked())
@@ -1468,6 +1549,20 @@ void EntityLiving::onLivingUpdate()
 			rotationYawHead = rotationYaw;
 		}
 	}
+#if PLATFORM_MULTIPLAYER_REMOTE_LIVING_PHYSICS_TICK_DIVISOR > 1
+	if (isRemoteMultiplayerLiving(this) && !isRemoteLivingPhysicsTick(this, ticksExisted))
+	{
+		// Network interpolation above remains per-tick. Only the redundant
+		// local physics is skipped; preserve vanilla input damping so a
+		// server velocity/action cannot accumulate between refresh ticks.
+		moveStrafing *= 0.98f;
+		moveForward *= 0.98f;
+		randomYawVelocity *= 0.9f;
+		if (!isJumping)
+			jumpTicks = 0;
+		return;
+	}
+#endif
 	bool flag  = isInWater();
 	bool flag1 = handleLavaMovement();
 	if (isJumping)

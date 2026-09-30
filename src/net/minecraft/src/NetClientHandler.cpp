@@ -831,9 +831,12 @@ void NetClientHandler::handleCollect(Packet22Collect* packet)
         worldClient->playSoundAtEntity(collected, pickupSound, 0.2f,
             (rand.nextFloatDifference() * 0.7f + 1.0f) * 2.0f);
         
-        mc->effectRenderer->addEffect(new EntityPickupFX(
-            mc->theWorld, collected, collector, -0.5f
-        ));
+        if (mc != nullptr && mc->effectRenderer != nullptr && mc->theWorld != nullptr && collector != nullptr)
+        {
+            mc->effectRenderer->addEffect(new EntityPickupFX(
+                mc->theWorld, collected, collector, -0.5f
+            ));
+        }
         
         worldClient->removeEntityFromWorld(packet->collectedEntityId);
     }
@@ -881,11 +884,13 @@ void NetClientHandler::handleArmAnimation(Packet18Animation* packet)
     }
     else if (packet->animate == 6)
     {
-        mc->effectRenderer->addEffect(new EntityCrit2FX(mc->theWorld, entity));
+        if (mc != nullptr && mc->effectRenderer != nullptr && mc->theWorld != nullptr && entity != nullptr)
+            mc->effectRenderer->addEffect(new EntityCrit2FX(mc->theWorld, entity));
     }
     else if (packet->animate == 7)
     {
-        mc->effectRenderer->addEffect(new EntityCrit2FX(mc->theWorld, entity, "magicCrit"));
+        if (mc != nullptr && mc->effectRenderer != nullptr && mc->theWorld != nullptr && entity != nullptr)
+            mc->effectRenderer->addEffect(new EntityCrit2FX(mc->theWorld, entity, "magicCrit"));
     }
     // Animation 5 is intentionally ignored for EntityOtherPlayerMP in 1.2.5.
 }

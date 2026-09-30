@@ -455,8 +455,7 @@ bool BiomeDecorator::advanceDecoration()
                             maxGrass = 8;
                     }
                     if (decorationIndex < maxGrass &&
-                        ((currentWorld != nullptr && currentWorld->isIslandWorld()) ||
-                         PLATFORM_POPULATE_GRASS_PER_CHUNK_MAX < 0 || decorationIndex < PLATFORM_POPULATE_GRASS_PER_CHUNK_MAX))
+                        (PLATFORM_POPULATE_GRASS_PER_CHUNK_MAX < 0 || decorationIndex < PLATFORM_POPULATE_GRASS_PER_CHUNK_MAX))
                     {
                         const int_t x = JavaArithmetic::intAdd(JavaArithmetic::intAdd(chunk_X, randomGenerator->nextInt(16)), 8);
                         const int_t y = randomGenerator->nextInt(128);

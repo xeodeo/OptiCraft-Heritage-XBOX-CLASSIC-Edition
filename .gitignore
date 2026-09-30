@@ -399,6 +399,7 @@ ninja.exe
 extracted_assets/
 extracted_assets_vanilla/
 *.pak
+<<<<<<< HEAD
 # Xbox bring-up outputs (link XDK library code; never commit)
 xbox-spike/**/out/
 *.xbe
@@ -411,3 +412,8 @@ scripts/xbox/tools/__pycache__/
 
 # XDK bundler writes a header next to each .rdf on every build
 scripts/xbox/media/*.h
+=======
+
+# Local commit patch exports
+/patches/
+>>>>>>> origin/pr-59

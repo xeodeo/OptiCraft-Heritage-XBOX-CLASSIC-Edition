@@ -48,7 +48,7 @@ protected:
     GuiButton *worldTypeButton;
     GuiButton *worldSizeButton;
     bool limitedWorld;
-    bool islandWorld;
+    int_t worldSizeType;
     std::string gameModeDescriptionLine1;
     std::string gameModeDescriptionLine2;
     std::string seed;

@@ -33,7 +33,12 @@ void PlayerController::clickBlock(int_t i, int_t j, int_t k, int_t l)
 bool PlayerController::sendBlockRemoved(int_t i, int_t j, int_t k, int_t)
 {
 	World *world = mc->theWorld;
-	Block *block = Block::blocksList[world->getBlockId(i, j, k)];
+	if (world == nullptr)
+		return false;
+	int_t id = world->getBlockId(i, j, k);
+	if (id <= 0 || id >= Block::BLOCK_REGISTRY_SIZE)
+		return false;
+	Block *block = Block::blocksList[id];
 	if (block == nullptr)
 		return false;
 	World::PlayerEditMarkScope editScope(world);
@@ -133,11 +138,15 @@ EntityPlayer *PlayerController::createPlayer(World *world)
 
 void PlayerController::interactWithEntity(EntityPlayer *entityplayer, Entity *entity)
 {
+	if (entityplayer == nullptr || entity == nullptr)
+		return;
 	entityplayer->useCurrentItemOnEntity(entity);
 }
 
 void PlayerController::attackEntity(EntityPlayer *entityplayer, Entity *entity)
 {
+	if (entityplayer == nullptr || entity == nullptr)
+		return;
 	entityplayer->attackTargetEntityWithCurrentItem(entity);
 }
 

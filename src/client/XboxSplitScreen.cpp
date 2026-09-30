@@ -306,7 +306,7 @@ void tick(Minecraft *mc)
         return;
     }
     // X: console crafting (2x2), as for player 1.
-    if ((pressed & XBOX_PAD_X) && mc->gameSettings->legacyCrafting && mc->playerController != nullptr &&
+    if ((pressed & XBOX_PAD_X) && mc->gameSettings->xboxStyleCrafting && mc->playerController != nullptr &&
         !mc->playerController->isInCreativeMode())
     {
         asPlayer2(mc, [mc, p2]() { mc->displayGuiScreen(new XboxCraftingScreen(p2)); });

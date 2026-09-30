@@ -6,6 +6,7 @@
 #include "net/minecraft/src/RenderGlobal.h"
 #include "net/minecraft/src/World.h"
 #include "ps2/render/Ps2Tuning.h"
+#include "ps2/diagnostics/Ps2OptimizationValidation.h"
 
 #include <cstdio>
 #include <cstring>
@@ -82,10 +83,14 @@ void lighting(long long ns) { ps2_perf_add_lighting_ns(ns); }
 void displayUpdate(long long ns) { ps2_perf_add_display_update_ns(ns); }
 void render(long long ns) { ps2_perf_add_render_ns(ns); }
 
-void frameEnd(long long, long long tickNs, long long renderNs,
+void frameEnd(long long frameNs, long long tickNs, long long renderNs,
               int, int chunkUpdates, World* world, RenderGlobal* renderGlobal)
 {
 	ps2_perf_frame_end();
+#ifdef PS2_OPTIMIZATION_VALIDATION
+	if (world != nullptr)
+		Ps2OptimizationValidation::frameEnd(frameNs);
+#endif
 #if MC_LOG_LEVEL >= 2
 	static int frameCount = 0;
 	++frameCount;

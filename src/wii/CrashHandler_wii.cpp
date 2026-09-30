@@ -18,14 +18,24 @@
 #include <cstdlib>
 
 #include <gccore.h>
+#include <asndlib.h>
 #include "wii/WiiEarlyInit.h"
 #include "wii/input/WiiInput.h"
+
+#ifndef SYS_RETURNTOMENU
+#define SYS_RETURNTOMENU 3
+#endif
 
 namespace CrashHandler
 {
 
 void Crash(const std::string &message, const std::string &stackTrace)
 {
+	// Immediately silence sound hardware to eliminate the loud screeching noise
+	ASND_Pause(1);
+	ASND_End();
+	AUDIO_StopDMA();
+
 	// Always emit to stdout first: if anything below fails, this is still the
 	// record, and it is what Dolphin's log shows.
 	WiiConsole::write("[WII] CRASH: %s\n", message.c_str());
@@ -64,11 +74,12 @@ void Crash(const std::string &message, const std::string &stackTrace)
 		WiiConsole::write("%s\n", message.c_str());
 		if (!stackTrace.empty())
 			WiiConsole::write("\n%s\n", stackTrace.c_str());
-		WiiConsole::write("\nPress HOME to return to the Homebrew Channel.\n");
+		WiiConsole::write("\nPress HOME or START/A to return to the Homebrew Channel.\n");
 	}
 
 	WiiInput::waitForHome();
 
+	SYS_ResetSystem(SYS_RETURNTOMENU, 0, 0);
 	std::exit(1);
 }
 

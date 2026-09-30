@@ -3,12 +3,14 @@
 #ifdef PS2_PLATFORM
 
 #include <cstddef>
+#include "platform/Log.h"
 
 #include "ps2/render/Ps2RenderBackend.h"
 #include "ps2/render/Ps2TerrainMesh.h"
 #include "ps2/render/Ps2TerrainMeshView.h"
 #include "ps2/render/Ps2TerrainRuntime.h"
 #include "ps2/render/Ps2Vu1Terrain.h"
+#include "ps2/diagnostics/Ps2OptimizationValidation.h"
 
 #ifdef PS2_RENDER_STATS
 #define PS2_TERRAIN_COMMAND_STAT(expr) do { expr; } while (0)
@@ -19,8 +21,7 @@
 namespace
 {
 void submitVu0List(const std::vector<Ps2TerrainVu0Command>& commandList,
-                   const std::vector<Ps2NativeSlice>& sliceStorage,
-                   bool fallbackList)
+                   const std::vector<Ps2NativeSlice>& sliceStorage)
 {
     Ps2TerrainRuntimeState& runtime = ps2_terrain_runtime();
     for (std::size_t i = 0; i < commandList.size(); ++i)
@@ -30,7 +31,7 @@ void submitVu0List(const std::vector<Ps2TerrainVu0Command>& commandList,
             continue;
         Ps2QueuedTerrainSection& queued = runtime.queued[command.sectionIndex];
         if (!queued.commandReady || queued.commandFailed ||
-            queued.forceVu0All != fallbackList)
+            queued.forceVu0All)
         {
             continue;
         }
@@ -64,6 +65,9 @@ void submitVu0List(const std::vector<Ps2TerrainVu0Command>& commandList,
         PS2_TERRAIN_COMMAND_STAT(++runtime.clusterStats.vu0GatherBatches);
         PS2_TERRAIN_COMMAND_STAT(
             runtime.clusterStats.vu0GatherVertices += command.totalVertices);
+#ifdef PS2_OPTIMIZATION_VALIDATION
+        Ps2OptimizationValidation::terrainVu0Submit(command.totalVertices);
+#endif
     }
 }
 }
@@ -115,10 +119,16 @@ void ps2_terrain_submit_vu1_commands()
         {
             PS2_TERRAIN_COMMAND_STAT(++runtime.clusterStats.vu1Ranges);
             PS2_TERRAIN_COMMAND_STAT(runtime.clusterStats.vu1Vertices += result.vertices);
+#ifdef PS2_OPTIMIZATION_VALIDATION
+            Ps2OptimizationValidation::terrainVu1Submit(result.vertices);
+#endif
             continue;
         }
 
-        // RETRY and FATAL both use the prebuilt whole-section VU0 stream.
+#ifdef PS2_OPTIMIZATION_VALIDATION
+        Ps2OptimizationValidation::terrainVu1Retry(result.status == PS2_VU1_TERRAIN_FATAL);
+#endif
+        // RETRY and FATAL both request whole-section VU0 replay.
         // A fatal status can mean VU1 accepted a prefix before failing; opaque
         // depth testing makes replaying the complete section safe and matches
         // the legacy two-phase behavior.
@@ -153,9 +163,39 @@ void ps2_terrain_submit_vu0_commands()
 {
     Ps2TerrainRuntimeState& runtime = ps2_terrain_runtime();
     submitVu0List(runtime.commands.vu0Commands,
-                  runtime.commands.vu0Slices, false);
-    submitVu0List(runtime.commands.vu0FallbackCommands,
-                  runtime.commands.vu0FallbackSlices, true);
+                  runtime.commands.vu0Slices);
+
+    // Path1 has been released by terrain_end. Replay failed VU1 sections and
+    // failed VU0 command lists through the existing whole-section VU0 path.
+    // Otherwise commandReady would hide a failed list from the recovery loop.
+    // Invalidate classification because command-ready sections do not fill
+    // the legacy cache, which may still describe an earlier queued section.
+    for (int i = 0; i < runtime.queuedCount; ++i)
+    {
+        Ps2QueuedTerrainSection& queued = runtime.queued[i];
+        if (queued.commandReady && (queued.forceVu0All || queued.commandFailed))
+        {
+            // Opaque depth testing permits replay of any successful prefix.
+            queued.forceVu0All = true;
+            queued.classification.valid = false;
+            queued.commandReady = false;
+        }
+    }
+#if MC_LOG_LEVEL >= 2
+    static unsigned int samples = 0, vu1Replays = 0, vu0Failures = 0;
+    for (int i = 0; i < runtime.queuedCount; ++i)
+    {
+        const Ps2QueuedTerrainSection& queued = runtime.queued[i];
+        if (queued.commandFailed) ++vu0Failures;
+        else if (queued.forceVu0All) ++vu1Replays;
+    }
+    if (++samples == 120)
+    {
+        MC_LOG_DEBUG("terrain", "recovery passes=%u vu1Replay=%u vu0Failed=%u\n",
+            samples, vu1Replays, vu0Failures);
+        samples = vu1Replays = vu0Failures = 0;
+    }
+#endif
     runtime.traceSection = -1;
 }
 

@@ -13,6 +13,7 @@ std::string legacyControlPromptLabel(const GameSettings &, LegacyControlAction a
     case LegacyControlAction::Jump: return "A";
     case LegacyControlAction::Attack: return "RT";
     case LegacyControlAction::Use: return "LT";
+    case LegacyControlAction::Crafting: return "X";
     }
     return std::string();
 }

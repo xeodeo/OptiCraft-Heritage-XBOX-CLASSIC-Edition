@@ -12,6 +12,7 @@
 #include "ps2/render/Ps2TerrainMesh.h"
 #include "ps2/render/Ps2TerrainMeshView.h"
 #include "ps2/render/Ps2TerrainRuntime.h"
+#include "ps2/diagnostics/Ps2OptimizationValidation.h"
 #include "ps2/render/Ps2Vu1Terrain.h"
 
 #ifdef PS2_RENDER_STATS
@@ -22,6 +23,15 @@
 
 namespace
 {
+#ifdef PS2_RENDER_STATS
+unsigned int commandProfileClock()
+{
+    unsigned int cycles;
+    __asm__ __volatile__("mfc0 %0, $9" : "=r"(cycles) : : "memory");
+    return cycles;
+}
+#endif
+
 constexpr int kMaxVu1Slices = 8;
 constexpr int kMaxVu0Slices = 32;
 
@@ -131,9 +141,6 @@ void buildVu0Commands(Ps2TerrainCommandBuffer& commands,
         Ps2NativeSlice normalSlices[kMaxVu0Slices];
         int normalSliceCount = 0;
         int normalVertices = 0;
-        Ps2NativeSlice fallbackSlices[kMaxVu0Slices];
-        int fallbackSliceCount = 0;
-        int fallbackVertices = 0;
 
         auto flushNormal = [&]()
         {
@@ -143,16 +150,6 @@ void buildVu0Commands(Ps2TerrainCommandBuffer& commands,
             normalSliceCount = 0;
             normalVertices = 0;
         };
-        auto flushFallback = [&]()
-        {
-            appendVu0Command(commands.vu0FallbackCommands,
-                             commands.vu0FallbackSlices,
-                             sectionIndex, fallbackSlices, fallbackSliceCount,
-                             fallbackVertices, wantClipSafe);
-            fallbackSliceCount = 0;
-            fallbackVertices = 0;
-        };
-
         auto appendSlice = [&](Ps2NativeSlice* slices,
                                int& sliceCount,
                                int& totalVertices,
@@ -206,9 +203,6 @@ void buildVu0Commands(Ps2TerrainCommandBuffer& commands,
                 continue;
             }
 
-            appendSlice(fallbackSlices, fallbackSliceCount, fallbackVertices,
-                        range.firstVertex, range.vertexCount(), flushFallback);
-
             if (target != PS2_TERRAIN_CLUSTER_VU1)
             {
                 appendSlice(normalSlices, normalSliceCount, normalVertices,
@@ -216,7 +210,6 @@ void buildVu0Commands(Ps2TerrainCommandBuffer& commands,
             }
         }
         flushNormal();
-        flushFallback();
     }
 }
 
@@ -572,6 +565,9 @@ bool ps2_terrain_build_section_commands(int sectionIndex)
 
     int clusterClass[PS2_MESH_CLUSTER_COUNT];
     int clusterGuardRisk[PS2_MESH_CLUSTER_COUNT];
+#ifdef PS2_RENDER_STATS
+    const unsigned int classificationStart = commandProfileClock();
+#endif
     Ps2TerrainCullingContext cullingContext = {};
     ps2_terrain_build_culling_context(cullingContext, queued.commandContext.mvp,
                                       queued.frame.native.viewW,
@@ -579,17 +575,42 @@ bool ps2_terrain_build_section_commands(int sectionIndex)
     ps2_terrain_classify_clusters(section.faceGroups->clusters,
                                   section.fullyInside, true, &cullingContext,
                                   clusterClass, clusterGuardRisk);
+#ifdef PS2_RENDER_STATS
+    const unsigned int classificationElapsed = commandProfileClock() - classificationStart;
+    runtime.clusterStats.classificationCycles += classificationElapsed;
+    runtime.clusterStats.classificationMaxCycles = std::max(
+        runtime.clusterStats.classificationMaxCycles, classificationElapsed);
+    ++runtime.clusterStats.commandSections;
+    runtime.clusterStats.testedClusters += PS2_MESH_CLUSTER_COUNT;
+    for (int cluster = 0; cluster < PS2_MESH_CLUSTER_COUNT; ++cluster)
+        if (clusterClass[cluster] == 0)
+            ++runtime.clusterStats.rejectedClusters;
+#endif
     const bool directVu1Usable = PS2_DIRECT_VU1_TERRAIN &&
         ps2_vu1_terrain_pass_ready();
     bool clusterClipSafe[PS2_MESH_CLUSTER_COUNT];
     Ps2TerrainClusterTarget clusterTarget[PS2_MESH_CLUSTER_COUNT];
+#ifdef PS2_OPTIMIZATION_VALIDATION
+    int validationRejected = 0;
+    int validationClipSafe = 0;
+    int validationGuardRisk = 0;
+#endif
     for (int cluster = 0; cluster < PS2_MESH_CLUSTER_COUNT; ++cluster)
     {
         clusterClipSafe[cluster] = ps2_terrain_cluster_can_skip_clip(
             clusterClass[cluster], clusterGuardRisk[cluster]);
         clusterTarget[cluster] = ps2_terrain_cluster_target(
             clusterClass[cluster], clusterGuardRisk[cluster], directVu1Usable);
+#ifdef PS2_OPTIMIZATION_VALIDATION
+        if (clusterClass[cluster] == 0) ++validationRejected;
+        if (clusterClipSafe[cluster]) ++validationClipSafe;
+        if (clusterGuardRisk[cluster] != 0) ++validationGuardRisk;
+#endif
     }
+#ifdef PS2_OPTIMIZATION_VALIDATION
+    Ps2OptimizationValidation::terrainClusters(PS2_MESH_CLUSTER_COUNT,
+        validationRejected, validationClipSafe, validationGuardRisk);
+#endif
     updateClassificationStats(runtime.clusterStats, section,
                               clusterClass, clusterGuardRisk, clusterTarget,
                               directVu1Usable);
@@ -598,6 +619,9 @@ bool ps2_terrain_build_section_commands(int sectionIndex)
     for (int group = 0; group < PS2_FACE_GROUP_COUNT; ++group)
         faceVisibility[group] = faceVisible(section, group);
 
+#ifdef PS2_RENDER_STATS
+    const unsigned int commandStart = commandProfileClock();
+#endif
     if (directVu1Usable)
     {
         buildVu1Commands(runtime.commands, queued, sectionIndex,
@@ -608,6 +632,12 @@ bool ps2_terrain_build_section_commands(int sectionIndex)
     buildVu0Commands(runtime.commands, queued, sectionIndex,
                      clusterTarget, clusterClipSafe, faceVisibility);
 
+#ifdef PS2_RENDER_STATS
+    const unsigned int commandElapsed = commandProfileClock() - commandStart;
+    runtime.clusterStats.commandBuildCycles += commandElapsed;
+    runtime.clusterStats.commandBuildMaxCycles = std::max(
+        runtime.clusterStats.commandBuildMaxCycles, commandElapsed);
+#endif
     queued.commandReady = true;
     return true;
 }

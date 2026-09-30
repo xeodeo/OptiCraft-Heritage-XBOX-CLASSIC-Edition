@@ -90,3 +90,5 @@ void platformGameSettingsFinalizeLoad(GameSettings& settings)
 void platformGameSettingsSyncControllerBindings(const GameSettings&) {}
 void platformGameSettingsAddKnownKeys(std::unordered_set<std::string>&) {}
 void platformGameSettingsWriteOptions(const GameSettings&, std::ostream&) {}
+void platformGameSettingsApplyLegacyCrafting(GameSettings&) {}
+

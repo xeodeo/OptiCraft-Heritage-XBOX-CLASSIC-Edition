@@ -293,7 +293,11 @@ void run(Minecraft* minecraft)
 
     LogoResult first = playLegacyLogo(minecraft, "/legacy/logo1.png", musicStarted);
     if (first == LogoResult::Skipped)
+    {
+        if (!musicStarted)
+            startLegacyCalmMusic(minecraft);
         return;
+    }
 
     const LogoResult second = playLegacyLogo(minecraft, "/legacy/logo2.png", musicStarted);
 #if PLATFORM_XBOX
@@ -303,6 +307,10 @@ void run(Minecraft* minecraft)
 #else
     (void)second;
 #endif
+
+    if (!musicStarted)
+        startLegacyCalmMusic(minecraft);
+
 }
 
 } // namespace LegacyStartup

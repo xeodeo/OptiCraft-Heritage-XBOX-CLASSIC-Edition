@@ -45,7 +45,7 @@ void LegacyVideoOptions::initGui()
 #if PLATFORM_WII
     const int_t rowCount = 7;
 #elif PLATFORM_PS2
-    const int_t rowCount = 7;
+    const int_t rowCount = 6;
 #else
     const int_t rowCount = 8;
 #endif
@@ -66,7 +66,7 @@ void LegacyVideoOptions::initGui()
     controlList.push_back(smoothLightingCheckbox);
     controlList.push_back(viewBobbingCheckbox);
 
-#if !PLATFORM_WII
+#if !(PLATFORM_PS2 || PLATFORM_WII)
     cloudsCheckbox = new LegacyOptionCheckbox(BUTTON_CLOUDS, x, legacyLayout.rowY(row++), w, h,
         uiText("Render Clouds"), legacyCloudsChecked(settings->ofClouds));
     controlList.push_back(cloudsCheckbox);

@@ -33,13 +33,16 @@ constexpr int_t BUTTON_EDIT_PLAYER_NAME = 606;
 constexpr int_t BUTTON_SPLITSCREEN_LAYOUT = 607;
 constexpr int_t BUTTON_EDIT_PLAYER_NAME2 = 608;
 constexpr int_t BUTTON_LEGACY_CRAFTING = 609;
+constexpr int_t BUTTON_LEGACY_CREATIVE = 610;
+constexpr int_t BUTTON_XBOX_STYLE_CRAFTING = 611;
 
 }
 
 LegacyHeritageOptions::LegacyHeritageOptions(GuiScreen *parent, GameSettings *settingsValue,
     LegacyOptionsBackgroundMode backgroundModeValue)
     : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), nameField(nullptr), nameField2(nullptr), legacyUiCheckbox(nullptr),
-      legacyLookCheckbox(nullptr), legacyCraftingCheckbox(nullptr), alternativeControlsCheckbox(nullptr)
+      legacyLookCheckbox(nullptr), legacyCraftingCheckbox(nullptr), xboxStyleCraftingCheckbox(nullptr), legacyCreativeCheckbox(nullptr),
+      alternativeControlsCheckbox(nullptr)
 {
 }
 
@@ -53,7 +56,7 @@ LegacyHeritageOptions::~LegacyHeritageOptions()
 
 void LegacyHeritageOptions::initGui()
 {
-    int_t rowCount = 5; // player name label, player name field, Legacy UI, Legacy Look, Done
+    int_t rowCount = 7; // player name label, player name field, Legacy UI, Legacy Look, Legacy Crafting, Legacy Creative, Done
 #if PLATFORM_HAS_ASPECT_RATIO_OPTION
     ++rowCount;
 #endif
@@ -64,7 +67,7 @@ void LegacyHeritageOptions::initGui()
     ++rowCount;
 #endif
 #if PLATFORM_XBOX || PLATFORM_PS2
-    ++rowCount; // Console Crafting
+    ++rowCount; // Xbox-Style Crafting
 #endif
 #if PLATFORM_HAS_CONTROLLER_CALIBRATION
     ++rowCount;
@@ -123,10 +126,17 @@ void LegacyHeritageOptions::initGui()
     controlList.push_back(legacyLookCheckbox);
 
 #if PLATFORM_XBOX || PLATFORM_PS2
-    legacyCraftingCheckbox = new LegacyOptionCheckbox(BUTTON_LEGACY_CRAFTING, x, legacyLayout.rowY(row++), w, h,
-        uiText("Console Crafting"), settings->legacyCrafting);
-    controlList.push_back(legacyCraftingCheckbox);
+    xboxStyleCraftingCheckbox = new LegacyOptionCheckbox(BUTTON_XBOX_STYLE_CRAFTING, x, legacyLayout.rowY(row++), w, h,
+        uiText("Xbox-Style Crafting"), settings->xboxStyleCrafting);
+    controlList.push_back(xboxStyleCraftingCheckbox);
 #endif
+    legacyCraftingCheckbox = new LegacyOptionCheckbox(BUTTON_LEGACY_CRAFTING, x, legacyLayout.rowY(row++), w, h,
+        uiText("Legacy Crafting"), settings->legacyCrafting);
+    controlList.push_back(legacyCraftingCheckbox);
+
+    legacyCreativeCheckbox = new LegacyOptionCheckbox(BUTTON_LEGACY_CREATIVE, x, legacyLayout.rowY(row++), w, h,
+        uiText("Legacy Creative"), settings->legacyCreative);
+    controlList.push_back(legacyCreativeCheckbox);
 
 #ifdef WII_PLATFORM
     alternativeControlsCheckbox = new LegacyOptionCheckbox(BUTTON_ALTERNATIVE_CONTROLS, x,
@@ -289,11 +299,32 @@ void LegacyHeritageOptions::actionPerformed(GuiButton *button)
     if (button->id == BUTTON_LEGACY_CRAFTING)
     {
         settings->legacyCrafting = !settings->legacyCrafting;
+        settings->applyLegacyCraftingBindings();
+
         if (legacyCraftingCheckbox != nullptr)
             legacyCraftingCheckbox->setChecked(settings->legacyCrafting);
         settings->saveOptions();
         return;
     }
+
+    if (button->id == BUTTON_XBOX_STYLE_CRAFTING)
+    {
+        settings->xboxStyleCrafting = !settings->xboxStyleCrafting;
+        if (xboxStyleCraftingCheckbox != nullptr)
+            xboxStyleCraftingCheckbox->setChecked(settings->xboxStyleCrafting);
+        settings->saveOptions();
+        return;
+    }
+
+    if (button->id == BUTTON_LEGACY_CREATIVE)
+    {
+        settings->legacyCreative = !settings->legacyCreative;
+        if (legacyCreativeCheckbox != nullptr)
+            legacyCreativeCheckbox->setChecked(settings->legacyCreative);
+        settings->saveOptions();
+        return;
+    }
+
 
 #ifdef WII_PLATFORM
     if (button->id == BUTTON_ALTERNATIVE_CONTROLS)

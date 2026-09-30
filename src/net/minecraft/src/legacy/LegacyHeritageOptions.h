@@ -33,5 +33,8 @@ private:
     LegacyOptionCheckbox *legacyUiCheckbox;
     LegacyOptionCheckbox *legacyLookCheckbox;
     LegacyOptionCheckbox *legacyCraftingCheckbox;
+    LegacyOptionCheckbox *xboxStyleCraftingCheckbox;
+    LegacyOptionCheckbox *legacyCreativeCheckbox;
+
     LegacyOptionCheckbox *alternativeControlsCheckbox;
 };

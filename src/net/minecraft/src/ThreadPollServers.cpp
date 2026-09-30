@@ -5,6 +5,9 @@
 
 #include "GuiMultiplayer.h"
 #include "ServerNBTStorage.h"
+#ifdef PS2_PLATFORM
+#include "java/System.h"
+#endif
 
 void ThreadPollServers::start(const std::shared_ptr<ServerNBTStorage> &server)
 {
@@ -30,7 +33,26 @@ void ThreadPollServers::run(std::shared_ptr<ServerNBTStorage> server)
         const auto endTime = std::chrono::steady_clock::now();
         const long_t latency = (long_t)std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
         std::lock_guard<std::mutex> guard(server->stateMutex);
+#ifdef PS2_PLATFORM
+        if (server->lag == -1)
+        {
+            if (server->pollRetryCount < 3)
+            {
+                ++server->pollRetryCount;
+                server->nextPollTime = System::currentTimeMillis() + 5000;
+            }
+            else
+                server->nextPollTime = 0;
+        }
+        else
+        {
+            server->lag = latency;
+            server->nextPollTime = 0;
+            server->pollRetryCount = 0;
+        }
+#else
         server->lag = latency;
+#endif
     }
     catch (...)
     {
@@ -38,6 +60,15 @@ void ThreadPollServers::run(std::shared_ptr<ServerNBTStorage> server)
         server->lag = -1;
         server->motd = "\xC2\xA7" "4Can't reach server";
         server->playerCount.clear();
+#ifdef PS2_PLATFORM
+        if (server->pollRetryCount < 3)
+        {
+            ++server->pollRetryCount;
+            server->nextPollTime = System::currentTimeMillis() + 5000;
+        }
+        else
+            server->nextPollTime = 0;
+#endif
     }
 
     GuiMultiplayer::decrementThreadsPending();

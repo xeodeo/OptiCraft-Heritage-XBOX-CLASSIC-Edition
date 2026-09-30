@@ -183,6 +183,12 @@ const std::vector<int_t> &WorldChunkManager::fastBiomeIdArea(int_t x, int_t z,
 	// getBiomeGenForCoordsFloat lays its output out X-major (index = i * sizeZ + k).
 	// Resolve each lattice cell once here, then the expansion below is pure
 	// indexing -- no float work per output block.
+	int_t sampleX = 0;
+	int_t sampleZ = 0;
+	const float rInner = worldSizeType == 2 ? 394.0f : 92.0f;
+	const float rOuter = worldSizeType == 2 ? 420.0f : 118.0f;
+	const float rInnerSq = rInner * rInner;
+	const float rOuterSq = rOuter * rOuter;
 	for (int_t s = 0; s < sampleCount; ++s)
 	{
 		const std::size_t sample = static_cast<std::size_t>(s);
@@ -191,20 +197,19 @@ const std::vector<int_t> &WorldChunkManager::fastBiomeIdArea(int_t x, int_t z,
 		const float humidity = toUnitRange(static_cast<float>(fastHumidityField[sample]));
 		if (limitedWorld)
 		{
-			const int_t sampleX = s / sampleHeight;
-			const int_t sampleZ = s % sampleHeight;
 			const int_t worldX = (cellX0 + sampleX) << BIOME_SAMPLE_SHIFT;
 			const int_t worldZ = (cellZ0 + sampleZ) << BIOME_SAMPLE_SHIFT;
 			const float dx = static_cast<float>(worldX);
 			const float dz = static_cast<float>(worldZ);
-			const float dist = std::sqrt(dx * dx + dz * dz);
-			if (dist < 92.0f)
+			const float distSq = dx * dx + dz * dz;
+			if (distSq < rInnerSq)
 			{
 				continent = 0.50f + continent * 0.35f;
 			}
-			else if (dist < 118.0f)
+			else if (distSq < rOuterSq)
 			{
-				const float t = (dist - 92.0f) / 26.0f;
+				const float dist = std::sqrt(distSq);
+				const float t = (dist - rInner) * (1.0f / 26.0f);
 				const float land = 0.50f + continent * 0.35f;
 				continent = land * (1.0f - t) + 0.30f * t;
 			}
@@ -214,6 +219,11 @@ const std::vector<int_t> &WorldChunkManager::fastBiomeIdArea(int_t x, int_t z,
 			}
 		}
 		fastCoarseBiomeIds[sample] = selectBiomeId(continent, temperature, humidity);
+		if (++sampleZ >= sampleHeight)
+		{
+			sampleZ = 0;
+			++sampleX;
+		}
 	}
 
 	// Consumers expect GenLayer's Z-major convention (index = j * width + i).

@@ -1,4 +1,11 @@
 #include "EntityRenderer.h"
+#if PLATFORM_PS2
+#include "ps2/minecraft/Ps2WeatherMath.h"
+#include "ps2/diagnostics/Ps2OptimizationValidation.h"
+#if MC_LOG_LEVEL >= 2
+#include "platform/Log.h"
+#endif
+#endif
 #include "Minecraft.h"
 #include "Gui.h"
 #include "ItemRenderer.h"
@@ -1177,7 +1184,13 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
     if (settingsWorld != nullptr)
     {
         WorldInfo *worldInfo = settingsWorld->getWorldInfo();
-        if (!Config::isWeatherEnabled() && worldInfo != nullptr)
+        if (!Config::isWeatherEnabled() && worldInfo != nullptr
+#if PLATFORM_PS2
+            // Local weather simulation settings must not clear server rain.
+            // Rain/snow and splash visibility have separate rendering options.
+            && !settingsWorld->multiplayerWorld
+#endif
+        )
             worldInfo->setRaining(false);
 
         // C6 only forces time in local Creative worlds. Multiplayer time remains
@@ -2159,13 +2172,18 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
 void EntityRenderer::addRainParticles()
 {
     float rainStrength = mc->theWorld->getRainStrength(1.0f);
+#if PLATFORM_PS2
+    const float soundStrength = rainStrength;
+#endif
     if (!Config::isRainFancy())
         rainStrength /= 2.0f;
 
     if (rainStrength == 0.0f)
         return;
+#if !PLATFORM_PS2
     if (!Config::isRainSplash())
         return;
+#endif
 
     random.setSeed(static_cast<long_t>(rendererUpdateCount) * 312987231LL);
 
@@ -2181,9 +2199,8 @@ void EntityRenderer::addRainParticles()
     int_t rainParticleCount = 0;
     int_t particleCount = static_cast<int_t>(100.0f * rainStrength * rainStrength);
 #if PLATFORM_PS2
-    // PS2 does not draw the full weather curtains, but this splash path still
-    // ran the vanilla 100-attempt burst every tick. Bound it before applying the
-    // user's particle setting so "Decreased" still halves the console budget.
+    // Bound allocations before applying the user's particle setting.
+    // Ambient sound sampling below has its own small, allocation-free budget.
     if (particleCount > PS2_RAIN_SPLASH_PARTICLES_PER_TICK)
         particleCount = PS2_RAIN_SPLASH_PARTICLES_PER_TICK;
 #endif
@@ -2193,7 +2210,16 @@ void EntityRenderer::addRainParticles()
     else if (mc->gameSettings->particleSetting == 2)
         particleCount = 0;
 
-    for (int_t i = 0; i < particleCount; ++i)
+#if PLATFORM_PS2
+    if (!Config::isRainSplash())
+        particleCount = 0;
+    // Minimal particles/splashes-off must not mute weather. Two surface probes
+    // per tick suffice for ambience and do not allocate particles themselves.
+    const int_t sampleCount = std::max(particleCount, 2);
+#else
+    const int_t sampleCount = particleCount;
+#endif
+    for (int_t i = 0; i < sampleCount; ++i)
     {
         const int_t x = random.nextIntOffset(centerX, range);
         const int_t z = random.nextIntOffset(centerZ, range);
@@ -2219,6 +2245,9 @@ void EntityRenderer::addRainParticles()
         const double particleY = static_cast<double>(static_cast<float>(precipitationY) + 0.1f) - blockBelow->minY;
         if (blockBelow->blockMaterial == Material::lava)
         {
+#if PLATFORM_PS2
+            if (i < particleCount)
+#endif
             mc->effectRenderer->addEffect(new EntitySmokeFX(
                 world, static_cast<double>(static_cast<float>(x) + offsetX), particleY,
                 static_cast<double>(static_cast<float>(z) + offsetZ), 0.0, 0.0, 0.0));
@@ -2233,6 +2262,9 @@ void EntityRenderer::addRainParticles()
                 soundZ = static_cast<double>(static_cast<float>(z) + offsetZ);
             }
 
+#if PLATFORM_PS2
+            if (i < particleCount)
+#endif
             mc->effectRenderer->addEffect(new EntityRainFX(
                 world, static_cast<double>(static_cast<float>(x) + offsetX), particleY,
                 static_cast<double>(static_cast<float>(z) + offsetZ)));
@@ -2242,16 +2274,21 @@ void EntityRenderer::addRainParticles()
     if (rainParticleCount > 0 && random.nextInt(3) < rainSoundCounter++)
     {
         rainSoundCounter = 0;
+#if PLATFORM_PS2
+        const float soundGain = soundStrength;
+#else
+        const float soundGain = 1.0f;
+#endif
         if (soundY > entity->posY + 1.0 &&
             world->getPrecipitationHeight(MathHelper::floor_double(entity->posX),
                                           MathHelper::floor_double(entity->posZ)) >
                 MathHelper::floor_double(entity->posY))
         {
-            world->playSoundEffect(soundX, soundY, soundZ, "ambient.weather.rain", 0.1f, 0.5f);
+            world->playSoundEffect(soundX, soundY, soundZ, "ambient.weather.rain", 0.1f * soundGain, 0.5f);
         }
         else
         {
-            world->playSoundEffect(soundX, soundY, soundZ, "ambient.weather.rain", 0.2f, 1.0f);
+            world->playSoundEffect(soundX, soundY, soundZ, "ambient.weather.rain", 0.2f * soundGain, 1.0f);
         }
     }
 }
@@ -2259,8 +2296,44 @@ void EntityRenderer::addRainParticles()
 void EntityRenderer::renderRainSnow(float partialTicks)
 {
     const float rainStrength = mc->theWorld->getRainStrength(partialTicks);
+#if PLATFORM_PS2 && MC_LOG_LEVEL >= 2
+    static unsigned int weatherFrames = 0;
+    const bool reportWeather = ++weatherFrames >= 120;
+    int weatherColumns = 0;
+    if (reportWeather)
+    {
+        weatherFrames = 0;
+        MC_LOG_DEBUG("ps2.weather", "rain=%.3f rainOff=%d splashes=%d particles=%d multiplayer=%d\n",
+            (double)rainStrength, Config::isRainOff() ? 1 : 0, Config::isRainSplash() ? 1 : 0,
+            (int)mc->gameSettings->particleSetting, mc->theWorld->multiplayerWorld ? 1 : 0);
+    }
+#endif
+#ifdef PS2_OPTIMIZATION_VALIDATION
+    int validationWeatherCandidates = 0;
+    int validationRainColumns = 0;
+    int validationSnowColumns = 0;
+    int validationWeatherTextureSwitches = 0;
+    const auto validationReportWeather = [&]()
+    {
+        Ps2OptimizationValidation::weatherFrame(rainStrength, validationWeatherCandidates,
+            validationRainColumns, validationSnowColumns, validationWeatherTextureSwitches);
+    };
+#endif
     if (rainStrength <= 0.0f)
+    {
+#ifdef PS2_OPTIMIZATION_VALIDATION
+        validationReportWeather();
+#endif
         return;
+    }
+
+    if (Config::isRainOff())
+    {
+#ifdef PS2_OPTIMIZATION_VALIDATION
+        validationReportWeather();
+#endif
+        return;
+    }
 
     enableLightmap(static_cast<double>(partialTicks));
 
@@ -2274,15 +2347,19 @@ void EntityRenderer::renderRainSnow(float partialTicks)
                 const float dz = static_cast<float>(z - 16);
                 const float length = MathHelper::sqrt_float(dx * dx + dz * dz);
                 const int_t index = z << 5 | x;
+#if PLATFORM_PS2
+                // The camera column has dx=dz=0. Never submit NaN vertices to
+                // VU/GS clipping: they can become screen-spanning primitives.
+                rainXCoords[index] = length > 0.0f ? -dz / length : 1.0f;
+                rainYCoords[index] = length > 0.0f ? dx / length : 0.0f;
+#else
                 rainXCoords[index] = -dz / length;
                 rainYCoords[index] = dx / length;
+#endif
             }
         }
         rainCoordsInitialized = true;
     }
-
-    if (Config::isRainOff())
-        return;
 
     EntityLiving* entity = mc->renderViewEntity;
     World* world = mc->theWorld;
@@ -2296,7 +2373,13 @@ void EntityRenderer::renderRainSnow(float partialTicks)
     renderEnable(RenderCapability::Blend);
     renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
     renderAlphaFunc(RenderCompare::Greater, 0.01f);
+#if PLATFORM_PS2
+    // Test against terrain, but do not let translucent curtains occlude one
+    // another as columns change order around the moving camera.
+    renderDepthMask(false);
+#else
     renderBindTexture(mc->renderEngine->getTexture("/environment/snow.png"));
+#endif
 
 #if PLATFORM_FLOAT_VERTEX_MATH
     const float renderPosX = static_cast<float>(entity->lastTickPosX) +
@@ -2311,9 +2394,23 @@ void EntityRenderer::renderRainSnow(float partialTicks)
     const double renderPosZ = entity->lastTickPosZ + (entity->posZ - entity->lastTickPosZ) * static_cast<double>(partialTicks);
 #endif
     const int_t interpolatedY = MathHelper::floor_double(renderPosY);
+#if PLATFORM_PS2
+    const int_t range = PS2_RAIN_SNOW_RENDER_RANGE;
+#else
     const int_t range = Config::isRainFancy() ? 10 : 5;
+#endif
     int_t activeWeatherTexture = -1;
+#ifdef PS2_OPTIMIZATION_VALIDATION
+    const auto validationDrawWeatherBatch = [&]()
+    {
+        Ps2OptimizationValidation::weatherDrawBegin(activeWeatherTexture);
+        const int_t bytesDrawn = tessellator->draw();
+        Ps2OptimizationValidation::weatherDrawEnd(bytesDrawn);
+    };
+#endif
+#if !PLATFORM_PS2
     const float weatherTime = static_cast<float>(rendererUpdateCount) + partialTicks;
+#endif
 
     renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -2327,6 +2424,9 @@ void EntityRenderer::renderRainSnow(float partialTicks)
             BiomeGenBase* biome = world->getBiomeGenForCoords(x, z);
             if (biome == nullptr || (!biome->canSpawnLightningBolt() && !biome->getEnableSnow()))
                 continue;
+#ifdef PS2_OPTIMIZATION_VALIDATION
+            ++validationWeatherCandidates;
+#endif
 
             const int_t precipitationY = world->getPrecipitationHeight(x, z);
             int_t minY = centerY - range;
@@ -2342,6 +2442,9 @@ void EntityRenderer::renderRainSnow(float partialTicks)
 
             if (minY == maxY)
                 continue;
+#if PLATFORM_PS2 && MC_LOG_LEVEL >= 2
+            ++weatherColumns;
+#endif
 
             const int_t xSquared = JavaArithmetic::intMul(x, x);
             const int_t zSquared = JavaArithmetic::intMul(z, z);
@@ -2349,7 +2452,14 @@ void EntityRenderer::renderRainSnow(float partialTicks)
                                                        JavaArithmetic::intMul(x, 45238971));
             const int_t zSeed = JavaArithmetic::intAdd(JavaArithmetic::intMul(zSquared, 418711),
                                                        JavaArithmetic::intMul(z, 13761));
+#if PLATFORM_PS2
+            const unsigned int weatherSeed = ps2WeatherHash(static_cast<unsigned int>(xSeed ^ zSeed));
+            const float dx = static_cast<float>(x) + 0.5f - renderPosX;
+            const float dz = static_cast<float>(z) + 0.5f - renderPosZ;
+            const float distanceSquared = (dx * dx + dz * dz) / static_cast<float>(range * range);
+#else
             random.setSeed(static_cast<long_t>(xSeed ^ zSeed));
+#endif
 
             const float temperature = world->getWorldChunkManager()->getTemperatureAtHeight(
                 biome->getFloatTemperature(), precipitationY);
@@ -2359,19 +2469,34 @@ void EntityRenderer::renderRainSnow(float partialTicks)
                 if (activeWeatherTexture != 0)
                 {
                     if (activeWeatherTexture >= 0)
+                    {
+#ifdef PS2_OPTIMIZATION_VALIDATION
+                        validationDrawWeatherBatch();
+#else
                         tessellator->draw();
+#endif
+                    }
+#ifdef PS2_OPTIMIZATION_VALIDATION
+                    ++validationWeatherTextureSwitches;
+#endif
                     activeWeatherTexture = 0;
                     renderBindTexture(mc->renderEngine->getTexture("/environment/rain.png"));
                     tessellator->startDrawingQuads();
                 }
 
+#if PLATFORM_PS2
+                const float textureOffset = ps2RainOffset(rendererUpdateCount, partialTicks, weatherSeed);
+#else
                 const int_t animationSeed = JavaArithmetic::intAdd(
                     rendererUpdateCount,
                     JavaArithmetic::intAdd(xSeed, zSeed));
                 const float textureOffset =
                     ((static_cast<float>(animationSeed & 31) + partialTicks) / 32.0f) *
                     (3.0f + random.nextFloat());
-#if PLATFORM_FLOAT_VERTEX_MATH
+#endif
+#if PLATFORM_PS2
+                const float opacity = ps2WeatherOpacity(distanceSquared, rainStrength, false);
+#elif PLATFORM_FLOAT_VERTEX_MATH
                 const float dx = static_cast<float>(
                     static_cast<double>(static_cast<float>(x) + 0.5f) - entity->posX);
                 const float dz = static_cast<float>(
@@ -2390,26 +2515,52 @@ void EntityRenderer::renderRainSnow(float partialTicks)
                 const float maxV = static_cast<float>(maxY) / 4.0f + textureOffset;
 
                 tessellator->setBrightness(world->getLightBrightnessForSkyBlocks(x, brightnessY, z, 0));
+#if PLATFORM_PS2
+                tessellator->setColorRGBA_F(1.0f, 1.0f, 1.0f, opacity);
+#else
                 tessellator->setColorRGBA_F(1.0f, 1.0f, 1.0f,
                     ((1.0f - distance * distance) * 0.5f + 0.5f) * rainStrength);
+#endif
                 tessellator->setTranslationD(-renderPosX, -renderPosY, -renderPosZ);
                 tessellator->addVertexWithUV(minX, minY, minZ, 0.0f, minV);
                 tessellator->addVertexWithUV(maxX, minY, maxZ, 1.0f, minV);
                 tessellator->addVertexWithUV(maxX, maxY, maxZ, 1.0f, maxV);
                 tessellator->addVertexWithUV(minX, maxY, minZ, 0.0f, maxV);
                 tessellator->setTranslationD(0.0, 0.0, 0.0);
+#ifdef PS2_OPTIMIZATION_VALIDATION
+                ++validationRainColumns;
+#endif
             }
             else
             {
                 if (activeWeatherTexture != 1)
                 {
                     if (activeWeatherTexture >= 0)
+                    {
+#ifdef PS2_OPTIMIZATION_VALIDATION
+                        validationDrawWeatherBatch();
+#else
                         tessellator->draw();
+#endif
+                    }
+#ifdef PS2_OPTIMIZATION_VALIDATION
+                    ++validationWeatherTextureSwitches;
+#endif
                     activeWeatherTexture = 1;
                     renderBindTexture(mc->renderEngine->getTexture("/environment/snow.png"));
                     tessellator->startDrawingQuads();
                 }
 
+#if PLATFORM_PS2
+                // Bounded periodic motion replaces per-column software-double
+                // Gaussian sampling. Integral wrap distances keep UVs continuous.
+                const float phase = (static_cast<float>(rendererUpdateCount & 2047) + partialTicks) / 2048.0f;
+                const float textureU = static_cast<float>(weatherSeed & 255u) / 256.0f +
+                    phase * static_cast<float>(static_cast<int>((weatherSeed >> 8) & 7u) - 3);
+                const float textureJitter = static_cast<float>((weatherSeed >> 16) & 255u) / 256.0f;
+                const float textureV = phase * 4.0f;
+                const float opacity = ps2WeatherOpacity(distanceSquared, rainStrength, true);
+#else
                 const float textureV = (static_cast<float>(rendererUpdateCount & 511) + partialTicks) / 512.0f;
                 const float textureRandom = random.nextFloat();
                 const float textureGaussian = static_cast<float>(random.nextGaussian());
@@ -2428,6 +2579,7 @@ void EntityRenderer::renderRainSnow(float partialTicks)
                 const double dz = static_cast<double>(static_cast<float>(z) + 0.5f) - entity->posZ;
                 const float distance = MathHelper::sqrt_double(dx * dx + dz * dz) / static_cast<float>(range);
 #endif
+#endif
                 const tess_coord_t minX = static_cast<tess_coord_t>(static_cast<float>(x) - offsetX) + static_cast<tess_coord_t>(0.5);
                 const tess_coord_t maxX = static_cast<tess_coord_t>(static_cast<float>(x) + offsetX) + static_cast<tess_coord_t>(0.5);
                 const tess_coord_t minZ = static_cast<tess_coord_t>(static_cast<float>(z) - offsetZ) + static_cast<tess_coord_t>(0.5);
@@ -2437,24 +2589,47 @@ void EntityRenderer::renderRainSnow(float partialTicks)
                 const int_t packedLight = world->getLightBrightnessForSkyBlocks(x, brightnessY, z, 0);
 
                 tessellator->setBrightness((packedLight * 3 + 15728880) / 4);
+#if PLATFORM_PS2
+                tessellator->setColorRGBA_F(1.0f, 1.0f, 1.0f, opacity);
+#else
                 tessellator->setColorRGBA_F(1.0f, 1.0f, 1.0f,
                     ((1.0f - distance * distance) * 0.3f + 0.5f) * rainStrength);
+#endif
                 tessellator->setTranslationD(-renderPosX, -renderPosY, -renderPosZ);
                 tessellator->addVertexWithUV(minX, minY, minZ, textureU, minV);
                 tessellator->addVertexWithUV(maxX, minY, maxZ, 1.0f + textureU, minV);
                 tessellator->addVertexWithUV(maxX, maxY, maxZ, 1.0f + textureU, maxV);
                 tessellator->addVertexWithUV(minX, maxY, minZ, textureU, maxV);
                 tessellator->setTranslationD(0.0, 0.0, 0.0);
+#ifdef PS2_OPTIMIZATION_VALIDATION
+                ++validationSnowColumns;
+#endif
             }
         }
     }
 
+#ifdef PS2_OPTIMIZATION_VALIDATION
+    validationReportWeather();
+#endif
     if (activeWeatherTexture >= 0)
+    {
+#ifdef PS2_OPTIMIZATION_VALIDATION
+        validationDrawWeatherBatch();
+#else
         tessellator->draw();
+#endif
+    }
+#if PLATFORM_PS2 && MC_LOG_LEVEL >= 2
+    if (reportWeather)
+        MC_LOG_DEBUG("ps2.weather", "submittedColumns=%d lastKind=%d\n", weatherColumns, activeWeatherTexture);
+#endif
 
     renderEnable(RenderCapability::CullFace);
     renderDisable(RenderCapability::Blend);
     renderAlphaFunc(RenderCompare::Greater, 0.1f);
+#if PLATFORM_PS2
+    renderDepthMask(true);
+#endif
     disableLightmap(static_cast<double>(partialTicks));
 }
 

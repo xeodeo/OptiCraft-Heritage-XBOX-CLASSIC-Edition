@@ -96,6 +96,8 @@ void poll(u32 connectedMask, WiiPadInternal::FrameState& state)
 	if (held & PAD_BUTTON_DOWN)  state.textInputHeld |= WII_TEXT_DOWN;
 	if (held & PAD_BUTTON_LEFT)  state.textInputHeld |= WII_TEXT_LEFT;
 	if (held & PAD_BUTTON_RIGHT) state.textInputHeld |= WII_TEXT_RIGHT;
+	if (held & PAD_TRIGGER_L)    state.textInputHeld |= WII_TEXT_PREV_PAGE;
+	if (held & PAD_TRIGGER_R)    state.textInputHeld |= WII_TEXT_NEXT_PAGE;
 
 	// Z is the debug overlay (F3). The FPS / position / chunk readout is the
 	// main way to see what the port is doing without a host log, same reason

@@ -51,14 +51,20 @@ public:
 	void unloadEntities(const std::vector<Entity *> &list) override;
 	void addEntityToWorld(int_t entityId, Entity *entity);
 	void applyNetworkPosition(Entity *entity, double x, double y, double z, float yaw, float pitch);
-	Entity *getEntityByID(int_t entityId);
+	Entity *getEntityByID(int_t entityId) override;
 	Entity *removeEntityFromWorld(int_t entityId);
 	bool setBlockMetadata(int_t x, int_t y, int_t z, int_t metadata) override;
 	bool setBlockAndMetadata(int_t x, int_t y, int_t z, int_t blockId, int_t metadata) override;
 	bool setBlock(int_t x, int_t y, int_t z, int_t blockId) override;
 	bool setBlockAndMetadataAndInvalidate(int_t x, int_t y, int_t z, int_t blockId, int_t metadata);
 	void sendQuittingDisconnectingPacket() override;
+#if PLATFORM_PS2
+	// Server weather events set an instantaneous value. Update both interpolation
+	// endpoints; otherwise every render tick fades from a stale previous value.
+	void setRainStrength(float strength) { World::setRainStrength(strength); }
+#else
 	void setRainStrength(float strength) { rainingStrength = strength; }
+#endif
 
 protected:
 	IChunkProvider *getChunkProvider() override;

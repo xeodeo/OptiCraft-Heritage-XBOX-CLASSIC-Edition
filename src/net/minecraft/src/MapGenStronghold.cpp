@@ -10,6 +10,7 @@
 #include "StructureStart.h"
 #include "StructureStrongholdStart.h"
 #include "World.h"
+#include "WorldInfo.h"
 #include "WorldChunkManager.h"
 #include "java/Arithmetic.h"
 #include "java/Math.h"
@@ -133,7 +134,11 @@ std::vector<ChunkPosition *> MapGenStronghold::getStructureCoordinates()
 StructureStart *MapGenStronghold::getStructureStart(int_t chunkX, int_t chunkZ)
 {
 	StructureStart *fallbackStart = nullptr;
-	for (int_t attempt = 0; attempt < 40; ++attempt)
+	const int_t maxAttempts = (worldObj != nullptr && worldObj->isLimitedWorld()) ? 5 : 10;
+	const double limit = (worldObj != nullptr && worldObj->getWorldInfo() != nullptr)
+		? (worldObj->getWorldInfo()->getLimitedWorldBoundary() - 18.0)
+		: 109.5;
+	for (int_t attempt = 0; attempt < maxAttempts; ++attempt)
 	{
 		StructureStrongholdStart *start = new StructureStrongholdStart(worldObj, rand, chunkX, chunkZ);
 		const std::vector<StructureComponent *> &components = start->getComponents();
@@ -145,8 +150,8 @@ StructureStart *MapGenStronghold::getStructureStart(int_t chunkX, int_t chunkZ)
 				if (worldObj != nullptr && worldObj->isIslandWorld())
 				{
 					StructureBoundingBox *bb = start->getBoundingBox();
-					if (bb != nullptr && bb->minX >= -110 && bb->maxX <= 110 &&
-					    bb->minZ >= -110 && bb->maxZ <= 110)
+					if (bb != nullptr && bb->minX >= -limit && bb->maxX <= limit &&
+					    bb->minZ >= -limit && bb->maxZ <= limit)
 					{
 						if (fallbackStart != nullptr)
 							delete fallbackStart;

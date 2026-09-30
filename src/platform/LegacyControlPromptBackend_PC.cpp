@@ -10,6 +10,7 @@ const KeyBinding *bindingForAction(const GameSettings &settings, LegacyControlAc
     switch (action)
     {
     case LegacyControlAction::Inventory: return settings.keyBindInventory;
+    case LegacyControlAction::Crafting: return settings.legacyCrafting ? settings.keyBindCrafting : nullptr;
     case LegacyControlAction::Drop: return settings.keyBindDrop;
     case LegacyControlAction::Jump: return settings.keyBindJump;
     case LegacyControlAction::Attack: return settings.keyBindAttack;
@@ -22,7 +23,7 @@ const KeyBinding *bindingForAction(const GameSettings &settings, LegacyControlAc
 std::string legacyControlPromptLabel(const GameSettings &settings, LegacyControlAction action)
 {
     const KeyBinding *binding = bindingForAction(settings, action);
-    if (binding == nullptr)
+    if (binding == nullptr || binding->keyCode == 0)
         return std::string();
     return GameSettings::getKeyDisplayString(binding->keyCode);
 }

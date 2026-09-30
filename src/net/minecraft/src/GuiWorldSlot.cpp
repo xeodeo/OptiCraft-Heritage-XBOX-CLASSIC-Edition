@@ -6,7 +6,7 @@
 #include "StatCollector.h"
 
 GuiWorldSlot::GuiWorldSlot(GuiSelectWorld *parent)
-	: GuiSlot(parent->mc, parent->width, parent->height, 32, parent->height - 64, 36)
+	: GuiSlot(parent->mc, parent->width, parent->height, 32, parent->height - 64, 46)
 	, parentWorldGui(parent)
 {
 }
@@ -35,7 +35,7 @@ bool GuiWorldSlot::isSelected(int_t index)
 
 int_t GuiWorldSlot::getContentHeight()
 {
-	return getSize() * 36;
+	return getSize() * 46;
 }
 
 void GuiWorldSlot::drawBackground()
@@ -67,7 +67,11 @@ void GuiWorldSlot::drawSlot(int_t i, int_t x, int_t y, int_t h, Tessellator *tes
 			line3 = StatCollector::translateToLocal("gameMode.hardcore");
 	}
 
+	int64_t seedValue = entry->getSeed();
+	std::string line4 = "Seed: " + std::to_string(seedValue);
+
 	parentWorldGui->drawString(parentWorldGui->fontRenderer, name,  x + 2, y + 1,  0xffffff);
 	parentWorldGui->drawString(parentWorldGui->fontRenderer, line2, x + 2, y + 12, 0x808080);
 	parentWorldGui->drawString(parentWorldGui->fontRenderer, line3, x + 2, y + 22, 0x808080);
+	parentWorldGui->drawString(parentWorldGui->fontRenderer, line4, x + 2, y + 32, 0x808080);
 }

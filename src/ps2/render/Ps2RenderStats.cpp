@@ -34,6 +34,20 @@ extern "C" void ps2_dbg_draw_dump()
 
     Ps2TerrainClusterStats clusterStats;
     ps2_terrain_take_cluster_stats(clusterStats);
+    // Packed opaque command path only. Times exclude validation, native
+    // context preparation, target selection, stats gathering and submission.
+    // Counts/totals cover the reporting interval, not a single frame.
+    const double passCycles = 294912.0 *
+        (clusterStats.opaquePasses > 0 ? clusterStats.opaquePasses : 1);
+    MC_LOG_DEBUG("render", "[PS2] terrain CPU: passes=%ld sections=%ld clusters=%ld rejected=%ld"
+           " classifyMs/pass=%.3f buildMs/pass=%.3f"
+           " classifyMaxSectionMs=%.3f buildMaxSectionMs=%.3f\n",
+           clusterStats.opaquePasses, clusterStats.commandSections,
+           clusterStats.testedClusters, clusterStats.rejectedClusters,
+           (double)clusterStats.classificationCycles / passCycles,
+           (double)clusterStats.commandBuildCycles / passCycles,
+           (double)clusterStats.classificationMaxCycles / 294912.0,
+           (double)clusterStats.commandBuildMaxCycles / 294912.0);
     MC_LOG_DEBUG("render", "[PS2] terrain clusters: sections=%ld inside=%ld partial=%ld outside=%ld"
            " culledVerts=%ld guardSafePartial=%ld/%ld guardRisk=%ld/%ld"
            " vu1Eligible=%ld sideClip=%ld vu0Risk=%ld/%ld/%ld unavailable=%ld policy=%ld"
@@ -55,6 +69,44 @@ extern "C" void ps2_dbg_draw_dump()
            clusterStats.vu1Ranges,
            clusterStats.vu1Vertices, clusterStats.vu0GatherBatches,
            clusterStats.vu0GatherVertices);
+
+    const Ps2TranslucentStats& trans = stats.translucent;
+    const double transPassCycles = 294912.0 * (trans.passes > 0 ? trans.passes : 1);
+    MC_LOG_DEBUG("render", "[PS2] translucent: passes=%ld draws=%ld quads=%ld trivialRejectQuads=%ld"
+        " clipInTris=%ld clipFanTris=%ld stripFlush=%ld triFlush=%ld\n",
+        trans.passes, trans.draws, trans.quads, trans.rejectedQuads,
+        trans.clippedInputTriangles, trans.clippedOutputTriangles,
+        trans.stripFlushes, trans.triangleFlushes);
+    // Partial CPU spans, not total pass time: project covers quad-strip
+    // projection; emit covers strip packing (including fog) and batch flushes.
+    // clip measures polygon clipping only, excluding fan projection/emission.
+    MC_LOG_DEBUG("render", "[PS2] translucent CPU ms/pass: xform=%.3f stripProject=%.3f"
+        " packFlush=%.3f clipPoly=%.3f\n",
+        (double)trans.transformCycles / transPassCycles,
+        (double)trans.projectCycles / transPassCycles,
+        (double)trans.emitCycles / transPassCycles,
+        (double)trans.clipCycles / transPassCycles);
+    // Submit includes queue flush time: these columns must not be added.
+    // Strip packing includes fog, but excludes clipped-triangle packing.
+    // Queue flush measures submission plus any wait, not isolated GS busy time.
+    MC_LOG_DEBUG("render", "[PS2] translucent submit ms/pass: stripPack=%.3f"
+        " batchSubmit=%.3f queueFlushIncluded=%.3f queueFlushes=%ld\n",
+        (double)trans.stripPackCycles / transPassCycles,
+        (double)trans.batchSubmitCycles / transPassCycles,
+        (double)trans.queueFlushCycles / transPassCycles, trans.queueFlushes);
+    // Nested scopes, NOT an additive pass breakdown. drawTotal includes all
+    // scopes and profiler overhead; quadTriangles includes clipping, projection,
+    // attribute fetch, emission and any flush it triggers. stripPrepare covers
+    // post-projection rejection, attribute fetch/software fog and atlas selection.
+    // Work before ps2_draw_3d (e.g. raw terrain preparation) is outside drawTotal.
+    MC_LOG_DEBUG("render", "[PS2] translucent coverage ms/pass: drawTotal=%.3f"
+        " setup=%.3f quadClassify=%.3f stripPrepare=%.3f quadTriangles=%.3f\n",
+        (double)trans.drawCycles / transPassCycles,
+        (double)trans.setupCycles / transPassCycles,
+        (double)trans.classifyCycles / transPassCycles,
+        (double)trans.stripPrepareCycles / transPassCycles,
+        (double)trans.quadTriangleCycles / transPassCycles);
+    stats.translucent = Ps2TranslucentStats{};
 
     const long stripFlush = stats.stripFlush;
     MC_LOG_DEBUG("render", "[PS2] batch: stripFlush=%ld batchFlush=%ld quads=%ld quadsPerFlush=%ld"
@@ -82,6 +134,10 @@ extern "C" void ps2_dbg_draw_dump()
     stats.cycleTransform = 0;
     stats.cycleProject = 0;
     stats.cycleEmit = 0;
+    stats.cycleStripPack = 0;
+    stats.cycleBatchSubmit = 0;
+    stats.cycleVu0QueueFlush = 0;
+    stats.vu0QueueFlushes = 0;
 
 #ifdef PS2_ENABLE_VU1_TERRAIN
     Ps2Vu1TerrainStats terrainVu1;

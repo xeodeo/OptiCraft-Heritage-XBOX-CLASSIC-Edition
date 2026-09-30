@@ -197,6 +197,8 @@ void poll(WiiPadInternal::FrameState& state)
 	if (held & WPAD_BUTTON_DOWN)   state.textInputHeld |= WII_TEXT_DOWN;
 	if (held & WPAD_BUTTON_LEFT)   state.textInputHeld |= WII_TEXT_LEFT;
 	if (held & WPAD_BUTTON_RIGHT)  state.textInputHeld |= WII_TEXT_RIGHT;
+	if (held & (WPAD_BUTTON_MINUS | WPAD_BUTTON_1)) state.textInputHeld |= WII_TEXT_PREV_PAGE;
+	if (held & (WPAD_BUTTON_PLUS  | WPAD_BUTTON_2)) state.textInputHeld |= WII_TEXT_NEXT_PAGE;
 
 	// Diagnostics is the 1+2 chord, so that 2 is free to cycle the hotbar and 1
 	// is free to be the default Drop. Both singles stand down while the chord is
@@ -329,6 +331,12 @@ void poll(WiiPadInternal::FrameState& state)
 		if (held & WPAD_CLASSIC_BUTTON_DOWN)   state.textInputHeld |= WII_TEXT_DOWN;
 		if (held & WPAD_CLASSIC_BUTTON_LEFT)   state.textInputHeld |= WII_TEXT_LEFT;
 		if (held & WPAD_CLASSIC_BUTTON_RIGHT)  state.textInputHeld |= WII_TEXT_RIGHT;
+		if (held & (WPAD_CLASSIC_BUTTON_FULL_L | WPAD_CLASSIC_BUTTON_ZL))
+			state.textInputHeld |= WII_TEXT_PREV_PAGE;
+		if (held & (WPAD_CLASSIC_BUTTON_FULL_R | WPAD_CLASSIC_BUTTON_ZR))
+			state.textInputHeld |= WII_TEXT_NEXT_PAGE;
+		if (held & (WPAD_CLASSIC_BUTTON_X | WPAD_CLASSIC_BUTTON_Y))
+			state.textInputHeld |= WII_TEXT_SHIFT;
 
 		// ZL/ZR are the hotbar, for the same reason the GameCube pad puts it on
 		// the D-pad: without it there is no way to change the selected item.

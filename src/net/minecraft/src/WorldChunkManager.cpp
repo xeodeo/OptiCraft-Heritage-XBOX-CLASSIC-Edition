@@ -79,6 +79,10 @@ const std::vector<int_t> &WorldChunkManager::biomeIdArea(int_t x, int_t z, int_t
     const std::vector<int_t> &ids = biomeIndexLayer->getInts(x, z, width, height);
     if (limitedWorld)
     {
+        const float rInner = worldSizeType == 2 ? 394.0f : 92.0f;
+        const float rOuter = worldSizeType == 2 ? 420.0f : 118.0f;
+        const float rInnerSq = rInner * rInner;
+        const float rOuterSq = rOuter * rOuter;
         if (fastBiomeIds.size() < ids.size())
             fastBiomeIds.resize(ids.size());
         for (int_t j = 0; j < height; ++j)
@@ -89,13 +93,13 @@ const std::vector<int_t> &WorldChunkManager::biomeIdArea(int_t x, int_t z, int_t
                 int_t bId = ids[idx];
                 const float dx = static_cast<float>(x + i);
                 const float dz = static_cast<float>(z + j);
-                const float dist = std::sqrt(dx * dx + dz * dz);
-                if (dist < 92.0f)
+                const float distSq = dx * dx + dz * dz;
+                if (distSq < rInnerSq)
                 {
                     if (bId == BiomeGenBase::ocean->biomeID || bId == BiomeGenBase::frozenOcean->biomeID)
                         bId = BiomeGenBase::plains->biomeID;
                 }
-                else if (dist >= 118.0f)
+                else if (distSq >= rOuterSq)
                 {
                     bId = BiomeGenBase::ocean->biomeID;
                 }
@@ -118,6 +122,10 @@ const std::vector<int_t> &WorldChunkManager::coarseBiomeIdArea(int_t x, int_t z,
     const std::vector<int_t> &ids = genBiomes->getInts(x, z, width, height);
     if (limitedWorld)
     {
+        const float rInner = worldSizeType == 2 ? 394.0f : 92.0f;
+        const float rOuter = worldSizeType == 2 ? 420.0f : 118.0f;
+        const float rInnerSq = rInner * rInner;
+        const float rOuterSq = rOuter * rOuter;
         if (fastCoarseBiomeIds.size() < ids.size())
             fastCoarseBiomeIds.resize(ids.size());
         for (int_t j = 0; j < height; ++j)
@@ -128,13 +136,13 @@ const std::vector<int_t> &WorldChunkManager::coarseBiomeIdArea(int_t x, int_t z,
                 int_t bId = ids[idx];
                 const float dx = static_cast<float>(x + i);
                 const float dz = static_cast<float>(z + j);
-                const float dist = std::sqrt(dx * dx + dz * dz);
-                if (dist < 92.0f)
+                const float distSq = dx * dx + dz * dz;
+                if (distSq < rInnerSq)
                 {
                     if (bId == BiomeGenBase::ocean->biomeID || bId == BiomeGenBase::frozenOcean->biomeID)
                         bId = BiomeGenBase::plains->biomeID;
                 }
-                else if (dist >= 118.0f)
+                else if (distSq >= rOuterSq)
                 {
                     bId = BiomeGenBase::ocean->biomeID;
                 }
@@ -153,7 +161,8 @@ WorldChunkManager::WorldChunkManager(World *world)
 {
     if (world != nullptr && world->isIslandWorld())
     {
-        limitedWorld = true;
+        worldSizeType = world->getWorldInfo() != nullptr ? world->getWorldInfo()->getWorldSizeType() : 1;
+        limitedWorld = (worldSizeType != 0);
     }
 }
 

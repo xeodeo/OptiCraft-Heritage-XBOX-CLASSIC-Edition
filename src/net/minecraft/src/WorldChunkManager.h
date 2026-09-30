@@ -57,13 +57,16 @@ public:
     virtual std::vector<BiomeGenBase *> &getBiomeBlock(int_t x, int_t z, int_t width, int_t height);
 
     bool isLimitedWorld() const { return limitedWorld; }
-    void setLimitedWorld(bool limited) { limitedWorld = limited; }
+    void setLimitedWorld(bool limited) { limitedWorld = limited; if (limited && worldSizeType == 0) worldSizeType = 1; else if (!limited) worldSizeType = 0; }
+    int_t getWorldSizeType() const { return worldSizeType; }
+    void setWorldSizeType(int_t type) { worldSizeType = type; limitedWorld = (type != 0); }
 
     BiomeNoiseBuffer temperature;
     BiomeNoiseBuffer humidity;
 
 protected:
     bool limitedWorld = false;
+    int_t worldSizeType = 0;
     static int_t checkedBiomeAreaCount(int_t width, int_t height);
 
     // Single point where a biome id area is produced. Every biome-derived value in

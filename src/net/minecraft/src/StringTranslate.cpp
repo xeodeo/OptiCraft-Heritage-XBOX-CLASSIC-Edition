@@ -194,6 +194,7 @@ void StringTranslate::setLanguage(const std::string &language)
     for (const auto &alias : aliases)
         if (translateTable.find(alias[1]) != translateTable.end())
             englishUiKeys[alias[0]] = alias[1];
+    englishUiKeys["Crafting"] = "key.crafting";
     currentLanguage = "en_US";
     if (language != "en_US" && loadLanguageFile("/lang/" + language + ".lang"))
         currentLanguage = language;
@@ -245,7 +246,15 @@ std::string StringTranslate::translateUi(const std::string &english)
 std::string StringTranslate::translateKey(const std::string &s)
 {
     auto it = translateTable.find(s);
-    return it != translateTable.end() ? it->second : s;
+    if (it != translateTable.end())
+        return it->second;
+    if (s == "key.crafting")
+    {
+        if (currentLanguage.rfind("es_", 0) == 0)
+            return "Fabricar";
+        return "Crafting";
+    }
+    return s;
 }
 
 std::string StringTranslate::translateKeyFormat(const std::string &s, const std::vector<std::string> &args)

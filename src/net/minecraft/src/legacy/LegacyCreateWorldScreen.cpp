@@ -253,15 +253,8 @@ bool LegacyCreateWorldScreen::adjustSelection(int_t direction)
         return false;
     if (selectedControlIndex == 3 && worldSizeButton != nullptr)
     {
-        if (!limitedWorld) {
-            limitedWorld = true;
-            islandWorld = false;
-        } else if (!islandWorld) {
-            islandWorld = true;
-        } else {
-            limitedWorld = false;
-            islandWorld = false;
-        }
+        worldSizeType = (worldSizeType + (direction > 0 ? 1 : 2)) % 3;
+        limitedWorld = (worldSizeType != 0);
         updateButtonText();
         mc->sndManager->playSoundFX("random.focus", 1.0f, 1.0f);
         return true;
