@@ -122,6 +122,10 @@ void GameSettings::setDefaults()
     keyBindPickBlock = new KeyBinding("key.pickItem", -98);
     keyBindToggleFog = new KeyBinding("key.fog", 33);
     keyBindSneak = new KeyBinding("key.sneak", 42);
+    // The PS2 defaults depend on which crafting menu is on, so set the
+    // crafting options before the platform picks the default buttons.
+    legacyCrafting = PLATFORM_XBOX != 0;
+    xboxStyleCrafting = (PLATFORM_XBOX || PLATFORM_PS2) != 0;
     platformGameSettingsInitialize(*this);
     keyBindings = {
         keyBindAttack, keyBindUseItem, keyBindForward, keyBindLeft, keyBindBack, keyBindRight,
