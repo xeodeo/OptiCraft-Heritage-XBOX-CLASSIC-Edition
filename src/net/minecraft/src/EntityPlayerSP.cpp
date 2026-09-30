@@ -344,34 +344,20 @@ void EntityPlayerSP::displayGUIChest(IInventory *iinventory)
 
 void EntityPlayerSP::displayWorkbenchGUI(int_t i, int_t j, int_t k)
 {
-	if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->xboxStyleCrafting)
+		if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->xboxStyleCrafting)
 	{
 		if (mc->isSplitScreenActive())
 		{
 			const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS2
 			mc->displayPlayerScreen(pIdx, new XboxCraftingScreen(this, worldObj, i, j, k));
 			return;
 		}
 		mc->displayGuiScreen(new XboxCraftingScreen(this, worldObj, i, j, k));
 #else
-#if PLATFORM_PS2
-			if (mc->gameSettings->legacyCrafting)
-			{
-				mc->displayPlayerScreen(pIdx, new XboxCraftingScreen(this, worldObj, i, j, k));
-				return;
-			}
-#endif
 			mc->displayPlayerScreen(pIdx, new LegacyCraftingScreen(inventory, worldObj, i, j, k, false, this));
 			return;
 		}
-#if PLATFORM_PS2
-		if (mc->gameSettings->legacyCrafting)
-		{
-			mc->displayGuiScreen(new XboxCraftingScreen(this, worldObj, i, j, k));
-			return;
-		}
-#endif
 		mc->displayGuiScreen(new LegacyCraftingScreen(inventory, worldObj, i, j, k, false, this));
 #endif
 		return;

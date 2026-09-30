@@ -2207,7 +2207,11 @@ void Minecraft::runTick()
                         displayPlayerScreen(0, new XboxCraftingScreen(thePlayer));
                     else
 #endif
-                    if (gameSettings->legacyCrafting && gameSettings->legacyUI)
+                    #if !(PLATFORM_XBOX || PLATFORM_PS2)
+            if (gameSettings->legacyCrafting && gameSettings->legacyUI)
+#else
+            if (false)
+#endif
                         displayPlayerScreen(0, new LegacyCraftingScreen(thePlayer->inventory, theWorld, 0, 0, 0, true, thePlayer));
                 }
                 continue;
@@ -2218,7 +2222,11 @@ void Minecraft::runTick()
                 displayGuiScreen(new XboxCraftingScreen(thePlayer));
             else
 #endif
+            #if !(PLATFORM_XBOX || PLATFORM_PS2)
             if (gameSettings->legacyCrafting && gameSettings->legacyUI)
+#else
+            if (false)
+#endif
                 displayGuiScreen(new LegacyCraftingScreen(thePlayer->inventory, theWorld, 0, 0, 0, true, thePlayer));
         }
 

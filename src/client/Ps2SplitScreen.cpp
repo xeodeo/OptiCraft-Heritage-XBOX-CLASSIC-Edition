@@ -246,11 +246,36 @@ void tick(Minecraft *mc)
     if (mc == nullptr)
         return;
 
-    const Ps2PadSnapshot &pad2 = ps2PadGetSnapshot(1);
-    if (!pad2.connected)
+    const Ps2PadSnapshot &pad2_raw = ps2PadGetSnapshot(1);
+    if (!pad2_raw.connected)
         return;
 
     static unsigned short s_prevTickHeld = 0;
+    static unsigned int s_suppressedButtons = 0;
+    
+    // If player 2 had a menu open last tick, but doesn't now (or vice versa), handle suppression
+    bool p2MenuOpen = mc->currentScreen != nullptr && mc->isScreenOwnedByPlayer2();
+    if (mc->isPlayerScreenActive(1)) p2MenuOpen = true;
+    
+    static bool s_previousMenu = false;
+    if (p2MenuOpen && !s_previousMenu) {
+        // entered menu
+    }
+    if (!p2MenuOpen && s_previousMenu) {
+        // left menu
+        s_suppressedButtons = pad2_raw.held;
+    }
+    s_previousMenu = p2MenuOpen;
+    
+    if (p2MenuOpen) {
+        s_suppressedButtons = 0;
+    } else {
+        s_suppressedButtons &= pad2_raw.held;
+    }
+    
+    Ps2PadSnapshot pad2 = pad2_raw;
+    pad2.held &= ~s_suppressedButtons;
+    
     const unsigned short tickPressed = static_cast<unsigned short>(pad2.held & ~s_prevTickHeld);
     const unsigned short pad2Released = static_cast<unsigned short>(s_prevTickHeld & ~pad2.held);
     s_prevTickHeld = pad2.held;

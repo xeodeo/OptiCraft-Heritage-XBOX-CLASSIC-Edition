@@ -23,10 +23,11 @@
 #include "wii/input/WiiPadKeyCodes.h"
 #endif
 
-#if PLATFORM_XBOX
 #include "LegacyButtonPrompt.h"
 #include "LegacyOptionMetrics.h"
 #include "net/minecraft/src/KeyBinding.h"
+
+#if PLATFORM_XBOX
 #include "xbox/input/XboxPadKeyCodes.h"
 #endif
 
@@ -81,7 +82,7 @@ void LegacyControlsScreen::initGui()
     captureRow = -1;
     platformSetPadRebindExclusive(false);
     rows = legacyControlsRows(settings);
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS2
     // The Xbox keeps the single-column page its controller icons are laid
     // out for (drawScreen draws them over each row).
     rowsPerPage = std::max<int_t>(3, std::min<int_t>(8,
@@ -173,7 +174,7 @@ int_t LegacyControlsScreen::pageCount() const
 
 void LegacyControlsScreen::refreshRowLabels()
 {
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS2
     rowIcons.assign(static_cast<size_t>(rowsPerPage), -1);
     rowIconX.assign(static_cast<size_t>(rowsPerPage), 0);
 #endif
@@ -191,11 +192,15 @@ void LegacyControlsScreen::refreshRowLabels()
         }
 
         const LegacyControlsBindingRow &row = rows[rowIndex];
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS2
         if (captureRow != rowIndex && fontRenderer != nullptr && row.kind == LegacyControlsBindingKind::KeyBinding &&
             row.bindingIndex >= 0 && row.bindingIndex < static_cast<int_t>(settings->keyBindings.size()))
         {
+            #if PLATFORM_XBOX
             const char *name = xboxPadKeyName(settings->keyBindings[row.bindingIndex]->keyCode);
+#else
+            const char *name = ps2PadKeyName(settings->keyBindings[row.bindingIndex]->keyCode);
+#endif
             const Ps2ButtonIcon icon = name != nullptr ? LegacyButtonPrompt::iconFromName(name) : Ps2ButtonIcon::None;
             if (icon != Ps2ButtonIcon::None)
             {
@@ -291,14 +296,11 @@ void LegacyControlsScreen::actionPerformed(GuiButton *button)
     if (button == nullptr || !button->enabled)
         return;
 
-#if !PLATFORM_PS2
     if (button->id >= BUTTON_ROW_BASE && button->id < BUTTON_ROW_BASE + rowsPerPage)
     {
         beginCapture(button->id - BUTTON_ROW_BASE);
         return;
     }
-#endif
-#if !PLATFORM_PS2
     if (button->id == BUTTON_PREVIOUS)
     {
         --page;
@@ -316,7 +318,6 @@ void LegacyControlsScreen::actionPerformed(GuiButton *button)
         resetDefaults();
         return;
     }
-#endif
     if (button->id == BUTTON_BACK)
     {
         cancelCapture();
@@ -373,12 +374,12 @@ void LegacyControlsScreen::updateScreen()
 void LegacyControlsScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 {
     drawLegacyBackground(partialTick);
-#if !PLATFORM_XBOX
+#if !(PLATFORM_XBOX || PLATFORM_PS2)
     drawLayoutArtwork();
 #endif
     updateLegacyPointerHover(mouseX, mouseY);
     GuiScreen::drawScreen(mouseX, mouseY, partialTick);
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS2
     for (int_t i = 0; i < static_cast<int_t>(rowIcons.size()) && i < static_cast<int_t>(controlList.size()); ++i)
     {
         if (rowIcons[i] < 0 || controlList[i] == nullptr)

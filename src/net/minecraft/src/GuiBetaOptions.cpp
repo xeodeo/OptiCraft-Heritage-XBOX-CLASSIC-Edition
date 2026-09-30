@@ -59,8 +59,13 @@ void GuiBetaOptions::initGui()
 	by += 24;
 
 	// Row 2: Legacy Crafting & Legacy Creative
+	#if !(PLATFORM_XBOX || PLATFORM_PS2)
 	controlList.push_back(new GuiSmallButton(BUTTON_LEGACY_CRAFTING, width / 2 - 155, by,
 		uiText("Legacy Crafting: ") + std::string(settings->legacyCrafting ? uiText("ON") : uiText("OFF"))));
+#else
+	controlList.push_back(new GuiSmallButton(BUTTON_LEGACY_CRAFTING, width / 2 - 155, by,
+		uiText("Console Crafting: ") + std::string(settings->xboxStyleCrafting ? uiText("ON") : uiText("OFF"))));
+#endif
 	controlList.push_back(new GuiSmallButton(BUTTON_LEGACY_CREATIVE, width / 2 + 5, by,
 		uiText("Legacy Creative: ") + std::string(settings->legacyCreative ? uiText("ON") : uiText("OFF"))));
 	by += 24;
@@ -188,9 +193,14 @@ void GuiBetaOptions::actionPerformed(GuiButton *button)
 	}
 	if (button->id == BUTTON_LEGACY_CRAFTING)
 	{
+		#if !(PLATFORM_XBOX || PLATFORM_PS2)
 		settings->legacyCrafting = !settings->legacyCrafting;
 		settings->applyLegacyCraftingBindings();
 		button->displayString = uiText("Legacy Crafting: ") + std::string(settings->legacyCrafting ? uiText("ON") : uiText("OFF"));
+#else
+		settings->xboxStyleCrafting = !settings->xboxStyleCrafting;
+		button->displayString = uiText("Console Crafting: ") + std::string(settings->xboxStyleCrafting ? uiText("ON") : uiText("OFF"));
+#endif
 		settings->saveOptions();
 		return;
 	}

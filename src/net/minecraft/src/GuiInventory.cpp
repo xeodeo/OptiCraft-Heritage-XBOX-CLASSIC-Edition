@@ -205,7 +205,7 @@ void GuiInventory::actionPerformed(GuiButton *button)
 
 void GuiInventory::keyTyped(char_t c, int_t key)
 {
-	if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI && mc->gameSettings->legacyCrafting)
+	if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI && mc->gameSettings->legacyCrafting && !(PLATFORM_XBOX || PLATFORM_PS2))
 	{
 		const bool isCraftingKey = (mc->gameSettings->keyBindCrafting != nullptr && key == mc->gameSettings->keyBindCrafting->keyCode) ||
 			key == lwjgl::Keyboard::KEY_C;
