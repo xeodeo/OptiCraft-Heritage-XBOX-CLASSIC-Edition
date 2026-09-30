@@ -130,9 +130,11 @@
 #include "net/minecraft/src/Tessellator.h"
 #include "net/minecraft/src/legacy/startup/StartupPresentation.h"
 #include "net/minecraft/src/legacy/LegacyDebugOptions.h"
+#if PLATFORM_XBOX || PLATFORM_PS2
+#include "net/minecraft/src/legacy/XboxCraftingScreen.h"
+#endif
 #if PLATFORM_XBOX
 #include "net/minecraft/src/legacy/LegacyCraftingScreen.h"
-#include "net/minecraft/src/legacy/XboxCraftingScreen.h"
 #include "xbox/input/XboxPadKeyCodes.h"
 #endif
 
@@ -2169,6 +2171,10 @@ void Minecraft::runTick()
                 {
                     if (playerController->isInCreativeMode())
                         displayPlayerScreen(0, new GuiContainerCreative(thePlayer));
+#if PLATFORM_PS2
+                    else if (gameSettings->legacyUI && gameSettings->legacyCrafting)
+                        displayPlayerScreen(0, new XboxCraftingScreen(thePlayer));
+#endif
 #if !PLATFORM_XBOX
                     else if (gameSettings->legacyUI)
                         displayPlayerScreen(0, new LegacyCraftingScreen(thePlayer->inventory, theWorld, 0, 0, 0, true, thePlayer));
@@ -2180,6 +2186,10 @@ void Minecraft::runTick()
             }
             if (playerController->isInCreativeMode())
                 displayGuiScreen(new GuiContainerCreative(thePlayer));
+#if PLATFORM_PS2
+            else if (gameSettings->legacyUI && gameSettings->legacyCrafting)
+                displayGuiScreen(new XboxCraftingScreen(thePlayer));
+#endif
 #if !PLATFORM_XBOX
             else if (gameSettings->legacyUI)
                 displayGuiScreen(new LegacyCraftingScreen(thePlayer->inventory, theWorld, 0, 0, 0, true, thePlayer));

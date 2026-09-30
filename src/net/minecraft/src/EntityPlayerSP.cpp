@@ -355,9 +355,23 @@ void EntityPlayerSP::displayWorkbenchGUI(int_t i, int_t j, int_t k)
 		}
 		mc->displayGuiScreen(new XboxCraftingScreen(this, worldObj, i, j, k));
 #else
+#if PLATFORM_PS2
+			if (mc->gameSettings->legacyCrafting)
+			{
+				mc->displayPlayerScreen(pIdx, new XboxCraftingScreen(this, worldObj, i, j, k));
+				return;
+			}
+#endif
 			mc->displayPlayerScreen(pIdx, new LegacyCraftingScreen(inventory, worldObj, i, j, k, false, this));
 			return;
 		}
+#if PLATFORM_PS2
+		if (mc->gameSettings->legacyCrafting)
+		{
+			mc->displayGuiScreen(new XboxCraftingScreen(this, worldObj, i, j, k));
+			return;
+		}
+#endif
 		mc->displayGuiScreen(new LegacyCraftingScreen(inventory, worldObj, i, j, k, false, this));
 #endif
 		return;

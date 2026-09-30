@@ -63,7 +63,7 @@ void LegacyHeritageOptions::initGui()
 #ifdef WII_PLATFORM
     ++rowCount;
 #endif
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS2
     ++rowCount; // Console Crafting
 #endif
 #if PLATFORM_HAS_CONTROLLER_CALIBRATION
@@ -122,7 +122,7 @@ void LegacyHeritageOptions::initGui()
         uiText("Legacy Look"), settings->legacyLook);
     controlList.push_back(legacyLookCheckbox);
 
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS2
     legacyCraftingCheckbox = new LegacyOptionCheckbox(BUTTON_LEGACY_CRAFTING, x, legacyLayout.rowY(row++), w, h,
         uiText("Console Crafting"), settings->legacyCrafting);
     controlList.push_back(legacyCraftingCheckbox);

@@ -120,6 +120,7 @@ void GuiContainerCreative::updateScreen()
                     mc->sndManager->playSoundFX("random.pop", 0.6f, 0.8f);
             }
         }
+    }
 #elif PLATFORM_XBOX
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     // Tabs from the separate White/Black latch: the slot navigator has already

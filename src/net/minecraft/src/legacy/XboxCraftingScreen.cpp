@@ -1,3 +1,6 @@
+// Console crafting menu of the Xbox port, also used on PS2 when "Console
+// Crafting" is on (upstream's LegacyCraftingScreen otherwise).
+#if defined(XBOX_PLATFORM) || defined(PS2_PLATFORM)
 #include "XboxCraftingScreen.h"
 
 #include <algorithm>
@@ -571,7 +574,7 @@ void XboxCraftingScreen::drawSunken(int_t x0, int_t y0, int_t x1, int_t y1, int_
 void XboxCraftingScreen::drawHighlight(int_t x0, int_t y0, int_t x1, int_t y1, int_t t1)
 {
     // Craft_Highlight_L: three 3 px rings, dark / pale green / mid green.
-    const int_t rings[3] = { 0xff2a3128, 0xffa1b29d, 0xff434f41 };
+    const int_t rings[3] = { static_cast<int_t>(0xff2a3128u), static_cast<int_t>(0xffa1b29du), static_cast<int_t>(0xff434f41u) };
     for (int_t i = 0; i < 3; ++i)
     {
         const int_t a = i * t1;
@@ -901,3 +904,5 @@ void XboxCraftingScreen::drawScreen(int_t, int_t, float_t)
 
     drawHints();
 }
+
+#endif // XBOX_PLATFORM || PS2_PLATFORM
