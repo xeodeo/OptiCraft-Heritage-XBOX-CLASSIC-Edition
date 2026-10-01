@@ -278,8 +278,13 @@ void GuiMainMenu::initGui()
         else if (month == 1  && day == 1)  splashText = "Happy new year!";
     }
 
+#if !(PLATFORM_XBOX || PLATFORM_PS2)
+    // Minecraft 1.2.5 only runs the music timer while a world is loaded (see
+    // PlayerController::onUpdate). Xbox and PS2 keep that original behaviour:
+    // the menu plays the startup theme and then stays quiet.
     if (mc != nullptr && mc->sndManager != nullptr)
         mc->sndManager->playRandomMusicIfReady();
+#endif
 
     StringTranslate *tr = StringTranslate::getInstance();
     if (mc->gameSettings != nullptr && mc->gameSettings->legacyUI)

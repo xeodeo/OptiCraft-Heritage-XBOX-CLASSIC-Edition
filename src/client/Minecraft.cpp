@@ -2355,11 +2355,15 @@ void Minecraft::runTick()
             ClientProfiler::tickPhase("effects", System::nanoTime() - clientPhaseStartNs);
         }
     }
+#if !(PLATFORM_XBOX || PLATFORM_PS2)
     else
     {
+        // Outside a world 1.2.5 does not advance the music timer; Xbox and PS2
+        // keep that, so only GuiMainMenu drives it on the other platforms.
         if (sndManager != nullptr)
             sndManager->playRandomMusicIfReady();
     }
+#endif
 
     systemTime = System::currentTimeMillis();
 }
@@ -2893,10 +2897,14 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
         renderEngine->setBackgroundTextureLoadingEnabled(true);
     }
 
+#if !(PLATFORM_XBOX || PLATFORM_PS2)
+    // Original behaviour on Xbox and PS2: entering a world does not force a
+    // track, the first one arrives after the usual random wait.
     if (world != nullptr && sndManager != nullptr)
     {
         sndManager->triggerMusicNow();
     }
+#endif
 
 
     systemTime = 0L;
