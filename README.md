@@ -30,6 +30,8 @@ The desktop build uses SDL2, OpenGL, and the shared platform abstraction layer. 
 
 The PS2 build uses a native platform backend with PS2SDK support, GS-specific rendering, console-aware memory policies, asynchronous asset loading, platform storage, controller input, and optional VU-assisted terrain paths.
 
+It also uses the console crafting menu written for the Xbox port (option *Console Crafting*, on by default: Square or a workbench), with the DualShock button icons, and its buttons follow the Xbox layout: Cross jump, Circle drop, Triangle inventory, Square crafting, R2 attack, L2 use, L1/R1 hotbar, L3 sneak, R3 camera.
+
 The expected USB application directory is:
 
 ```text
@@ -59,7 +61,7 @@ It provides:
 - 480p (`default.xbe`) or 720p progressive (`OptiCraft_720p.xbe`, same program; needs component video and 720p enabled in the dashboard);
 - dashboard artwork and the title name "OptiCraft by xeodeo";
 - two-player split screen with independent screens per player (second controller, START to join; Limited or Island worlds);
-- a console-style crafting menu (X, workbench) and Xbox controller icons in every menu hint;
+- a console-style crafting menu (option *Console Crafting*: X or a workbench; also available on PS2) and Xbox controller icons in every menu hint;
 - experimental multiplayer against Minecraft 1.2.5 servers (`online-mode=false`) over the console's network;
 - the OptiJuegos additions: bed respawn, creative inventory with tabs, world size Infinite / Limited / Island, Stronghold Locator and Rei Minimap waypoints;
 - a normal build and an experimental performance build (chunks generated and loaded on a background thread: `OptiCraft_exp.xbe`, `OptiCraft_exp_720p.xbe`).
