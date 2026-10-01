@@ -38,6 +38,12 @@ option(XBOX_ENABLE_SOUND "Enable the DirectSound backend" OFF)
 option(XBOX_ENABLE_NETWORK "Experimental: multiplayer over XNet TCP (Minecraft 1.2.5 servers)" OFF)
 option(XBOX_AUTOPILOT "Test build: replay a scripted controller from D:/autopilot.txt (never deployed)" OFF)
 option(XBOX_LIMIT_MEMORY "Limit the title to the retail 64 MB even on 128 MB dev kits / xemu" ON)
+option(XBOX_LTCG "Enable Link Time Code Generation (LTCG)" OFF)
+if(XBOX_LTCG AND NOT XBOX_MODERN_LINKER)
+    message(WARNING "XBOX_LTCG requires XBOX_MODERN_LINKER. Disabling XBOX_LTCG.")
+    set(XBOX_LTCG OFF)
+endif()
+
 set(MC_LOG_LEVEL "0" CACHE STRING "Unified diagnostic verbosity: 0=off, 1=info, 2=debug, 3=trace")
 set_property(CACHE MC_LOG_LEVEL PROPERTY STRINGS 0 1 2 3)
 set(XBOX_TITLE_NAME "OptiCraft by xeodeo" CACHE STRING "Title name embedded in the XBE")
@@ -76,11 +82,9 @@ add_custom_command(
 set(XBOX_RUNTIME_SOURCES
     "${XBOX_RUNTIME_DIR}/XboxEntry.cpp"
     "${XBOX_RUNTIME_DIR}/XboxCrtShim.cpp"
-    "${XBOX_RUNTIME_DIR}/XboxP3Math.c"
     "${XBOX_IMPORTS_ASM}"
 )
 # Pentium III replacements for SSE2-only UCRT math: plain x87/integer code.
-set_property(SOURCE "${XBOX_RUNTIME_DIR}/XboxP3Math.c" APPEND PROPERTY COMPILE_OPTIONS "/arch:IA32")
 
 # --- Source selection ---------------------------------------------------------
 if(XBOX_BRINGUP)
@@ -123,8 +127,16 @@ else()
     message(STATUS "Xbox build: FULL game sources")
 endif()
 
+# --- Unity Build --------------------------------------------------------------
+# Global variables must be set BEFORE add_executable()
+
 # --- Target -------------------------------------------------------------------
-add_executable(OptiCraft ${XBOX_SOURCES} ${XBOX_RUNTIME_SOURCES})
+add_library(XboxP3Math OBJECT "${XBOX_RUNTIME_DIR}/XboxP3Math.c")
+target_compile_options(XboxP3Math PRIVATE /arch:IA32 /O2 /GS- /Gy /utf-8 /wd4996)
+add_executable(OptiCraft ${XBOX_SOURCES} ${XBOX_RUNTIME_SOURCES} $<TARGET_OBJECTS:XboxP3Math>)
+
+# Target-level properties (also set for good measure)
+
 set_target_properties(OptiCraft PROPERTIES
     SUFFIX ".exe"
     CXX_STANDARD 17
@@ -133,9 +145,11 @@ set_target_properties(OptiCraft PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${XBOX_BIN_DIR}"
 )
 
+
 target_compile_options(OptiCraft PRIVATE
     $<$<COMPILE_LANGUAGE:C,CXX>:/arch:SSE>        # Pentium III: SSE, no SSE2
     $<$<COMPILE_LANGUAGE:C,CXX>:/O2>
+    $<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<STREQUAL:${XBOX_LTCG},ON>>:/GL>
     $<$<COMPILE_LANGUAGE:C,CXX>:/GS->             # no /GS cookies (no fastfail handler)
     $<$<COMPILE_LANGUAGE:C,CXX>:/Gy>
     $<$<COMPILE_LANGUAGE:C,CXX>:/utf-8>
@@ -186,6 +200,8 @@ target_include_directories(OptiCraft PRIVATE
     ${XBOX_STL_INCLUDES}
 )
 
+# Link libraries and flags (replaces the old CMAKE_CXX_LINK_EXECUTABLE override)
+
 # XDK headers (XTL.h, D3D8.h, DSound.h, XInput via XTL) conflict with the
 # Win32 SDK's <windows.h>, so only Xbox backend sources get them, appended
 # after the modern STL (see xbox_toolchain.cmake). A backend TU includes
@@ -223,6 +239,7 @@ endif()
 # --- Link ---------------------------------------------------------------------
 # Order matters: the modern CRT resolves first (its mainCRTStartup is the one
 # XboxEntry calls), XAPI supplies Win32 services, xboxkrnl comes last.
+# Use custom link command for Xbox (required for XDK libraries and /ENTRY:XboxEntry)
 set(XBOX_LINK_LIBS
     "${XBOX_MSVC_LIB_DIR}/libcmt.lib"
     "${XBOX_MSVC_LIB_DIR}/libcpmt.lib"
@@ -244,8 +261,17 @@ if(XBOX_NETLOG_HOST OR XBOX_ENABLE_NETWORK)
 endif()
 list(APPEND XBOX_LINK_LIBS "${XBOX_XDK_ROOT}/lib/xboxkrnl.lib")
 string(REPLACE ";" "\" \"" _xbox_libs_quoted "${XBOX_LINK_LIBS}")
+if(XBOX_LTCG)
+    set(XBOX_LTCG_FLAG "/LTCG")
+else()
+    set(XBOX_LTCG_FLAG "")
+endif()
 set(CMAKE_CXX_LINK_EXECUTABLE
-    "\"${CMAKE_LINKER}\" /nologo /MACHINE:I386 /FIXED:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB /ENTRY:XboxEntry /INCREMENTAL:NO /OPT:REF /MAP:<TARGET>.map /OUT:<TARGET> <OBJECTS> \"${_xbox_libs_quoted}\"")
+    "\"${CMAKE_LINKER}\" /nologo /MACHINE:I386 /FIXED:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB /ENTRY:XboxEntry /INCREMENTAL:NO /OPT:REF ${XBOX_LTCG_FLAG} /FORCE:MULTIPLE /MAP:<TARGET>.map /OUT:<TARGET> <OBJECTS> \"${_xbox_libs_quoted}\"")
+
+# --- Unity Build (manual implementation) --------------------------------------
+# CMake's built-in UNITY_BUILD doesn't work with custom CMAKE_CXX_LINK_EXECUTABLE.
+# Manually create unity_*.cxx files that #include batches of source files.
 
 # --- Post-link: PE fixups, XBE, ISO ------------------------------------------
 get_filename_component(_xbox_cl_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)

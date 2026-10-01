@@ -62,7 +62,12 @@ set(XBOX_WINSDK_VERSION "${XBOX_WINSDK_VERSION}" CACHE STRING "Windows 10 SDK ve
 set(CMAKE_C_COMPILER "${XBOX_MSVC_ROOT}/bin/Hostx64/x86/cl.exe")
 set(CMAKE_CXX_COMPILER "${XBOX_MSVC_ROOT}/bin/Hostx64/x86/cl.exe")
 set(CMAKE_ASM_MASM_COMPILER "${XBOX_MSVC_ROOT}/bin/Hostx64/x86/ml.exe")
-set(CMAKE_LINKER "${XBOX_XDK_ROOT}/bin/vc71/Link.Exe")
+option(XBOX_MODERN_LINKER "Use VS2022 link.exe instead of XDK Link.Exe" ON)
+if(XBOX_MODERN_LINKER)
+    set(CMAKE_LINKER "${XBOX_MSVC_ROOT}/bin/Hostx64/x86/link.exe")
+else()
+    set(CMAKE_LINKER "${XBOX_XDK_ROOT}/bin/vc71/Link.Exe")
+endif()
 set(CMAKE_AR "${XBOX_MSVC_ROOT}/bin/Hostx64/x86/lib.exe")
 # CMake's Windows platform module requires an RC compiler even though no .rc
 # file is built; the SDK's rc.exe satisfies it. The manifest tool is unused.
