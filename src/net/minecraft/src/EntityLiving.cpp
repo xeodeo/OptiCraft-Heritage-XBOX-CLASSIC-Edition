@@ -111,6 +111,7 @@ EntityLiving::EntityLiving(World *world)
 	prevSwingProgress = 0.0f;
 	swingProgress = 0.0f;
 	livingSoundTime = 0;
+	insideBlockTicks = 0;
 	hurtTime = 0;
 	maxHurtTime = 0;
 	attackedAtYaw = 0.0f;
@@ -630,6 +631,24 @@ void EntityLiving::onEntityUpdate()
 #endif
 	{
 		attackEntityFrom(DamageSource::inWall, 1);
+#if PLATFORM_XBOX
+		// A mob (never the player) stuck in solid ground for two seconds was
+		// buried, e.g. placed while its chunk was still coming in. Lift it to
+		// the top of its column; stuck, each one also cost ~12 ms a tick.
+		if (!isPlayer() && !worldObj->multiplayerWorld && ++insideBlockTicks > 40)
+		{
+			insideBlockTicks = 0;
+			const int_t bx = MathHelper::floor_double(posX);
+			const int_t bz = MathHelper::floor_double(posZ);
+			const int_t top = worldObj->getTopSolidOrLiquidBlock(bx, bz);
+			if (top > 0)
+				setPosition(posX, static_cast<double>(top), posZ);
+		}
+	}
+	else
+	{
+		insideBlockTicks = 0;
+#endif
 	}
 	if (immuneToFire || worldObj->multiplayerWorld)
 	{

@@ -238,6 +238,9 @@ public:
 	int_t  prevHealth;
 private:
 	int_t  livingSoundTime;
+	// Xbox: ticks spent inside a solid block (a mob buried by a chunk that
+	// came in late is lifted to the surface after a while; see onEntityUpdate).
+	int_t  insideBlockTicks;
 public:
 	int_t  hurtTime;
 	int_t  maxHurtTime;
