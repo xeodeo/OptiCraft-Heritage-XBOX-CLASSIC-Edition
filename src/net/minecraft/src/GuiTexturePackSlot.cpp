@@ -7,6 +7,7 @@
 #include "Minecraft.h"
 #include "Tessellator.h"
 #include "platform/RenderAPI.h"
+#include "platform/PlatformConfig.h"
 
 GuiTexturePackSlot::GuiTexturePackSlot(GuiTexturePacks *guitexturepacks)
 	: GuiSlot(guitexturepacks->mc, guitexturepacks->width, guitexturepacks->height, 32, (guitexturepacks->height - 55) + 4, 36)
@@ -28,8 +29,14 @@ void GuiTexturePackSlot::elementClicked(int_t i, bool flag)
 
 bool GuiTexturePackSlot::isSelected(int_t i)
 {
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+	// With the pad the box follows the highlighted row; the pack in use has a
+	// yellow name (drawSlot).
+	return i == parentTexturePackGui->controllerIndex;
+#else
 	const auto &list = parentTexturePackGui->mc->texturePackList->getAvailableTexturePacks();
 	return parentTexturePackGui->mc->texturePackList->getSelectedTexturePack() == list[i];
+#endif
 }
 
 int_t GuiTexturePackSlot::getContentHeight()
@@ -55,7 +62,8 @@ void GuiTexturePackSlot::drawSlot(int_t i, int_t x, int_t y, int_t h, Tessellato
 	tess->addVertexWithUV(x + 32, y,     0.0, 1.0, 0.0);
 	tess->addVertexWithUV(x,      y,     0.0, 0.0, 0.0);
 	tess->draw();
-	parentTexturePackGui->drawString(parentTexturePackGui->fontRenderer, texturepackbase->texturePackFileName,    x + 32 + 2, y + 1,       0xffffff);
+	const bool inUse = parentTexturePackGui->mc->texturePackList->getSelectedTexturePack() == texturepackbase;
+	parentTexturePackGui->drawString(parentTexturePackGui->fontRenderer, texturepackbase->texturePackFileName,    x + 32 + 2, y + 1,       inUse ? 0xffff55 : 0xffffff);
 	parentTexturePackGui->drawString(parentTexturePackGui->fontRenderer, texturepackbase->firstDescriptionLine,  x + 32 + 2, y + 12,      0x808080);
 	parentTexturePackGui->drawString(parentTexturePackGui->fontRenderer, texturepackbase->secondDescriptionLine, x + 32 + 2, y + 12 + 10, 0x808080);
 }

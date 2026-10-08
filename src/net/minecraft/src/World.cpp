@@ -4789,8 +4789,13 @@ void World::tick()
     if (i != skylightSubtracted)
     {
         skylightSubtracted = i;
+#if !PLATFORM_XBOX
         for (size_t j = 0; j < worldAccesses.size(); j++)
             worldAccesses[j]->updateAllRenderers();
+#endif
+        // Xbox: as in 1.2.5, the lightmap darkens the sky light at draw time
+        // (RenderAPI_D3D8_XBOX.cpp), so dusk and dawn no longer rebuild every
+        // chunk section about eleven times.
     }
 #if PLATFORM_PROFILE_RENDER_PHASES
     platformProfileTickPhase("skylightChange", System::nanoTime() - platformPhaseStartNs);
@@ -5475,6 +5480,14 @@ void World::randomDisplayUpdates(int x, int y, int z)
             const float_t particleX = rand.nextFloat();
             const float_t particleY = rand.nextFloat();
             const float_t particleZ = rand.nextFloat();
+#if PLATFORM_XBOX
+            // Void particles near bedrock: one in eight on the Xbox (each is a
+            // live entity to tick and draw). A plain counter, so the world's
+            // random sequence is the same as before.
+            static unsigned voidParticleCounter = 0;
+            if ((++voidParticleCounter & 7) != 0)
+                continue;
+#endif
             spawnParticle("depthsuspend",
                 static_cast<double>(static_cast<float_t>(randX) + particleX),
                 static_cast<double>(static_cast<float_t>(randY) + particleY),

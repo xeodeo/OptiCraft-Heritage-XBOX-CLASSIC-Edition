@@ -17,6 +17,7 @@ public:
 	void initGui() override;
 	void updateScreen() override;
 	void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
+	void handleSpecializedMenuInput() override;
 
 protected:
 	void actionPerformed(GuiButton *button) override;
@@ -28,6 +29,8 @@ protected:
 
 private:
 	int_t field_6454_o;
+	// Console pad: the highlighted row (D-pad up/down moves it, A applies it).
+	int_t controllerIndex;
 	std::string fileLocation;
 	GuiTexturePackSlot *guiTexturePackSlot;
 };

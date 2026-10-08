@@ -27,6 +27,7 @@ enum LegacyVideoButtonId
     BUTTON_DEFLICKER = 307,
     BUTTON_FRAME_CAP = 308,
     BUTTON_COORDINATES = 309,
+    BUTTON_FULLBRIGHT = 310,
     BUTTON_DONE = 399
 };
 
@@ -36,7 +37,7 @@ LegacyVideoOptions::LegacyVideoOptions(GuiScreen *parent, GameSettings *settings
     LegacyOptionsBackgroundMode backgroundModeValue)
     : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), graphicsCheckbox(nullptr), smoothLightingCheckbox(nullptr),
       viewBobbingCheckbox(nullptr), cloudsCheckbox(nullptr), fogCheckbox(nullptr), deflickerCheckbox(nullptr),
-      frameCapCheckbox(nullptr), coordinatesCheckbox(nullptr)
+      frameCapCheckbox(nullptr), coordinatesCheckbox(nullptr), fullbrightCheckbox(nullptr)
 {
 }
 
@@ -46,6 +47,8 @@ void LegacyVideoOptions::initGui()
     const int_t rowCount = 7;
 #elif PLATFORM_PS2
     const int_t rowCount = 6;
+#elif PLATFORM_XBOX
+    const int_t rowCount = 11;
 #else
     const int_t rowCount = 8;
 #endif
@@ -99,8 +102,12 @@ void LegacyVideoOptions::initGui()
         uiText("30 FPS Limit"), settings->limitFramerate == 2);
     coordinatesCheckbox = new LegacyOptionCheckbox(BUTTON_COORDINATES, x, legacyLayout.rowY(row++), w, h,
         uiText("Show Coordinates"), settings->showCoordinates);
+    // Without Minecraft's light: no night or cave darkness, as before 1.3.
+    fullbrightCheckbox = new LegacyOptionCheckbox(BUTTON_FULLBRIGHT, x, legacyLayout.rowY(row++), w, h,
+        uiText("Fullbright"), settings->fullbright);
     controlList.push_back(frameCapCheckbox);
     controlList.push_back(coordinatesCheckbox);
+    controlList.push_back(fullbrightCheckbox);
 #endif
 
     controlList.push_back(new LegacyOptionSlider(BUTTON_RENDER_DISTANCE, x, legacyLayout.rowY(row++), w, h,
@@ -125,6 +132,8 @@ void LegacyVideoOptions::syncCheckboxes()
         frameCapCheckbox->setChecked(settings->limitFramerate == 2);
     if (coordinatesCheckbox != nullptr)
         coordinatesCheckbox->setChecked(settings->showCoordinates);
+    if (fullbrightCheckbox != nullptr)
+        fullbrightCheckbox->setChecked(settings->fullbright);
 }
 
 void LegacyVideoOptions::actionPerformed(GuiButton *button)
@@ -170,6 +179,11 @@ void LegacyVideoOptions::actionPerformed(GuiButton *button)
         return;
     case BUTTON_COORDINATES:
         settings->showCoordinates = !settings->showCoordinates;
+        settings->saveOptions();
+        syncCheckboxes();
+        return;
+    case BUTTON_FULLBRIGHT:
+        settings->fullbright = !settings->fullbright;
         settings->saveOptions();
         syncCheckboxes();
         return;

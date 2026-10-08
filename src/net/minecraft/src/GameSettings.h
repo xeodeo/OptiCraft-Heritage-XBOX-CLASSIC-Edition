@@ -79,6 +79,9 @@ public:
 	bool dolbyDigital;
 	// Console HUD: one small line with the player position and facing.
 	bool showCoordinates;
+	// Xbox: draw without Minecraft's light (no night or cave darkness), as the
+	// port did before it had the lightmap.
+	bool fullbright;
 	int_t renderDistance;
 	bool viewBobbing;
 	bool anaglyph;

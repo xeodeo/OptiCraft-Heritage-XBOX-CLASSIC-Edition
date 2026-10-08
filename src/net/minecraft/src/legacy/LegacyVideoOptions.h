@@ -27,7 +27,8 @@ private:
     LegacyOptionCheckbox *fogCheckbox;
     // Wii only: the EFB->XFB deflicker filter; null elsewhere.
     LegacyOptionCheckbox *deflickerCheckbox;
-    // Xbox only: 30 FPS cap and the coordinates HUD line; null elsewhere.
+    // Xbox only: 30 FPS cap, the coordinates HUD line and Fullbright; null elsewhere.
     LegacyOptionCheckbox *frameCapCheckbox;
     LegacyOptionCheckbox *coordinatesCheckbox;
+    LegacyOptionCheckbox *fullbrightCheckbox;
 };

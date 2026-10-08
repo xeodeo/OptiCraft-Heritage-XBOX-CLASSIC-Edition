@@ -9,6 +9,12 @@
 #include <iostream>
 #include "TexturePackDefault.h"
 #include "TexturePackCustom.h"
+#if defined(XBOX_PLATFORM)
+#include "TexturePackFolder.h"
+#include "TexturePackPak.h"
+#include "java/File.h"
+#include <memory>
+#endif
 #include "Minecraft.h"
 #include "GameSettings.h"
 #include "java/String.h"
@@ -107,6 +113,51 @@ void TexturePackList::updateAvailableTexturePacks()
 			{
 				MC_LOG_ERROR("game", "%s\n", ioexception.what());
 			}
+		}
+	}
+#elif defined(XBOX_PLATFORM)
+	// Xbox: packs in texturepacks\ next to the game's XBE, either one .pak
+	// file each (scripts/make_pak.py on the pack's folder; one file to copy
+	// and open) or an unzipped folder (D:\texturepacks\<name>\terrain.png,
+	// gui\items.png, ...). What a pack lacks comes from the game's own data.
+	std::unique_ptr<File> packRoot(File::open(jstring("D:\\texturepacks")));
+	if (packRoot != nullptr && packRoot->isDirectory())
+	{
+		for (std::unique_ptr<File> &entry : packRoot->listFiles())
+		{
+			if (entry == nullptr)
+				continue;
+			const std::string name = entry->getName();
+			const jstring lowerName = String::toLowerCaseJava(jstring(name));
+			const bool isPak = lowerName.size() > 4 && lowerName.compare(lowerName.size() - 4, 4, ".pak") == 0;
+			if (!entry->isDirectory() && !isPak)
+				continue;
+			const std::string key = (isPak ? "pak:" : "folder:") + name;
+			auto it = soundPool.find(key);
+			if (it == soundPool.end())
+			{
+				TexturePackBase *pack = nullptr;
+				if (isPak)
+				{
+					TexturePackPak *pakPack = new TexturePackPak(entry->toString());
+					if (!pakPack->isValid())
+					{
+						delete pakPack;
+						continue;
+					}
+					pack = pakPack;
+				}
+				else
+				{
+					pack = new TexturePackFolder(entry.release());
+				}
+				pack->texturePackFolder = key;
+				pack->getTexturePackFolder(mc);
+				it = soundPool.emplace(key, pack).first;
+			}
+			if (it->second->texturePackFileName == currentTexturePack)
+				selectedTexturePack = it->second;
+			arraylist.push_back(it->second);
 		}
 	}
 #endif

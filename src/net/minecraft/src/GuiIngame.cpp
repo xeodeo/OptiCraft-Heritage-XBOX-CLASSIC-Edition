@@ -34,6 +34,7 @@
 #include "FontRenderer.h"
 #include "MathHelper.h"
 #include "GuiChat.h"
+#include "GuiIngameMenu.h"
 #include "ChatLine.h"
 #include "ChatClickData.h"
 #include "Tessellator.h"
@@ -820,6 +821,14 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 	// Las entidades pueden dejar GL_BLEND, GL_COLOR, matriz de textura o blend func
 	// en un estado no apto para 2D. Reiniciar aca evita hotbar verde/transparente.
 	resetOverlayGLState();
+
+#if PLATFORM_XBOX
+	// The pause menu's lower buttons sit over the hotbar, hearts and food;
+	// only their dimmed edges showed between the buttons. Like the console
+	// editions, the HUD is hidden while the game is paused.
+	if (dynamic_cast<GuiIngameMenu *>(mc->currentScreen) != nullptr)
+		return;
+#endif
 
 	renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	renderBindTexture(mc->renderEngine->getTexture("/gui/gui.png"));

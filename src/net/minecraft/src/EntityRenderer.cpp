@@ -548,6 +548,12 @@ void EntityRenderer::enableLightmap(double)
 #else
     if (lightmapTexture < 0)
         return;
+#if PLATFORM_XBOX
+    // Fullbright option: leave the lightmap unit off, so everything is drawn
+    // at full light.
+    if (mc->gameSettings->fullbright)
+        return;
+#endif
     OpenGlHelper::setActiveTexture(OpenGlHelper::lightmapTexUnit);
     renderMatrixMode(RenderMatrixMode::Texture);
     renderLoadIdentity();

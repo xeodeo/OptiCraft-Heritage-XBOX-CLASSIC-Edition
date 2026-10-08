@@ -145,6 +145,7 @@ target_compile_options(OptiCraft PRIVATE
     $<$<COMPILE_LANGUAGE:C,CXX>:/O2>
     $<$<COMPILE_LANGUAGE:C,CXX>:/GS->             # no /GS cookies (no fastfail handler)
     $<$<COMPILE_LANGUAGE:C,CXX>:/Gy>
+    $<$<COMPILE_LANGUAGE:C,CXX>:/Gw>              # globals in their own COMDATs: /OPT:REF drops unused ones
     $<$<COMPILE_LANGUAGE:C,CXX>:/utf-8>
     $<$<COMPILE_LANGUAGE:CXX>:/EHsc>
     $<$<COMPILE_LANGUAGE:CXX>:/GR>
@@ -253,7 +254,7 @@ endif()
 list(APPEND XBOX_LINK_LIBS "${XBOX_XDK_ROOT}/lib/xboxkrnl.lib")
 string(REPLACE ";" "\" \"" _xbox_libs_quoted "${XBOX_LINK_LIBS}")
 set(CMAKE_CXX_LINK_EXECUTABLE
-    "\"${CMAKE_LINKER}\" /nologo /MACHINE:I386 /FIXED:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB /ENTRY:XboxEntry /INCREMENTAL:NO /OPT:REF /MAP:<TARGET>.map /OUT:<TARGET> <OBJECTS> \"${_xbox_libs_quoted}\"")
+    "\"${CMAKE_LINKER}\" /nologo /MACHINE:I386 /FIXED:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB /ENTRY:XboxEntry /INCREMENTAL:NO /OPT:REF /OPT:ICF /MAP:<TARGET>.map /OUT:<TARGET> <OBJECTS> \"${_xbox_libs_quoted}\"")
 
 # --- Post-link: PE fixups, XBE, ISO ------------------------------------------
 get_filename_component(_xbox_cl_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)

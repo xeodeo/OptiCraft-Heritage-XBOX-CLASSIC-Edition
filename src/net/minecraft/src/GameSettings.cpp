@@ -97,6 +97,7 @@ void GameSettings::setDefaults()
     invertMouse = false;
     dolbyDigital = false;
     showCoordinates = false;
+    fullbright = false;
     renderDistance = 0;
     particleSetting = 0;
     fovSetting = 0.0f;

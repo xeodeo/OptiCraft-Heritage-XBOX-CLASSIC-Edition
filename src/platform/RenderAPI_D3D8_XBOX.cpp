@@ -17,8 +17,11 @@
 //    position, float2 UV, RGBA8 color) to one FVF and use DrawVerticesUP.
 //  * Display lists record commands (GL_COMPILE semantics: not executed while
 //    recording) and replay them; draws inside a list keep a copy of the data.
-//  * Fixed-function lighting is left off: the terrain and GUI bake brightness
-//    into vertex colors; entity shading is a later refinement.
+//  * Fixed-function lighting is left off. Minecraft's own light (sky and block
+//    light per vertex, day/night and the Brightness gamma) is the lightmap, a
+//    16x16 texture on GL texture unit 1: it goes to texture stage 1 here,
+//    addressed by each vertex's light value or, for entities, by the constant
+//    coordinate the game sets (see applyLightmapStage).
 #ifdef XBOX_PLATFORM
 
 #include "platform/RenderAPI.h"
@@ -115,10 +118,16 @@ bool s_defaultsApplied = false;
 bool s_texture2D = false;
 int s_boundTexture = 0;
 // GL texture unit selected by renderSetActiveTextureUnit (0x84C0 = unit 0).
-// Only unit 0 exists here; unit 1 is the desktop lightmap, which the Xbox
-// path does not use, so its enable/disable/bind calls must not touch unit 0.
+// Unit 1 is the lightmap: its enable/disable/bind calls drive texture stage 1
+// (applyLightmapStage) and must not touch unit 0.
 int s_activeTextureUnit = 0;
 int s_boundOtherUnit = 0;  // texture bound while a unit other than 0 was active
+bool s_lightmapOn = false;  // GL_TEXTURE_2D enabled on unit 1
+// Unit 1 coordinate set by renderSetMultiTextureCoord (OpenGlHelper::
+// setLightmapTextureCoords): the light of an entity, tile entity or the held
+// item, as raw 0..240 block/sky values. Full light until the game sets one.
+float s_lightU = 240.0f;
+float s_lightV = 240.0f;
 
 // Texture that uploads/parameters apply to: the one bound on the active unit.
 int uploadTarget()
@@ -603,23 +612,36 @@ bool recordIfCompiling(F&& command)
 // ---------------------------------------------------------------------------
 // Vertex conversion
 // ---------------------------------------------------------------------------
+// lu/lv: lightmap coordinate (texture stage 1), already in 0..1.
 struct XboxVertex
 {
     float x, y, z;
     DWORD color;
     float u, v;
+    float lu, lv;
 };
-const DWORD kXboxVertexFvf = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1;
+const DWORD kXboxVertexFvf = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2;
+
+// Lightmap coordinate of a raw 0..240 light value, as GL's unit-1 texture
+// matrix makes it (EntityRenderer::enableLightmap): (value + 8) / 256, the
+// centre of the light level's texel.
+inline float lightmapCoord(float value)
+{
+    return (value + 8.0f) * (1.0f / 256.0f);
+}
 
 // Compact layout for display lists kept in vertex buffers (all terrain):
-// 16 bytes instead of 24. Chunk sections are built in section-local
+// 16 bytes instead of 32. Chunk sections are built in section-local
 // coordinates, so positions fit a short at 1/1024 of a block (error below
 // 1/2000 block, far under a texel) and atlas UVs a normalized short (error
 // 1/65000, well inside the atlas' texel inset). The world transform scales
-// positions back. Meshes whose values do not fit keep the 24-byte layout.
+// positions back. The lightmap coordinate rides in two normalized bytes where
+// a position w used to be (SHORT3 expands w to 1 by itself). Meshes whose
+// values do not fit keep the 32-byte layout.
 struct XboxCompactVertex
 {
-    short x, y, z, w;   // w = 1
+    short x, y, z;
+    unsigned char lu, lv;
     DWORD color;
     short u, v;
 };
@@ -644,7 +666,8 @@ DWORD compactShader(IDirect3DDevice8* d)
         s_compactShaderTried = true;
         const DWORD decl[] = {
             D3DVSD_STREAM(0),
-            D3DVSD_REG(D3DVSDE_POSITION, D3DVSDT_SHORT4),
+            D3DVSD_REG(D3DVSDE_POSITION, D3DVSDT_SHORT3),
+            D3DVSD_REG(D3DVSDE_TEXCOORD1, D3DVSDT_PBYTE2),
             D3DVSD_REG(D3DVSDE_DIFFUSE, D3DVSDT_D3DCOLOR),
             D3DVSD_REG(D3DVSDE_TEXCOORD0, D3DVSDT_NORMSHORT2),
             D3DVSD_END()
@@ -698,6 +721,12 @@ short quantize(float value, float scale)
     return static_cast<short>(q >= 0.0f ? q + 0.5f : q - 0.5f);
 }
 
+unsigned char quantizeUnit(float value)
+{
+    const float q = value * 255.0f + 0.5f;
+    return static_cast<unsigned char>(q <= 0.0f ? 0.0f : (q >= 255.0f ? 255.0f : q));
+}
+
 void writeCompact(const XboxVertex* in, int count, XboxCompactVertex* out)
 {
     for (int i = 0; i < count; ++i)
@@ -706,7 +735,8 @@ void writeCompact(const XboxVertex* in, int count, XboxCompactVertex* out)
         c.x = quantize(in[i].x, kCompactPositionScale);
         c.y = quantize(in[i].y, kCompactPositionScale);
         c.z = quantize(in[i].z, kCompactPositionScale);
-        c.w = 1;
+        c.lu = quantizeUnit(in[i].lu);
+        c.lv = quantizeUnit(in[i].lv);
         c.color = in[i].color;
         c.u = quantize(in[i].u, 32767.0f);
         c.v = quantize(in[i].v, 32767.0f);
@@ -790,6 +820,129 @@ void convertVertices(const RenderInterleavedMesh& mesh, XboxVertex* out)
         {
             v.u = v.v = 0.0f;
         }
+        if (mesh.hasBrightness)
+        {
+            // Block light in the low 16 bits, sky light in the high 16 (GL
+            // reads them as the two shorts of the unit-1 coordinate).
+            const unsigned char* b = src + mesh.brightnessOffset;
+            const short block = static_cast<short>(b[0] | (b[1] << 8));
+            const short sky = static_cast<short>(b[2] | (b[3] << 8));
+            v.lu = lightmapCoord(block);
+            v.lv = lightmapCoord(sky);
+        }
+        else
+        {
+            v.lu = lightmapCoord(s_lightU);
+            v.lv = lightmapCoord(s_lightV);
+        }
+    }
+}
+
+// Texture stage 1 = the lightmap, multiplied over stage 0's result. Vertices
+// either carry their own lightmap coordinate (texture coordinate set 1:
+// terrain, and every immediate draw, which gets the current coordinate baked
+// in) or, for meshes recorded without one (entity and item models replayed
+// from display lists), take the current coordinate at playback: camera-space
+// texgen through a matrix that keeps only its translation.
+enum class LightSource
+{
+    PerVertex,
+    Constant,
+};
+float s_sentConstU = -1.0f, s_sentConstV = -1.0f;
+
+// The lightmap changes every tick (torch flicker, day/night). Locking the one
+// texture the GPU is still reading from the previous frame stalls the CPU
+// until the GPU catches up, so each update goes to the next of three
+// textures instead; by the time one comes round again the GPU is done with it.
+constexpr int kLightmapRing = 3;
+IDirect3DTexture8* s_lightmapRing[kLightmapRing] = {};
+int s_lightmapRingSize = 0;     // edge of the ring textures (power of two)
+int s_lightmapCurrent = -1;     // ring slot holding the newest upload
+
+IDirect3DTexture8* lightmapTexture(IDirect3DDevice8* d, Texture& t)
+{
+    if (t.pixels.empty() || t.width != t.height || !isPowerOfTwo(t.width))
+    {
+        // Not the 16x16 lightmap shape: plain upload path.
+        if (t.dirty || (!t.d3d && !t.pixels.empty()))
+            swizzleUpload(t);
+        return t.d3d;
+    }
+    if (s_lightmapRingSize != t.width)
+    {
+        for (IDirect3DTexture8*& tex : s_lightmapRing)
+        {
+            if (tex) tex->Release();
+            tex = nullptr;
+        }
+        for (IDirect3DTexture8*& tex : s_lightmapRing)
+            d->CreateTexture(t.width, t.height, 1, 0, D3DFMT_A8R8G8B8, 0, &tex);
+        s_lightmapRingSize = t.width;
+        s_lightmapCurrent = -1;
+    }
+    if (t.dirty || s_lightmapCurrent < 0)
+    {
+        const int next = (s_lightmapCurrent + 1) % kLightmapRing;
+        D3DLOCKED_RECT locked;
+        if (s_lightmapRing[next] && SUCCEEDED(s_lightmapRing[next]->LockRect(0, &locked, NULL, 0)))
+        {
+            XGSwizzleRect(t.pixels.data(), t.width * 4, NULL, locked.pBits, t.width, t.height, NULL, 4);
+            _mm_empty();   // the swizzler is MMX code (see swizzleUpload)
+            s_lightmapRing[next]->UnlockRect(0);
+            s_lightmapCurrent = next;
+        }
+        t.dirty = false;
+    }
+    return s_lightmapCurrent >= 0 ? s_lightmapRing[s_lightmapCurrent] : nullptr;
+}
+
+void applyLightmapStage(IDirect3DDevice8* d, LightSource source)
+{
+    IDirect3DTexture8* lightmap = nullptr;
+    if (s_lightmapOn && s_boundOtherUnit > 0)
+    {
+        auto it = s_textures.find(s_boundOtherUnit);
+        if (it != s_textures.end())
+            lightmap = lightmapTexture(d, it->second);
+    }
+    if (!lightmap)
+    {
+        setTss(d, 1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+        setTss(d, 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+        return;
+    }
+    setTex(d, 1, lightmap);
+    setTss(d, 1, D3DTSS_MINFILTER, D3DTEXF_LINEAR);
+    setTss(d, 1, D3DTSS_MAGFILTER, D3DTEXF_LINEAR);
+    setTss(d, 1, D3DTSS_MIPFILTER, D3DTEXF_NONE);
+    setTss(d, 1, D3DTSS_ADDRESSU, D3DTADDRESS_CLAMP);
+    setTss(d, 1, D3DTSS_ADDRESSV, D3DTADDRESS_CLAMP);
+    setTss(d, 1, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    setTss(d, 1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    setTss(d, 1, D3DTSS_COLORARG2, D3DTA_CURRENT);
+    setTss(d, 1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+    setTss(d, 1, D3DTSS_ALPHAARG1, D3DTA_CURRENT);
+    if (source == LightSource::PerVertex)
+    {
+        setTss(d, 1, D3DTSS_TEXCOORDINDEX, 1);
+        setTss(d, 1, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
+        return;
+    }
+    setTss(d, 1, D3DTSS_TEXCOORDINDEX, D3DTSS_TCI_CAMERASPACEPOSITION);
+    setTss(d, 1, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
+    const float u = lightmapCoord(s_lightU);
+    const float v = lightmapCoord(s_lightV);
+    if (u != s_sentConstU || v != s_sentConstV)
+    {
+        s_sentConstU = u;
+        s_sentConstV = v;
+        D3DMATRIX m;
+        std::memset(&m, 0, sizeof(m));
+        m._41 = u;   // (x, y, z, 1) * m = (u, v)
+        m._42 = v;
+        m._44 = 1.0f;
+        d->SetTransform(D3DTS_TEXTURE1, &m);
     }
 }
 
@@ -800,6 +953,7 @@ void submitVertices(RenderPrimitive primitive, const XboxVertex* vertices, int c
 
     applyMatrices();
     applyTextureStage();
+    applyLightmapStage(d, LightSource::PerVertex);
     setWorldCompact(d, false);
     setVs(d, kXboxVertexFvf);
 
@@ -898,7 +1052,7 @@ long s_recordedBytes = 0;
 // that gets a pool of its own. A freed range is tagged with a GPU fence and
 // only reused once the GPU has passed it.
 constexpr UINT kVertexPoolBytes = 512 * 1024;
-constexpr UINT kVertexGranule = 96;   // multiple of both vertex sizes (24, 16), 32-byte aligned
+constexpr UINT kVertexGranule = 96;   // multiple of the vertex sizes (32, 16, 12), 32-byte aligned
 
 struct VertexPool
 {
@@ -1073,6 +1227,7 @@ struct RecordedMesh
     long bytes = 0;
     RenderPrimitive primitive = RenderPrimitive::Triangles;
     bool usesCurrentColor = false;
+    bool hasLight = false;   // per-vertex lightmap coordinate; else the current one
 };
 
 void drawRecorded(const RecordedMesh& mesh)
@@ -1089,6 +1244,9 @@ void drawRecorded(const RecordedMesh& mesh)
         applyTextureStage(mesh.usesCurrentColor);
         if (mesh.usesCurrentColor)
             setRs(d, D3DRS_TEXTUREFACTOR, s_currentColor);
+        // The colourless compact layout has no lightmap coordinate.
+        applyLightmapStage(d, mesh.hasLight && !mesh.usesCurrentColor ? LightSource::PerVertex
+                                                                      : LightSource::Constant);
         const bool compact = mesh.stride != sizeof(XboxVertex);
         setWorldCompact(d, compact);
         setVs(d, !compact ? kXboxVertexFvf : mesh.usesCurrentColor ? s_compactNoColorShader : s_compactShader);
@@ -1100,17 +1258,26 @@ void drawRecorded(const RecordedMesh& mesh)
         return;
     }
     const int count = static_cast<int>(mesh.vertices.size());
-    if (!mesh.usesCurrentColor)
+    if (!mesh.usesCurrentColor && mesh.hasLight)
     {
         submitVertices(mesh.primitive, mesh.vertices.data(), count);
         return;
     }
     if (static_cast<int>(s_scratch.size()) < count)
         s_scratch.resize(static_cast<size_t>(count));
+    const float lu = lightmapCoord(s_lightU);
+    const float lv = lightmapCoord(s_lightV);
     for (int i = 0; i < count; ++i)
     {
-        s_scratch[static_cast<size_t>(i)] = mesh.vertices[static_cast<size_t>(i)];
-        s_scratch[static_cast<size_t>(i)].color = s_currentColor;
+        XboxVertex& v = s_scratch[static_cast<size_t>(i)];
+        v = mesh.vertices[static_cast<size_t>(i)];
+        if (mesh.usesCurrentColor)
+            v.color = s_currentColor;
+        if (!mesh.hasLight)
+        {
+            v.lu = lu;
+            v.lv = lv;
+        }
     }
     submitVertices(mesh.primitive, s_scratch.data(), count);
 }
@@ -1127,7 +1294,10 @@ void renderEnable(RenderCapability capability)
     if (!d) return;
     switch (capability)
     {
-        case RenderCapability::Texture2D: if (s_activeTextureUnit == 0) s_texture2D = true; break;
+        case RenderCapability::Texture2D:
+            if (s_activeTextureUnit == 0) s_texture2D = true;
+            else s_lightmapOn = true;
+            break;
         case RenderCapability::AlphaTest: setRs(d, D3DRS_ALPHATESTENABLE, TRUE); break;
         case RenderCapability::Blend: setRs(d, D3DRS_ALPHABLENDENABLE, TRUE); break;
         case RenderCapability::CullFace: s_cullEnabled = true; applyCull(); break;
@@ -1144,7 +1314,10 @@ void renderDisable(RenderCapability capability)
     if (!d) return;
     switch (capability)
     {
-        case RenderCapability::Texture2D: if (s_activeTextureUnit == 0) s_texture2D = false; break;
+        case RenderCapability::Texture2D:
+            if (s_activeTextureUnit == 0) s_texture2D = false;
+            else s_lightmapOn = false;
+            break;
         case RenderCapability::AlphaTest: setRs(d, D3DRS_ALPHATESTENABLE, FALSE); break;
         case RenderCapability::Blend: setRs(d, D3DRS_ALPHABLENDENABLE, FALSE); break;
         case RenderCapability::CullFace: s_cullEnabled = false; applyCull(); break;
@@ -1220,14 +1393,21 @@ void renderColor3f(float r, float g, float b)
 
 void renderNormal3f(float, float, float) {}
 
-// Single texture unit on this backend; the lightmap unit is unused by Beta.
+// Unit 0 is the texture, unit 1 the lightmap (texture stage 1).
 void renderSetActiveTextureUnit(int textureUnit)
 {
     if (recordIfCompiling([textureUnit] { renderSetActiveTextureUnit(textureUnit); })) return;
     s_activeTextureUnit = textureUnit >= 0x84C0 ? textureUnit - 0x84C0 : textureUnit;
 }
 void renderSetClientActiveTextureUnit(int) {}
-void renderSetMultiTextureCoord(int, float, float) {}
+void renderSetMultiTextureCoord(int textureUnit, float u, float v)
+{
+    if (recordIfCompiling([textureUnit, u, v] { renderSetMultiTextureCoord(textureUnit, u, v); })) return;
+    const int unit = textureUnit >= 0x84C0 ? textureUnit - 0x84C0 : textureUnit;
+    if (unit != 1) return;
+    s_lightU = u;
+    s_lightV = v;
+}
 void renderSetLightmapColors(const std::uint32_t*, int) {}
 
 // ===========================================================================
@@ -1439,6 +1619,7 @@ void renderDeleteTextures(int count, const int* textures)
             if (IDirect3DDevice8* d = device())
             {
                 if (s_boundTexture == textures[i]) setTex(d, 0, NULL);
+                if (s_boundOtherUnit == textures[i]) setTex(d, 1, NULL);
                 s_stageValid = false;
             }
             it->second.d3d->Release();
@@ -1596,6 +1777,7 @@ bool renderDrawInterleaved(const RenderInterleavedMesh& mesh)
         auto recorded = std::make_shared<RecordedMesh>();
         recorded->primitive = mesh.primitive;
         recorded->usesCurrentColor = !mesh.hasColor;
+        recorded->hasLight = mesh.hasBrightness;
         const int count = mesh.count + (loop ? 1 : 0);
         int pool = -1;
         UINT offset = 0;
@@ -1692,6 +1874,8 @@ bool renderDrawCaptured(const RenderCapturedMesh& mesh)
     view.texCoordOffset = mesh.texCoordOffset;
     view.hasColor = mesh.hasColor;
     view.colorOffset = mesh.colorOffset;
+    view.hasBrightness = mesh.hasBrightness;
+    view.brightnessOffset = mesh.brightnessOffset;
     return renderDrawInterleaved(view);
 }
 
