@@ -34,7 +34,6 @@
 #include "FontRenderer.h"
 #include "MathHelper.h"
 #include "GuiChat.h"
-#include "GuiIngameMenu.h"
 #include "ChatLine.h"
 #include "ChatClickData.h"
 #include "Tessellator.h"
@@ -823,10 +822,11 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 	resetOverlayGLState();
 
 #if PLATFORM_XBOX
-	// The pause menu's lower buttons sit over the hotbar, hearts and food;
-	// only their dimmed edges showed between the buttons. Like the console
-	// editions, the HUD is hidden while the game is paused.
-	if (dynamic_cast<GuiIngameMenu *>(mc->currentScreen) != nullptr)
+	// Menus (pause, death, inventory, crafting...) sit over the hotbar,
+	// hearts and food, and only their dimmed edges showed around them. Like
+	// the console editions, the HUD is hidden while a menu is open; chat is
+	// the exception, it is typed over the game.
+	if (mc->currentScreen != nullptr && dynamic_cast<GuiChat *>(mc->currentScreen) == nullptr)
 		return;
 #endif
 
