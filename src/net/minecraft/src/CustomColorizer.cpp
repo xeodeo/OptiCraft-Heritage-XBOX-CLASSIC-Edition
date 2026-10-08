@@ -18,6 +18,9 @@
 #include "Material.h"
 #include "OptiFineResource.h"
 #include "RenderEngine.h"
+#include "TexturePackDefault.h"
+#include "TexturePackList.h"
+#include "Minecraft.h"
 
 std::vector<int_t> CustomColorizer::grassColors;
 std::vector<int_t> CustomColorizer::waterColors;
@@ -54,6 +57,14 @@ void CustomColorizer::update(RenderEngine *engine)
 	paletteColors.clear(); hasBlockPalettes = false; particleWaterColor = particlePortalColor = lilyPadColor = -1;
 	for (auto &entry : blockPalettes) entry.fill(-1);
 	if (engine == nullptr) return;
+	// The game's own textures carry the vanilla colormaps, which the biomes
+	// already apply with their special cases (swamp tint, spruce and birch
+	// leaves, dead bush). Reading them here as "custom" maps flattened those,
+	// so, as in OptiFine, only a texture pack's maps replace anything.
+	Minecraft *mc = Minecraft::getMinecraft();
+	if (mc != nullptr && mc->texturePackList != nullptr &&
+		dynamic_cast<TexturePackDefault *>(mc->texturePackList->getSelectedTexturePack()) != nullptr)
+		return;
 
 	// These three maps are honored even with Custom Colors off, matching C6's
 	// biome colormap replacement behavior.
@@ -95,6 +106,15 @@ int_t CustomColorizer::getSmoothColor(const std::vector<int_t> &colors, IBlockAc
 	return count > 0 ? ((r/count)<<16)|((g/count)<<8)|(b/count) : -1;
 }
 
+// Vanilla's swamp tint (BiomeGenSwamp::getBiomeGrassColor/FoliageColor):
+// half the biome colour, half a muddy brown. A colormap read from
+// misc/grasscolor.png (the game ships one) bypasses the biome, so without a
+// swamp map of the pack's own the swamp lost its dark green.
+static int_t swampTint(int_t color)
+{
+	return ((color & 0xfefefe) + 0x4e0e4e) / 2;
+}
+
 int_t CustomColorizer::getSmoothBlockColor(Block *block, IBlockAccess *access, int_t x, int_t y, int_t z,
 	const std::vector<int_t> *colors, const std::vector<int_t> *swampColors)
 {
@@ -103,10 +123,13 @@ int_t CustomColorizer::getSmoothBlockColor(Block *block, IBlockAccess *access, i
 	{
 		const int_t sx=x+dx, sz=z+dz;
 		const std::vector<int_t> *map=colors;
-		if (Config::isSwampColors() && swampColors != nullptr && !swampColors->empty() && access->getBiomeGenForCoords(sx,sz)==BiomeGenBase::swampland)
+		const bool swamp = access->getBiomeGenForCoords(sx,sz)==BiomeGenBase::swampland;
+		const bool swampMap = Config::isSwampColors() && swampColors != nullptr && !swampColors->empty() && swamp;
+		if (swampMap)
 			map=swampColors;
 		int_t color = map != nullptr && !map->empty() ? getCustomColor(*map,access,sx,sz) : block->colorMultiplier(access,sx,y,sz);
 		if(color<0) color=block->colorMultiplier(access,sx,y,sz);
+		else if (swamp && !swampMap && map != nullptr && !map->empty()) color=swampTint(color);
 		r+=(color>>16)&255; g+=(color>>8)&255; b+=color&255;
 	}
 	return (r/9<<16)|(g/9<<8)|(b/9);
@@ -137,6 +160,8 @@ int_t CustomColorizer::getColorMultiplier(Block *block, IBlockAccess *access, in
 	}
 
 	const std::vector<int_t> *colors=nullptr, *swamp=nullptr;
+	if (block == Block::tallGrass && access->getBlockMetadata(x,y,z) == 0)
+		return block->colorMultiplier(access,x,y,z);   // dead bush: untinted
 	if (block == Block::grass || block == Block::tallGrass)
 	{
 		colors=&grassColors; swamp=&swampGrassColors;
@@ -146,14 +171,18 @@ int_t CustomColorizer::getColorMultiplier(Block *block, IBlockAccess *access, in
 		const int_t md=access->getBlockMetadata(x,y,z)&3;
 		if (block == Block::leaves && md==1 && !foliagePineColors.empty()) colors=&foliagePineColors;
 		else if (block == Block::leaves && md==2 && !foliageBirchColors.empty()) colors=&foliageBirchColors;
+		else if (block == Block::leaves && (md==1 || md==2)) return block->colorMultiplier(access,x,y,z);   // fixed spruce/birch colour
 		else { colors=&foliageColors; swamp=&swampFoliageColors; }
 	}
 	if (colors != nullptr && !colors->empty())
 	{
 		if (Config::isSmoothBiomes()) return getSmoothBlockColor(block,access,x,y,z,colors,swamp);
-		if (Config::isSwampColors() && swamp != nullptr && !swamp->empty() && access->getBiomeGenForCoords(x,z)==BiomeGenBase::swampland)
+		const bool inSwamp = swamp != nullptr && access->getBiomeGenForCoords(x,z)==BiomeGenBase::swampland;
+		const bool swampMap = inSwamp && Config::isSwampColors() && !swamp->empty();
+		if (swampMap)
 			colors=swamp;
-		const int_t custom=getCustomColor(*colors,access,x,z); if(custom>=0) return custom;
+		const int_t custom=getCustomColor(*colors,access,x,z);
+		if(custom>=0) return inSwamp && !swampMap ? swampTint(custom) : custom;
 	}
 	return block->colorMultiplier(access,x,y,z);
 }
