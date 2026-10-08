@@ -168,6 +168,19 @@
       }
     },
     {
+      "name": "xbox-launcher",
+      "displayName": "Xbox version launcher",
+      "description": "The default.xbe that lets you pick normal / 720p / experimental and starts OptiCraft*.xbe; output in bin/xbox-launcher.",
+      "inherits": "xbox-release",
+      "binaryDir": "${sourceDir}/build/xbox-launcher",
+      "cacheVariables": {
+        "XBOX_LAUNCHER": "ON",
+        "XBOX_BIN_SUBDIR": "xbox-launcher",
+        "XBOX_NETLOG_HOST": "",
+        "XBOX_DEPLOY_DIR": ""
+      }
+    },
+    {
       "name": "xbox-public",
       "inherits": "xbox-release",
       "displayName": "Xbox public release",
@@ -270,6 +283,10 @@
     {
       "name": "xbox-bringup",
       "configurePreset": "xbox-bringup"
+    },
+    {
+      "name": "xbox-launcher",
+      "configurePreset": "xbox-launcher"
     },
     {
       "name": "xbox-public",

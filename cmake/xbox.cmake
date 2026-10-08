@@ -8,6 +8,8 @@
 #   xbox-bringup    only src/xbox/tools/XboxBringup.cpp: proves the hybrid
 #                   toolchain (C++17 runtime, SEH/C++ exceptions, RTTI, threads,
 #                   thread_local, D3D8) boots, without pulling game code.
+#   xbox-launcher   only src/xbox/tools/XboxLauncher.cpp: the version picker
+#                   that ships as default.xbe and starts OptiCraft*.xbe.
 #
 # How an Xbox image is produced:
 #   1. VS2022 cl.exe compiles everything as x86 C++17 against the modern STL +
@@ -34,6 +36,7 @@ enable_language(ASM_MASM)
 
 # --- Options ------------------------------------------------------------------
 option(XBOX_BRINGUP "Build only the Xbox toolchain smoke test instead of the game" OFF)
+option(XBOX_LAUNCHER "Build only the version launcher (default.xbe that starts OptiCraft*.xbe)" OFF)
 option(XBOX_ENABLE_SOUND "Enable the DirectSound backend" OFF)
 option(XBOX_ENABLE_NETWORK "Experimental: multiplayer over XNet TCP (Minecraft 1.2.5 servers)" OFF)
 option(XBOX_AUTOPILOT "Test build: replay a scripted controller from D:/autopilot.txt (never deployed)" OFF)
@@ -87,6 +90,9 @@ set_property(SOURCE "${XBOX_RUNTIME_DIR}/XboxP3Math.c" APPEND PROPERTY COMPILE_O
 if(XBOX_BRINGUP)
     set(XBOX_SOURCES "${CMAKE_SOURCE_DIR}/src/xbox/tools/XboxBringup.cpp")
     message(STATUS "Xbox build: BRINGUP (toolchain smoke test only)")
+elseif(XBOX_LAUNCHER)
+    set(XBOX_SOURCES "${CMAKE_SOURCE_DIR}/src/xbox/tools/XboxLauncher.cpp")
+    message(STATUS "Xbox build: LAUNCHER (version picker only)")
 else()
     mcbeta_collect_platform_sources(XBOX_SOURCES xbox)
     # The runtime glue is added explicitly below; the smoke test is its own shape.
@@ -216,7 +222,7 @@ endif()
 # Java StrictMath/fdlibm must keep the exact operation ordering (see the
 # desktop branch in CMakeLists.txt). The UCRT's legacy non-standard names
 # (`extern double HUGE`, DOMAIN, ...) collide with fdlibm's own macros.
-if(NOT XBOX_BRINGUP)
+if(NOT XBOX_BRINGUP AND NOT XBOX_LAUNCHER)
     set(XBOX_STRICT_MATH_SOURCES ${XBOX_SOURCES})
     list(FILTER XBOX_STRICT_MATH_SOURCES INCLUDE REGEX "([/\\]java[/\\]fdlibm[/\\].*\\.c|[/\\]java[/\\]StrictMathCompat\\.cpp)$")
     set_property(SOURCE ${XBOX_STRICT_MATH_SOURCES} APPEND PROPERTY COMPILE_OPTIONS "/fp:strict")
@@ -295,6 +301,28 @@ else()
                     "(expects assets/ and resources/); the ISO will not have data/.")
 endif()
 
+# Names the game XBE also gets, for the launcher (src/xbox/tools/XboxLauncher.cpp):
+# OptiCraft[_exp].xbe and OptiCraft[_exp]_720p.xbe. "720" in the name picks
+# 1280x720 when the dashboard allows it (src/xbox/system/XboxVideoMode.h).
+if(XBOX_ASYNC_CHUNK_IO)
+    set(_xbox_game_name "OptiCraft_exp")
+else()
+    set(_xbox_game_name "OptiCraft")
+endif()
+if(XBOX_LAUNCHER)
+    set(_xbox_game_steps)
+    set(_xbox_stage_data)
+else()
+    set(_xbox_game_steps
+        COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/${_xbox_game_name}.xbe"
+        COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/${_xbox_game_name}_720p.xbe"
+        # Folder thumbnail for XBMC-style dashboards.
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/scripts/xbox/media/cover.png" "${XBOX_ISO_DIR}/default.tbn"
+        # Xbox port credit shown after the OptiProjects logo (StartupPresentation).
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_ISO_DIR}/data/assets/legacy"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/xbox/media/logo3.png" "${XBOX_ISO_DIR}/data/assets/legacy/logo3.png")
+endif()
+
 add_custom_command(TARGET OptiCraft POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_ISO_DIR}"
     ${_xbox_stage_data}
@@ -307,19 +335,12 @@ add_custom_command(TARGET OptiCraft POST_BUILD
             -Dumpbin "${XBOX_DUMPBIN}"
     COMMAND "${XBOX_XDK_ROOT}/bin/imagebld.exe" ${XBOX_IMAGEBLD_FLAGS}
             "/IN:$<TARGET_FILE:OptiCraft>" "/MAP:$<TARGET_FILE:OptiCraft>.map" "/OUT:${XBOX_XBE}"
-    # Same program under a name with "720" in it: runs at 1280x720 when the
-    # dashboard allows it (src/xbox/system/XboxVideoMode.h).
-    COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/OptiCraft_720p.xbe"
-    # Folder thumbnail for XBMC-style dashboards.
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/scripts/xbox/media/cover.png" "${XBOX_ISO_DIR}/default.tbn"
-    # Xbox port credit shown after the OptiProjects logo (StartupPresentation).
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_ISO_DIR}/data/assets/legacy"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/xbox/media/logo3.png" "${XBOX_ISO_DIR}/data/assets/legacy/logo3.png"
+    ${_xbox_game_steps}
     COMMENT "imagebld: ${XBOX_XBE}"
     VERBATIM
 )
 
-if(XBOX_EXTRACT_XISO)
+if(XBOX_EXTRACT_XISO AND NOT XBOX_LAUNCHER)
     # extract-xiso mangles forward-slash absolute paths; give it native ones.
     file(TO_NATIVE_PATH "${XBOX_ISO_DIR}" _xbox_iso_dir_native)
     file(TO_NATIVE_PATH "${XBOX_BIN_DIR}/OptiCraft.iso" _xbox_iso_native)
