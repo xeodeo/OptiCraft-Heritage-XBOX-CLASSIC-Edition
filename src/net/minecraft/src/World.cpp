@@ -3439,6 +3439,12 @@ void World::updateEntities()
     EntityTypeCost xboxEntityCost[24];
     int xboxEntityCostCount = 0;
     const long_t xboxEntityTickStart = System::nanoTime();
+    // The slowest single entity this tick, where it was, and whether chunks
+    // were published or unloaded during its tick (a chunk loaded for it).
+    long_t xboxSlowNs = 0;
+    const char *xboxSlowName = "";
+    double xboxSlowX = 0, xboxSlowY = 0, xboxSlowZ = 0;
+    unsigned xboxSlowChunkChanges = 0;
 #endif
     // Update loaded entities
     for (size_t l = 0; l < loadedEntityList.size(); l++)
@@ -3464,11 +3470,21 @@ void World::updateEntities()
 #if PLATFORM_XBOX && MC_LOG_LEVEL >= 1
             const long_t xboxOneStart = System::nanoTime();
             const char *xboxTypeName = typeid(*entity).name();
+            const std::uint32_t xboxTopologyBefore = chunkProvider->getChunkTopologyVersion();
 #endif
             updateEntity(entity);
 #if PLATFORM_XBOX && MC_LOG_LEVEL >= 1
             {
                 const long_t spent = System::nanoTime() - xboxOneStart;
+                if (spent > xboxSlowNs)
+                {
+                    xboxSlowNs = spent;
+                    xboxSlowName = xboxTypeName;
+                    xboxSlowX = entity->posX;
+                    xboxSlowY = entity->posY;
+                    xboxSlowZ = entity->posZ;
+                    xboxSlowChunkChanges = chunkProvider->getChunkTopologyVersion() - xboxTopologyBefore;
+                }
                 int slot = 0;
                 while (slot < xboxEntityCostCount && xboxEntityCost[slot].name != xboxTypeName)
                     ++slot;
@@ -3532,6 +3548,10 @@ void World::updateEntities()
                     xboxEntityCost[i].count, static_cast<double>(xboxEntityCost[i].ns) / 1e6);
             }
             MC_LOG_INFO("xbox.ent", "%s\n", line);
+            const char *slowName = xboxSlowName;
+            if (std::strncmp(slowName, "class ", 6) == 0) slowName += 6;
+            MC_LOG_INFO("xbox.ent", "slowest: %s %.1fms at %.1f %.1f %.1f chunkChanges=%u\n", slowName,
+                static_cast<double>(xboxSlowNs) / 1e6, xboxSlowX, xboxSlowY, xboxSlowZ, xboxSlowChunkChanges);
         }
     }
 #endif

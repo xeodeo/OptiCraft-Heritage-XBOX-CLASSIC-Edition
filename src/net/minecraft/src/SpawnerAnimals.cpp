@@ -462,6 +462,14 @@ void SpawnerAnimals::performWorldGenSpawning(World *world, BiomeGenBase *biome,
 
 bool SpawnerAnimals::canCreatureTypeSpawnAtLocation(const EnumCreatureType &type, World *world, int_t i, int_t j, int_t k)
 {
+#if PLATFORM_XBOX
+    // A chunk still coming in from the background thread reads as air: a mob
+    // placed against it passed the collision checks and ended up inside the
+    // ground once the chunk arrived (suffocating mobs after a respawn). Only
+    // spawn where the blocks around the mob are really loaded.
+    if (!world->checkChunksExist(i - 2, j, k - 2, i + 2, j, k + 2))
+        return false;
+#endif
     if (type.getCreatureMaterial() == Material::water)
         return world->getBlockMaterial(i, j, k)->getIsLiquid() && !world->isBlockNormalCube(i, j + 1, k);
 

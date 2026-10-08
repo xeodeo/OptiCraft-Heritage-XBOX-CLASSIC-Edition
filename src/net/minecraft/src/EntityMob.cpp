@@ -9,6 +9,7 @@
 #include "Potion.h"
 #include "PotionEffect.h"
 #include "World.h"
+#include "platform/PlatformConfig.h"
 
 EntityMob::EntityMob(World *world)
 	: EntityCreature(world), attackStrength(2)
@@ -98,6 +99,14 @@ bool EntityMob::isValidLightLevel()
 	const int_t x = MathHelper::floor_double(posX);
 	const int_t y = MathHelper::floor_double(boundingBox->minY);
 	const int_t z = MathHelper::floor_double(posZ);
+#if PLATFORM_XBOX
+	// Under the open sky in daytime the light is always too high for a
+	// monster. A chunk that has just come in from the background thread may
+	// not have its sky light filled in yet, which let creepers spawn in the
+	// sun on fresh terrain; this keeps the vanilla result without waiting.
+	if (!worldObj->isThundering() && worldObj->isDaytime() && worldObj->canBlockSeeTheSky(x, y, z))
+		return false;
+#endif
 	if (worldObj->getSavedLightValue(EnumSkyBlock::Sky, x, y, z) > rand.nextInt(32))
 		return false;
 
