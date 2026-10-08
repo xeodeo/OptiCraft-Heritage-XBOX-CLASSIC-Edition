@@ -352,6 +352,10 @@ unsigned readButtons(bool* plugged = nullptr)
         if (g.wButtons & XINPUT_GAMEPAD_START) bits |= kStart;
         if (g.bAnalogButtons[XINPUT_GAMEPAD_A] > 30) bits |= kA;
         if (g.bAnalogButtons[XINPUT_GAMEPAD_B] > 30) bits |= kB;
+        // In-game reset: LT + RT + Back + Start goes back to the dashboard.
+        if (g.bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] > 30 && g.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] > 30 &&
+            (g.wButtons & XINPUT_GAMEPAD_BACK) && (g.wButtons & XINPUT_GAMEPAD_START))
+            XLaunchNewImage(NULL, NULL);
     }
     return bits;
 }

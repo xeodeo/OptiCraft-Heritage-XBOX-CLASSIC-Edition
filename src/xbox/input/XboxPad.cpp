@@ -274,6 +274,18 @@ void poll()
 	readPlayer(s_players[0], found > 0 ? &states[0].Gamepad : nullptr);
 	readPlayer(s_players[1], found > 1 ? &states[1].Gamepad : nullptr);
 
+	// In-game reset: LT + RT + Back + Start on any controller goes back to
+	// the dashboard, as modded consoles' IGR does in other games.
+	const unsigned short kIgr = XBOX_PAD_LT | XBOX_PAD_RT | XBOX_PAD_BACK | XBOX_PAD_START;
+	for (const XboxPadSnapshot& player : s_players)
+	{
+		if (player.connected && (player.held & kIgr) == kIgr)
+		{
+			MC_LOG_INFO("xbox.input", "IGR combo: back to the dashboard\n");
+			XLaunchNewImage(NULL, NULL);
+		}
+	}
+
 	const XboxPadSnapshot& source = s_players[0];
 	s_snapshot.connected = source.connected;
 	s_snapshot.leftX = source.leftX;

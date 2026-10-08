@@ -1,4 +1,8 @@
 #include "World.h"
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <typeinfo>
 #include "platform/Log.h"
 #include "platform/WorldLoadTrace.h"
 #include "platform/Diagnostics.h"
@@ -3428,6 +3432,14 @@ void World::updateEntities()
     platformPhaseStartNs = System::nanoTime();
 #endif
 
+#if PLATFORM_XBOX && MC_LOG_LEVEL >= 1
+    // Which entity types the tick goes to: logged when a tick is slow (the
+    // console log showed entTick at 50-800 ms for seconds on end).
+    struct EntityTypeCost { const char *name; long_t ns; int count; };
+    EntityTypeCost xboxEntityCost[24];
+    int xboxEntityCostCount = 0;
+    const long_t xboxEntityTickStart = System::nanoTime();
+#endif
     // Update loaded entities
     for (size_t l = 0; l < loadedEntityList.size(); l++)
     {
@@ -3449,7 +3461,26 @@ void World::updateEntities()
 #if PLATFORM_PS2 && MC_LOG_LEVEL >= 2
             const std::uint32_t entityTickStart = platformProfileRenderPhaseBegin();
 #endif
+#if PLATFORM_XBOX && MC_LOG_LEVEL >= 1
+            const long_t xboxOneStart = System::nanoTime();
+            const char *xboxTypeName = typeid(*entity).name();
+#endif
             updateEntity(entity);
+#if PLATFORM_XBOX && MC_LOG_LEVEL >= 1
+            {
+                const long_t spent = System::nanoTime() - xboxOneStart;
+                int slot = 0;
+                while (slot < xboxEntityCostCount && xboxEntityCost[slot].name != xboxTypeName)
+                    ++slot;
+                if (slot == xboxEntityCostCount && xboxEntityCostCount < 24)
+                    xboxEntityCost[xboxEntityCostCount++] = {xboxTypeName, 0, 0};
+                if (slot < xboxEntityCostCount)
+                {
+                    xboxEntityCost[slot].ns += spent;
+                    ++xboxEntityCost[slot].count;
+                }
+            }
+#endif
 #if PLATFORM_PS2 && MC_LOG_LEVEL == 2
             platformProfileEntityTickWork(entityTickStart, entity);
 #elif PLATFORM_PS2 && MC_LOG_LEVEL > 2
@@ -3480,6 +3511,30 @@ void World::updateEntities()
         }
     }
     
+#if PLATFORM_XBOX && MC_LOG_LEVEL >= 1
+    {
+        const long_t total = System::nanoTime() - xboxEntityTickStart;
+        static long_t lastLog = 0;
+        const long_t now = System::nanoTime();
+        if (total > 40000000LL && now - lastLog > 1000000000LL)
+        {
+            lastLog = now;
+            std::sort(xboxEntityCost, xboxEntityCost + xboxEntityCostCount,
+                [](const EntityTypeCost &a, const EntityTypeCost &b) { return a.ns > b.ns; });
+            char line[400];
+            int len = std::snprintf(line, sizeof(line), "entTick=%.1fms entities=%d top:",
+                static_cast<double>(total) / 1e6, static_cast<int>(loadedEntityList.size()));
+            for (int i = 0; i < xboxEntityCostCount && i < 5 && len < 360; ++i)
+            {
+                const char *name = xboxEntityCost[i].name;
+                if (std::strncmp(name, "class ", 6) == 0) name += 6;
+                len += std::snprintf(line + len, sizeof(line) - len, " %s x%d %.1fms", name,
+                    xboxEntityCost[i].count, static_cast<double>(xboxEntityCost[i].ns) / 1e6);
+            }
+            MC_LOG_INFO("xbox.ent", "%s\n", line);
+        }
+    }
+#endif
 #if PLATFORM_PROFILE_RENDER_PHASES
     platformProfileTickPhase("entTick", System::nanoTime() - platformPhaseStartNs);
     platformPhaseStartNs = System::nanoTime();
