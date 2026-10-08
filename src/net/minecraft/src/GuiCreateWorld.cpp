@@ -15,6 +15,7 @@
 #include "java/Random.h"
 #include "java/String.h"
 #include "pc/lwjgl/Keyboard.h"
+#include "platform/PlatformConfig.h"
 #include <algorithm>
 
 GuiCreateWorld::GuiCreateWorld(GuiScreen *parent)
@@ -88,11 +89,50 @@ void GuiCreateWorld::initGui()
     updateButtonText();
 }
 
+#if PLATFORM_XBOX || PLATFORM_PS2
+namespace
+{
+// Console save drives take only plain ASCII file names (FATX: letters, digits,
+// space and !#$%&'()-.@[]^_`{}~, at most 42 characters). The default world
+// name is translated ("Nowy świat", "Новый мир", ...), and a folder with those
+// bytes cannot be created, which ended on the red crash screen. Each non-ASCII
+// letter becomes one '_'; a name with no letter or digit left becomes "World".
+// Only the folder changes: the world keeps the name the player typed.
+std::string consoleSafeFolderName(const std::string& name)
+{
+    static const std::string kAllowed = " !#$%&'()-.@[]^_`{}~";
+    std::string out;
+    bool hasLetter = false;
+    for (std::size_t i = 0; i < name.size(); ++i)
+    {
+        const unsigned char c = static_cast<unsigned char>(name[i]);
+        if (c >= 0x80)
+        {
+            // One '_' per UTF-8 character, not per byte.
+            if ((c & 0xC0) != 0x80)
+                out += '_';
+            continue;
+        }
+        const bool alnum = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+        hasLetter = hasLetter || alnum;
+        out += (alnum || kAllowed.find(static_cast<char>(c)) != std::string::npos) ? static_cast<char>(c) : '_';
+    }
+    // Room for the "-" suffixes generateUnusedFolderName adds.
+    if (out.size() > 32)
+        out.resize(32);
+    return hasLetter ? String::trimJava(out) : std::string("World");
+}
+}
+#endif
+
 void GuiCreateWorld::updateFolderName()
 {
     folderName = String::trimJava(textboxWorldName->getText());
     for (char c : ChatAllowedCharacters::allowedCharactersArray)
         std::replace(folderName.begin(), folderName.end(), c, '_');
+#if PLATFORM_XBOX || PLATFORM_PS2
+    folderName = consoleSafeFolderName(folderName);
+#endif
     if (MathHelper::stringNullOrLengthZero(folderName))
         folderName = "World";
     folderName = generateUnusedFolderName(mc->getSaveLoader(), folderName);
