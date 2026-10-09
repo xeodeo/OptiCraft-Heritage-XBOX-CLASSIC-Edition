@@ -805,7 +805,13 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 	mc->entityRenderer->setupOverlayRendering();
 	resetOverlayGLState();
 
-	if (Minecraft::isFancyGraphicsEnabled())
+	// Legacy Look has no vignette, as on the console editions (and it saves a
+	// blended full-screen quad every frame).
+	if (Minecraft::isFancyGraphicsEnabled()
+#if PLATFORM_XBOX
+		&& !mc->gameSettings->legacyLook
+#endif
+		)
 		renderVignette(mc->thePlayer->getEntityBrightness(partialTick), sw, sh);
 
 	ItemStack *helmet = mc->thePlayer->inventory->armorItemInSlot(3);

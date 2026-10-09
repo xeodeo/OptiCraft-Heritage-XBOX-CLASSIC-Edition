@@ -28,6 +28,8 @@
 #include "xbox/render/XboxD3D.h"
 #include "platform/Log.h"
 #include "xbox/system/XboxVideoMode.h"
+#include "java/Math.h"
+#include "net/minecraft/src/legacy/LegacyLook.h"
 
 #include <xgraphics.h>
 
@@ -1950,7 +1952,35 @@ unsigned int renderOcclusionQueryResult(int) { return 1; }
 // ===========================================================================
 bool renderReadPixelsRgb(int, int, int, int, void*) { return false; }
 bool renderCopyFramebufferToBoundTexture(int, int, int, int) { return false; }
-void renderSetLegacyPresentationGamma(bool) {}
+// Legacy Look: the console editions' picture comes from a hardware gamma ramp
+// over the whole output (x^0.8, LegacyLook.h), not a post-process. The NV2A
+// applies the ramp at scan-out, so it costs nothing per frame.
+void renderSetLegacyPresentationGamma(bool enabled)
+{
+    static int s_applied = -1;
+    if (s_applied == (enabled ? 1 : 0)) return;
+    IDirect3DDevice8* d = device();
+    if (!d) return;
+    s_applied = enabled ? 1 : 0;
+    static D3DGAMMARAMP s_legacy;
+    static D3DGAMMARAMP s_linear;
+    static bool s_built = false;
+    if (!s_built)
+    {
+        s_built = true;
+        for (int i = 0; i < 256; ++i)
+        {
+            const double x = static_cast<double>(i) / 255.0;
+            // JavaMath::pow: the UCRT pow helper uses SSE2 (no SSE2 on the P3).
+            const double y = JavaMath::pow(x, static_cast<double>(LEGACY_LOOK_GAMMA_EXPONENT));
+            int v = static_cast<int>(y * 255.0 + 0.5);
+            if (v > 255) v = 255;
+            s_legacy.red[i] = s_legacy.green[i] = s_legacy.blue[i] = static_cast<BYTE>(v);
+            s_linear.red[i] = s_linear.green[i] = s_linear.blue[i] = static_cast<BYTE>(i);
+        }
+    }
+    d->SetGammaRamp(0, enabled ? &s_legacy : &s_linear);
+}
 
 #endif // XBOX_PLATFORM
 

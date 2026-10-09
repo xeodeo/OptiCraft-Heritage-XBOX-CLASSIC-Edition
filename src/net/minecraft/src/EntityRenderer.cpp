@@ -1412,6 +1412,11 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
     // Si limitFramerate es 0 (ilimitado) o tiene un valor anómalo, establecemos 120L para evitar congelamiento fatal en PowerPC.
     const long limitFps = (fpsLimitChar > '\0') ? static_cast<long>(fpsLimitChar) : 120L;
     
+#if PLATFORM_XBOX
+    // Xbox: the gamma ramp covers the whole picture, menus and HUD included,
+    // as on the console editions; it follows the option every frame.
+    renderSetLegacyPresentationGamma(mc->gameSettings != nullptr && mc->gameSettings->legacyLook);
+#endif
     if (mc->theWorld != nullptr)
     {
 #if PLATFORM_PS2
