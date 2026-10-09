@@ -353,8 +353,12 @@ unsigned readButtons(bool* plugged = nullptr)
         if (g.bAnalogButtons[XINPUT_GAMEPAD_A] > 30) bits |= kA;
         if (g.bAnalogButtons[XINPUT_GAMEPAD_B] > 30) bits |= kB;
         // In-game reset: LT + RT + Back + Start goes back to the dashboard.
-        if (g.bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] > 30 && g.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] > 30 &&
-            (g.wButtons & XINPUT_GAMEPAD_BACK) && (g.wButtons & XINPUT_GAMEPAD_START))
+        // (or Back + Start + White + Black, the other usual IGR combo).
+        const bool backStart = (g.wButtons & XINPUT_GAMEPAD_BACK) && (g.wButtons & XINPUT_GAMEPAD_START);
+        const bool triggers = g.bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] > 30 &&
+                              g.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] > 30;
+        const bool whiteBlack = g.bAnalogButtons[XINPUT_GAMEPAD_WHITE] > 30 && g.bAnalogButtons[XINPUT_GAMEPAD_BLACK] > 30;
+        if (backStart && (triggers || whiteBlack))
             XLaunchNewImage(NULL, NULL);
     }
     return bits;

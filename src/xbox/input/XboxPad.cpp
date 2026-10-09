@@ -206,6 +206,29 @@ bool autopilotState(XboxPadSnapshot& out)
 
 } // namespace
 
+namespace
+{
+// In-game reset, as modded consoles' IGR does in other games: LT + RT + Back +
+// Start, or Back + Start + White + Black, on any controller goes back to the
+// dashboard.
+void checkInGameReset()
+{
+	const unsigned short kTriggers = XBOX_PAD_LT | XBOX_PAD_RT | XBOX_PAD_BACK | XBOX_PAD_START;
+	const unsigned short kWhiteBlack = XBOX_PAD_WHITE | XBOX_PAD_BLACK | XBOX_PAD_BACK | XBOX_PAD_START;
+	for (const XboxPadSnapshot& player : s_players)
+	{
+		if (!player.connected)
+			continue;
+		if ((player.held & kTriggers) == kTriggers || (player.held & kWhiteBlack) == kWhiteBlack)
+		{
+			MC_LOG_INFO("xbox.input", "IGR combo: back to the dashboard\n");
+			const DWORD result = XLaunchNewImage(NULL, NULL);
+			MC_LOG_ERROR("xbox.input", "IGR: XLaunchNewImage returned %lu\n", static_cast<unsigned long>(result));
+		}
+	}
+}
+}
+
 namespace XboxPad
 {
 
@@ -256,6 +279,7 @@ void poll()
 			MC_LOG_INFO("xbox.input", "autopilot pad 2 held=%04x connected=%d\n", s_players[1].held, s_autopilotHasP2 ? 1 : 0);
 		s_players[1].pressed = static_cast<unsigned short>(s_autopilotP2 & ~previous2);
 		s_players[1].released = static_cast<unsigned short>(previous2 & ~s_autopilotP2);
+		checkInGameReset();
 		s_latched[1] |= s_players[1].pressed;
 		s_pageLatched[1] |= s_players[1].pressed & kPageButtons;
 		return;
@@ -274,17 +298,7 @@ void poll()
 	readPlayer(s_players[0], found > 0 ? &states[0].Gamepad : nullptr);
 	readPlayer(s_players[1], found > 1 ? &states[1].Gamepad : nullptr);
 
-	// In-game reset: LT + RT + Back + Start on any controller goes back to
-	// the dashboard, as modded consoles' IGR does in other games.
-	const unsigned short kIgr = XBOX_PAD_LT | XBOX_PAD_RT | XBOX_PAD_BACK | XBOX_PAD_START;
-	for (const XboxPadSnapshot& player : s_players)
-	{
-		if (player.connected && (player.held & kIgr) == kIgr)
-		{
-			MC_LOG_INFO("xbox.input", "IGR combo: back to the dashboard\n");
-			XLaunchNewImage(NULL, NULL);
-		}
-	}
+	checkInGameReset();
 
 	const XboxPadSnapshot& source = s_players[0];
 	s_snapshot.connected = source.connected;
