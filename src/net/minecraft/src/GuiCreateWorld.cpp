@@ -228,6 +228,11 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
 
         Random random;
         long_t worldSeed = random.nextLong();
+#if XBOX_AUTOPILOT
+        // Test builds: always the same world, so the generator can be compared
+        // between builds (ChunkProviderGenerate's terrain fingerprints).
+        worldSeed = 20261008LL;
+#endif
         const std::string seedText = textboxSeed->getText();
         if (!MathHelper::stringNullOrLengthZero(seedText))
         {

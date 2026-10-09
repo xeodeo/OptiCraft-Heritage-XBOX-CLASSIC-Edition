@@ -30,6 +30,41 @@
 #include "platform/Log.h"
 #include "platform/PlatformTuning.h"
 #include "platform/WorldLoadTrace.h"
+#include "java/System.h"
+
+#if PLATFORM_XBOX && MC_LOG_LEVEL >= 1
+// Where chunk generation time goes on the console (xbox.gen, every 32 chunks):
+// biome layers, density noise, terrain fill, surface pass, caves, ravines.
+namespace
+{
+struct GenTiming
+{
+    long_t biomes = 0, noise = 0, fill = 0, surface = 0, caves = 0, ravines = 0;
+    int chunks = 0;
+};
+GenTiming s_genTiming;
+struct GenTimer
+{
+    long_t &slot;
+    long_t start;
+    explicit GenTimer(long_t &s) : slot(s), start(System::nanoTime()) {}
+    ~GenTimer() { slot += System::nanoTime() - start; }
+};
+void genTimingChunkDone()
+{
+    if (++s_genTiming.chunks < 32)
+        return;
+    const double n = static_cast<double>(s_genTiming.chunks) * 1e6;
+    MC_LOG_INFO("xbox.gen", "per chunk (avg of %d): biomes=%.1fms noise=%.1fms fill=%.1fms surface=%.1fms caves=%.1fms ravines=%.1fms\n",
+        s_genTiming.chunks, s_genTiming.biomes / n, s_genTiming.noise / n, s_genTiming.fill / n,
+        s_genTiming.surface / n, s_genTiming.caves / n, s_genTiming.ravines / n);
+    s_genTiming = GenTiming();
+}
+}
+#define GEN_TIME(field) GenTimer genTimer_##field(s_genTiming.field)
+#else
+#define GEN_TIME(field) ((void)0)
+#endif
 #include "platform/Diagnostics.h"
 
 #if PLATFORM_PS2 && defined(PS2_RENDER_STATS)
@@ -142,17 +177,24 @@ void ChunkProviderGenerate::generateTerrain(int_t chunkX, int_t chunkZ, byte_t *
 	constexpr int_t noiseHeight = 17;
 	const int_t noiseDepth = horizontalCells + 1;
 
-	generationWorldChunkManager()->getBiomesForGeneration(
-		biomesForGeneration,
-		JavaArithmetic::intSub(JavaArithmetic::intMul(chunkX, 4), 2),
-		JavaArithmetic::intSub(JavaArithmetic::intMul(chunkZ, 4), 2),
-		noiseWidth + 5,
-		noiseDepth + 5);
+	{
+		GEN_TIME(biomes);
+		generationWorldChunkManager()->getBiomesForGeneration(
+			biomesForGeneration,
+			JavaArithmetic::intSub(JavaArithmetic::intMul(chunkX, 4), 2),
+			JavaArithmetic::intSub(JavaArithmetic::intMul(chunkZ, 4), 2),
+			noiseWidth + 5,
+			noiseDepth + 5);
+	}
 
-	field_4180_q = generateNoiseField(field_4180_q,
-		JavaArithmetic::intMul(chunkX, horizontalCells), 0,
-		JavaArithmetic::intMul(chunkZ, horizontalCells),
-		noiseWidth, noiseHeight, noiseDepth);
+	{
+		GEN_TIME(noise);
+		field_4180_q = generateNoiseField(field_4180_q,
+			JavaArithmetic::intMul(chunkX, horizontalCells), 0,
+			JavaArithmetic::intMul(chunkZ, horizontalCells),
+			noiseWidth, noiseHeight, noiseDepth);
+	}
+	GEN_TIME(fill);
 
 	for (int_t cellX = 0; cellX < horizontalCells; ++cellX)
 	{
@@ -364,12 +406,18 @@ void ChunkProviderGenerate::generateBaseTerrain(int_t chunkX, int_t chunkZ, byte
 
 	WorldLoadTrace::step("biomes");
 #if !PLATFORM_USE_HEIGHTMAP_TERRAIN
-	generationWorldChunkManager()->loadBlockGeneratorData(
-		biomesForGeneration,
-		JavaArithmetic::intMul(chunkX, 16),
-		JavaArithmetic::intMul(chunkZ, 16), 16, 16);
+	{
+		GEN_TIME(biomes);
+		generationWorldChunkManager()->loadBlockGeneratorData(
+			biomesForGeneration,
+			JavaArithmetic::intMul(chunkX, 16),
+			JavaArithmetic::intMul(chunkZ, 16), 16, 16);
+	}
 #endif
-	replaceBlocksForBiome(chunkX, chunkZ, blocks, biomesForGeneration.data());
+	{
+		GEN_TIME(surface);
+		replaceBlocksForBiome(chunkX, chunkZ, blocks, biomesForGeneration.data());
+	}
 
 	for (std::size_t index = 0; index < 256 && index < biomesForGeneration.size(); ++index)
 		biomeIds[index] = static_cast<byte_t>(biomesForGeneration[index]->biomeID);
@@ -379,6 +427,7 @@ void ChunkProviderGenerate::generateCaves(int_t chunkX, int_t chunkZ, byte_t *bl
 {
 #if !PLATFORM_SKIP_CAVE_GENERATION
 	WorldLoadTrace::step("caves");
+	GEN_TIME(caves);
 	caveGenerator->generate(this, worldObj, chunkX, chunkZ, blocks);
 #else
 	(void)chunkX;
@@ -391,7 +440,10 @@ void ChunkProviderGenerate::generateRavines(int_t chunkX, int_t chunkZ, byte_t *
 {
 #if !PLATFORM_SKIP_RAVINE_GENERATION
 	WorldLoadTrace::step("ravines");
-	ravineGenerator->generate(this, worldObj, chunkX, chunkZ, blocks);
+	{
+		GEN_TIME(ravines);
+		ravineGenerator->generate(this, worldObj, chunkX, chunkZ, blocks);
+	}
 #else
 	(void)chunkX;
 	(void)chunkZ;
@@ -404,6 +456,7 @@ bool ChunkProviderGenerate::generateCavesStep(int_t chunkX, int_t chunkZ, byte_t
 {
 #if !PLATFORM_SKIP_CAVE_GENERATION
 	WorldLoadTrace::step("caves");
+	GEN_TIME(caves);
 	return caveGenerator->generateRange(worldObj, chunkX, chunkZ, blocks, cursor,
 		PLATFORM_GENERATION_SOURCE_COLUMNS_PER_STEP);
 #else
@@ -419,6 +472,7 @@ bool ChunkProviderGenerate::generateRavinesStep(int_t chunkX, int_t chunkZ, byte
 {
 #if !PLATFORM_SKIP_RAVINE_GENERATION
 	WorldLoadTrace::step("ravines");
+	GEN_TIME(ravines);
 	return ravineGenerator->generateRange(worldObj, chunkX, chunkZ, blocks, cursor,
 		PLATFORM_GENERATION_SOURCE_COLUMNS_PER_STEP);
 #else
@@ -490,10 +544,33 @@ void ChunkProviderGenerate::trimStructureStarts(int_t chunkX, int_t chunkZ)
 #endif
 }
 
+#if XBOX_AUTOPILOT
+// Test builds only: a fingerprint of each chunk's generated terrain (blocks
+// after caves and ravines, plus biomes), so a speed change to the generator
+// can be checked to produce exactly the same world for the same seed.
+static void autotestLogTerrainHash(int_t chunkX, int_t chunkZ, const byte_t *blocks, std::size_t blockCount,
+	const byte_t *biomeIds)
+{
+	std::uint32_t hash = 2166136261u;
+	for (std::size_t i = 0; i < blockCount; ++i)
+		hash = (hash ^ static_cast<std::uint8_t>(blocks[i])) * 16777619u;
+	for (std::size_t i = 0; i < 256; ++i)
+		hash = (hash ^ static_cast<std::uint8_t>(biomeIds[i])) * 16777619u;
+	MC_LOG_INFO("genhash", "%d %d %08x\n", static_cast<int>(chunkX), static_cast<int>(chunkZ),
+		static_cast<unsigned>(hash));
+}
+#endif
+
 Chunk *ChunkProviderGenerate::buildGeneratedChunk(int_t chunkX, int_t chunkZ,
 	const byte_t biomeIds[256], const byte_t *blocks, std::size_t blockCount,
 	const byte_t *metadata)
 {
+#if XBOX_AUTOPILOT
+	autotestLogTerrainHash(chunkX, chunkZ, blocks, blockCount, biomeIds);
+#endif
+#if PLATFORM_XBOX && MC_LOG_LEVEL >= 1
+	genTimingChunkDone();
+#endif
 	WorldLoadTrace::step("newChunk");
 	Chunk *chunk = new Chunk(worldObj, blocks, blockCount, chunkX, chunkZ, metadata);
 	WorldLoadTrace::step("biomeArray");
@@ -526,7 +603,10 @@ bool ChunkProviderGenerate::generateAsyncChunkData(int_t chunkX, int_t chunkZ, s
 	generateBaseTerrain(chunkX, chunkZ, blocks, biomeIds);
 	generateCaves(chunkX, chunkZ, blocks);
 	generateRavines(chunkX, chunkZ, blocks);
-	return true;
+#if XBOX_AUTOPILOT
+	autotestLogTerrainHash(chunkX, chunkZ, blocks, blockCount, biomeIds);
+#endif
+	return true;   // counted for xbox.gen when finishAsyncChunkData builds it
 }
 
 Chunk *ChunkProviderGenerate::finishAsyncChunkData(int_t chunkX, int_t chunkZ, std::vector<byte_t> &data)
