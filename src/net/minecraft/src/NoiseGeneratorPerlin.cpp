@@ -210,6 +210,73 @@ void NoiseGeneratorPerlin::getCanSpawnHere(TerrainNoiseBuffer &ad, perlin_real_t
     perlin_real_t amp = (perlin_real_t)1.0f / d6;
     int_t i2 = -1;
     perlin_real_t d13=0, d15=0, d16=0, d18=0;
+
+    // The Y (and Z) lattice cell, fraction and fade only depend on the row
+    // index, yet the loop below recomputed them for every column: 17 distinct
+    // Y values computed 25 times per octave for a chunk's density field. They
+    // are worked out once here with the very same expressions and reused, so
+    // every value -- and the terrain -- is bit-for-bit what it was.
+    constexpr int_t kCachedAxis = 64;
+    if (j <= kCachedAxis && k <= kCachedAxis)
+    {
+        int_t cellY[kCachedAxis];
+        perlin_real_t fracY[kCachedAxis];
+        perlin_real_t fadeY[kCachedAxis];
+        for (int_t i7 = 0; i7 < j; i7++)
+        {
+            terrain_coord_real_t d26 = baseY + (terrain_coord_real_t)i7 * scaleY + coordY;
+            int_t j7 = floorPerlinCoord(d26);
+            cellY[i7] = j7 & 0xff;
+            perlin_real_t fy = (perlin_real_t)(d26 - j7);
+            fracY[i7] = fy;
+            fadeY[i7] = fy*fy*fy*(fy*(fy*6.0f-15.0f)+10.0f);
+        }
+        int_t cellZ[kCachedAxis];
+        perlin_real_t fracZ[kCachedAxis];
+        perlin_real_t fadeZ[kCachedAxis];
+        for (int_t j6 = 0; j6 < k; j6++)
+        {
+            terrain_coord_real_t d24 = baseZ + (terrain_coord_real_t)j6 * scaleZ + coordZ;
+            int_t k6 = floorPerlinCoord(d24);
+            cellZ[j6] = k6 & 0xff;
+            perlin_real_t fz = (perlin_real_t)(d24 - k6);
+            fracZ[j6] = fz;
+            fadeZ[j6] = fz*fz*fz*(fz*(fz*6.0f-15.0f)+10.0f);
+        }
+        for (int_t i5 = 0; i5 < i; i5++)
+        {
+            terrain_coord_real_t d20 = baseX + (terrain_coord_real_t)i5 * scaleX + coordX;
+            int_t k5 = floorPerlinCoord(d20);
+            int_t i6 = k5 & 0xff;
+            perlin_real_t fx = (perlin_real_t)(d20 - k5);
+            perlin_real_t d22 = fx*fx*fx*(fx*(fx*6.0f-15.0f)+10.0f);
+            for (int_t j6 = 0; j6 < k; j6++)
+            {
+                const int_t l6 = cellZ[j6];
+                const perlin_real_t fz = fracZ[j6];
+                const perlin_real_t d25 = fadeZ[j6];
+                for (int_t i7 = 0; i7 < j; i7++)
+                {
+                    const int_t k7 = cellY[i7];
+                    const perlin_real_t fy = fracY[i7];
+                    const perlin_real_t d27 = fadeY[i7];
+                    if (i7 == 0 || k7 != i2)
+                    {
+                        i2 = k7;
+                        int_t j2 = permutations[i6]+k7, k2=permutations[j2]+l6, l2=permutations[j2+1]+l6;
+                        int_t i3 = permutations[i6+1]+k7, k3=permutations[i3]+l6, l3=permutations[i3+1]+l6;
+                        d13 = lerp(d22, grad(permutations[k2],fx,fy,fz), grad(permutations[k3],fx-1.0f,fy,fz));
+                        d15 = lerp(d22, grad(permutations[l2],fx,fy-1.0f,fz), grad(permutations[l3],fx-1.0f,fy-1.0f,fz));
+                        d16 = lerp(d22, grad(permutations[k2+1],fx,fy,fz-1.0f), grad(permutations[k3+1],fx-1.0f,fy,fz-1.0f));
+                        d18 = lerp(d22, grad(permutations[l2+1],fx,fy-1.0f,fz-1.0f), grad(permutations[l3+1],fx-1.0f,fy-1.0f,fz-1.0f));
+                    }
+                    ad[i1++] += (terrain_noise_real_t)(lerp(d25, lerp(d27,d13,d15), lerp(d27,d16,d18)) * amp);
+                }
+            }
+        }
+        return;
+    }
+
     for (int_t i5 = 0; i5 < i; i5++)
     {
         terrain_coord_real_t d20 = baseX + (terrain_coord_real_t)i5 * scaleX + coordX;
