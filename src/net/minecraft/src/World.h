@@ -619,6 +619,15 @@ public:
 private:
 	Chunk *getPopulationFastChunk(int_t x, int_t y, int_t z) const;
 	std::array<int_t, 32768> lightUpdateBlockList{};
+#if PLATFORM_XBOX
+	// Light updates skipped because chunks within 17 blocks were not loaded
+	// yet (still on the background thread). Vanilla drops them, which left a
+	// rare dark hole once the neighbour arrived; they are retried instead.
+	struct DeferredLightUpdate { EnumSkyBlock *type; int_t x, y, z; };
+	std::vector<DeferredLightUpdate> deferredLightUpdates;
+	std::size_t deferredLightCursor = 0;
+	void retryDeferredLightUpdates();
+#endif
 	std::vector<TileEntity *> tileEntitiesToAdd;
 	std::vector<TileEntity *> tileEntitiesToRemove;
 	bool populationFastPathActive = false;

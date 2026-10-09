@@ -4546,6 +4546,33 @@ int_t World::computeBlockLightValue(int_t currentLight, int_t x, int_t y, int_t 
     return result;
 }
 
+#if PLATFORM_XBOX
+// A few deferred light updates a tick: the ones whose surroundings have
+// loaded since are run (and leave the list); the rest wait their turn.
+void World::retryDeferredLightUpdates()
+{
+    int_t budget = 32;
+    while (budget-- > 0 && !deferredLightUpdates.empty())
+    {
+        if (deferredLightCursor >= deferredLightUpdates.size())
+            deferredLightCursor = 0;
+        const DeferredLightUpdate update = deferredLightUpdates[deferredLightCursor];
+        const bool ownChunkGone = !chunkExists(JavaArithmetic::intShr(update.x, 4), JavaArithmetic::intShr(update.z, 4));
+        if (!ownChunkGone && !doChunksNearChunkExist(update.x, update.y, update.z, 17))
+        {
+            ++deferredLightCursor;
+            continue;
+        }
+        // Run it, or drop it if its own chunk was unloaded meanwhile (it gets
+        // its light again when it is loaded).
+        deferredLightUpdates[deferredLightCursor] = deferredLightUpdates.back();
+        deferredLightUpdates.pop_back();
+        if (!ownChunkGone)
+            updateLightByType(update.type, update.x, update.y, update.z);
+    }
+}
+#endif
+
 void World::updateLightByType(EnumSkyBlock *type, int_t x, int_t y, int_t z)
 {
     if (type == nullptr)
@@ -4559,7 +4586,13 @@ void World::updateLightByType(EnumSkyBlock *type, int_t x, int_t y, int_t z)
     return;
 #else
     if (!doChunksNearChunkExist(x, y, z, 17))
+    {
+#if PLATFORM_XBOX
+        if (deferredLightUpdates.size() < 2048)
+            deferredLightUpdates.push_back({type, x, y, z});
+#endif
         return;
+    }
 
     int_t readIndex = 0;
     int_t writeIndex = 0;
@@ -4855,6 +4888,9 @@ void World::tick()
     platformPhaseStartNs = System::nanoTime();
 #endif
     chunkProvider->unload100OldestChunks();
+#if PLATFORM_XBOX
+    retryDeferredLightUpdates();
+#endif
 #if PLATFORM_PROFILE_RENDER_PHASES
     platformProfileTickPhase("chunkUnload", System::nanoTime() - platformPhaseStartNs);
     platformPhaseStartNs = System::nanoTime();
