@@ -106,7 +106,8 @@ void BlockBasePressurePlate::setStateIfMobInteractsWithPlate(World *world, int_t
 	bool hasPower = newPower > 0;
 	if (currentPower != newPower)
 	{
-		world->setBlockMetadataWithNotify(x, y, z, getMetaFromWeight(newPower));
+		// Flags 2 as in 1.5.2: the plate notifies its neighbours below.
+		world->setBlockMetadataWithNotify152(x, y, z, getMetaFromWeight(newPower), 2);
 		notifyNeighbors(world, x, y, z);
 		world->markBlocksDirty(x, y, z, x, y, z);
 	}

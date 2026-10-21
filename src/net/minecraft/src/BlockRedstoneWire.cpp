@@ -123,7 +123,11 @@ void BlockRedstoneWire::calculateCurrentChanges(World *world, int_t i, int_t j, 
 
 	if (currentMeta != targetStrength)
 	{
-		world->setBlockMetadataWithNotify(i, j, k, targetStrength);
+		// Flags 2 as in 1.5.2: redraw only. The wire tells its neighbours itself
+		// once the whole line has its new strength (pendingWireUpdates); a notify
+		// here (1.2.5 suppressed it with editingBlocks) woke torches, repeaters and
+		// pistons on half-updated wire.
+		world->setBlockMetadataWithNotify152(i, j, k, targetStrength, 2);
 		pendingWireUpdates.add(ChunkPosition(i, j, k));
 		pendingWireUpdates.add(ChunkPosition(i - 1, j, k));
 		pendingWireUpdates.add(ChunkPosition(i + 1, j, k));
