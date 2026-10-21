@@ -32,6 +32,18 @@ TILE_ID_FALLBACK = {'Tile::cloth': 35, 'Tile::stoneSlabHalf': 44, 'Tile::woodSla
                     'Tile::tripWireSource': 131}
 CAST = r'(?:\(\s*\w+\s*\*\s*\)\s*)?'
 
+# Crafted items the Legacy sources have no recipe for, as (id, aux, group letter,
+# base type, name). Chainmail is crafted from fire in Java 1.2.5 and 1.5.2;
+# the block of redstone is new in 1.5.
+EXTRA_ENTRIES = [
+    (302, -1, 'A', 'helmet', 'Item::helmetChain'),
+    (303, -1, 'A', 'chestplate', 'Item::plateChain'),
+    (304, -1, 'A', 'leggings', 'Item::legsChain'),
+    (305, -1, 'A', 'boots', 'Item::bootsChain'),
+    (152, -1, 'D', 'block', 'Tile::blockRedstone'),
+    (331, -1, 'D', 'treasure', 'Item::redstone'),
+]
+
 
 def strip_comments(text):
     text = re.sub(r'/\*.*?\*/', '', text, flags=re.S)
@@ -153,6 +165,8 @@ def main():
     lines.append('struct LegacyCraftingGroupEntry { short id; short aux; unsigned char group; unsigned char baseType; };')
     lines.append('')
     lines.append('static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {')
+    for item_id, aux, letter, base, name in EXTRA_ENTRIES:
+        rows.setdefault((item_id, aux), (GROUPS[letter], type_names.index(base) if base in type_names else 0, name))
     for (item_id, aux), (group, base, name) in sorted(rows.items()):
         lines.append('    { %d, %d, %d, %d }, // %s%s' % (item_id, aux, group, base, name,
                      (' (%s)' % type_names[base]) if base else ''))
