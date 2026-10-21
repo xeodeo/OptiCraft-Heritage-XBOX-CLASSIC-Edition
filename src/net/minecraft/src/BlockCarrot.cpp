@@ -1,8 +1,9 @@
 #include "BlockCarrot.h"
+#include "Texture152Atlas.h"
 
 #include "Item.h"
 
-BlockCarrot::BlockCarrot(int_t i) : BlockCrops(i, 88) // PORT152_ICON: carrots_0
+BlockCarrot::BlockCarrot(int_t i) : BlockCrops(i, TEX152_BLOCK_ICON("carrots_0.png")) // 1.5.2 icon: carrots_0.png
 {
 }
 
@@ -17,14 +18,14 @@ int_t BlockCarrot::getBlockTextureFromSideAndMetadata(int_t i, int_t j)
 		switch (j >> 1)
 		{
 		case 0:
-			return 88; // PORT152_ICON: carrots_0
+			return TEX152_BLOCK_ICON("carrots_0.png"); // 1.5.2 icon: carrots_0.png
 		case 1:
-			return 90; // PORT152_ICON: carrots_1
+			return TEX152_BLOCK_ICON("carrots_1.png"); // 1.5.2 icon: carrots_1.png
 		default:
-			return 92; // PORT152_ICON: carrots_2
+			return TEX152_BLOCK_ICON("carrots_2.png"); // 1.5.2 icon: carrots_2.png
 		}
 	}
-	return 95; // PORT152_ICON: carrots_3
+	return TEX152_BLOCK_ICON("carrots_3.png"); // 1.5.2 icon: carrots_3.png
 }
 
 int_t BlockCarrot::getSeedItem()

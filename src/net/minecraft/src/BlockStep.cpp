@@ -1,4 +1,5 @@
 #include "BlockStep.h"
+#include "Texture152Atlas.h"
 
 #include "AxisAlignedBB.h"
 #include "Block.h"
@@ -65,7 +66,7 @@ int_t BlockStep::getBlockTextureFromSideAndMetadata(int_t side, int_t metadata)
 	if (type == 4) return Block::brick->blockIndexInTexture;
 	if (type == 5) return Block::stoneBrick->blockIndexInTexture;
 	if (type == 6) return Block::netherBrick->blockIndexInTexture;
-	if (type == 7) return side == 0 ? 208 : (side == 1 ? 176 : 192); // PORT152_ICON: quartzblock_top
+	if (type == 7) return side == 0 ? TEX152_BLOCK_ICON("quartzblock_bottom.png") : (side == 1 ? TEX152_BLOCK_ICON("quartzblock_top.png") : TEX152_BLOCK_ICON("quartzblock_side.png")); // 1.5.2 icon: quartzblock_bottom.png, quartzblock_top.png, quartzblock_side.png
 	return 6;
 }
 

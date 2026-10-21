@@ -1,4 +1,5 @@
 #include "Block.h"
+#include "Texture152Atlas.h"
 
 #include "AxisAlignedBB.h"
 #include "BlockBed.h"
@@ -1077,15 +1078,15 @@ void Block::initialize()
 	redstoneLampIdle = (new BlockRedstoneLight(123, false))->setHardness(0.3f)->setStepSound(soundGlassFootstep)->setBlockName("redstoneLight");
 	redstoneLampActive = (new BlockRedstoneLight(124, true))->setHardness(0.3f)->setStepSound(soundGlassFootstep)->setBlockName("redstoneLight");
 	stairsSandStone = (new BlockStairs(128, sandStone, 0))->setBlockName("stairsSandStone")->setRequiresSelfNotify();
-	oreEmerald = (new BlockOre(129, 50))->setHardness(3.0f)->setResistance(5.0f)->setStepSound(soundStoneFootstep)->setBlockName("oreEmerald"); // PORT152_ICON: oreEmerald
-	blockEmerald = (new BlockOreStorage(133, 24))->setHardness(5.0f)->setResistance(10.0f)->setStepSound(soundMetalFootstep)->setBlockName("blockEmerald"); // PORT152_ICON: blockEmerald
+	oreEmerald = (new BlockOre(129, TEX152_BLOCK_ICON("oreEmerald.png")))->setHardness(3.0f)->setResistance(5.0f)->setStepSound(soundStoneFootstep)->setBlockName("oreEmerald"); // 1.5.2 icon: oreEmerald.png
+	blockEmerald = (new BlockOreStorage(133, TEX152_BLOCK_ICON("blockEmerald.png")))->setHardness(5.0f)->setResistance(10.0f)->setStepSound(soundMetalFootstep)->setBlockName("blockEmerald"); // 1.5.2 icon: blockEmerald.png
 	stairsWoodSpruce = (new BlockStairs(134, planks, 1))->setBlockName("stairsWoodSpruce")->setRequiresSelfNotify();
 	stairsWoodBirch = (new BlockStairs(135, planks, 2))->setBlockName("stairsWoodBirch")->setRequiresSelfNotify();
 	stairsWoodJungle = (new BlockStairs(136, planks, 3))->setBlockName("stairsWoodJungle")->setRequiresSelfNotify();
 	carrot = (new BlockCarrot(141))->setBlockName("carrots")->disableStats()->setRequiresSelfNotify();
 	potato = (new BlockPotato(142))->setBlockName("potatoes")->disableStats()->setRequiresSelfNotify();
-	blockRedstone = (new BlockPoweredOre(152, 24))->setHardness(5.0f)->setResistance(10.0f)->setStepSound(soundMetalFootstep)->setBlockName("blockRedstone"); // PORT152_ICON: blockRedstone
-	oreNetherQuartz = (new BlockOre(153, 50))->setHardness(3.0f)->setResistance(5.0f)->setStepSound(soundStoneFootstep)->setBlockName("netherquartz"); // PORT152_ICON: netherquartz
+	blockRedstone = (new BlockPoweredOre(152, TEX152_BLOCK_ICON("blockRedstone.png")))->setHardness(5.0f)->setResistance(10.0f)->setStepSound(soundMetalFootstep)->setBlockName("blockRedstone"); // 1.5.2 icon: blockRedstone.png
+	oreNetherQuartz = (new BlockOre(153, TEX152_BLOCK_ICON("netherquartz.png")))->setHardness(3.0f)->setResistance(5.0f)->setStepSound(soundStoneFootstep)->setBlockName("netherquartz"); // 1.5.2 icon: netherquartz.png
 	blockNetherQuartz = (new BlockQuartz(155))->setStepSound(soundStoneFootstep)->setHardness(0.8f)->setBlockName("quartzBlock");
 	stairsNetherQuartz = (new BlockStairs(156, blockNetherQuartz, 0))->setBlockName("stairsQuartz")->setRequiresSelfNotify();
 

@@ -1,4 +1,5 @@
 #include "BlockQuartz.h"
+#include "Texture152Atlas.h"
 
 #include "ItemStack.h"
 #include "Material.h"
@@ -9,7 +10,7 @@ const char *const BlockQuartz::quartzBlockTypes[3] = {
 	"lines"
 };
 
-BlockQuartz::BlockQuartz(int_t i) : Block(i, 192, Material::rock) // PORT152_ICON: quartzblock_side
+BlockQuartz::BlockQuartz(int_t i) : Block(i, TEX152_BLOCK_ICON("quartzblock_side.png"), Material::rock) // 1.5.2 icon: quartzblock_side.png
 {
 }
 
@@ -19,9 +20,9 @@ int_t BlockQuartz::getBlockTextureFromSideAndMetadata(int_t side, int_t metadata
 	{
 		if (side == 1 || side == 0)
 		{
-			return 176; // PORT152_ICON: quartzblock_chiseled_top
+			return TEX152_BLOCK_ICON("quartzblock_chiseled_top.png"); // 1.5.2 icon: quartzblock_chiseled_top.png
 		}
-		return 229; // PORT152_ICON: quartzblock_chiseled
+		return TEX152_BLOCK_ICON("quartzblock_chiseled.png"); // 1.5.2 icon: quartzblock_chiseled.png
 	}
 	if (metadata == 2 || metadata == 3 || metadata == 4)
 	{
@@ -29,19 +30,19 @@ int_t BlockQuartz::getBlockTextureFromSideAndMetadata(int_t side, int_t metadata
 		    (metadata == 3 && (side == 5 || side == 4)) ||
 		    (metadata == 4 && (side == 2 || side == 3)))
 		{
-			return 176; // PORT152_ICON: quartzblock_lines_top
+			return TEX152_BLOCK_ICON("quartzblock_lines_top.png"); // 1.5.2 icon: quartzblock_lines_top.png
 		}
-		return 230; // PORT152_ICON: quartzblock_lines
+		return TEX152_BLOCK_ICON("quartzblock_lines.png"); // 1.5.2 icon: quartzblock_lines.png
 	}
 	if (side == 0)
 	{
-		return 208; // PORT152_ICON: quartzblock_bottom
+		return TEX152_BLOCK_ICON("quartzblock_bottom.png"); // 1.5.2 icon: quartzblock_bottom.png
 	}
 	if (side == 1)
 	{
-		return 176; // PORT152_ICON: quartzblock_top
+		return TEX152_BLOCK_ICON("quartzblock_top.png"); // 1.5.2 icon: quartzblock_top.png
 	}
-	return 192; // PORT152_ICON: quartzblock_side
+	return TEX152_BLOCK_ICON("quartzblock_side.png"); // 1.5.2 icon: quartzblock_side.png
 }
 
 int_t BlockQuartz::getBlockTextureFromSide(int_t side)
