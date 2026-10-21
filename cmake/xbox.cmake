@@ -292,7 +292,14 @@ endif()
 set(XBOX_DATA_DIR "${CMAKE_SOURCE_DIR}/data" CACHE PATH "Folder with the game's assets/ and resources/")
 set(XBOX_ASSETS_PAK "" CACHE FILEPATH "Optional generated assets.pak staged at the disc root")
 set(_xbox_stage_data)
-if(EXISTS "${XBOX_DATA_DIR}/assets")
+set(_xbox_has_assets_pak FALSE)
+if(XBOX_ASSETS_PAK AND EXISTS "${XBOX_ASSETS_PAK}")
+    # The runtime resolves assets.pak before loose data/. Remove any leftovers
+    # from a previous build so imagebld cannot include the duplicate tree.
+    set(_xbox_has_assets_pak TRUE)
+    set(_xbox_stage_data
+        COMMAND ${CMAKE_COMMAND} -E rm -rf "${XBOX_ISO_DIR}/data")
+elseif(EXISTS "${XBOX_DATA_DIR}/assets")
     set(_xbox_stage_data
         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
                 "${XBOX_DATA_DIR}/assets" "${XBOX_ISO_DIR}/data/assets"
@@ -325,10 +332,13 @@ else()
         COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/${_xbox_game_name}.xbe"
         COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/${_xbox_game_name}_720p.xbe"
         # Folder thumbnail for XBMC-style dashboards.
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/scripts/xbox/media/cover.png" "${XBOX_ISO_DIR}/default.tbn"
-        # Xbox port credit shown after the OptiProjects logo (StartupPresentation).
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_ISO_DIR}/data/assets/legacy"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/xbox/media/logo3.png" "${XBOX_ISO_DIR}/data/assets/legacy/logo3.png")
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/scripts/xbox/media/cover.png" "${XBOX_ISO_DIR}/default.tbn")
+    if(NOT _xbox_has_assets_pak)
+        # Older loose-data builds need the Xbox port credit copied beside data.
+        list(APPEND _xbox_game_steps
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_ISO_DIR}/data/assets/legacy"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/xbox/media/logo3.png" "${XBOX_ISO_DIR}/data/assets/legacy/logo3.png")
+    endif()
 endif()
 
 add_custom_command(TARGET OptiCraft POST_BUILD
@@ -375,11 +385,9 @@ endif()
 # Forces a full re-copy of the game data (the normal build only copies what
 # changed):  cmake --build build/xbox-release --target xbox-data
 add_custom_target(xbox-data
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${XBOX_DATA_DIR}/assets" "${XBOX_ISO_DIR}/data/assets"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${XBOX_DATA_DIR}/resources" "${XBOX_ISO_DIR}/data/resources"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_ISO_DIR}"
+    ${_xbox_stage_data}
     ${_xbox_stage_pak}
-    COMMENT "Staging data/ into ${XBOX_ISO_DIR}/data"
+    COMMENT "Staging game data into ${XBOX_ISO_DIR}"
     VERBATIM
 )
