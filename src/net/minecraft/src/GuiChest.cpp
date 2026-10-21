@@ -3,6 +3,7 @@
 #include "IInventory.h"
 #include "InventoryLargeChest.h"
 #include "InventoryBasic.h"
+#include "InventoryEnderChest.h"
 #include "InventoryPlayer.h"
 #include "FontRenderer.h"
 #include "RenderEngine.h"
@@ -10,8 +11,19 @@
 #include "StatCollector.h"
 #include "platform/RenderAPI.h"
 
+// The container frees the lower inventory when it was made just for this screen
+// (a double chest pairing, a window the server sent). The ender chest inventory
+// is an InventoryBasic too, but the player keeps it: freeing it here left the
+// player pointing at freed memory and hung the next save or world load.
+static bool ownsLowerInventory(IInventory *lower)
+{
+	if (dynamic_cast<InventoryEnderChest *>(lower) != nullptr)
+		return false;
+	return dynamic_cast<InventoryLargeChest *>(lower) != nullptr || dynamic_cast<InventoryBasic *>(lower) != nullptr;
+}
+
 GuiChest::GuiChest(IInventory *upper, IInventory *lower, EntityPlayer *player)
-	: GuiContainer(new ContainerChest(upper, lower, (dynamic_cast<InventoryLargeChest *>(lower) != nullptr || dynamic_cast<InventoryBasic *>(lower) != nullptr)),
+	: GuiContainer(new ContainerChest(upper, lower, ownsLowerInventory(lower)),
 	               true,
 	               (player != nullptr) ? player : (dynamic_cast<InventoryPlayer *>(upper) ? dynamic_cast<InventoryPlayer *>(upper)->player : nullptr))
 	, upperChestInventory(upper)
