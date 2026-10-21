@@ -1139,13 +1139,43 @@ bool World::setBlockAndMetadata(int x, int y, int z, int blockId, int metadata)
 
 bool World::setBlock(int x, int y, int z, int blockId)
 {
-    return setBlockNotify152(x, y, z, blockId, 0, 0);
+    if (x < -30000000 || z < -30000000 || x >= 30000000 || z >= 30000000)
+    {
+        return false;
+    }
+
+    if (y < 0)
+    {
+        return false;
+    }
+
+    if (y >= WorldHeight::HEIGHT)
+    {
+        return false;
+    }
+
+    if (chunkLocalDecoration.isActive())
+        return chunkLocalDecoration.setBlock(x, y, z, blockId, 0);
+
+#if PLATFORM_POPULATION_BLOCK_WRITER
+    Chunk *populationChunk = getPopulationFastChunk(x, y, z);
+    if (populationChunk != nullptr)
+    {
+        platformProfilePopulationAccess(PlatformPopulationAccessKind::BlockWrite, true);
+        return populationChunk->setBlockID(x & 0xf, y, z & 0xf, blockId);
+    }
+#endif
+    if (populationFastPathActive)
+        platformProfilePopulationAccess(PlatformPopulationAccessKind::BlockWrite, false);
+
+    Chunk* chunk = getChunkFromChunkCoords(JavaArithmetic::intShr(x, 4), JavaArithmetic::intShr(z, 4));
+    return chunk->setBlockID(x & 0xf, y, z & 0xf, blockId);
 }
 
 bool World::setBlockNotify152(int x, int y, int z, int blockId, int metadata, int flags)
 {
     const int_t oldBlockId = (flags & 1) != 0 ? getBlockId(x, y, z) : 0;
-    const bool changed = setBlockAndMetadata(x, y, z, blockId, metadata);
+    const bool changed = World::setBlockAndMetadata(x, y, z, blockId, metadata);
     if (!changed || chunkLocalDecoration.isActive())
         return changed;
 
@@ -1535,7 +1565,7 @@ void World::setBlockMetadataWithNotify(int x, int y, int z, int metadata)
 
 bool World::setBlockMetadataWithNotify152(int x, int y, int z, int metadata, int flags)
 {
-    if (!setBlockMetadata(x, y, z, metadata))
+    if (!World::setBlockMetadata(x, y, z, metadata))
         return false;
     if (chunkLocalDecoration.isActive())
         return true;
