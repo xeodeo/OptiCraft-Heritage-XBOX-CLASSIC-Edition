@@ -17,7 +17,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 
 CELL = 16
@@ -31,11 +31,60 @@ SKIP_CONSOLE_GUI = {
 }
 # These legacy slots still have active users, but 1.5.2 changed the artwork or
 # stores the texture as an animation strip rather than a 16x16 icon.
-BLOCK_SLOT_OVERRIDES = {14: "portal.png", 19: "gravel.png", 31: "fire_0.png"}
+BLOCK_SLOT_OVERRIDES = {
+    14: "portal.png", 19: "gravel.png", 31: "fire_0.png", 47: "fire_1.png",
+    # Still water is one cell; flowing water and lava are 2x2 (TextureWaterFlowFX
+    # and TextureLavaFlowFX use tileSize 2 at 206 and 238).
+    205: "water.png", 237: "lava.png",
+    206: ("water_flow.png", 0, 0), 207: ("water_flow.png", 1, 0),
+    222: ("water_flow.png", 0, 1), 223: ("water_flow.png", 1, 1),
+    238: ("lava_flow.png", 0, 0), 239: ("lava_flow.png", 1, 0),
+    254: ("lava_flow.png", 0, 1), 255: ("lava_flow.png", 1, 1),
+}
+# The same legacy tile repeated this many times is the atlas filler, not a texture.
+PLACEHOLDER_REPEATS = 8
+# Mean per-channel difference (0-255) under which a changed 1.5.2 icon is taken
+# as the same texture redrawn; above it the cell keeps its 1.2.5 pixels.
+NEAR_MATCH_DIFF = 3.0
+LEGACY_TILE = "<1.2.5 tile>"
+# Item cells whose icon comes from metadata or item state, not setIconCoord.
+DYE_COLORS = ["black", "red", "green", "brown", "blue", "purple", "cyan", "silver",
+              "gray", "pink", "lime", "yellow", "lightBlue", "magenta", "orange", "white"]
+ITEM_STATE_OVERRIDES = {
+    101: "bow_pull_0.png", 117: "bow_pull_1.png", 133: "bow_pull_2.png",
+    85: "fishingRod_empty.png",
+    140: "potion.png", 141: "potion_contents.png", 154: "potion_splash.png",
+    169: "monsterPlacer_overlay.png",
+}
+OVERFLOW: dict[str, list[str]] = {}
+# Group 1 of the port (buzon-xbox 44/46): these must get a cell before the rest.
+PRIORITY_ICONS = [
+    "oreEmerald.png", "blockEmerald.png", "blockRedstone.png", "netherquartz.png",
+    "quartzblock_bottom.png", "quartzblock_chiseled.png", "quartzblock_chiseled_top.png",
+    "quartzblock_lines.png", "quartzblock_lines_top.png", "quartzblock_side.png", "quartzblock_top.png",
+    "carrots_0.png", "carrots_1.png", "carrots_2.png", "carrots_3.png",
+    "potatoes_0.png", "potatoes_1.png", "potatoes_2.png", "potatoes_3.png",
+    "flowerPot.png", "cocoa_0.png", "cocoa_1.png", "cocoa_2.png",
+    "anvil_base.png", "anvil_top.png", "anvil_top_damaged_1.png", "anvil_top_damaged_2.png", "beacon.png",
+]
 
 
 def image_key(image: Image.Image) -> bytes:
     return image.convert("RGBA").tobytes()
+
+
+def icon_diff(a: Image.Image, b: Image.Image) -> float:
+    data = ImageChops.difference(a, b).tobytes()
+    return sum(data) / len(data)
+
+
+def load_quadrant(path: Path, qx: int, qy: int) -> Image.Image | None:
+    # First 32x32 frame of a 2x2 animation strip, one 16x16 quarter of it.
+    with Image.open(path) as image:
+        if image.width != 2 * CELL or image.height < 2 * CELL:
+            return None
+        x, y = qx * CELL, qy * CELL
+        return image.crop((x, y, x + CELL, y + CELL)).convert("RGBA")
 
 
 def load_icon(path: Path) -> Image.Image | None:
@@ -86,29 +135,66 @@ def build_atlas(source_dir: Path, old_atlas_path: Path, overrides: dict[int, str
 
     # Explicit modern replacements for active legacy slots whose source art
     # changed or became animated in 1.5.2.
-    for index, filename in overrides.items():
+    for index, spec in overrides.items():
+        filename, quadrant = (spec, None) if isinstance(spec, str) else (spec[0], spec[1:])
         path = find_named_icon(source_dir, filename)
         if path is None:
-            raise FileNotFoundError(f"Required 1.5.2 atlas replacement missing: {path}")
-        icon = load_icon(path)
+            raise FileNotFoundError(f"Required 1.5.2 atlas replacement missing: {filename}")
+        if quadrant is None:
+            icon = load_icon(path)
+        else:
+            icon = load_quadrant(path, *quadrant)
         if icon is None:
-            raise ValueError(f"Cannot extract first 16x16 frame from {path}")
+            raise ValueError(f"Cannot extract a 16x16 frame from {path}")
         x, y = index % 16 * CELL, index // 16 * CELL
         atlas.paste(icon, (x, y))
         index_to_name[index] = path.name
 
+    # Every other cell that had art in 1.2.5 may still be read by code that
+    # computes its index (fluids, metadata offsets, item states), so it keeps
+    # its slot: a near-identical 1.5.2 icon if there is one, otherwise its
+    # 1.2.5 pixels. Only empty cells and the repeated placeholder tile are
+    # handed out to new icons.
+    tiles = {}
+    for index in range(CELL_COUNT):
+        x, y = index % 16 * CELL, index // 16 * CELL
+        tiles[index] = old.crop((x, y, x + CELL, y + CELL))
+    repeats: dict[bytes, int] = {}
+    for tile in tiles.values():
+        if tile.getbbox() is not None:
+            repeats[image_key(tile)] = repeats.get(image_key(tile), 0) + 1
+    placeholders = {index for index, tile in tiles.items()
+                    if tile.getbbox() is not None and repeats[image_key(tile)] >= PLACEHOLDER_REPEATS}
+    for index, tile in tiles.items():
+        if index in index_to_name or tile.getbbox() is None or index in placeholders:
+            continue
+        x, y = index % 16 * CELL, index // 16 * CELL
+        best_name, best_diff = min(((name, icon_diff(tile, icon)) for name, icon in icons.items()),
+                                   key=lambda pair: pair[1])
+        if best_diff <= NEAR_MATCH_DIFF:
+            atlas.paste(icons[best_name], (x, y))
+            index_to_name[index] = best_name
+        else:
+            atlas.paste(tile, (x, y))
+            index_to_name[index] = LEGACY_TILE
     used = set(index_to_name)
     free = iter(index for index in range(CELL_COUNT) if index not in used and index not in reserved)
     image_to_index = {image_key(icons[name]): index for index, name in index_to_name.items() if name in icons}
     # One image can have several filenames. Give every filename the same slot.
-    for path_name, icon in icons.items():
+    # Icons of blocks already being ported go first: the free cells run out.
+    first = [name for name in PRIORITY_ICONS if name in icons]
+    order = first + [name for name in icons if name not in first]
+    for path_name in order:
+        icon = icons[path_name]
         key = image_key(icon)
         index = image_to_index.get(key)
         if index is None:
-            try:
-                index = next(free)
-            except StopIteration as exc:
-                raise ValueError(f"More than {CELL_COUNT} distinct 1.5.2 icons in {source_dir}") from exc
+            index = next(free, None)
+            if index is None:
+                # No room left: the icon stays out of this atlas and out of the
+                # header, so code asking for it by name gets -1.
+                OVERFLOW.setdefault(source_dir.name, []).append(path_name)
+                continue
             x, y = index % 16 * CELL, index // 16 * CELL
             atlas.paste(icon, (x, y))
             index_to_name[index] = path_name
@@ -144,7 +230,7 @@ def legacy_item_overrides(item_cpp: Path, source_dir: Path) -> tuple[dict[int, s
     if not item_cpp.exists():
         return overrides, reserved
     line_pattern = re.compile(
-        r"\b(\w+)\s*=\s*\(new\s+\w+\s*\(.*?\.setIconCoord\(\s*(\d+)\s*,\s*(\d+)\s*\).*?\.setItemName\(\"([^\"]+)\"\)"
+        r"\b(\w+)\s*=\s*\(new\s+\w+\s*\(.*?(?:\.|->)setIconCoord\(\s*(\d+)\s*,\s*(\d+)\s*\).*?(?:\.|->)setItemName\(\"([^\"]+)\"\)"
     )
     for line in item_cpp.read_text(encoding="utf-8").splitlines():
         match = line_pattern.search(line)
@@ -156,6 +242,9 @@ def legacy_item_overrides(item_cpp: Path, source_dir: Path) -> tuple[dict[int, s
         candidates = [f"{item_name}.png", f"{variable}.png"]
         if item_name == "dyePowder":
             candidates = ["dyePowder_white.png"]
+        if variable == "diamond":
+            # 1.2.5 names the diamond item "emerald" (its old language key).
+            candidates = ["diamond.png"]
         for candidate in candidates:
             source = find_named_icon(source_dir, candidate)
             if source is not None:
@@ -180,6 +269,17 @@ def legacy_item_overrides(item_cpp: Path, source_dir: Path) -> tuple[dict[int, s
             if source is not None:
                 overrides[index] = source.name
                 break
+    # ItemDye::getIconFromDamage: base + (meta % 8) * 16 + meta / 8.
+    dye = re.search(r"dyePowder\s*=.*?setIconCoord\(\s*(\d+)\s*,\s*(\d+)\s*\)", item_cpp.read_text(encoding="utf-8"))
+    if dye:
+        base = int(dye.group(1)) + 16 * int(dye.group(2))
+        for meta, color in enumerate(DYE_COLORS):
+            index = base + (meta % 8) * 16 + meta // 8
+            reserved.add(index)
+            overrides[index] = f"dyePowder_{color}.png"
+    for index, name in ITEM_STATE_OVERRIDES.items():
+        reserved.add(index)
+        overrides[index] = name
     return overrides, reserved
 
 
@@ -212,10 +312,28 @@ def write_header(path: Path, blocks: dict[str, int], items: dict[str, int]) -> N
                 lines.append(f"    {{\"{name}\", {index}}},")
                 seen.add(ident)
         lines.append("};")
+        lines.append(f"inline constexpr int k{label}IconCount = sizeof(k{label}Icons) / sizeof(k{label}Icons[0]);")
         lines.append(f"inline constexpr std::uint16_t k{label}AtlasWidth = 256;")
         lines.append(f"inline constexpr std::uint16_t k{label}AtlasHeight = 256;")
         lines.append("")
-    lines += ["} // namespace Texture152", ""]
+    lines += [
+        "// Atlas index of a 1.5.2 texture by file name (\"oreEmerald.png\"), or -1.",
+        "inline constexpr bool sameName(const char* a, const char* b)",
+        "{",
+        "    while (*a && *a == *b) { ++a; ++b; }",
+        "    return *a == *b;",
+        "}",
+        "inline constexpr int findIcon(const IconIndex* icons, int count, const char* name)",
+        "{",
+        "    for (int i = 0; i < count; ++i)",
+        "        if (sameName(icons[i].name, name)) return icons[i].index;",
+        "    return -1;",
+        "}",
+        "inline constexpr int blockIcon(const char* name) { return findIcon(kBlockIcons, kBlockIconCount, name); }",
+        "inline constexpr int itemIcon(const char* name) { return findIcon(kItemIcons, kItemIconCount, name); }",
+        "",
+        "} // namespace Texture152", "",
+    ]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines), encoding="utf-8")
 
@@ -262,16 +380,26 @@ def copy_source_textures(source_root: Path, assets: Path, staged: list[str]) -> 
         if key in SKIP_CONSOLE_GUI:
             continue
         old_path = old_files.get(key)
+        cropped = None
         if old_path is not None:
-            try:
-                with Image.open(path) as new_image, Image.open(old_path) as old_image:
-                    if new_image.size == old_image.size and image_key(new_image) == image_key(old_image):
+            with Image.open(path) as new_image, Image.open(old_path) as old_image:
+                if new_image.size == old_image.size and image_key(new_image) == image_key(old_image):
+                    continue
+                if new_image.size != old_image.size:
+                    # The 1.2.5 models keep their UV layout: 1.5.2 grew some
+                    # textures downwards (zombie 64x64 carries the zombie
+                    # villager underneath), so only the old area is usable.
+                    if new_image.width == old_image.width and new_image.height > old_image.height:
+                        cropped = new_image.crop((0, 0, old_image.width, old_image.height)).convert("RGBA")
+                    else:
+                        print(f"keeping 1.2.5 {rel}: 1.5.2 size {new_image.size} != {old_image.size}")
                         continue
-            except Exception:
-                pass
         dest = assets / Path(rel)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(path, dest)
+        if cropped is not None:
+            cropped.save(dest)
+        else:
+            shutil.copy2(path, dest)
         staged.append(dest.relative_to(assets.parent).as_posix())
 
 
@@ -358,13 +486,14 @@ def main() -> int:
         "oldBlocks": block_report,
         "skippedConsoleGui": sorted(SKIP_CONSOLE_GUI),
         "staged1_5Files": staged,
+        "iconsWithoutRoom": OVERFLOW,
         "pakEntries": count,
         "pakBytes": total_bytes,
         "pakPath": str(args.output_pak.resolve()),
     }
     args.report_json.parent.mkdir(parents=True, exist_ok=True)
     args.report_json.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({key: result[key] for key in ("atlas", "blockIconNames", "blockUniqueImages", "itemIconNames", "itemUniqueImages", "pakEntries", "pakBytes", "pakPath")}, indent=2))
+    print(json.dumps({key: result[key] for key in ("atlas", "blockIconNames", "blockUniqueImages", "itemIconNames", "itemUniqueImages", "iconsWithoutRoom", "pakEntries", "pakBytes", "pakPath")}, indent=2))
     return 0
 
 
