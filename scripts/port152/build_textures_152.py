@@ -424,6 +424,49 @@ def copy_source_textures(source_root: Path, assets: Path, staged: list[str]) -> 
         staged.append(dest.relative_to(assets.parent).as_posix())
 
 
+def read_lang(path: Path) -> tuple[list[str], dict[str, str]]:
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    values = {}
+    for line in lines:
+        if "=" in line and not line.lstrip().startswith("#"):
+            key, value = line.split("=", 1)
+            values[key.strip()] = value
+    return lines, values
+
+
+def merge_languages(base_lang: Path, old_lang: Path, new_lang: Path, out_lang: Path) -> list[str]:
+    """1.5.2 texts for every language OptiCraft ships, keeping OptiCraft's own.
+
+    A key OptiCraft changed from vanilla 1.2.5 keeps OptiCraft's text; a key it
+    left as vanilla takes the 1.5.2 text; keys new in 1.5.2 are appended.
+    """
+    merged_names = []
+    for base in sorted(base_lang.glob("*.lang")):
+        new = new_lang / base.name
+        if not new.exists():
+            continue
+        base_lines, base_values = read_lang(base)
+        _, old_values = read_lang(old_lang / base.name) if (old_lang / base.name).exists() else ([], {})
+        _, new_values = read_lang(new)
+        out = []
+        for line in base_lines:
+            if "=" in line and not line.lstrip().startswith("#"):
+                key = line.split("=", 1)[0].strip()
+                if key in new_values and base_values.get(key) == old_values.get(key, base_values.get(key)):
+                    line = f"{key}={new_values[key]}"
+            out.append(line)
+        added = [f"{key}={value}" for key, value in new_values.items() if key not in base_values]
+        if added:
+            out.append("")
+            out.append("# Minecraft 1.5.2")
+            out += added
+        target = out_lang / base.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("\n".join(out) + "\n", encoding="utf-8")
+        merged_names.append(base.name)
+    return merged_names
+
+
 def load_make_pak(script: Path):
     spec = importlib.util.spec_from_file_location("make_pak", script)
     if spec is None or spec.loader is None:
@@ -480,6 +523,9 @@ def main() -> int:
 
     staged = ["assets/terrain.png", "assets/gui/items.png"]
     copy_source_textures(args.source, assets, staged)
+    merged_langs = merge_languages(args.base_data / "assets/lang", args.source.parent / "src125/lang",
+                                   args.source / "lang", assets / "lang")
+    staged += [f"assets/lang/{name}" for name in merged_langs]
     block_report = parse_block_report(block_cpp, block_slots)
 
     args.preview.parent.mkdir(parents=True, exist_ok=True)
@@ -508,6 +554,7 @@ def main() -> int:
         "skippedConsoleGui": sorted(SKIP_CONSOLE_GUI),
         "staged1_5Files": staged,
         "iconsWithoutRoom": OVERFLOW,
+        "mergedLanguages": len(merged_langs),
         "pakEntries": count,
         "pakBytes": total_bytes,
         "pakPath": str(args.output_pak.resolve()),
