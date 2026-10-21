@@ -14,10 +14,13 @@ public:
 	void dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, int_t l, float f) override;
 	void dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, int_t l, float f, int_t fortune) override;
 	int_t idDropped(int_t i, Random &random) override;
+	int_t idDropped(int_t i, Random &random, int_t fortune) override;
 	int_t quantityDropped(Random &random) override;
 
 protected:
 	bool canThisPlantGrowOnThisBlockID(int_t i) override;
+	virtual int_t getSeedItem();
+	virtual int_t getCropItem();
 
 private:
 	float getGrowthRate(World *world, int_t i, int_t j, int_t k);

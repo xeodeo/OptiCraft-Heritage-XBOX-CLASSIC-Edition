@@ -20,5 +20,8 @@ public:
 		int_t x, int_t y, int_t z, int_t direction, int_t type);
 
 private:
+	static int_t pickRandomCrop(Random &random);
 	int_t averageGroundLevel;
+	int_t cropTypeA;
+	int_t cropTypeB;
 };

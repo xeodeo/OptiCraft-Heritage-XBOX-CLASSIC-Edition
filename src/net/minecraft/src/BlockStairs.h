@@ -11,7 +11,7 @@ class Vec3D;
 class BlockStairs : public Block
 {
 public:
-    BlockStairs(int_t i, Block *block);
+    BlockStairs(int_t i, Block *block, int_t metadata = 0);
     void setBlockBoundsBasedOnState(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k) override;
     AxisAlignedBB *getCollisionBoundingBoxFromPool(World *world, int_t i, int_t j, int_t k) override;
     bool isOpaqueCube() override;
@@ -27,8 +27,7 @@ public:
     float getBlockBrightness(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k) override;
     float getExplosionResistance(Entity *entity) override;
     int_t getRenderBlockPass() override;
-    int_t idDropped(int_t i, Random &random) override;
-    int_t quantityDropped(Random &random) override;
+    int_t getBlockTexture(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l) override;
     int_t getBlockTextureFromSideAndMetadata(int_t i, int_t j) override;
     int_t getBlockTextureFromSide(int_t i) override;
     int_t tickRate() override;
@@ -39,7 +38,6 @@ public:
     bool canPlaceBlockAt(World *world, int_t i, int_t j, int_t k) override;
     void onBlockAdded(World *world, int_t i, int_t j, int_t k) override;
     void onBlockRemoval(World *world, int_t i, int_t j, int_t k) override;
-    void dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, int_t l, float f) override;
     void onEntityWalking(World *world, int_t i, int_t j, int_t k, Entity *entity) override;
     void updateTick(World *world, int_t i, int_t j, int_t k, Random &random) override;
     bool blockActivated(World *world, int_t i, int_t j, int_t k, EntityPlayer *entityplayer) override;
@@ -49,4 +47,5 @@ public:
 
 private:
     Block *modelBlock;
+    int_t modelBlockMetadata;
 };

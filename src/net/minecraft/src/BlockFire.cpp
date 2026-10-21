@@ -26,6 +26,9 @@ void BlockFire::initializeBlock()
 	setBurnRate(Block::planks->blockID, 5, 20);
 	setBurnRate(Block::fence->blockID, 5, 20);
 	setBurnRate(Block::stairCompactPlanks->blockID, 5, 20);
+	setBurnRate(Block::stairsWoodSpruce->blockID, 5, 20);
+	setBurnRate(Block::stairsWoodBirch->blockID, 5, 20);
+	setBurnRate(Block::stairsWoodJungle->blockID, 5, 20);
 	setBurnRate(Block::wood->blockID, 5, 5);
 	setBurnRate(Block::leaves->blockID, 30, 60);
 	setBurnRate(Block::bookShelf->blockID, 30, 20);

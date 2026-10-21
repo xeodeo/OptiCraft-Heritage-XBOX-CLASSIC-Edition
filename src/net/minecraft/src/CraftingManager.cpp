@@ -76,6 +76,8 @@ CraftingManager::CraftingManager()
 	addRecipe(new ItemStack(Block::stairSingle, 6, 2),        { "###", '#', Block::planks });
 	addRecipe(new ItemStack(Block::stairSingle, 6, 4),        { "###", '#', Block::brick });
 	addRecipe(new ItemStack(Block::stairSingle, 6, 5),        { "###", '#', Block::stoneBrick });
+	addRecipe(new ItemStack(Block::stairSingle, 6, 6),        { "###", '#', Block::netherBrick });
+	addRecipe(new ItemStack(Block::stairSingle, 6, 7),        { "###", '#', Block::blockNetherQuartz });
 	addRecipe(new ItemStack(Block::ladder, 3),                { "# #", "###", "# #", '#', Item::stick });
 	addRecipe(new ItemStack(Item::doorWood, 1),               { "##", "##", "##", '#', Block::planks });
 	addRecipe(new ItemStack(Block::trapdoor, 2),              { "###", "###", '#', Block::planks });
@@ -105,7 +107,10 @@ CraftingManager::CraftingManager()
 	addRecipe(new ItemStack(Item::bucketEmpty, 1),            { "# #", " # ", '#', Item::ingotIron });
 	addRecipe(new ItemStack(Item::flintAndSteel, 1),          { "A ", " B", 'A', Item::ingotIron, 'B', Item::flint });
 	addRecipe(new ItemStack(Item::bread, 1),                  { "###", '#', Item::wheat });
-	addRecipe(new ItemStack(Block::stairCompactPlanks, 4),    { "#  ", "## ", "###", '#', Block::planks });
+	addRecipe(new ItemStack(Block::stairCompactPlanks, 4),    { "#  ", "## ", "###", '#', new ItemStack(Block::planks, 1, 0) });
+	addRecipe(new ItemStack(Block::stairsWoodSpruce, 4),      { "#  ", "## ", "###", '#', new ItemStack(Block::planks, 1, 1) });
+	addRecipe(new ItemStack(Block::stairsWoodBirch, 4),       { "#  ", "## ", "###", '#', new ItemStack(Block::planks, 1, 2) });
+	addRecipe(new ItemStack(Block::stairsWoodJungle, 4),      { "#  ", "## ", "###", '#', new ItemStack(Block::planks, 1, 3) });
 	addRecipe(new ItemStack(Item::fishingRod, 1),             { "  #", " #X", "# X", '#', Item::stick, 'X', Item::silk });
 	addRecipe(new ItemStack(Block::stairCompactCobblestone, 4), { "#  ", "## ", "###", '#', Block::cobblestone });
 	addRecipe(new ItemStack(Block::stairsBrick, 4),           { "#  ", "## ", "###", '#', Block::brick });

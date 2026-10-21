@@ -201,6 +201,45 @@ void StringTranslate::setLanguage(const std::string &language)
     // Supplemental files use English labels as keys and do not alter the
     // existing resource files. Missing files/entries keep the English text.
     loadLanguageFile("/lang/ui/" + currentLanguage + ".lang", true);
+
+    // 1.5.2 fallback translations for newly ported blocks and items when using
+    // unmodified 1.2.5 language files.
+    const bool isSpanish = (currentLanguage.rfind("es_", 0) == 0);
+    const char *port152Defaults[][3] = {
+        {"tile.stairsSandStone.name", "Sandstone Stairs", "Escaleras de arenisca"},
+        {"tile.oreEmerald.name", "Emerald Ore", "Mena de esmeralda"},
+        {"tile.blockEmerald.name", "Block of Emerald", "Bloque de esmeralda"},
+        {"tile.stairsWoodSpruce.name", "Spruce Wood Stairs", "Escaleras de madera de abeto"},
+        {"tile.stairsWoodBirch.name", "Birch Wood Stairs", "Escaleras de madera de abedul"},
+        {"tile.stairsWoodJungle.name", "Jungle Wood Stairs", "Escaleras de madera de jungla"},
+        {"tile.carrots.name", "Carrots", "Zanahorias"},
+        {"tile.potatoes.name", "Potatoes", "Patatas"},
+        {"tile.blockRedstone.name", "Block of Redstone", "Bloque de redstone"},
+        {"tile.netherquartz.name", "Nether Quartz Ore", "Mena de cuarzo del Nether"},
+        {"tile.quartzBlock.name", "Block of Quartz", "Bloque de cuarzo"},
+        {"tile.quartzBlock.default.name", "Block of Quartz", "Bloque de cuarzo"},
+        {"tile.quartzBlock.chiseled.name", "Chiseled Quartz Block", "Bloque de cuarzo cincelado"},
+        {"tile.quartzBlock.lines.name", "Pillar Quartz Block", "Pilar de cuarzo"},
+        {"tile.stairsQuartz.name", "Quartz Stairs", "Escaleras de cuarzo"},
+        {"tile.stoneSlab.netherBrick.name", "Nether Brick Slab", "Losa de ladrillos del Nether"},
+        {"tile.stoneSlab.quartz.name", "Quartz Slab", "Losa de cuarzo"},
+        {"item.diamond.name", "Diamond", "Diamante"},
+        {"item.emerald.name", "Emerald", "Esmeralda"},
+        {"item.carrots.name", "Carrot", "Zanahoria"},
+        {"item.potato.name", "Potato", "Patata"},
+        {"item.potatoBaked.name", "Baked Potato", "Patata asada"},
+        {"item.potatoPoisonous.name", "Poisonous Potato", "Patata venenosa"},
+        {"item.carrotGolden.name", "Golden Carrot", "Zanahoria dorada"},
+        {"item.pumpkinPie.name", "Pumpkin Pie", "Tarta de calabaza"},
+        {"item.netherbrick.name", "Nether Brick", "Ladrillo del Nether"},
+        {"item.netherquartz.name", "Nether Quartz", "Cuarzo del Nether"}
+    };
+    for (const auto &entry : port152Defaults)
+    {
+        if (translateTable.find(entry[0]) == translateTable.end())
+            translateTable[entry[0]] = isSpanish ? entry[2] : entry[1];
+    }
+
     updateUnicodeFlag();
 }
 
@@ -313,6 +352,9 @@ bool StringTranslate::loadLanguageFile(const std::string &path, bool ui)
         return false;
     }
 
+    bool hasDiamondKey = false;
+    std::string fileEmeraldValue;
+
     std::string line;
     while (std::getline(*input, line))
     {
@@ -328,8 +370,28 @@ bool StringTranslate::loadLanguageFile(const std::string &path, bool ui)
         const std::string value = trim(line.substr(equals + 1));
         // Empty overrides must not erase the English fallback.
         if (!key.empty() && !value.empty())
+        {
+            if (!ui)
+            {
+                if (key == "item.diamond.name")
+                    hasDiamondKey = true;
+                else if (key == "item.emerald.name")
+                    fileEmeraldValue = value;
+            }
             translateTable[(ui ? "ui." : "") + key] = value;
+        }
     }
+
+    // In 1.2.5 .lang files, Item::diamond used the legacy key "item.emerald.name".
+    // When loading a 1.2.5 language file (which lacks "item.diamond.name"), map
+    // its "item.emerald.name" value to "item.diamond.name" and clear "item.emerald.name"
+    // so 1.5.2 Item::emerald receives the proper emerald name instead of "Diamond".
+    if (!ui && !hasDiamondKey && !fileEmeraldValue.empty())
+    {
+        translateTable["item.diamond.name"] = fileEmeraldValue;
+        translateTable.erase("item.emerald.name");
+    }
+
     return true;
 }
 

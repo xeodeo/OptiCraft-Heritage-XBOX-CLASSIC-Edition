@@ -28,6 +28,7 @@ public:
     static const std::string redstoneEffect;
     static const std::string glowstoneEffect;
     static const std::string gunpowderEffect;
+    static const std::string goldenCarrotEffect;
 
 private:
     static void ensureInitialized();

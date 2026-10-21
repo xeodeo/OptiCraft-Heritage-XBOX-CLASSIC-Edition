@@ -22,6 +22,8 @@ void RecipesFood::addRecipes(CraftingManager *craftingmanager)
 	                           { "M", 'M', Item::melon });
 	craftingmanager->addRecipe(new ItemStack(Item::pumpkinSeeds, 4),
 	                           { "M", 'M', Block::pumpkin });
+	craftingmanager->addShapelessRecipe(new ItemStack(Item::pumpkinPie),
+	                                    { Block::pumpkin, Item::sugar, Item::egg });
 	craftingmanager->addShapelessRecipe(new ItemStack(Item::fermentedSpiderEye),
 	                                    { Item::spiderEye, Block::mushroomBrown, Item::sugar });
 	craftingmanager->addShapelessRecipe(new ItemStack(Item::speckledMelon),
@@ -30,5 +32,6 @@ void RecipesFood::addRecipes(CraftingManager *craftingmanager)
 	                                    { Item::blazeRod });
 	craftingmanager->addShapelessRecipe(new ItemStack(Item::magmaCream),
 	                                    { Item::blazePowder, Item::slimeBall });
+	craftingmanager->addRecipe(new ItemStack(Item::goldenCarrot, 1),
+	                           { "###", "#X#", "###", '#', Item::goldNugget, 'X', Item::carrot });
 }
-

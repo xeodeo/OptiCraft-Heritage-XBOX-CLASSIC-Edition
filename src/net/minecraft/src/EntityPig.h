@@ -6,6 +6,7 @@ class World;
 class NBTTagCompound;
 class EntityPlayer;
 class EntityLightningBolt;
+class ItemStack;
 
 // net.minecraft.src.EntityPig
 class EntityPig : public EntityAnimal
@@ -25,6 +26,7 @@ public:
 	void setSaddled(bool flag);
 	void onStruckByLightning(EntityLightningBolt *entitylightningbolt) override;
 	EntityAnimal *spawnBabyAnimal(EntityAnimal *mate) override;
+	bool isWheat(ItemStack *itemstack) const override;
 
 protected:
 	void entityInit() override;

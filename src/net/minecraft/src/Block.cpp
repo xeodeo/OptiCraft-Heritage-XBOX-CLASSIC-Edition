@@ -6,6 +6,7 @@
 #include "BlockButton.h"
 #include "BlockCactus.h"
 #include "BlockCake.h"
+#include "BlockCarrot.h"
 #include "BlockChest.h"
 #include "BlockClay.h"
 #include "BlockCloth.h"
@@ -61,8 +62,11 @@
 #include "BlockPistonExtension.h"
 #include "BlockPistonMoving.h"
 #include "BlockPortal.h"
+#include "BlockPotato.h"
+#include "BlockPoweredOre.h"
 #include "BlockPressurePlate.h"
 #include "BlockPumpkin.h"
+#include "BlockQuartz.h"
 #include "BlockRail.h"
 #include "BlockRedstoneOre.h"
 #include "BlockRedstoneRepeater.h"
@@ -90,11 +94,13 @@
 #include "BlockWorkbench.h"
 #include "EntityItem.h"
 #include "EntityPlayer.h"
+#include "EntityXPOrb.h"
 #include "EnchantmentHelper.h"
 #include "IBlockAccess.h"
 #include "Item.h"
 #include "ItemBlock.h"
 #include "ItemMetadata.h"
+#include "ItemMultiTextureTile.h"
 #include "ItemLilyPad.h"
 #include "ItemColored.h"
 #include "ItemCloth.h"
@@ -266,6 +272,18 @@ Block *Block::whiteStone = nullptr;
 Block *Block::dragonEgg = nullptr;
 Block *Block::redstoneLampIdle = nullptr;
 Block *Block::redstoneLampActive = nullptr;
+Block *Block::stairsSandStone = nullptr;
+Block *Block::oreEmerald = nullptr;
+Block *Block::blockEmerald = nullptr;
+Block *Block::stairsWoodSpruce = nullptr;
+Block *Block::stairsWoodBirch = nullptr;
+Block *Block::stairsWoodJungle = nullptr;
+Block *Block::carrot = nullptr;
+Block *Block::potato = nullptr;
+Block *Block::blockRedstone = nullptr;
+Block *Block::oreNetherQuartz = nullptr;
+Block *Block::blockNetherQuartz = nullptr;
+Block *Block::stairsNetherQuartz = nullptr;
 
 static TileEntity *createTileEntitySign()
 {
@@ -345,7 +363,7 @@ bool Block::isNormalCube(int_t blockId)
 	if (blockId < 0 || blockId >= BLOCK_REGISTRY_SIZE)
 		return false;
 	Block *block = blocksList[blockId];
-	return block != nullptr && block->blockMaterial->isOpaque() && block->renderAsNormalBlock();
+	return block != nullptr && block->blockMaterial->isOpaque() && block->renderAsNormalBlock() && !block->canProvidePower();
 }
 
 bool Block::renderAsNormalBlock()
@@ -594,6 +612,21 @@ void Block::dropBlockAsItem_do(World *world, int_t i, int_t j, int_t k, ItemStac
 	entityitem->delayBeforeCanPickup = 10;
 	if (!world->entityJoinedWorld(entityitem))
 		delete entityitem;
+}
+
+void Block::dropXpOnBlockBreak(World *world, int_t i, int_t j, int_t k, int_t xp)
+{
+	if (!world->multiplayerWorld)
+	{
+		while (xp > 0)
+		{
+			int_t split = EntityXPOrb::getXPSplit(xp);
+			xp -= split;
+			EntityXPOrb *orb = new EntityXPOrb(world, (double)i + 0.5, (double)j + 0.5, (double)k + 0.5, split);
+			if (!world->entityJoinedWorld(orb))
+				delete orb;
+		}
+	}
 }
 
 int_t Block::damageDropped(int_t i)
@@ -1043,6 +1076,18 @@ void Block::initialize()
 	dragonEgg = (new BlockDragonEgg(122, 167))->setHardness(3.0f)->setResistance(15.0f)->setStepSound(soundStoneFootstep)->setLightValue(2.0f / 16.0f)->setBlockName("dragonEgg");
 	redstoneLampIdle = (new BlockRedstoneLight(123, false))->setHardness(0.3f)->setStepSound(soundGlassFootstep)->setBlockName("redstoneLight");
 	redstoneLampActive = (new BlockRedstoneLight(124, true))->setHardness(0.3f)->setStepSound(soundGlassFootstep)->setBlockName("redstoneLight");
+	stairsSandStone = (new BlockStairs(128, sandStone, 0))->setBlockName("stairsSandStone")->setRequiresSelfNotify();
+	oreEmerald = (new BlockOre(129, 50))->setHardness(3.0f)->setResistance(5.0f)->setStepSound(soundStoneFootstep)->setBlockName("oreEmerald"); // PORT152_ICON: oreEmerald
+	blockEmerald = (new BlockOreStorage(133, 24))->setHardness(5.0f)->setResistance(10.0f)->setStepSound(soundMetalFootstep)->setBlockName("blockEmerald"); // PORT152_ICON: blockEmerald
+	stairsWoodSpruce = (new BlockStairs(134, planks, 1))->setBlockName("stairsWoodSpruce")->setRequiresSelfNotify();
+	stairsWoodBirch = (new BlockStairs(135, planks, 2))->setBlockName("stairsWoodBirch")->setRequiresSelfNotify();
+	stairsWoodJungle = (new BlockStairs(136, planks, 3))->setBlockName("stairsWoodJungle")->setRequiresSelfNotify();
+	carrot = (new BlockCarrot(141))->setBlockName("carrots")->disableStats()->setRequiresSelfNotify();
+	potato = (new BlockPotato(142))->setBlockName("potatoes")->disableStats()->setRequiresSelfNotify();
+	blockRedstone = (new BlockPoweredOre(152, 24))->setHardness(5.0f)->setResistance(10.0f)->setStepSound(soundMetalFootstep)->setBlockName("blockRedstone"); // PORT152_ICON: blockRedstone
+	oreNetherQuartz = (new BlockOre(153, 50))->setHardness(3.0f)->setResistance(5.0f)->setStepSound(soundStoneFootstep)->setBlockName("netherquartz"); // PORT152_ICON: netherquartz
+	blockNetherQuartz = (new BlockQuartz(155))->setStepSound(soundStoneFootstep)->setHardness(0.8f)->setBlockName("quartzBlock");
+	stairsNetherQuartz = (new BlockStairs(156, blockNetherQuartz, 0))->setBlockName("stairsQuartz")->setRequiresSelfNotify();
 
 	Item::itemsList[cloth->blockID] = (new ItemCloth(cloth->blockID - 256))->setItemName("cloth");
 	Item::itemsList[wood->blockID] = (new ItemMetadata(wood->blockID - 256, wood))->setItemName("log");
@@ -1057,6 +1102,7 @@ void Block::initialize()
 	Item::itemsList[waterlily->blockID] = new ItemLilyPad(waterlily->blockID - 256);
 	Item::itemsList[pistonBase->blockID] = new ItemPiston(pistonBase->blockID - 256);
 	Item::itemsList[pistonStickyBase->blockID] = new ItemPiston(pistonStickyBase->blockID - 256);
+	Item::itemsList[blockNetherQuartz->blockID] = (new ItemMultiTextureTile(blockNetherQuartz->blockID - 256, blockNetherQuartz, BlockQuartz::quartzBlockTypes, 3))->setItemName("quartzBlock");
 	for (int_t i = 0; i < 256; i++)
 	{
 		if (blocksList[i] != nullptr && Item::itemsList[i] == nullptr)
@@ -1249,5 +1295,16 @@ void Block::cleanup()
 	dragonEgg = nullptr;
 	redstoneLampIdle = nullptr;
 	redstoneLampActive = nullptr;
+	stairsSandStone = nullptr;
+	oreEmerald = nullptr;
+	blockEmerald = nullptr;
+	stairsWoodSpruce = nullptr;
+	stairsWoodBirch = nullptr;
+	stairsWoodJungle = nullptr;
+	carrot = nullptr;
+	potato = nullptr;
+	blockRedstone = nullptr;
+	oreNetherQuartz = nullptr;
+	blockNetherQuartz = nullptr;
+	stairsNetherQuartz = nullptr;
 }
-

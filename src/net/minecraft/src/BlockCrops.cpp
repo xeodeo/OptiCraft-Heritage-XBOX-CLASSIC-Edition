@@ -82,6 +82,16 @@ int_t BlockCrops::getBlockTextureFromSideAndMetadata(int_t i, int_t j)
 
 int_t BlockCrops::getRenderType() { return 6; }
 
+int_t BlockCrops::getSeedItem()
+{
+	return Item::seeds->shiftedIndex;
+}
+
+int_t BlockCrops::getCropItem()
+{
+	return Item::wheat->shiftedIndex;
+}
+
 void BlockCrops::dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, int_t l, float f)
 {
 	dropBlockAsItemWithChance(world, i, j, k, l, f, 0);
@@ -91,26 +101,26 @@ void BlockCrops::dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t
 {
 	BlockFlower::dropBlockAsItemWithChance(world, i, j, k, l, f, 0);
 	if (world->multiplayerWorld) return;
-	for (int_t i1 = 0; i1 < 3 + fortune; i1++)
+	if (l >= 7)
 	{
-		if (world->rand.nextInt(15) <= l)
+		for (int_t i1 = 0; i1 < 3 + fortune; i1++)
 		{
-			float f1 = 0.7f;
-			float f2 = world->rand.nextFloat() * f1 + (1.0f - f1) * 0.5f;
-			float f3 = world->rand.nextFloat() * f1 + (1.0f - f1) * 0.5f;
-			float f4 = world->rand.nextFloat() * f1 + (1.0f - f1) * 0.5f;
-			EntityItem *entityitem = new EntityItem(world, (float)i + f2, (float)j + f3, (float)k + f4, new ItemStack(Item::seeds));
-			entityitem->delayBeforeCanPickup = 10;
-			if (!world->entityJoinedWorld(entityitem))
-				delete entityitem;
+			if (world->rand.nextInt(15) <= l)
+			{
+				dropBlockAsItem_do(world, i, j, k, new ItemStack(getSeedItem(), 1, 0));
+			}
 		}
 	}
 }
 
 int_t BlockCrops::idDropped(int_t i, Random &random)
 {
-	if (i == 7) return Item::wheat->shiftedIndex;
-	return -1;
+	return i == 7 ? getCropItem() : getSeedItem();
+}
+
+int_t BlockCrops::idDropped(int_t i, Random &random, int_t fortune)
+{
+	return i == 7 ? getCropItem() : getSeedItem();
 }
 
 int_t BlockCrops::quantityDropped(Random &random) { return 1; }

@@ -28,7 +28,7 @@ int ItemSlab::getMetadata(int damage)
 std::string ItemSlab::getItemNameIS(ItemStack* itemstack)
 {
     int damage = itemstack->getItemDamage();
-    if (damage < 0 || damage >= 6)
+    if (damage < 0 || damage >= 8)
     {
         damage = 0;
     }

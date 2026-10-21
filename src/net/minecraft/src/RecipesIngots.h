@@ -13,5 +13,5 @@ public:
 	void addRecipes(CraftingManager *craftingmanager);
 
 private:
-	void *recipeItems[4][2];
+	void *recipeItems[6][2];
 };

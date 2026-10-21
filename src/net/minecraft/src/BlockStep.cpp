@@ -7,7 +7,7 @@
 #include "Material.h"
 #include "World.h"
 
-const jstring BlockStep::blockStepTypes[6] = { "stone", "sand", "wood", "cobble", "brick", "smoothStoneBrick" };
+const jstring BlockStep::blockStepTypes[8] = { "stone", "sand", "wood", "cobble", "brick", "smoothStoneBrick", "netherBrick", "quartz" };
 
 BlockStep::BlockStep(int_t i, bool flag) : Block(i, 6, Material::rock)
 {
@@ -64,6 +64,8 @@ int_t BlockStep::getBlockTextureFromSideAndMetadata(int_t side, int_t metadata)
 	if (type == 3) return 16;
 	if (type == 4) return Block::brick->blockIndexInTexture;
 	if (type == 5) return Block::stoneBrick->blockIndexInTexture;
+	if (type == 6) return Block::netherBrick->blockIndexInTexture;
+	if (type == 7) return side == 0 ? 208 : (side == 1 ? 176 : 192); // PORT152_ICON: quartzblock_top
 	return 6;
 }
 

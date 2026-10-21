@@ -217,6 +217,15 @@ public:
     static Item* monsterPlacer;
     static Item* expBottle;
     static Item* fireballCharge;
+    static Item* emerald;
+    static Item* carrot;
+    static Item* potato;
+    static Item* bakedPotato;
+    static Item* poisonousPotato;
+    static Item* goldenCarrot;
+    static Item* pumpkinPie;
+    static Item* netherrackBrick;
+    static Item* netherQuartz;
     static Item* record13;
     static Item* recordCat;
     static Item* recordBlocks;

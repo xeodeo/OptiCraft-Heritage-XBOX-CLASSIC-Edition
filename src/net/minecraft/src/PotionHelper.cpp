@@ -16,6 +16,7 @@ const std::string PotionHelper::magmaCreamEffect = "+0+1-2-3&4-4+13";
 const std::string PotionHelper::redstoneEffect = "-5+6-7";
 const std::string PotionHelper::glowstoneEffect = "+5-6-7";
 const std::string PotionHelper::gunpowderEffect = "+14&13-13";
+const std::string PotionHelper::goldenCarrotEffect = "-0+1+2-3+13&4-4";
 
 namespace
 {
@@ -51,6 +52,8 @@ void PotionHelper::ensureInitialized()
     potionRequirements[Potion::harm->getId()] = "!0 & !1 & 2 & 3";
     potionRequirements[Potion::moveSlowdown->getId()] = "!0 & 1 & !2 & 3 & 3+6";
     potionRequirements[Potion::damageBoost->getId()] = "0 & !1 & !2 & 3 & 3+6";
+    potionRequirements[Potion::nightVision->getId()] = "!0 & 1 & !2 & 3 & 2+6";
+    potionRequirements[Potion::invisibility->getId()] = "!0 & 1 & 2 & 3 & 2+6";
 
     potionAmplifiers[Potion::moveSpeed->getId()] = "5";
     potionAmplifiers[Potion::digSpeed->getId()] = "5";

@@ -22,7 +22,7 @@ public:
 	bool shouldSideBeRendered(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l) override;
 	bool usesDefaultFaceCulling() const override { return false; }
 
-	static const jstring blockStepTypes[6];
+	static const jstring blockStepTypes[8];
 
 protected:
 	int_t damageDropped(int_t i) override;

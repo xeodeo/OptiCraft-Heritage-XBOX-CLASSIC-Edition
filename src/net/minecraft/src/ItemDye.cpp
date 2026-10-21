@@ -72,9 +72,12 @@ bool ItemDye::onItemUse(ItemStack* itemstack, EntityPlayer* entityplayer, World*
         }
         return true;
     }
-    if (blockId == Block::crops->blockID) {
+    if (blockId > 0 && dynamic_cast<BlockCrops*>(Block::blocksList[blockId]) != nullptr) {
+        if (world->getBlockMetadata(i, j, k) == 7) {
+            return false;
+        }
         if (!world->multiplayerWorld) {
-            static_cast<BlockCrops*>(Block::crops)->fertilize(world, i, j, k);
+            static_cast<BlockCrops*>(Block::blocksList[blockId])->fertilize(world, i, j, k);
             --itemstack->stackSize;
         }
         return true;

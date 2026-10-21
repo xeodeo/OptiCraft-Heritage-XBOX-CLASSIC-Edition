@@ -9,10 +9,11 @@
 #include "Vec3D.h"
 #include "MathHelper.h"
 
-BlockStairs::BlockStairs(int_t i, Block *block)
-    : Block(i, block->blockIndexInTexture, block->blockMaterial)
+BlockStairs::BlockStairs(int_t i, Block *block, int_t metadata)
+    : Block(i, block->getBlockTextureFromSideAndMetadata(2, metadata), block->blockMaterial)
 {
     modelBlock = block;
+    modelBlockMetadata = metadata;
     setHardness(block->blockHardness);
     setResistance(block->blockResistance / 3.0f);
     setStepSound(block->stepSound);
@@ -118,24 +119,19 @@ int_t BlockStairs::getRenderBlockPass()
     return modelBlock->getRenderBlockPass();
 }
 
-int_t BlockStairs::idDropped(int_t i, Random &random)
+int_t BlockStairs::getBlockTexture(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l)
 {
-    return modelBlock->idDropped(i, random);
-}
-
-int_t BlockStairs::quantityDropped(Random &random)
-{
-    return modelBlock->quantityDropped(random);
+    return modelBlock->getBlockTextureFromSideAndMetadata(l, modelBlockMetadata);
 }
 
 int_t BlockStairs::getBlockTextureFromSideAndMetadata(int_t i, int_t j)
 {
-    return modelBlock->getBlockTextureFromSideAndMetadata(i, 0);
+    return modelBlock->getBlockTextureFromSideAndMetadata(i, modelBlockMetadata);
 }
 
 int_t BlockStairs::getBlockTextureFromSide(int_t i)
 {
-    return modelBlock->getBlockTextureFromSideAndMetadata(i, 0);
+    return modelBlock->getBlockTextureFromSideAndMetadata(i, modelBlockMetadata);
 }
 
 int_t BlockStairs::tickRate()
@@ -177,11 +173,6 @@ void BlockStairs::onBlockAdded(World *world, int_t i, int_t j, int_t k)
 void BlockStairs::onBlockRemoval(World *world, int_t i, int_t j, int_t k)
 {
     modelBlock->onBlockRemoval(world, i, j, k);
-}
-
-void BlockStairs::dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, int_t l, float f)
-{
-    modelBlock->dropBlockAsItemWithChance(world, i, j, k, l, f);
 }
 
 void BlockStairs::onEntityWalking(World *world, int_t i, int_t j, int_t k, Entity *entity)

@@ -82,11 +82,10 @@ EnumCreatureAttribute EntityZombie::getCreatureAttribute() const
 
 void EntityZombie::dropRareDrop(int_t)
 {
-	switch (rand.nextInt(4))
+	switch (rand.nextInt(3))
 	{
-	case 0: if (Item::swordSteel != nullptr) dropItem(Item::swordSteel->shiftedIndex, 1); break;
-	case 1: if (Item::helmetSteel != nullptr) dropItem(Item::helmetSteel->shiftedIndex, 1); break;
-	case 2: if (Item::ingotIron != nullptr) dropItem(Item::ingotIron->shiftedIndex, 1); break;
-	case 3: if (Item::shovelSteel != nullptr) dropItem(Item::shovelSteel->shiftedIndex, 1); break;
+	case 0: if (Item::ingotIron != nullptr) dropItem(Item::ingotIron->shiftedIndex, 1); break;
+	case 1: if (Item::carrot != nullptr) dropItem(Item::carrot->shiftedIndex, 1); break;
+	case 2: if (Item::potato != nullptr) dropItem(Item::potato->shiftedIndex, 1); break;
 	}
 }

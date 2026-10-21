@@ -94,7 +94,7 @@ void TooManyItems::populateItems()
             for (int meta = 0; meta < 4; ++meta)
                 s_items.push_back(new ItemStack(b, 1, meta));
         }
-        else if (Block::sandStone && b->blockID == Block::sandStone->blockID)
+        else if ((Block::sandStone && b->blockID == Block::sandStone->blockID) || (Block::blockNetherQuartz && b->blockID == Block::blockNetherQuartz->blockID))
         {
             for (int meta = 0; meta < 3; ++meta)
                 s_items.push_back(new ItemStack(b, 1, meta));
@@ -106,7 +106,7 @@ void TooManyItems::populateItems()
         }
         else if (Block::stairSingle && b->blockID == Block::stairSingle->blockID)
         {
-            for (int meta = 0; meta < 6; ++meta)
+            for (int meta = 0; meta < 8; ++meta)
                 s_items.push_back(new ItemStack(b, 1, meta));
         }
         else if (Block::tallGrass && b->blockID == reinterpret_cast<Block*>(Block::tallGrass)->blockID)

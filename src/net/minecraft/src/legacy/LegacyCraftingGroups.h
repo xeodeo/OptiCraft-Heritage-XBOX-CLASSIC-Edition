@@ -79,6 +79,7 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 139, -1, 0, 28 }, // Tile::cobbleWall (fence)
     { 143, -1, 4, 33 }, // Tile::button_wood (button)
     { 145, -1, 0, 29 }, // Tile::anvil (device)
+    { 152, -1, 6, 13 }, // Tile::blockRedstone (block)
     { 155, -1, 0, 19 }, // Tile::quartzBlock (structblock)
     { 156, -1, 0, 15 }, // Tile::stairs_quartz (stairs)
     { 171, -1, 6, 37 }, // Tile::woolCarpet (carpet)
@@ -145,6 +146,7 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 325, -1, 1, 25 }, // Item::bucket_empty (utensil)
     { 328, -1, 5, 0 }, // Item::minecart
     { 330, -1, 0, 6 }, // Item::door_iron (door)
+    { 331, -1, 6, 30 }, // Item::redstone (treasure)
     { 333, -1, 5, 0 }, // Item::boat
     { 339, -1, 6, 0 }, // Item::paper
     { 340, -1, 6, 0 }, // Item::book

@@ -8,21 +8,25 @@ FurnaceRecipes* FurnaceRecipes::smeltingBase = nullptr;
 
 FurnaceRecipes::FurnaceRecipes()
 {
-    addSmelting(Block::oreIron->blockID,     new ItemStack(Item::ingotIron));
-    addSmelting(Block::oreGold->blockID,     new ItemStack(Item::ingotGold));
-    addSmelting(Block::oreDiamond->blockID,  new ItemStack(Item::diamond));
-    addSmelting(Block::sand->blockID,        new ItemStack(Block::glass));
-    addSmelting(Item::porkRaw->shiftedIndex,    new ItemStack(Item::porkCooked));
-    addSmelting(Item::beefRaw->shiftedIndex,    new ItemStack(Item::beefCooked));
-    addSmelting(Item::chickenRaw->shiftedIndex, new ItemStack(Item::chickenCooked));
-    addSmelting(Item::fishRaw->shiftedIndex,    new ItemStack(Item::fishCooked));
-    addSmelting(Block::cobblestone->blockID,    new ItemStack(Block::stone));
-    addSmelting(Item::clay->shiftedIndex,       new ItemStack(Item::brick));
-    addSmelting(Block::cactus->blockID,         new ItemStack(Item::dyePowder, 1, 2));
-    addSmelting(Block::wood->blockID,           new ItemStack(Item::coal, 1, 1));
-    addSmelting(Block::oreCoal->blockID,        new ItemStack(Item::coal));
-    addSmelting(Block::oreRedstone->blockID,    new ItemStack(Item::redstone));
-    addSmelting(Block::oreLapis->blockID,       new ItemStack(Item::dyePowder, 1, 4));
+    addSmelting(Block::oreIron->blockID,         new ItemStack(Item::ingotIron));
+    addSmelting(Block::oreGold->blockID,         new ItemStack(Item::ingotGold));
+    addSmelting(Block::oreDiamond->blockID,      new ItemStack(Item::diamond));
+    addSmelting(Block::sand->blockID,            new ItemStack(Block::glass));
+    addSmelting(Item::porkRaw->shiftedIndex,     new ItemStack(Item::porkCooked));
+    addSmelting(Item::beefRaw->shiftedIndex,     new ItemStack(Item::beefCooked));
+    addSmelting(Item::chickenRaw->shiftedIndex,  new ItemStack(Item::chickenCooked));
+    addSmelting(Item::fishRaw->shiftedIndex,     new ItemStack(Item::fishCooked));
+    addSmelting(Block::cobblestone->blockID,     new ItemStack(Block::stone));
+    addSmelting(Item::clay->shiftedIndex,        new ItemStack(Item::brick));
+    addSmelting(Block::cactus->blockID,          new ItemStack(Item::dyePowder, 1, 2));
+    addSmelting(Block::wood->blockID,            new ItemStack(Item::coal, 1, 1));
+    addSmelting(Item::potato->shiftedIndex,      new ItemStack(Item::bakedPotato));
+    addSmelting(Block::netherrack->blockID,      new ItemStack(Item::netherrackBrick));
+    addSmelting(Block::oreCoal->blockID,         new ItemStack(Item::coal));
+    addSmelting(Block::oreRedstone->blockID,     new ItemStack(Item::redstone));
+    addSmelting(Block::oreLapis->blockID,        new ItemStack(Item::dyePowder, 1, 4));
+    addSmelting(Block::oreEmerald->blockID,      new ItemStack(Item::emerald));
+    addSmelting(Block::oreNetherQuartz->blockID, new ItemStack(Item::netherQuartz));
 }
 
 FurnaceRecipes* FurnaceRecipes::smelting()

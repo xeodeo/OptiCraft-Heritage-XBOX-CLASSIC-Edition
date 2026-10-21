@@ -13,13 +13,17 @@ RecipesIngots::RecipesIngots()
 	recipeItems[1][1] = new ItemStack(Item::ingotIron, 9);
 	recipeItems[2][0] = Block::blockDiamond;
 	recipeItems[2][1] = new ItemStack(Item::diamond, 9);
-	recipeItems[3][0] = Block::blockLapis;
-	recipeItems[3][1] = new ItemStack(Item::dyePowder, 9, 4);
+	recipeItems[3][0] = Block::blockEmerald;
+	recipeItems[3][1] = new ItemStack(Item::emerald, 9);
+	recipeItems[4][0] = Block::blockLapis;
+	recipeItems[4][1] = new ItemStack(Item::dyePowder, 9, 4);
+	recipeItems[5][0] = Block::blockRedstone;
+	recipeItems[5][1] = new ItemStack(Item::redstone, 9);
 }
 
 void RecipesIngots::addRecipes(CraftingManager *craftingmanager)
 {
-	for (int_t i = 0; i < 4; i++)
+	for (int_t i = 0; i < 6; i++)
 	{
 		Block *block = static_cast<Block *>(recipeItems[i][0]);
 		ItemStack *itemstack = static_cast<ItemStack *>(recipeItems[i][1]);

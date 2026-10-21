@@ -47,7 +47,8 @@ static int_t getCreativeCategory(ItemStack *stack)
             (Block::torchRedstoneActive != nullptr && id == Block::torchRedstoneActive->blockID) ||
             (Block::button != nullptr && id == Block::button->blockID) ||
             (Block::trapdoor != nullptr && id == Block::trapdoor->blockID) ||
-            (Block::redstoneLampIdle != nullptr && id == Block::redstoneLampIdle->blockID))
+            (Block::redstoneLampIdle != nullptr && id == Block::redstoneLampIdle->blockID) ||
+            (Block::blockRedstone != nullptr && id == Block::blockRedstone->blockID))
         {
             return CREATIVE_TAB_REDSTONE_TRANSPORT;
         }
@@ -119,6 +120,12 @@ static int_t getCreativeCategory(ItemStack *stack)
         (Item::chickenCooked != nullptr && id == Item::chickenCooked->shiftedIndex) ||
         (Item::rottenFlesh != nullptr && id == Item::rottenFlesh->shiftedIndex) ||
         (Item::bowlSoup != nullptr && id == Item::bowlSoup->shiftedIndex) ||
+        (Item::carrot != nullptr && id == Item::carrot->shiftedIndex) ||
+        (Item::potato != nullptr && id == Item::potato->shiftedIndex) ||
+        (Item::bakedPotato != nullptr && id == Item::bakedPotato->shiftedIndex) ||
+        (Item::poisonousPotato != nullptr && id == Item::poisonousPotato->shiftedIndex) ||
+        (Item::goldenCarrot != nullptr && id == Item::goldenCarrot->shiftedIndex) ||
+        (Item::pumpkinPie != nullptr && id == Item::pumpkinPie->shiftedIndex) ||
         (Item::swordWood != nullptr && id == Item::swordWood->shiftedIndex) ||
         (Item::swordStone != nullptr && id == Item::swordStone->shiftedIndex) ||
         (Item::swordSteel != nullptr && id == Item::swordSteel->shiftedIndex) ||
@@ -202,10 +209,13 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
 
     Block *blocks[] = {
         Block::cobblestone, Block::stone, Block::oreDiamond, Block::oreGold, Block::oreIron, Block::oreCoal,
-        Block::oreLapis, Block::oreRedstone, Block::stoneBrick, Block::stoneBrick, Block::stoneBrick,
+        Block::oreLapis, Block::oreRedstone, Block::oreEmerald, Block::oreNetherQuartz,
+        Block::stoneBrick, Block::stoneBrick, Block::stoneBrick,
         Block::stoneBrick, Block::blockClay, Block::blockDiamond, Block::blockGold, Block::blockSteel,
+        Block::blockEmerald, Block::blockRedstone,
         Block::bedrock, Block::blockLapis, Block::brick, Block::cobblestoneMossy, Block::stairSingle,
         Block::stairSingle, Block::stairSingle, Block::stairSingle, Block::stairSingle, Block::stairSingle,
+        Block::stairSingle, Block::stairSingle,
         Block::obsidian, Block::netherrack, Block::slowSand, Block::glowStone, Block::wood, Block::wood,
         Block::wood, Block::wood, Block::leaves, Block::leaves, Block::leaves, Block::leaves, Block::dirt,
         Block::grass, Block::sand, Block::sandStone, Block::sandStone, Block::sandStone, Block::gravel,
@@ -213,7 +223,9 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
         Block::sapling, Block::sapling, Block::deadBush, Block::sponge, Block::ice, Block::blockSnow,
         Block::plantYellow, Block::plantRed, Block::mushroomBrown, Block::mushroomRed, Block::cactus,
         Block::melon, Block::pumpkin, Block::pumpkinLantern, Block::vine, Block::fenceIron, Block::thinGlass,
-        Block::netherBrick, Block::netherFence, Block::stairsNetherBrick, Block::endPortal, Block::whiteStone,
+        Block::netherBrick, Block::netherFence, Block::stairsNetherBrick,
+        Block::blockNetherQuartz, Block::blockNetherQuartz, Block::blockNetherQuartz, Block::stairsNetherQuartz,
+        Block::endPortal, Block::whiteStone,
         Block::mycelium,
         Block::waterlily, Block::tallGrass, Block::tallGrass, Block::chest, Block::workbench, Block::glass,
         Block::tnt, Block::bookShelf, Block::cloth, Block::cloth, Block::cloth, Block::cloth, Block::cloth,
@@ -221,8 +233,10 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
         Block::cloth, Block::cloth, Block::cloth, Block::cloth, Block::dispenser, Block::stoneOvenIdle,
         Block::musicBlock, Block::jukebox, Block::pistonStickyBase, Block::pistonBase, Block::fence,
         Block::fenceGate, Block::ladder, Block::rail, Block::railPowered, Block::railDetector, Block::torchWood,
-        Block::stairCompactPlanks, Block::stairCompactCobblestone, Block::stairsBrick,
-        Block::stairsStoneBrickSmooth, Block::lever, Block::pressurePlateStone, Block::pressurePlatePlanks,
+        Block::stairCompactPlanks, Block::stairsWoodSpruce, Block::stairsWoodBirch, Block::stairsWoodJungle,
+        Block::stairCompactCobblestone, Block::stairsBrick,
+        Block::stairsStoneBrickSmooth, Block::stairsSandStone,
+        Block::lever, Block::pressurePlateStone, Block::pressurePlatePlanks,
         Block::torchRedstoneActive, Block::button, Block::trapdoor, Block::enchantmentTable,
         Block::redstoneLampIdle
     };
@@ -234,6 +248,7 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
     int_t saplingMeta = 0;
     int_t stoneBrickMeta = 0;
     int_t sandstoneMeta = 0;
+    int_t quartzMeta = 0;
     int_t leavesMeta = 0;
     int_t tallGrassMeta = 1;
 
@@ -250,6 +265,7 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
         else if (block == Block::sapling) meta = saplingMeta++;
         else if (block == Block::stoneBrick) meta = stoneBrickMeta++;
         else if (block == Block::sandStone) meta = sandstoneMeta++;
+        else if (block == Block::blockNetherQuartz) meta = quartzMeta++;
         else if (block == Block::tallGrass) meta = tallGrassMeta++;
         else if (block == Block::leaves) meta = leavesMeta++;
         addItemStack(new ItemStack(block, 1, meta));

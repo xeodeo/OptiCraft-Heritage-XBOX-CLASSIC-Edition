@@ -2,8 +2,8 @@
 #include "Block.h"
 #include "Material.h"
 
-Block* ItemPickaxe::blocksEffectiveAgainst[23] = {};
-int ItemPickaxe::numBlocksEffectiveAgainst = 23;
+Block* ItemPickaxe::blocksEffectiveAgainst[30] = {};
+int ItemPickaxe::numBlocksEffectiveAgainst = 30;
 
 Block** ItemPickaxe::getBlocksEffectiveAgainst() {
     Block* blocks[] = {
@@ -12,7 +12,9 @@ Block** ItemPickaxe::getBlocksEffectiveAgainst() {
         Block::oreCoal, Block::blockGold, Block::oreGold, Block::oreDiamond,
         Block::blockDiamond, Block::ice, Block::netherrack, Block::oreLapis,
         Block::blockLapis, Block::oreRedstone, Block::oreRedstoneGlowing, Block::rail,
-        Block::railDetector, Block::railPowered
+        Block::railDetector, Block::railPowered, Block::oreEmerald, Block::blockEmerald,
+        Block::blockRedstone, Block::oreNetherQuartz, Block::blockNetherQuartz,
+        Block::stairsSandStone, Block::stairsNetherQuartz, Block::stairsNetherBrick
     };
     for (int i = 0; i < numBlocksEffectiveAgainst; i++) {
         blocksEffectiveAgainst[i] = blocks[i];
@@ -29,6 +31,9 @@ bool ItemPickaxe::canHarvestBlock(Block* block) {
         return EnumToolMaterialHelper::getHarvestLevel(toolMaterial) == 3;
     }
     if (block == Block::blockDiamond || block == Block::oreDiamond) {
+        return EnumToolMaterialHelper::getHarvestLevel(toolMaterial) >= 2;
+    }
+    if (block == Block::oreEmerald || block == Block::blockEmerald) {
         return EnumToolMaterialHelper::getHarvestLevel(toolMaterial) >= 2;
     }
     if (block == Block::blockGold || block == Block::oreGold) {

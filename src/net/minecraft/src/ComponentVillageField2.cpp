@@ -7,11 +7,26 @@
 #include "java/Random.h"
 
 ComponentVillageField2::ComponentVillageField2(
-	int_t type, Random &, std::unique_ptr<StructureBoundingBox> bounds, int_t direction)
+	int_t type, Random &random, std::unique_ptr<StructureBoundingBox> bounds, int_t direction)
 	: ComponentVillage(type), averageGroundLevel(-1)
 {
 	coordBaseMode = direction;
 	boundingBox = std::move(bounds);
+	cropTypeA = pickRandomCrop(random);
+	cropTypeB = pickRandomCrop(random);
+}
+
+int_t ComponentVillageField2::pickRandomCrop(Random &random)
+{
+	switch (random.nextInt(5))
+	{
+	case 0:
+		return Block::carrot->blockID;
+	case 1:
+		return Block::potato->blockID;
+	default:
+		return Block::crops->blockID;
+	}
 }
 
 void ComponentVillageField2::buildComponent(
@@ -52,9 +67,10 @@ bool ComponentVillageField2::addComponentParts(
 
 	for (int_t z = 1; z <= 7; ++z)
 	{
-		for (int_t x : {1, 2, 4, 5})
-			placeBlockAtCurrentPosition(world, Block::crops->blockID,
-				MathHelper::getRandomIntegerInRange(random, 2, 7), x, 1, z, chunkBounds);
+		placeBlockAtCurrentPosition(world, cropTypeA, MathHelper::getRandomIntegerInRange(random, 2, 7), 1, 1, z, chunkBounds);
+		placeBlockAtCurrentPosition(world, cropTypeA, MathHelper::getRandomIntegerInRange(random, 2, 7), 2, 1, z, chunkBounds);
+		placeBlockAtCurrentPosition(world, cropTypeB, MathHelper::getRandomIntegerInRange(random, 2, 7), 4, 1, z, chunkBounds);
+		placeBlockAtCurrentPosition(world, cropTypeB, MathHelper::getRandomIntegerInRange(random, 2, 7), 5, 1, z, chunkBounds);
 	}
 
 	for (int_t z = 0; z < 9; ++z)

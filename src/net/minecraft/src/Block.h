@@ -127,6 +127,7 @@ public:
 
 protected:
 	virtual void dropBlockAsItem_do(World *world, int_t i, int_t j, int_t k, ItemStack *itemstack);
+	void dropXpOnBlockBreak(World *world, int_t i, int_t j, int_t k, int_t xp);
 	virtual int_t damageDropped(int_t i);
 	virtual bool func_50074_q();
 	virtual ItemStack *createStackedBlock(int_t metadata);
@@ -351,6 +352,18 @@ public:
 	static Block *dragonEgg;
 	static Block *redstoneLampIdle;
 	static Block *redstoneLampActive;
+	static Block *stairsSandStone;
+	static Block *oreEmerald;
+	static Block *blockEmerald;
+	static Block *stairsWoodSpruce;
+	static Block *stairsWoodBirch;
+	static Block *stairsWoodJungle;
+	static Block *carrot;
+	static Block *potato;
+	static Block *blockRedstone;
+	static Block *oreNetherQuartz;
+	static Block *blockNetherQuartz;
+	static Block *stairsNetherQuartz;
 
 	int_t blockIndexInTexture = 0;
 	const int_t blockID;

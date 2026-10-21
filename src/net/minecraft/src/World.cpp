@@ -6055,7 +6055,7 @@ bool World::isBlockGettingPowered(int x, int y, int z)
 
 bool World::isBlockIndirectlyProvidingPowerTo(int x, int y, int z, int side)
 {
-    if (isBlockNormalCube(x, y, z))
+    if (Block::isNormalCube(getBlockId(x, y, z)))
     {
         return isBlockGettingPowered(x, y, z);
     }

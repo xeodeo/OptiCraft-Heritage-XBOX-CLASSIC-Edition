@@ -7,6 +7,7 @@
 #include "ItemSword.h"
 #include "ItemHoe.h"
 #include "ItemFood.h"
+#include "ItemSeedFood.h"
 #include "Potion.h"
 #include "PotionHelper.h"
 #include "Enchantment.h"
@@ -189,6 +190,15 @@ Item* Item::speckledMelon = nullptr;
 Item* Item::monsterPlacer = nullptr;
 Item* Item::expBottle = nullptr;
 Item* Item::fireballCharge = nullptr;
+Item* Item::emerald = nullptr;
+Item* Item::carrot = nullptr;
+Item* Item::potato = nullptr;
+Item* Item::bakedPotato = nullptr;
+Item* Item::poisonousPotato = nullptr;
+Item* Item::goldenCarrot = nullptr;
+Item* Item::pumpkinPie = nullptr;
+Item* Item::netherrackBrick = nullptr;
+Item* Item::netherQuartz = nullptr;
 Item* Item::record13 = nullptr;
 Item* Item::recordCat = nullptr;
 Item* Item::recordBlocks = nullptr;
@@ -479,7 +489,7 @@ void Item::initItems() {
     bow = (new ItemBow(5))->setIconCoord(5, 1)->setItemName("bow");
     arrow = (new Item(6))->setIconCoord(5, 2)->setItemName("arrow");
     coal = (new ItemCoal(7))->setIconCoord(7, 0)->setItemName("coal");
-    diamond = (new Item(8))->setIconCoord(7, 3)->setItemName("emerald");
+    diamond = (new Item(8))->setIconCoord(7, 3)->setItemName("diamond");
     ingotIron = (new Item(9))->setIconCoord(7, 1)->setItemName("ingotIron");
     ingotGold = (new Item(10))->setIconCoord(7, 2)->setItemName("ingotGold");
     swordSteel = (new ItemSword(11, EnumToolMaterial::IRON))->setIconCoord(2, 4)->setItemName("swordIron");
@@ -601,6 +611,15 @@ void Item::initItems() {
     monsterPlacer = (new ItemMonsterPlacer(127))->setIconCoord(9, 9)->setItemName("monsterPlacer");
     expBottle = (new ItemExpBottle(128))->setIconCoord(11, 10)->setItemName("expBottle");
     fireballCharge = (new ItemFireball(129))->setIconCoord(14, 2)->setItemName("fireball");
+    emerald = (new Item(132))->setIconCoord(7, 3)->setItemName("emerald"); // PORT152_ICON: emerald
+    carrot = (new ItemSeedFood(135, 4, 0.6f, Block::carrot->blockID, Block::tilledField->blockID))->setIconCoord(10, 0)->setItemName("carrots"); // PORT152_ICON: carrots
+    potato = (new ItemSeedFood(136, 1, 0.3f, Block::potato->blockID, Block::tilledField->blockID))->setIconCoord(10, 0)->setItemName("potato"); // PORT152_ICON: potato
+    bakedPotato = (new ItemFood(137, 6, 0.6f, false))->setIconCoord(9, 2)->setItemName("potatoBaked"); // PORT152_ICON: potatoBaked
+    poisonousPotato = (new ItemFood(138, 2, 0.3f, false))->setPotionEffect(Potion::poison->id, 5, 0, 0.6f)->setIconCoord(11, 8)->setItemName("potatoPoisonous"); // PORT152_ICON: potatoPoisonous
+    goldenCarrot = (new ItemFood(140, 6, 1.2f, false))->setPotionEffect(PotionHelper::goldenCarrotEffect)->setIconCoord(11, 0)->setItemName("carrotGolden"); // PORT152_ICON: carrotGolden
+    pumpkinPie = (new ItemFood(144, 8, 0.3f, false))->setIconCoord(13, 1)->setItemName("pumpkinPie"); // PORT152_ICON: pumpkinPie
+    netherrackBrick = (new Item(149))->setIconCoord(6, 1)->setItemName("netherbrick"); // PORT152_ICON: netherbrick
+    netherQuartz = (new Item(150))->setIconCoord(7, 3)->setItemName("netherquartz"); // PORT152_ICON: netherquartz
     record13 = (new ItemRecord(2000, "13"))->setIconCoord(0, 15)->setItemName("record");
     recordCat = (new ItemRecord(2001, "cat"))->setIconCoord(1, 15)->setItemName("record");
     recordBlocks = (new ItemRecord(2002, "blocks"))->setIconCoord(2, 15)->setItemName("record");
@@ -734,7 +753,15 @@ void Item::cleanup()
     pumpkinSeeds = nullptr;
     melonSeeds = nullptr;
     netherStalkSeeds = nullptr;
+    emerald = nullptr;
+    carrot = nullptr;
+    potato = nullptr;
+    bakedPotato = nullptr;
+    poisonousPotato = nullptr;
+    goldenCarrot = nullptr;
+    pumpkinPie = nullptr;
+    netherrackBrick = nullptr;
+    netherQuartz = nullptr;
     record13 = nullptr;
     recordCat = nullptr;
 }
-
