@@ -57,7 +57,7 @@ public:
 #endif
 #if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || PLATFORM_PC_LEGACY
 	bool isTerrainBuildInProgress() const;
-#ifdef PS2_PLATFORM
+#if defined(PS2_PLATFORM) || PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	// Drops an in-flight build and returns its staging lease. The renderer
 	// stays dirty and restarts from scratch on a later scheduler step.
 	void abandonTerrainBuild();

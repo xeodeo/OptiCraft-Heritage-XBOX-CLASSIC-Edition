@@ -80,6 +80,7 @@
 #include "BiomeGenBase.h"
 #include "NextTickListEntry.h"
 #include "TileEntity.h"
+#include "TileEntityPiston.h"
 #include "ThreadedFileIOBase.h"
 #include "BlockFire.h"
 #include "BlockFluid.h"
@@ -4229,6 +4230,13 @@ void World::setBlockTileEntity(int x, int y, int z, TileEntity* tileEntity)
             {
                 chunk->setChunkBlockTileEntity(x & 0xf, y, z & 0xf, tileEntity);
             }
+        }
+        // A piston moves for two ticks, less than a section takes to mesh on
+        // the consoles, so it is handed to the renderers directly.
+        if (dynamic_cast<TileEntityPiston *>(tileEntity) != nullptr)
+        {
+            for (IWorldAccess *access : worldAccesses)
+                access->onMovingBlockTileEntity(tileEntity);
         }
     }
 }
