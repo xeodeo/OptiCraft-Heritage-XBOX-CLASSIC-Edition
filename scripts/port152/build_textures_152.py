@@ -332,6 +332,16 @@ def write_header(path: Path, blocks: dict[str, int], items: dict[str, int]) -> N
         "inline constexpr int blockIcon(const char* name) { return findIcon(kBlockIcons, kBlockIconCount, name); }",
         "inline constexpr int itemIcon(const char* name) { return findIcon(kItemIcons, kItemIconCount, name); }",
         "",
+        "// Compile-time only: use these in game code, so a lookup never runs per face",
+        "// and a name missing from the atlas is a build error.",
+        "template <int Index> struct CheckedIcon",
+        "{",
+        "    static_assert(Index >= 0, \"1.5.2 icon missing from the atlas\");",
+        "    static constexpr int value = Index;",
+        "};",
+        "#define TEX152_BLOCK_ICON(name) (::Texture152::CheckedIcon<::Texture152::blockIcon(name)>::value)",
+        "#define TEX152_ITEM_ICON(name) (::Texture152::CheckedIcon<::Texture152::itemIcon(name)>::value)",
+        "",
         "} // namespace Texture152", "",
     ]
     path.parent.mkdir(parents=True, exist_ok=True)
