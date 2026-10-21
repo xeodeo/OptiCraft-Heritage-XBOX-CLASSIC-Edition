@@ -22,5 +22,8 @@ public:
 	virtual void updateAllRenderers() = 0;
 	virtual void playRecord(const jstring &s, int_t i, int_t j, int_t k) = 0;
 	virtual void doNothingWithTileEntity(int_t i, int_t j, int_t k, TileEntity *tileentity) = 0;
+	// A moving block (piston) got its tile entity: renderers that only learn
+	// about tile entities from a finished section mesh can draw it at once.
+	virtual void onMovingBlockTileEntity(TileEntity *tileentity) { (void)tileentity; }
 	virtual void playAuxSFX(EntityPlayer *player, int_t eventId, int_t x, int_t y, int_t z, int_t data) = 0;
 };

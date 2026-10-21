@@ -50,6 +50,11 @@ PcLegacyTerrainStaging *pcLegacyTerrainStagingGet(WorldRenderer *owner)
         : nullptr;
 }
 
+WorldRenderer *pcLegacyTerrainStagingOwner()
+{
+    return g_pcLegacyTerrainStaging.owner;
+}
+
 void pcLegacyTerrainStagingRelease(WorldRenderer *owner)
 {
     if (owner == nullptr || g_pcLegacyTerrainStaging.owner != owner)

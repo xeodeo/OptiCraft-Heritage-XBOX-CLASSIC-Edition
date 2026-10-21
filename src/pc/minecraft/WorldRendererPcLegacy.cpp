@@ -91,6 +91,11 @@ void WorldRenderer::updateRenderer()
     pcLegacyBuildRendererStep(PLATFORM_CHUNK_BUILD_BLOCKS_PER_STEP);
 }
 
+void WorldRenderer::abandonTerrainBuild()
+{
+    pcLegacyResetBuildState();
+}
+
 void WorldRenderer::pcLegacyResetBuildState()
 {
     pcLegacyTerrainStagingRelease(this);

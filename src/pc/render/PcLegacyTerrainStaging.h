@@ -32,6 +32,8 @@ struct PcLegacyTerrainStaging
 bool pcLegacyTerrainStagingAcquire(WorldRenderer *owner, World *world,
     int_t x0, int_t y0, int_t z0, int_t x1, int_t y1, int_t z1);
 PcLegacyTerrainStaging *pcLegacyTerrainStagingGet(WorldRenderer *owner);
+// The renderer whose build holds the (single) staging buffer, or null.
+WorldRenderer *pcLegacyTerrainStagingOwner();
 void pcLegacyTerrainStagingRelease(WorldRenderer *owner);
 std::size_t pcLegacyTerrainStagingBytes();
 

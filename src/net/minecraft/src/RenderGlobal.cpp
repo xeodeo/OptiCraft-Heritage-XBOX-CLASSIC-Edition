@@ -8,6 +8,7 @@
 #include "platform/PlatformTuning.h"
 #if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 #include "pc/render/PcLegacyMeshScheduler.h"
+#include "pc/render/PcLegacyTerrainStaging.h"
 #endif
 
 #include <algorithm>
@@ -2556,6 +2557,20 @@ bool RenderGlobal::updateRenderers(EntityLiving *entityliving, bool flag)
 				candidate->urgentRebuild = false;
 				continue;
 			}
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
+			// One staging buffer: a streaming build in it gives way to the edit
+			// (it stays dirty and starts again later).
+			if (!buildInProgress(candidate))
+			{
+				WorldRenderer *owner = pcLegacyTerrainStagingOwner();
+				if (owner != nullptr && owner != candidate)
+				{
+					if (owner->urgentRebuild)
+						break;
+					owner->abandonTerrainBuild();
+				}
+			}
+#endif
 			if (!buildInProgress(candidate) && !renderTerrainStagingHasFreeSlot())
 			{
 #if PLATFORM_PS2
@@ -3105,6 +3120,11 @@ void RenderGlobal::markRenderersInRange(int_t i, int_t j, int_t k, int_t l, int_
 				// need to hear every mutation so population can be coalesced safely.
 				enqueueRendererUpdate(worldrenderer);
 				worldrenderer->markDirty();
+				// Any change next to the viewer (an edit, redstone, a piston) takes
+				// the urgent lane in updateRenderers(); see XboxTuning.h.
+				if (PLATFORM_URGENT_MESH_DISTANCE_SQ > 0.0f && mc != nullptr && mc->renderViewEntity != nullptr &&
+				    worldrenderer->distanceToEntitySquared(mc->renderViewEntity) <= PLATFORM_URGENT_MESH_DISTANCE_SQ)
+					worldrenderer->urgentRebuild = true;
 #else
 				if (!worldrenderer->needsUpdate)
 				{
@@ -3370,6 +3390,18 @@ void RenderGlobal::doNothingWithTileEntity(int_t i, int_t j, int_t k, TileEntity
 				renderer->tileEntityRenderers.end());
 		}
 	}
+}
+
+void RenderGlobal::onMovingBlockTileEntity(TileEntity *tileentity)
+{
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
+	// The incremental builder only lists a section's tile entities when its mesh
+	// is published, and a moving piston (block 36) is invisible in the mesh.
+	if (tileentity != nullptr && std::find(tileEntities.begin(), tileEntities.end(), tileentity) == tileEntities.end())
+		tileEntities.push_back(tileentity);
+#else
+	(void)tileentity;
+#endif
 }
 
 void RenderGlobal::playAuxSFX(EntityPlayer *entityplayer, int_t i, int_t j, int_t k, int_t l, int_t i1)

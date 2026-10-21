@@ -71,6 +71,14 @@
 #define PLATFORM_MAX_RENDERER_UPDATES_PER_FRAME  PC_LEGACY_MAX_RENDERER_UPDATES_PER_FRAME
 #undef  PLATFORM_RENDERER_UPDATE_CANDIDATES_PER_FRAME
 #define PLATFORM_RENDERER_UPDATE_CANDIDATES_PER_FRAME PC_LEGACY_RENDERER_UPDATE_CANDIDATES_PER_FRAME
+// Urgent lane: a section changed within 16 blocks of the viewer (an edit,
+// redstone, a piston) is meshed first, up to 6 ms a frame, taking the staging
+// buffer from a streaming build. Without it a redstone clock or a piston next
+// to the player waited behind terrain streaming and looked stuck.
+#undef  PLATFORM_URGENT_MESH_DISTANCE_SQ
+#define PLATFORM_URGENT_MESH_DISTANCE_SQ         256.0f
+#undef  PLATFORM_URGENT_MESH_BUDGET_MS
+#define PLATFORM_URGENT_MESH_BUDGET_MS           6
 #undef  PLATFORM_COALESCE_MESH_REBUILDS
 #define PLATFORM_COALESCE_MESH_REBUILDS          PC_LEGACY_COALESCE_MESH_REBUILDS
 #undef  PLATFORM_CHUNK_BUILD_BLOCKS_PER_STEP
