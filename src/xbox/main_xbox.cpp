@@ -16,6 +16,7 @@
 extern "C" int __isa_available;  // vcruntime CPU dispatch level
 
 #include "xbox/system/XboxCrashLog.h"
+#include "xbox/system/XboxGameDrive.h"
 namespace XboxSelfTest { void run(); }
 
 // T:\debug.log. McLog closes and reopens it after every line so a hang still
@@ -62,6 +63,7 @@ void __cdecl main()
 	// boot that dies anywhere after this names its last step.
 	xboxNetLogInit();  // no-op unless built with XBOX_NETLOG_HOST
 	XboxCrashLog::install();  // worker-thread and access-violation crashes
+	XboxGameDrive::mapToImageFolder();  // D: = this XBE's folder (launcher version folders)
 	const char* writableRoot = XboxWritableRoot::get();
 #if XBOX_DISK_LOG
 	char logDir[8];
