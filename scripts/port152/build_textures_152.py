@@ -33,6 +33,11 @@ SKIP_CONSOLE_GUI = {
 # stores the texture as an animation strip rather than a 16x16 icon.
 BLOCK_SLOT_OVERRIDES = {
     14: "portal.png", 19: "gravel.png", 31: "fire_0.png", 47: "fire_1.png",
+    # Redrawn in 1.5.2 past the near-match threshold, same blocks as 1.2.5:
+    # BlockSapling meta 3, BlockStem (111, bent +16), BlockEndPortalFrame
+    # side and eye, BlockLeaves jungle (52 + 144).
+    30: "sapling_jungle.png", 111: "stem_straight.png", 127: "stem_bent.png",
+    159: "endframe_side.png", 174: "endframe_eye.png", 196: "leaves_jungle.png",
     # Still water is one cell; flowing water and lava are 2x2 (TextureWaterFlowFX
     # and TextureLavaFlowFX use tileSize 2 at 206 and 238).
     205: "water.png", 237: "lava.png",
@@ -47,6 +52,10 @@ PLACEHOLDER_REPEATS = 8
 # as the same texture redrawn; above it the cell keeps its 1.2.5 pixels.
 NEAR_MATCH_DIFF = 3.0
 LEGACY_TILE = "<1.2.5 tile>"
+# Old chest faces: 1.5.2 draws chests only as models and gives the chest and the
+# locked chest the planks icon (BlockChest.cpp / BlockLockedChest.cpp), so these
+# cells go to new icons.
+FREED_BLOCK_CELLS = {25, 26, 27, 41, 42, 57, 58}
 # Item cells whose icon comes from metadata or item state, not setIconCoord.
 DYE_COLORS = ["black", "red", "green", "brown", "blue", "purple", "cyan", "silver",
               "gray", "pink", "lime", "yellow", "lightBlue", "magenta", "orange", "white"]
@@ -167,6 +176,8 @@ def build_atlas(source_dir: Path, old_atlas_path: Path, overrides: dict[int, str
                     if tile.getbbox() is not None and repeats[image_key(tile)] >= PLACEHOLDER_REPEATS}
     for index, tile in tiles.items():
         if index in index_to_name or tile.getbbox() is None or index in placeholders:
+            continue
+        if source_dir.name == "blocks" and index in FREED_BLOCK_CELLS:
             continue
         x, y = index % 16 * CELL, index // 16 * CELL
         best_name, best_diff = min(((name, icon_diff(tile, icon)) for name, icon in icons.items()),
