@@ -810,6 +810,103 @@ int_t Block::getMobilityFlag()
 	return blockMaterial->getMaterialMobility();
 }
 
+int_t Block::tickRate(World *world)
+{
+	(void)world;
+	return 10;
+}
+
+void Block::onPostBlockPlaced(World *world, int_t x, int_t y, int_t z, int_t metadata)
+{
+	(void)world;
+	(void)x;
+	(void)y;
+	(void)z;
+	(void)metadata;
+}
+
+void Block::onBlockHarvested(World *world, int_t x, int_t y, int_t z,
+	                            int_t metadata, EntityPlayer *player)
+{
+	(void)world;
+	(void)x;
+	(void)y;
+	(void)z;
+	(void)metadata;
+	(void)player;
+}
+
+void Block::onSetBlockIDWithMetaData(World *world, int_t x, int_t y, int_t z, int_t metadata)
+{
+	(void)world;
+	(void)x;
+	(void)y;
+	(void)z;
+	(void)metadata;
+}
+
+void Block::fillWithRain(World *world, int_t x, int_t y, int_t z)
+{
+	(void)world;
+	(void)x;
+	(void)y;
+	(void)z;
+}
+
+bool Block::isFlowerPot()
+{
+	return false;
+}
+
+bool Block::func_82506_l()
+{
+	return true;
+}
+
+bool Block::canDropFromExplosion(Explosion *explosion)
+{
+	(void)explosion;
+	return true;
+}
+
+bool Block::isAssociatedBlockID(int_t blockId)
+{
+	return this->blockID == blockId;
+}
+
+bool Block::hasComparatorInputOverride()
+{
+	return false;
+}
+
+int_t Block::getComparatorInputOverride(World *world, int_t x, int_t y, int_t z, int_t side)
+{
+	(void)world;
+	(void)x;
+	(void)y;
+	(void)z;
+	(void)side;
+	return 0;
+}
+
+bool Block::isAssociatedBlockID(int_t blockId, int_t otherBlockId)
+{
+	if (blockId == otherBlockId)
+		return true;
+	if (blockId <= 0 || blockId >= BLOCK_REGISTRY_SIZE ||
+		otherBlockId <= 0 || otherBlockId >= BLOCK_REGISTRY_SIZE ||
+		blocksList[blockId] == nullptr || blocksList[otherBlockId] == nullptr)
+		return false;
+	return blocksList[blockId]->isAssociatedBlockID(otherBlockId);
+}
+
+bool Block::isComparatorId(int_t blockId)
+{
+	// The comparator block is not registered in this port yet.
+	(void)blockId;
+	return false;
+}
+
 void Block::initialize()
 {
 	soundPowderFootstep = new StepSound("stone", 1.0f, 1.0f);

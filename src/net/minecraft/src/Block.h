@@ -18,6 +18,7 @@ class EntityLiving;
 class Entity;
 class ItemStack;
 class StepSound;
+class Explosion;
 
 class BlockGrass;
 class BlockLeaves;
@@ -177,6 +178,24 @@ public:
 	virtual int_t getMobilityFlag();
 
 	virtual ~Block() = default;
+
+	// 1.5.2 hooks. Keep these after the legacy virtuals so their addition does
+	// not renumber existing Block vtable entries on the console platforms.
+	virtual int_t tickRate(World *world);
+	virtual void onPostBlockPlaced(World *world, int_t x, int_t y, int_t z, int_t metadata);
+	virtual void onBlockHarvested(World *world, int_t x, int_t y, int_t z, int_t metadata, EntityPlayer *player);
+	virtual void onSetBlockIDWithMetaData(World *world, int_t x, int_t y, int_t z, int_t metadata);
+	virtual void fillWithRain(World *world, int_t x, int_t y, int_t z);
+	virtual bool isFlowerPot();
+	virtual bool func_82506_l();
+	virtual bool canDropFromExplosion(Explosion *explosion);
+	virtual bool isAssociatedBlockID(int_t blockId);
+	virtual bool hasComparatorInputOverride();
+	virtual int_t getComparatorInputOverride(World *world, int_t x, int_t y, int_t z, int_t side);
+
+	static bool isAssociatedBlockID(int_t blockId, int_t otherBlockId);
+	// Returns false until the comparator block is ported and registered.
+	static bool isComparatorId(int_t blockId);
 
 	static StepSound *soundPowderFootstep;
 	static StepSound *soundWoodFootstep;

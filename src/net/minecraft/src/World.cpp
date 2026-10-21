@@ -48,6 +48,7 @@
 #include "java/Arithmetic.h"
 #include "IBlockAccess.h"
 #include "WorldProvider.h"
+#include "Direction.h"
 #include "WorldType.h"
 #include "WorldHeight.h"
 #include "WorldInfo.h"
@@ -1185,7 +1186,10 @@ bool World::setBlockNotify152(int x, int y, int z, int blockId, int metadata, in
     if (!multiplayerWorld && (flags & 1) != 0)
     {
         notifyBlocksOfNeighborChange(x, y, z, oldBlockId);
-        func_96440_m(x, y, z, blockId);
+        if (blockId > 0 && blockId < Block::BLOCK_REGISTRY_SIZE &&
+            Block::blocksList[blockId] != nullptr &&
+            Block::blocksList[blockId]->hasComparatorInputOverride())
+            func_96440_m(x, y, z, blockId);
     }
     return true;
 }
@@ -1576,7 +1580,10 @@ bool World::setBlockMetadataWithNotify152(int x, int y, int z, int metadata, int
     if (!multiplayerWorld && (flags & 1) != 0)
     {
         notifyBlocksOfNeighborChange(x, y, z, blockId);
-        func_96440_m(x, y, z, blockId);
+        if (blockId > 0 && blockId < Block::BLOCK_REGISTRY_SIZE &&
+            Block::blocksList[blockId] != nullptr &&
+            Block::blocksList[blockId]->hasComparatorInputOverride())
+            func_96440_m(x, y, z, blockId);
     }
     return true;
 }
@@ -1771,12 +1778,30 @@ void World::notifyBlocksOfNeighborChange(int x, int y, int z, int blockId, int e
 
 void World::func_96440_m(int_t x, int_t y, int_t z, int_t blockId)
 {
-    // Comparator blocks and their input-override hooks have not been ported to
-    // this 1.2.5 codebase yet, so there are no comparator neighbours to notify.
-    (void)x;
-    (void)y;
-    (void)z;
-    (void)blockId;
+    for (int_t side = 0; side < 4; ++side)
+    {
+        int_t neighborX = x + Direction::offsetX[side];
+        int_t neighborZ = z + Direction::offsetZ[side];
+        int_t neighborId = getBlockId(neighborX, y, neighborZ);
+        if (neighborId != 0 && Block::isComparatorId(neighborId))
+        {
+            Block *neighbor = Block::blocksList[neighborId];
+            if (neighbor != nullptr)
+                neighbor->onNeighborBlockChange(this, neighborX, y, neighborZ, blockId);
+        }
+        else if (neighborId != 0 && Block::isNormalCube(neighborId))
+        {
+            neighborX += Direction::offsetX[side];
+            neighborZ += Direction::offsetZ[side];
+            neighborId = getBlockId(neighborX, y, neighborZ);
+            if (neighborId != 0 && Block::isComparatorId(neighborId))
+            {
+                Block *neighbor = Block::blocksList[neighborId];
+                if (neighbor != nullptr)
+                    neighbor->onNeighborBlockChange(this, neighborX, y, neighborZ, blockId);
+            }
+        }
+    }
 }
 
 void World::notifyBlockOfNeighborChange(int x, int y, int z, int blockId)
