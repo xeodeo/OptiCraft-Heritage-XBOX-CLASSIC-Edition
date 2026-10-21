@@ -1,17 +1,25 @@
 // Xbox version launcher (XBOX_LAUNCHER=ON). A small default.xbe that looks like
 // the old Java Minecraft launcher: news panel on top, a dirt bar at the bottom
-// with the version drop-down and a big Play button. Picking a version starts
-// the matching game XBE next to it:
+// with the version drop-down and a big Play button.
 //
-//   OptiCraft.xbe              normal, 640x480
-//   OptiCraft_720p.xbe         normal, 1280x720
-//   OptiCraft_exp.xbe          experimental (chunks on a background thread)
-//   OptiCraft_exp_720p.xbe     experimental, 1280x720
+// Each game version lives in its own folder next to default.xbe, with its own
+// data (assets.pak or data\, texturepacks\):
 //
+//   D:\default.xbe                   this launcher (+ D:\data\assets for its art)
+//   D:\1.2.5\OptiCraft.xbe           normal, 640x480
+//   D:\1.2.5\OptiCraft_720p.xbe      normal, 1280x720
+//   D:\1.2.5\OptiCraft_exp.xbe       experimental (chunks on a background thread)
+//   D:\1.2.5\OptiCraft_exp_720p.xbe  experimental, 1280x720
+//   D:\1.5.2\...                     same names, another version
+//
+// The launcher lists whatever of those XBEs each folder has, folders in name
+// order; an optional <folder>\version.txt replaces the description. A launched
+// title sees its own folder as D:, so every version reads only its own data.
+// XBEs left beside default.xbe (the old flat layout) are listed too.
 // The game picks 720p from "720" in its own file name (XboxVideoMode.cpp), so
-// the launcher only has to start the right file. It reads its art from the
-// game's data folder (D:\data\assets) and draws plain colors if it is missing.
-// It always opens on the normal build.
+// the launcher only has to start the right file. It reads its art from
+// D:\data\assets and draws plain colors if it is missing.
+// It always opens on the first folder's normal build.
 
 #include "XboxXtl.h"
 
@@ -39,33 +47,100 @@ LPDIRECT3DDEVICE8 g_dev;
 
 // --- versions -----------------------------------------------------------------
 
-struct Version {
-    const char* name;
+struct Variant {
     const char* file;
+    const char* label;
     const char* text;
 };
 
-const Version kVersions[] = {
-    {"OptiCraft", "D:\\OptiCraft.xbe",
+const Variant kVariants[] = {
+    {"OptiCraft.xbe", "",
      "The stable build at 640x480. Works on every console and every cable."},
-    {"OptiCraft 720p", "D:\\OptiCraft_720p.xbe",
+    {"OptiCraft_720p.xbe", " 720p",
      "The stable build at 1280x720. Needs a component (HD) cable and 720p turned on in the dashboard."},
-    {"Experimental", "D:\\OptiCraft_exp.xbe",
+    {"OptiCraft_exp.xbe", " Exp",
      "Chunks are generated and loaded on a background thread: fewer stutters while you walk. "
      "Still being tested, so keep a copy of your worlds."},
-    {"Experimental 720p", "D:\\OptiCraft_exp_720p.xbe",
+    {"OptiCraft_exp_720p.xbe", " Exp 720p",
      "The experimental build at 1280x720. Needs a component (HD) cable and 720p turned on in the dashboard."},
 };
-const int kVersionCount = sizeof(kVersions) / sizeof(kVersions[0]);
+const int kVariantCount = sizeof(kVariants) / sizeof(kVariants[0]);
 
-bool g_present[kVersionCount];
+struct Version {
+    char name[48];
+    char folder[48];    // "" for an XBE beside default.xbe
+    char file[128];     // full path for XLaunchNewImage
+    char text[400];
+};
+
+// The list opens upwards above the bar, 28 px a row: 13 rows fit.
+const int kMaxVersions = 13;
+Version g_versions[kMaxVersions];
+int g_versionCount;
 bool g_720pAllowed;
 
-bool versionIsHd(int i) { return strstr(kVersions[i].file, "720") != nullptr; }
+bool versionIsHd(int i) { return strstr(g_versions[i].file, "720") != nullptr; }
 
 bool fileExists(const char* path)
 {
     return GetFileAttributesA(path) != (DWORD)-1;
+}
+
+bool readFile(const char* path, std::vector<unsigned char>& out);
+
+// Adds every game XBE the folder has. `folder` is "" for D:\ itself.
+void addFolder(const char* folder)
+{
+    char custom[400] = "";
+    if (*folder) {
+        char path[128];
+        std::snprintf(path, sizeof(path), "D:\\%s\\version.txt", folder);
+        std::vector<unsigned char> bytes;
+        if (readFile(path, bytes)) {
+            const size_t n = bytes.size() < sizeof(custom) - 1 ? bytes.size() : sizeof(custom) - 1;
+            for (size_t i = 0; i < n; ++i)
+                custom[i] = (bytes[i] == '\r' || bytes[i] == '\n') ? ' ' : char(bytes[i]);
+            custom[n] = 0;
+        }
+    }
+    for (int v = 0; v < kVariantCount && g_versionCount < kMaxVersions; ++v) {
+        Version& out = g_versions[g_versionCount];
+        if (*folder)
+            std::snprintf(out.file, sizeof(out.file), "D:\\%s\\%s", folder, kVariants[v].file);
+        else
+            std::snprintf(out.file, sizeof(out.file), "D:\\%s", kVariants[v].file);
+        if (!fileExists(out.file)) continue;
+        std::snprintf(out.name, sizeof(out.name), "%s%s", *folder ? folder : "OptiCraft", kVariants[v].label);
+        std::snprintf(out.folder, sizeof(out.folder), "%s", folder);
+        std::snprintf(out.text, sizeof(out.text), "%s", *custom ? custom : kVariants[v].text);
+        ++g_versionCount;
+    }
+}
+
+void findVersions()
+{
+    char folders[kMaxVersions][48];
+    int count = 0;
+    WIN32_FIND_DATAA fd;
+    HANDLE h = FindFirstFileA("D:\\*", &fd);
+    if (h != INVALID_HANDLE_VALUE) {
+        do {
+            if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) || fd.cFileName[0] == '.') continue;
+            if (count == kMaxVersions || strlen(fd.cFileName) >= sizeof(folders[0])) continue;
+            std::snprintf(folders[count++], sizeof(folders[0]), "%s", fd.cFileName);
+        } while (FindNextFileA(h, &fd));
+        FindClose(h);
+    }
+    // Name order, so 1.2.5 comes before 1.5.2.
+    for (int i = 1; i < count; ++i)
+        for (int j = i; j > 0 && _stricmp(folders[j - 1], folders[j]) > 0; --j) {
+            char tmp[48];
+            memcpy(tmp, folders[j], sizeof(tmp));
+            memcpy(folders[j], folders[j - 1], sizeof(tmp));
+            memcpy(folders[j - 1], tmp, sizeof(tmp));
+        }
+    for (int i = 0; i < count; ++i) addFolder(folders[i]);
+    addFolder("");
 }
 
 // --- textures -----------------------------------------------------------------
@@ -417,12 +492,16 @@ void drawNews(const State& st)
     fill(x, y, w, h, 0xB0000000);
     frame(x, y, w, h, 0x60FFFFFF);
 
+    if (g_versionCount == 0) {
+        text("No versions found", x + 14, y + 12, 3, 0xFFFF6060);
+        paragraph("Put each version in its own folder next to default.xbe, "
+                  "for example 1.2.5\\OptiCraft.xbe with its data.", x + 14, y + 46, w - 28, 2, 0xFFE0E0E0);
+        return;
+    }
     const int sel = st.selected;
-    text(kVersions[sel].name, x + 14, y + 12, 3, 0xFFFFFF55);
-    float ty = paragraph(kVersions[sel].text, x + 14, y + 46, w - 28, 2, 0xFFE0E0E0);
-    if (!g_present[sel]) {
-        paragraph("This file is not in the game folder.", x + 14, ty + 6, w - 28, 2, 0xFFFF6060);
-    } else if (versionIsHd(sel) && !g_720pAllowed) {
+    text(g_versions[sel].name, x + 14, y + 12, 3, 0xFFFFFF55);
+    float ty = paragraph(g_versions[sel].text, x + 14, y + 46, w - 28, 2, 0xFFE0E0E0);
+    if (versionIsHd(sel) && !g_720pAllowed) {
         paragraph("720p is off in the dashboard: it will start at 640x480.", x + 14, ty + 6, w - 28, 2,
                   0xFFFFB040);
     }
@@ -450,23 +529,27 @@ void drawBar(const State& st)
     const bool dropFocus = !st.focusPlay || st.listOpen;
     fill(kDropX, kDropY, kDropW, kDropH, 0xFF000000);
     frame(kDropX, kDropY, kDropW, kDropH, dropFocus ? 0xFFFFFFFF : 0xFF808080);
-    text(kVersions[st.selected].name, kDropX + 8, kDropY + 7, 2, 0xFFFFFFFF);
+    if (g_versionCount) text(g_versions[st.selected].name, kDropX + 8, kDropY + 7, 2, 0xFFFFFFFF);
     text(st.listOpen ? "^" : "v", kDropX + kDropW - 20, kDropY + 7, 2, 0xFFC0C0C0);
 
     button(kPlayX, kPlayY, kPlayW, "Play", st.focusPlay && !st.listOpen);
 
     text("Ready to play", 426, 394, 2, 0xFFFFFFFF);
-    text("Minecraft 1.2.5", 426, 416, 2, 0xFFC0C0C0);
+    if (g_versionCount && g_versions[st.selected].folder[0]) {
+        char line[64];
+        std::snprintf(line, sizeof(line), "Minecraft %s", g_versions[st.selected].folder);
+        text(line, 426, 416, 2, 0xFFC0C0C0);
+    }
 
-    if (st.listOpen) {
+    if (st.listOpen && g_versionCount) {
         const float rowH = 28;
-        const float top = kDropY - rowH * kVersionCount - 2;
-        fill(kDropX, top, kDropW, rowH * kVersionCount + 2, 0xF0101010);
-        frame(kDropX, top, kDropW, rowH * kVersionCount + 2, 0xFFFFFFFF);
-        for (int i = 0; i < kVersionCount; ++i) {
+        const float top = kDropY - rowH * g_versionCount - 2;
+        fill(kDropX, top, kDropW, rowH * g_versionCount + 2, 0xF0101010);
+        frame(kDropX, top, kDropW, rowH * g_versionCount + 2, 0xFFFFFFFF);
+        for (int i = 0; i < g_versionCount; ++i) {
             const float ry = top + 1 + i * rowH;
             if (i == st.selected) fill(kDropX + 2, ry, kDropW - 4, rowH, 0xFF3060B0);
-            text(kVersions[i].name, kDropX + 8, ry + 6, 2, g_present[i] ? 0xFFFFFFFF : 0xFF707070);
+            text(g_versions[i].name, kDropX + 8, ry + 6, 2, 0xFFFFFFFF);
         }
     }
 }
@@ -489,17 +572,14 @@ void draw(const State& st, const char* overlay = nullptr)
 
 void launch(State& st)
 {
+    if (g_versionCount == 0) return;
     const int i = st.selected;
-    if (!g_present[i]) {
-        st.error = "That version is missing: copy its .xbe next to default.xbe.";
-        return;
-    }
     char overlay[96];
-    std::snprintf(overlay, sizeof(overlay), "Starting %s...", kVersions[i].name);
+    std::snprintf(overlay, sizeof(overlay), "Starting %s...", g_versions[i].name);
     draw(st, overlay);
     // Keep that frame on screen while the game loads.
     g_dev->PersistDisplay();
-    XLaunchNewImage(kVersions[i].file, NULL);
+    XLaunchNewImage(g_versions[i].file, NULL);
     st.error = "Could not start that version.";   // only reached if the launch failed
 }
 
@@ -517,10 +597,10 @@ void __cdecl main()
     loadImage("D:\\data\\assets\\legacy\\panorama.png", g_panorama);
     loadImage("D:\\data\\assets\\legacy\\title.png", g_logo);
 
-    for (int i = 0; i < kVersionCount; ++i) g_present[i] = fileExists(kVersions[i].file);
+    findVersions();
     g_720pAllowed = (XGetVideoFlags() & XC_VIDEO_FLAGS_HDTV_720p) != 0;
 
-    State st;   // opens on the normal build
+    State st;   // opens on the first folder's normal build
 
     unsigned previous = readButtons();   // ignore buttons still held from the dashboard
     const DWORD startTick = GetTickCount();
@@ -554,10 +634,10 @@ void __cdecl main()
         }
         previous = held;
 
-        if (pressed & (kUp | kDown)) {
+        if ((pressed & (kUp | kDown)) && g_versionCount) {
             st.listOpen = true;
             st.error = nullptr;
-            st.selected = (st.selected + ((pressed & kDown) ? 1 : kVersionCount - 1)) % kVersionCount;
+            st.selected = (st.selected + ((pressed & kDown) ? 1 : g_versionCount - 1)) % g_versionCount;
         }
         if (pressed & (kLeft | kRight)) {
             st.listOpen = false;
