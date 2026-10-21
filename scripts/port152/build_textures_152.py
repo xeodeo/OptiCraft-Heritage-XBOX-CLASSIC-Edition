@@ -66,6 +66,25 @@ ITEM_STATE_OVERRIDES = {
     169: "monsterPlacer_overlay.png",
 }
 OVERFLOW: dict[str, list[str]] = {}
+# 1.5.2 leather armour is grey and dyed at draw time (ItemArmor.getColor, default
+# 10511680 = 0xA06540), with an undyed overlay on top. The 1.2.5 renderer draws
+# it as it is, so it is baked brown here: the item icons and the worn texture.
+LEATHER_COLOR = (0xA0, 0x65, 0x40)
+LEATHER_ICONS = ["helmetCloth", "chestplateCloth", "leggingsCloth", "bootsCloth"]
+LEATHER_ARMOR = ["armor/cloth_1", "armor/cloth_2"]
+
+
+def bake_leather(base: Image.Image, overlay_path: Path | None) -> Image.Image:
+    base = base.convert("RGBA")
+    r, g, b, a = base.split()
+    r = r.point(lambda v: v * LEATHER_COLOR[0] // 255)
+    g = g.point(lambda v: v * LEATHER_COLOR[1] // 255)
+    b = b.point(lambda v: v * LEATHER_COLOR[2] // 255)
+    baked = Image.merge("RGBA", (r, g, b, a))
+    if overlay_path is not None and overlay_path.exists():
+        with Image.open(overlay_path) as overlay:
+            baked = Image.alpha_composite(baked, overlay.convert("RGBA").resize(baked.size))
+    return baked
 # Group 1 of the port (buzon-xbox 44/46): these must get a cell before the rest.
 PRIORITY_ICONS = [
     "oreEmerald.png", "blockEmerald.png", "blockRedstone.png", "netherquartz.png",
@@ -123,6 +142,14 @@ def build_atlas(source_dir: Path, old_atlas_path: Path, overrides: dict[int, str
         icons[path.name] = icon
         aliases.setdefault(key, []).append(path.name)
 
+    if source_dir.name == "items":
+        for stem in LEATHER_ICONS:
+            if f"{stem}.png" in icons:
+                icons[f"{stem}.png"] = bake_leather(icons[f"{stem}.png"], source_dir / f"{stem}_overlay.png")
+        aliases.clear()
+        for name, icon in icons.items():
+            aliases.setdefault(image_key(icon), []).append(name)
+
     old = Image.open(old_atlas_path).convert("RGBA")
     if old.size != (ATLAS_SIZE, ATLAS_SIZE):
         raise ValueError(f"Legacy atlas must be 256x256: {old_atlas_path} is {old.size}")
@@ -150,7 +177,8 @@ def build_atlas(source_dir: Path, old_atlas_path: Path, overrides: dict[int, str
         if path is None:
             raise FileNotFoundError(f"Required 1.5.2 atlas replacement missing: {filename}")
         if quadrant is None:
-            icon = load_icon(path)
+            # The loaded set, so baked icons (leather) are the ones placed.
+            icon = icons.get(path.name) or load_icon(path)
         else:
             icon = load_quadrant(path, *quadrant)
         if icon is None:
@@ -417,6 +445,9 @@ def copy_source_textures(source_root: Path, assets: Path, staged: list[str]) -> 
                         continue
         dest = assets / Path(rel)
         dest.parent.mkdir(parents=True, exist_ok=True)
+        if key[:-4] in LEATHER_ARMOR:
+            with Image.open(path) as image:
+                cropped = bake_leather(image, path.with_name(path.stem + "_b.png"))
         if cropped is not None:
             cropped.save(dest)
         else:
