@@ -143,6 +143,11 @@ public:
 	Chunk *getChunkFromChunkCoords(int_t i, int_t j);
 	virtual bool setBlockAndMetadata(int_t i, int_t j, int_t k, int_t l, int_t i1);
 	virtual bool setBlock(int_t i, int_t j, int_t k, int_t l);
+	// Minecraft 1.5.2 block mutation API. Flags: 1 = notify neighbours,
+	// 2 = update the client/render, 4 = suppress render update on a remote world.
+	bool setBlockNotify152(int_t x, int_t y, int_t z, int_t blockId, int_t metadata, int_t flags);
+	bool setBlockMetadataWithNotify152(int_t x, int_t y, int_t z, int_t metadata, int_t flags);
+	bool setBlockToAir152(int_t x, int_t y, int_t z);
 	Material *getBlockMaterial(int_t i, int_t j, int_t k) override;
 	int_t getBlockMetadata(int_t i, int_t j, int_t k) override;
 	void setBlockMetadataWithNotify(int_t i, int_t j, int_t k, int_t l);
@@ -213,12 +218,15 @@ public:
 	                                   int_t maxX, int_t maxY, int_t maxZ);
 	void flushPopulationLightingBatches();
 	void markBlockNeedsUpdate(int_t i, int_t j, int_t k);
+	void markBlockForUpdate(int_t x, int_t y, int_t z);
 	void notifyBlockChange(int_t i, int_t j, int_t k, int_t l);
 	void markBlocksDirtyVertical(int_t i, int_t j, int_t k, int_t l);
 	void markBlockAsNeedsUpdate(int_t i, int_t j, int_t k);
 	void markBlocksDirty(int_t i, int_t j, int_t k, int_t l, int_t i1, int_t j1);
 	void notifyChunkPublishedForRender(int_t chunkX, int_t chunkZ);
 	void notifyBlocksOfNeighborChange(int_t i, int_t j, int_t k, int_t l);
+	void notifyBlocksOfNeighborChange(int_t x, int_t y, int_t z, int_t blockId, int_t exceptSide);
+	void func_96440_m(int_t x, int_t y, int_t z, int_t blockId);
 
 private:
 	void notifyBlockOfNeighborChange(int_t i, int_t j, int_t k, int_t l);

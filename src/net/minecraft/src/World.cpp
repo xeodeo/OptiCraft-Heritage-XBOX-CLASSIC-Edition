@@ -1139,37 +1139,25 @@ bool World::setBlockAndMetadata(int x, int y, int z, int blockId, int metadata)
 
 bool World::setBlock(int x, int y, int z, int blockId)
 {
-    if (x < -30000000 || z < -30000000 || x >= 30000000 || z >= 30000000)
-    {
-        return false;
-    }
-    
-    if (y < 0)
-    {
-        return false;
-    }
-    
-    if (y >= WorldHeight::HEIGHT)
-    {
-        return false;
-    }
+    return setBlockNotify152(x, y, z, blockId, 0, 0);
+}
 
-    if (chunkLocalDecoration.isActive())
-        return chunkLocalDecoration.setBlock(x, y, z, blockId, 0);
+bool World::setBlockNotify152(int x, int y, int z, int blockId, int metadata, int flags)
+{
+    const int_t oldBlockId = (flags & 1) != 0 ? getBlockId(x, y, z) : 0;
+    const bool changed = setBlockAndMetadata(x, y, z, blockId, metadata);
+    if (!changed || chunkLocalDecoration.isActive())
+        return changed;
 
-#if PLATFORM_POPULATION_BLOCK_WRITER
-    Chunk *populationChunk = getPopulationFastChunk(x, y, z);
-    if (populationChunk != nullptr)
+    if ((flags & 2) != 0 && (!multiplayerWorld || (flags & 4) == 0))
+        markBlockForUpdate(x, y, z);
+
+    if (!multiplayerWorld && (flags & 1) != 0)
     {
-        platformProfilePopulationAccess(PlatformPopulationAccessKind::BlockWrite, true);
-        return populationChunk->setBlockID(x & 0xf, y, z & 0xf, blockId);
+        notifyBlocksOfNeighborChange(x, y, z, oldBlockId);
+        func_96440_m(x, y, z, blockId);
     }
-#endif
-    if (populationFastPathActive)
-        platformProfilePopulationAccess(PlatformPopulationAccessKind::BlockWrite, false);
-
-    Chunk* chunk = getChunkFromChunkCoords(JavaArithmetic::intShr(x, 4), JavaArithmetic::intShr(z, 4));
-    return chunk->setBlockID(x & 0xf, y, z & 0xf, blockId);
+    return true;
 }
 
 void World::beginPopulationFastPath(int_t chunkX, int_t chunkZ)
@@ -1545,6 +1533,29 @@ void World::setBlockMetadataWithNotify(int x, int y, int z, int metadata)
     }
 }
 
+bool World::setBlockMetadataWithNotify152(int x, int y, int z, int metadata, int flags)
+{
+    if (!setBlockMetadata(x, y, z, metadata))
+        return false;
+    if (chunkLocalDecoration.isActive())
+        return true;
+
+    const int_t blockId = getBlockId(x, y, z);
+    if ((flags & 2) != 0 && (!multiplayerWorld || (flags & 4) == 0))
+        markBlockForUpdate(x, y, z);
+    if (!multiplayerWorld && (flags & 1) != 0)
+    {
+        notifyBlocksOfNeighborChange(x, y, z, blockId);
+        func_96440_m(x, y, z, blockId);
+    }
+    return true;
+}
+
+bool World::setBlockToAir152(int x, int y, int z)
+{
+    return setBlockNotify152(x, y, z, 0, 0, 3);
+}
+
 bool World::setBlockMetadata(int x, int y, int z, int metadata)
 {
     if (x < -30000000 || z < -30000000 || x >= 30000000 || z >= 30000000)
@@ -1647,6 +1658,12 @@ void World::markBlockNeedsUpdate(int x, int y, int z)
     }
 }
 
+void World::markBlockForUpdate(int x, int y, int z)
+{
+    // 1.5.2's markBlockForUpdate is a single-position render notification.
+    markBlockAsNeedsUpdate(x, y, z);
+}
+
 void World::notifyBlockChange(int x, int y, int z, int blockId)
 {
     // A buffer under chunk-local decoration has no renderer and no live
@@ -1708,6 +1725,28 @@ void World::notifyBlocksOfNeighborChange(int x, int y, int z, int blockId)
     notifyBlockOfNeighborChange(x, y + 1, z, blockId);
     notifyBlockOfNeighborChange(x, y, z - 1, blockId);
     notifyBlockOfNeighborChange(x, y, z + 1, blockId);
+}
+
+void World::notifyBlocksOfNeighborChange(int x, int y, int z, int blockId, int exceptSide)
+{
+    if (chunkLocalDecoration.isActive())
+        return;
+    if (exceptSide != 4) notifyBlockOfNeighborChange(x - 1, y, z, blockId);
+    if (exceptSide != 5) notifyBlockOfNeighborChange(x + 1, y, z, blockId);
+    if (exceptSide != 0) notifyBlockOfNeighborChange(x, y - 1, z, blockId);
+    if (exceptSide != 1) notifyBlockOfNeighborChange(x, y + 1, z, blockId);
+    if (exceptSide != 2) notifyBlockOfNeighborChange(x, y, z - 1, blockId);
+    if (exceptSide != 3) notifyBlockOfNeighborChange(x, y, z + 1, blockId);
+}
+
+void World::func_96440_m(int_t x, int_t y, int_t z, int_t blockId)
+{
+    // Comparator blocks and their input-override hooks have not been ported to
+    // this 1.2.5 codebase yet, so there are no comparator neighbours to notify.
+    (void)x;
+    (void)y;
+    (void)z;
+    (void)blockId;
 }
 
 void World::notifyBlockOfNeighborChange(int x, int y, int z, int blockId)
