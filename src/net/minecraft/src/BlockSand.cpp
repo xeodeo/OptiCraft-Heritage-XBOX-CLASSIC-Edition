@@ -11,6 +11,10 @@ BlockSand::BlockSand(int_t i, int_t j) : Block(i, j, Material::sand)
 {
 }
 
+BlockSand::BlockSand(int_t i, Material *material) : Block(i, material)
+{
+}
+
 void BlockSand::onBlockAdded(World *world, int_t i, int_t j, int_t k)
 {
     world->scheduleBlockUpdate(i, j, k, blockID, tickRate());
@@ -55,9 +59,21 @@ void BlockSand::tryToFall(World *world, int_t i, int_t j, int_t k)
         }
         else if (!world->multiplayerWorld)
         {
-            EntityFallingSand *e = new EntityFallingSand(world, (float)i + 0.5f, (float)j + 0.5f, (float)k + 0.5f, blockID);
+            int_t meta = world->getBlockMetadata(i, j, k);
+            EntityFallingSand *e = new EntityFallingSand(world, (float)i + 0.5f, (float)j + 0.5f, (float)k + 0.5f, blockID, meta);
+            onStartFalling(e);
             if (!world->entityJoinedWorld(e))
                 delete e;
         }
     }
+}
+
+void BlockSand::onStartFalling(EntityFallingSand *entity)
+{
+    (void)entity;
+}
+
+void BlockSand::onFinishFalling(World *world, int_t i, int_t j, int_t k, int_t metadata)
+{
+    (void)world; (void)i; (void)j; (void)k; (void)metadata;
 }

@@ -1,6 +1,7 @@
 #include "RenderFallingSand.h"
 #include "EntityFallingSand.h"
 #include "Block.h"
+#include "BlockAnvil.h"
 #include "World.h"
 #include "MathHelper.h"
 #include "platform/RenderAPI.h"
@@ -11,6 +12,8 @@ RenderFallingSand::RenderFallingSand() {
 }
 
 void RenderFallingSand::doRenderFallingSand(EntityFallingSand* entityfallingsand, double d, double d1, double d2, float f, float f1) {
+    (void)f;
+    (void)f1;
     renderPushMatrix();
     renderTranslate((float)d, (float)d1, (float)d2);
     loadTexture("/terrain.png");
@@ -20,7 +23,19 @@ void RenderFallingSand::doRenderFallingSand(EntityFallingSand* entityfallingsand
     const int_t blockY = MathHelper::floor_double(entityfallingsand->posY);
     const int_t blockZ = MathHelper::floor_double(entityfallingsand->posZ);
     renderDisable(RenderCapability::Lighting);
-    if (block == Block::dragonEgg)
+    if (block != nullptr && block->getRenderType() == 35)
+    {
+        renderBlocks->blockAccess = world;
+        Tessellator* tessellator = &Tessellator::instance;
+        tessellator->startDrawingQuads();
+        tessellator->setTranslationF(static_cast<float>(JavaArithmetic::intSub(0, blockX)) - 0.5f,
+                                     static_cast<float>(JavaArithmetic::intSub(0, blockY)) - 0.5f,
+                                     static_cast<float>(JavaArithmetic::intSub(0, blockZ)) - 0.5f);
+        renderBlocks->renderBlockAnvilMetadata(dynamic_cast<BlockAnvil*>(block), blockX, blockY, blockZ, entityfallingsand->metadata);
+        tessellator->setTranslationF(0.0f, 0.0f, 0.0f);
+        tessellator->draw();
+    }
+    else if (block == Block::dragonEgg)
     {
         renderBlocks->blockAccess = world;
         Tessellator* tessellator = &Tessellator::instance;

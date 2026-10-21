@@ -10,6 +10,10 @@ class BlockSand : public Block
 {
 public:
 	BlockSand(int_t i, int_t j);
+	BlockSand(int_t i, Material *material);
+
+	virtual void onStartFalling(EntityFallingSand *entity);
+	virtual void onFinishFalling(World *world, int_t i, int_t j, int_t k, int_t metadata);
 
 	void onBlockAdded(World *world, int_t i, int_t j, int_t k) override;
 	void onNeighborBlockChange(World *world, int_t i, int_t j, int_t k, int_t l) override;

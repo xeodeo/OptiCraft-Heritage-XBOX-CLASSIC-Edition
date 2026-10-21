@@ -31,3 +31,23 @@ jstring StepSound::stepSoundDir()
 {
 	return getStepSound();
 }
+
+jstring StepSound::getPlaceSound()
+{
+	return getStepSound();
+}
+
+StepSoundAnvil::StepSoundAnvil(const jstring &s, float f, float f1) :
+	StepSound(s, f, f1)
+{
+}
+
+jstring StepSoundAnvil::getBreakSound()
+{
+	return "dig.stone";
+}
+
+jstring StepSoundAnvil::getPlaceSound()
+{
+	return "random.anvil_land";
+}

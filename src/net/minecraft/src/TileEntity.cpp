@@ -20,6 +20,9 @@
 #include "TileEntityEnchantmentTable.h"
 #include "TileEntityBrewingStand.h"
 #include "TileEntityEndPortal.h"
+#include "TileEntityEnderChest.h"
+#include "TileEntitySkull.h"
+#include "TileEntityBeacon.h"
 
 std::map<std::string, std::function<TileEntity *()>> TileEntity::nameToClassMap;
 std::map<std::string, std::string>                   TileEntity::classToNameMap;
@@ -43,6 +46,9 @@ namespace
 			TileEntity::addMapping<TileEntityEnchantmentTable>("EnchantTable");
 			TileEntity::addMapping<TileEntityBrewingStand>("Cauldron");
 			TileEntity::addMapping<TileEntityEndPortal>("Airportal");
+			TileEntity::addMapping<TileEntityEnderChest>("EnderChest");
+			TileEntity::addMapping<TileEntitySkull>("Skull");
+			TileEntity::addMapping<TileEntityBeacon>("Beacon");
 		}
 	};
 	TileEntityMappingInit tileEntityMappingInit;

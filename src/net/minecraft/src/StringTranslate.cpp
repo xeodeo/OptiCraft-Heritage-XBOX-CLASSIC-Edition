@@ -232,7 +232,31 @@ void StringTranslate::setLanguage(const std::string &language)
         {"item.carrotGolden.name", "Golden Carrot", "Zanahoria dorada"},
         {"item.pumpkinPie.name", "Pumpkin Pie", "Tarta de calabaza"},
         {"item.netherbrick.name", "Nether Brick", "Ladrillo del Nether"},
-        {"item.netherquartz.name", "Nether Quartz", "Cuarzo del Nether"}
+        {"item.netherquartz.name", "Nether Quartz", "Cuarzo del Nether"},
+        {"tile.woodSlab.name", "Wooden Slab", "Losa de madera"},
+        {"tile.woodSlab.oak.name", "Oak Wood Slab", "Losa de madera de roble"},
+        {"tile.woodSlab.spruce.name", "Spruce Wood Slab", "Losa de madera de abeto"},
+        {"tile.woodSlab.birch.name", "Birch Wood Slab", "Losa de madera de abedul"},
+        {"tile.woodSlab.jungle.name", "Jungle Wood Slab", "Losa de madera de jungla"},
+        {"tile.cocoa.name", "Cocoa", "Cacao"},
+        {"tile.enderChest.name", "Ender Chest", "Cofre del Fin"},
+        {"tile.beacon.name", "Beacon", "Faro"},
+        {"container.beacon", "Beacon", "Faro"},
+        {"tile.cobbleWall.normal.name", "Cobblestone Wall", "Muro de roca"},
+        {"tile.cobbleWall.mossy.name", "Mossy Cobblestone Wall", "Muro de roca musgosa"},
+        {"tile.flowerPot.name", "Flower Pot", "Maceta"},
+        {"tile.anvil.name", "Anvil", "Yunque"},
+        {"tile.anvil.intact.name", "Anvil", "Yunque"},
+        {"tile.anvil.slightlyDamaged.name", "Slightly Damaged Anvil", "Yunque ligeramente dañado"},
+        {"tile.anvil.veryDamaged.name", "Very Damaged Anvil", "Yunque muy dañado"},
+        {"tile.skull.name", "Head", "Cabeza"},
+        {"item.skull.skeleton.name", "Skeleton Skull", "Calavera de esqueleto"},
+        {"item.skull.wither.name", "Wither Skeleton Skull", "Calavera de esqueleto del Wither"},
+        {"item.skull.zombie.name", "Zombie Head", "Cabeza de zombi"},
+        {"item.skull.char.name", "Head", "Cabeza"},
+        {"item.skull.creeper.name", "Creeper Head", "Cabeza de creeper"},
+        {"item.flowerPot.name", "Flower Pot", "Maceta"},
+        {"item.netherStar.name", "Nether Star", "Estrella del Nether"}
     };
     for (const auto &entry : port152Defaults)
     {

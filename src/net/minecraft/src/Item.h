@@ -226,6 +226,9 @@ public:
     static Item* pumpkinPie;
     static Item* netherrackBrick;
     static Item* netherQuartz;
+    static Item* flowerPot;
+    static Item* skull;
+    static Item* netherStar;
     static Item* record13;
     static Item* recordCat;
     static Item* recordBlocks;

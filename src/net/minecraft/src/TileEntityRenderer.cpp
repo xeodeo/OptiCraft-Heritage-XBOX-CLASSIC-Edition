@@ -15,6 +15,12 @@
 #include "RenderEndPortal.h"
 #include "RenderEnchantmentTable.h"
 #include "TileEntityRendererPiston.h"
+#include "TileEntityEnderChest.h"
+#include "TileEntityEnderChestRenderer.h"
+#include "TileEntitySkull.h"
+#include "TileEntitySkullRenderer.h"
+#include "TileEntityBeacon.h"
+#include "TileEntityBeaconRenderer.h"
 #include "FontRenderer.h"
 #include "RenderEngine.h"
 #include "OpenGlHelper.h"
@@ -52,6 +58,9 @@ TileEntityRenderer::TileEntityRenderer()
     specialRendererMap[typeid(TileEntityChest).name()]       = new TileEntityChestRenderer();
     specialRendererMap[typeid(TileEntityEnchantmentTable).name()] = new RenderEnchantmentTable();
     specialRendererMap[typeid(TileEntityEndPortal).name()] = new RenderEndPortal();
+    specialRendererMap[typeid(TileEntityEnderChest).name()] = new TileEntityEnderChestRenderer();
+    specialRendererMap[typeid(TileEntitySkull).name()]      = new TileEntitySkullRenderer();
+    specialRendererMap[typeid(TileEntityBeacon).name()]     = new TileEntityBeaconRenderer();
 
     for (auto &pair : specialRendererMap)
         if (pair.second)
@@ -106,6 +115,12 @@ TileEntitySpecialRenderer *TileEntityRenderer::resolveSpecialRendererForEntity(T
         return specialRendererMap[typeid(TileEntityEnchantmentTable).name()];
     if (dynamic_cast<TileEntityEndPortal *>(tileentity) != nullptr)
         return specialRendererMap[typeid(TileEntityEndPortal).name()];
+    if (dynamic_cast<TileEntityEnderChest *>(tileentity) != nullptr)
+        return specialRendererMap[typeid(TileEntityEnderChest).name()];
+    if (dynamic_cast<TileEntitySkull *>(tileentity) != nullptr)
+        return specialRendererMap[typeid(TileEntitySkull).name()];
+    if (dynamic_cast<TileEntityBeacon *>(tileentity) != nullptr)
+        return specialRendererMap[typeid(TileEntityBeacon).name()];
     return nullptr;
 }
 

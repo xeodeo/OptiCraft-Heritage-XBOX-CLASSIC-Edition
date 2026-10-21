@@ -30,6 +30,7 @@
 #include "ItemSnowball.h"
 #include "ItemBoat.h"
 #include "ItemReed.h"
+#include "ItemSkull.h"
 #include "ItemEgg.h"
 #include "ItemFishingRod.h"
 #include "ItemDye.h"
@@ -200,6 +201,9 @@ Item* Item::goldenCarrot = nullptr;
 Item* Item::pumpkinPie = nullptr;
 Item* Item::netherrackBrick = nullptr;
 Item* Item::netherQuartz = nullptr;
+Item* Item::flowerPot = nullptr;
+Item* Item::skull = nullptr;
+Item* Item::netherStar = nullptr;
 Item* Item::record13 = nullptr;
 Item* Item::recordCat = nullptr;
 Item* Item::recordBlocks = nullptr;
@@ -479,6 +483,15 @@ MovingObjectPosition* Item::getMovingObjectPositionFromPlayer(World* world, Enti
     return world->rayTraceBlocks(start, end, includeLiquids, !includeLiquids);
 }
 
+
+namespace {
+class ItemNetherStar : public Item {
+public:
+    explicit ItemNetherStar(int id) : Item(id) {}
+    bool hasEffect(ItemStack *itemstack) override { (void)itemstack; return true; }
+};
+}
+
 void Item::initItems() {
     Potion::initPotions();
     Enchantment::initEnchantments();
@@ -621,6 +634,9 @@ void Item::initItems() {
     pumpkinPie = (new ItemFood(144, 8, 0.3f, false))->setIconIndex(TEX152_ITEM_ICON("pumpkinPie.png"))->setItemName("pumpkinPie"); // 1.5.2 icon: pumpkinPie.png
     netherrackBrick = (new Item(149))->setIconIndex(TEX152_ITEM_ICON("netherbrick.png"))->setItemName("netherbrick"); // 1.5.2 icon: netherbrick.png
     netherQuartz = (new Item(150))->setIconIndex(TEX152_ITEM_ICON("netherquartz.png"))->setItemName("netherquartz"); // 1.5.2 icon: netherquartz.png
+    flowerPot = (new ItemReed(134, Block::flowerPot))->setIconIndex(TEX152_ITEM_ICON("flowerPot.png"))->setItemName("flowerPot");
+    skull = (new ItemSkull(141))->setItemName("skull");
+    netherStar = (new ItemNetherStar(143))->setIconIndex(TEX152_ITEM_ICON("netherStar.png"))->setItemName("netherStar");
     record13 = (new ItemRecord(2000, "13"))->setIconCoord(0, 15)->setItemName("record");
     recordCat = (new ItemRecord(2001, "cat"))->setIconCoord(1, 15)->setItemName("record");
     recordBlocks = (new ItemRecord(2002, "blocks"))->setIconCoord(2, 15)->setItemName("record");
@@ -763,6 +779,9 @@ void Item::cleanup()
     pumpkinPie = nullptr;
     netherrackBrick = nullptr;
     netherQuartz = nullptr;
+    flowerPot = nullptr;
+    skull = nullptr;
+    netherStar = nullptr;
     record13 = nullptr;
     recordCat = nullptr;
 }

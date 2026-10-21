@@ -2,6 +2,7 @@
 
 class Block;
 class TileEntityChest;
+class TileEntityEnderChest;
 
 // net.minecraft.src.ChestItemRenderHelper
 class ChestItemRenderHelper
@@ -16,4 +17,5 @@ public:
 
 private:
 	TileEntityChest *chest;
+	TileEntityEnderChest *theEnderChest;
 };

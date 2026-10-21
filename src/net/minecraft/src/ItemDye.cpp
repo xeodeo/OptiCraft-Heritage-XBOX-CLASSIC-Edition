@@ -1,4 +1,6 @@
 #include "ItemDye.h"
+#include "BlockCocoa.h"
+#include "BlockDirectional.h"
 #include "java/Arithmetic.h"
 #include "ItemStack.h"
 #include "World.h"
@@ -46,6 +48,27 @@ bool ItemDye::onItemUse(ItemStack* itemstack, EntityPlayer* entityplayer, World*
     if (!entityplayer->canPlayerEdit(i, j, k)) {
         return false;
     }
+    if (itemstack->getItemDamage() == 3) {
+        int blockId = world->getBlockId(i, j, k);
+        int metadata = world->getBlockMetadata(i, j, k);
+        if (Block::wood != nullptr && blockId == Block::wood->blockID && (metadata & 3) == 3) {
+            if (l == 0 || l == 1) return false;
+            if (l == 2) --k;
+            if (l == 3) ++k;
+            if (l == 4) --i;
+            if (l == 5) ++i;
+            if (world->isAirBlock(i, j, k) && Block::cocoaPlant != nullptr) {
+                BlockCocoa *cocoa = dynamic_cast<BlockCocoa *>(Block::cocoaPlant);
+                int placeMeta = cocoa != nullptr ? cocoa->onBlockPlaced(world, i, j, k, l, 0.0f, 0.0f, 0.0f, 0) : 0;
+                world->setBlockAndMetadataWithNotify(i, j, k, Block::cocoaPlant->blockID, placeMeta);
+                if (!entityplayer->capabilities.isCreativeMode) {
+                    --itemstack->stackSize;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
     if (itemstack->getItemDamage() != 15) {
         return false;
     }
@@ -61,6 +84,19 @@ bool ItemDye::onItemUse(ItemStack* itemstack, EntityPlayer* entityplayer, World*
     if (blockId == Block::mushroomBrown->blockID || blockId == Block::mushroomRed->blockID) {
         if (!world->multiplayerWorld &&
             static_cast<BlockMushroom*>(Block::blocksList[blockId])->fertilizeMushroom(world, i, j, k, world->rand)) {
+            --itemstack->stackSize;
+        }
+        return true;
+    }
+    if (Block::cocoaPlant != nullptr && blockId == Block::cocoaPlant->blockID) {
+        int meta = world->getBlockMetadata(i, j, k);
+        int stage = BlockCocoa::func_72219_c(meta);
+        if (stage >= 2) {
+            return false;
+        }
+        if (!world->multiplayerWorld) {
+            ++stage;
+            world->setBlockMetadataWithNotify(i, j, k, (stage << 2) | BlockDirectional::getDirection(meta));
             --itemstack->stackSize;
         }
         return true;

@@ -1,4 +1,5 @@
 #include "EntityPlayer.h"
+#include "InventoryEnderChest.h"
 #include "java/Math.h"
 #include "java/Arithmetic.h"
 
@@ -103,6 +104,7 @@ EntityPlayer::EntityPlayer(World *world)
 	fishEntity = nullptr;
 	itemInUse = nullptr;
 	itemInUseCount = 0;
+	theInventoryEnderChest = new InventoryEnderChest();
 	inventorySlots = new ContainerPlayer(inventory, !world->multiplayerWorld);
 	craftingInventory = inventorySlots;
 	yOffset = 1.62f;
@@ -121,6 +123,7 @@ EntityPlayer::~EntityPlayer()
 		delete craftingInventory;
 	delete inventorySlots;
 	delete inventory;
+	delete theInventoryEnderChest; theInventoryEnderChest = nullptr;
 	delete bedChunkCoordinates;
 	delete playerSpawnCoordinate;
 	delete startMinecartRidingCoordinate;
@@ -648,12 +651,20 @@ void EntityPlayer::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 	experienceTotal = nbttagcompound->getInteger("XpTotal");
 	foodStats.readNBT(nbttagcompound);
 	capabilities.readCapabilitiesFromNBT(nbttagcompound);
+	if (nbttagcompound->hasKey("EnderItems") && theInventoryEnderChest != nullptr)
+	{
+		theInventoryEnderChest->loadInventoryFromNBT(nbttagcompound->getTagList("EnderItems"));
+	}
 }
 
 void EntityPlayer::writeEntityToNBT(NBTTagCompound *nbttagcompound)
 {
 	EntityLiving::writeEntityToNBT(nbttagcompound);
 	nbttagcompound->setTag("Inventory", inventory->writeToNBT(new NBTTagList()));
+	if (theInventoryEnderChest != nullptr)
+	{
+		nbttagcompound->setTag("EnderItems", theInventoryEnderChest->saveInventoryToNBT());
+	}
 	nbttagcompound->setInteger("Dimension", dimension);
 	nbttagcompound->setBoolean("Sleeping", sleeping);
 	nbttagcompound->setShort("SleepTimer", JavaArithmetic::shortFromBits(static_cast<ushort_t>(sleepTimer)));
@@ -1483,6 +1494,12 @@ void EntityPlayer::copyPlayer(EntityPlayer *player)
 	experienceTotal = player->experienceTotal;
 	experience = player->experience;
 	score = player->score;
+	if (player->theInventoryEnderChest != nullptr && theInventoryEnderChest != nullptr)
+	{
+		NBTTagList *list = player->theInventoryEnderChest->saveInventoryToNBT();
+		theInventoryEnderChest->loadInventoryFromNBT(list);
+		delete list;
+	}
 }
 
 bool EntityPlayer::canTriggerWalking()
@@ -1492,4 +1509,9 @@ bool EntityPlayer::canTriggerWalking()
 
 void EntityPlayer::func_50009_aI()
 {
+}
+
+InventoryEnderChest *EntityPlayer::getInventoryEnderChest()
+{
+	return theInventoryEnderChest;
 }

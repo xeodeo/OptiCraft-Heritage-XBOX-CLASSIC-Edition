@@ -46,6 +46,7 @@ void Material::cleanup()
 	delete cakeMaterial; cakeMaterial = nullptr;
 	delete web; web = nullptr;
 	delete piston; piston = nullptr; pistonBase = nullptr; pistonSticky = nullptr;
+	delete anvil; anvil = nullptr;
 }
 
 bool Material::getIsLiquid()
@@ -202,6 +203,7 @@ Material *Material::web = nullptr;
 Material *Material::piston = nullptr;
 Material *Material::pistonBase = nullptr;
 Material *Material::pistonSticky = nullptr;
+Material *Material::anvil = nullptr;
 
 void Material::initialize()
 {
@@ -238,4 +240,5 @@ void Material::initialize()
 	piston = (new Material(MapColor::stoneColor))->setImmovableMobility();
 	pistonBase = piston;
 	pistonSticky = piston;
+	anvil = (new Material(MapColor::ironColor))->setImmovableMobility();
 }

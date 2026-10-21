@@ -12,6 +12,14 @@
 #include "BlockDragonEgg.h"
 #include "BlockEndPortalFrame.h"
 #include "BlockFenceGate.h"
+#include "BlockWall.h"
+#include "BlockFlowerPot.h"
+#include "BlockDeadBush.h"
+#include "BlockTallGrass.h"
+#include "BlockCocoa.h"
+#include "BlockAnvil.h"
+#include "BlockBeacon.h"
+#include "Texture152Atlas.h"
 #include "BlockLilyPad.h"
 #include "BlockPane.h"
 #include "BlockStem.h"
@@ -245,21 +253,32 @@ bool RenderBlocks::renderBlockFenceGate(Block *block, int_t x, int_t y, int_t z)
     const int_t metadata = accessGetBlockMetadata(x, y, z);
     const bool open = BlockFenceGate::isFenceGateOpen(metadata);
     const int_t direction = BlockDirectional::getDirection(metadata);
+    float yGateOffset = 0.0f;
+    if (Block::cobblestoneWall != nullptr &&
+        (((direction == 2 || direction == 0) &&
+          accessGetBlockId(x - 1, y, z) == Block::cobblestoneWall->blockID &&
+          accessGetBlockId(x + 1, y, z) == Block::cobblestoneWall->blockID) ||
+         ((direction == 3 || direction == 1) &&
+          accessGetBlockId(x, y, z - 1) == Block::cobblestoneWall->blockID &&
+          accessGetBlockId(x, y, z + 1) == Block::cobblestoneWall->blockID)))
+    {
+        yGateOffset = -0.1875f;
+    }
     float minA, maxA, minB, maxB;
 
     if (direction != 3 && direction != 1)
     {
         minA = 0.0f; maxA = 2.0f / 16.0f; minB = 7.0f / 16.0f; maxB = 9.0f / 16.0f;
-        gate->setBlockBounds(minA, 5.0f / 16.0f, minB, maxA, 1.0f, maxB); renderStandardBlock(gate, x, y, z);
+        gate->setBlockBounds(minA, 5.0f / 16.0f + yGateOffset, minB, maxA, 1.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
         minA = 14.0f / 16.0f; maxA = 1.0f;
-        gate->setBlockBounds(minA, 5.0f / 16.0f, minB, maxA, 1.0f, maxB); renderStandardBlock(gate, x, y, z);
+        gate->setBlockBounds(minA, 5.0f / 16.0f + yGateOffset, minB, maxA, 1.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
     }
     else
     {
         minA = 7.0f / 16.0f; maxA = 9.0f / 16.0f; minB = 0.0f; maxB = 2.0f / 16.0f;
-        gate->setBlockBounds(minA, 5.0f / 16.0f, minB, maxA, 1.0f, maxB); renderStandardBlock(gate, x, y, z);
+        gate->setBlockBounds(minA, 5.0f / 16.0f + yGateOffset, minB, maxA, 1.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
         minB = 14.0f / 16.0f; maxB = 1.0f;
-        gate->setBlockBounds(minA, 5.0f / 16.0f, minB, maxA, 1.0f, maxB); renderStandardBlock(gate, x, y, z);
+        gate->setBlockBounds(minA, 5.0f / 16.0f + yGateOffset, minB, maxA, 1.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
     }
 
     if (!open)
@@ -267,65 +286,65 @@ bool RenderBlocks::renderBlockFenceGate(Block *block, int_t x, int_t y, int_t z)
         if (direction != 3 && direction != 1)
         {
             minA = 6.0f / 16.0f; maxA = 0.5f; minB = 7.0f / 16.0f; maxB = 9.0f / 16.0f;
-            gate->setBlockBounds(minA, 6.0f / 16.0f, minB, maxA, 15.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 6.0f / 16.0f + yGateOffset, minB, maxA, 15.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
             minA = 0.5f; maxA = 10.0f / 16.0f;
-            gate->setBlockBounds(minA, 6.0f / 16.0f, minB, maxA, 15.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 6.0f / 16.0f + yGateOffset, minB, maxA, 15.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
             minA = 10.0f / 16.0f; maxA = 14.0f / 16.0f;
-            gate->setBlockBounds(minA, 6.0f / 16.0f, minB, maxA, 9.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
-            gate->setBlockBounds(minA, 12.0f / 16.0f, minB, maxA, 15.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 6.0f / 16.0f + yGateOffset, minB, maxA, 9.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 12.0f / 16.0f + yGateOffset, minB, maxA, 15.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
             minA = 2.0f / 16.0f; maxA = 6.0f / 16.0f;
-            gate->setBlockBounds(minA, 6.0f / 16.0f, minB, maxA, 9.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
-            gate->setBlockBounds(minA, 12.0f / 16.0f, minB, maxA, 15.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 6.0f / 16.0f + yGateOffset, minB, maxA, 9.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 12.0f / 16.0f + yGateOffset, minB, maxA, 15.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
         }
         else
         {
             minA = 7.0f / 16.0f; maxA = 9.0f / 16.0f; minB = 6.0f / 16.0f; maxB = 0.5f;
-            gate->setBlockBounds(minA, 6.0f / 16.0f, minB, maxA, 15.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 6.0f / 16.0f + yGateOffset, minB, maxA, 15.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
             minB = 0.5f; maxB = 10.0f / 16.0f;
-            gate->setBlockBounds(minA, 6.0f / 16.0f, minB, maxA, 15.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 6.0f / 16.0f + yGateOffset, minB, maxA, 15.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
             minB = 10.0f / 16.0f; maxB = 14.0f / 16.0f;
-            gate->setBlockBounds(minA, 6.0f / 16.0f, minB, maxA, 9.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
-            gate->setBlockBounds(minA, 12.0f / 16.0f, minB, maxA, 15.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 6.0f / 16.0f + yGateOffset, minB, maxA, 9.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 12.0f / 16.0f + yGateOffset, minB, maxA, 15.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
             minB = 2.0f / 16.0f; maxB = 6.0f / 16.0f;
-            gate->setBlockBounds(minA, 6.0f / 16.0f, minB, maxA, 9.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
-            gate->setBlockBounds(minA, 12.0f / 16.0f, minB, maxA, 15.0f / 16.0f, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 6.0f / 16.0f + yGateOffset, minB, maxA, 9.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
+            gate->setBlockBounds(minA, 12.0f / 16.0f + yGateOffset, minB, maxA, 15.0f / 16.0f + yGateOffset, maxB); renderStandardBlock(gate, x, y, z);
         }
     }
     else if (direction == 3)
     {
-        gate->setBlockBounds(13.0f/16,6.0f/16,0,15.0f/16,15.0f/16,2.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(13.0f/16,6.0f/16,14.0f/16,15.0f/16,15.0f/16,1); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(9.0f/16,6.0f/16,0,13.0f/16,9.0f/16,2.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(9.0f/16,6.0f/16,14.0f/16,13.0f/16,9.0f/16,1); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(9.0f/16,12.0f/16,0,13.0f/16,15.0f/16,2.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(9.0f/16,12.0f/16,14.0f/16,13.0f/16,15.0f/16,1); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(13.0f/16,6.0f/16 + yGateOffset,0,15.0f/16 + yGateOffset,15.0f/16,2.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(13.0f/16,6.0f/16 + yGateOffset,14.0f/16,15.0f/16 + yGateOffset,15.0f/16,1); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(9.0f/16,6.0f/16 + yGateOffset,0,13.0f/16,9.0f/16 + yGateOffset,2.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(9.0f/16,6.0f/16 + yGateOffset,14.0f/16,13.0f/16,9.0f/16 + yGateOffset,1); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(9.0f/16,12.0f/16 + yGateOffset,0,13.0f/16,15.0f/16 + yGateOffset,2.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(9.0f/16,12.0f/16 + yGateOffset,14.0f/16,13.0f/16,15.0f/16 + yGateOffset,1); renderStandardBlock(gate,x,y,z);
     }
     else if (direction == 1)
     {
-        gate->setBlockBounds(1.0f/16,6.0f/16,0,3.0f/16,15.0f/16,2.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(1.0f/16,6.0f/16,14.0f/16,3.0f/16,15.0f/16,1); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(3.0f/16,6.0f/16,0,7.0f/16,9.0f/16,2.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(3.0f/16,6.0f/16,14.0f/16,7.0f/16,9.0f/16,1); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(3.0f/16,12.0f/16,0,7.0f/16,15.0f/16,2.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(3.0f/16,12.0f/16,14.0f/16,7.0f/16,15.0f/16,1); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(1.0f/16,6.0f/16 + yGateOffset,0,3.0f/16,15.0f/16 + yGateOffset,2.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(1.0f/16,6.0f/16 + yGateOffset,14.0f/16,3.0f/16,15.0f/16 + yGateOffset,1); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(3.0f/16,6.0f/16 + yGateOffset,0,7.0f/16,9.0f/16 + yGateOffset,2.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(3.0f/16,6.0f/16 + yGateOffset,14.0f/16,7.0f/16,9.0f/16 + yGateOffset,1); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(3.0f/16,12.0f/16 + yGateOffset,0,7.0f/16,15.0f/16 + yGateOffset,2.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(3.0f/16,12.0f/16 + yGateOffset,14.0f/16,7.0f/16,15.0f/16 + yGateOffset,1); renderStandardBlock(gate,x,y,z);
     }
     else if (direction == 0)
     {
-        gate->setBlockBounds(0,6.0f/16,13.0f/16,2.0f/16,15.0f/16,15.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(14.0f/16,6.0f/16,13.0f/16,1,15.0f/16,15.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(0,6.0f/16,9.0f/16,2.0f/16,9.0f/16,13.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(14.0f/16,6.0f/16,9.0f/16,1,9.0f/16,13.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(0,12.0f/16,9.0f/16,2.0f/16,15.0f/16,13.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(14.0f/16,12.0f/16,9.0f/16,1,15.0f/16,13.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(0,6.0f/16 + yGateOffset,13.0f/16,2.0f/16,15.0f/16 + yGateOffset,15.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(14.0f/16,6.0f/16 + yGateOffset,13.0f/16,1,15.0f/16 + yGateOffset,15.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(0,6.0f/16 + yGateOffset,9.0f/16 + yGateOffset,2.0f/16,9.0f/16 + yGateOffset,13.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(14.0f/16,6.0f/16 + yGateOffset,9.0f/16 + yGateOffset,1,9.0f/16 + yGateOffset,13.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(0,12.0f/16 + yGateOffset,9.0f/16 + yGateOffset,2.0f/16,15.0f/16 + yGateOffset,13.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(14.0f/16,12.0f/16 + yGateOffset,9.0f/16 + yGateOffset,1,15.0f/16 + yGateOffset,13.0f/16); renderStandardBlock(gate,x,y,z);
     }
     else if (direction == 2)
     {
-        gate->setBlockBounds(0,6.0f/16,1.0f/16,2.0f/16,15.0f/16,3.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(14.0f/16,6.0f/16,1.0f/16,1,15.0f/16,3.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(0,6.0f/16,3.0f/16,2.0f/16,9.0f/16,7.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(14.0f/16,6.0f/16,3.0f/16,1,9.0f/16,7.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(0,12.0f/16,3.0f/16,2.0f/16,15.0f/16,7.0f/16); renderStandardBlock(gate,x,y,z);
-        gate->setBlockBounds(14.0f/16,12.0f/16,3.0f/16,1,15.0f/16,7.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(0,6.0f/16 + yGateOffset,1.0f/16,2.0f/16,15.0f/16 + yGateOffset,3.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(14.0f/16,6.0f/16 + yGateOffset,1.0f/16,1,15.0f/16 + yGateOffset,3.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(0,6.0f/16 + yGateOffset,3.0f/16,2.0f/16,9.0f/16 + yGateOffset,7.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(14.0f/16,6.0f/16 + yGateOffset,3.0f/16,1,9.0f/16 + yGateOffset,7.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(0,12.0f/16 + yGateOffset,3.0f/16,2.0f/16,15.0f/16 + yGateOffset,7.0f/16); renderStandardBlock(gate,x,y,z);
+        gate->setBlockBounds(14.0f/16,12.0f/16 + yGateOffset,3.0f/16,1,15.0f/16 + yGateOffset,7.0f/16); renderStandardBlock(gate,x,y,z);
     }
 
     gate->setBlockBounds(0, 0, 0, 1, 1, 1);
@@ -973,4 +992,476 @@ bool RenderBlocks::renderBlockPane(Block *block, int_t var2, int_t var3, int_t v
 
     return true;
 
+}
+
+void RenderBlocks::drawCrossedSquares(Block *block, int_t i, double d, double d1, double d2, float scale)
+{
+	Tessellator *tessellator = &Tessellator::instance;
+	int_t j = block->getBlockTextureFromSideAndMetadata(0, i);
+	if (overrideBlockTexture >= 0)
+	{
+		j = overrideBlockTexture;
+	}
+	int_t k = (j & 0xf) << 4;
+	int_t l = j & 0xf0;
+	tess_coord_t d3 = (float)k / 256.0f;
+	tess_coord_t d4 = ((float)k + 15.99f) / 256.0f;
+	tess_coord_t d5 = (float)l / 256.0f;
+	tess_coord_t d6 = ((float)l + 15.99f) / 256.0f;
+	const tess_coord_t x = (tess_coord_t)d;
+	const tess_coord_t y = (tess_coord_t)d1;
+	const tess_coord_t z = (tess_coord_t)d2;
+	const tess_coord_t half = 0.5f;
+	const tess_coord_t inset = (tess_coord_t)(0.45f * scale);
+	tess_coord_t d7 = (x + half) - inset;
+	tess_coord_t d8 = x + half + inset;
+	tess_coord_t d9 = (z + half) - inset;
+	tess_coord_t d10 = z + half + inset;
+#if PLATFORM_PS2
+	const tess_coord_t reverseLowU = d3;
+	const tess_coord_t reverseHighU = d4;
+#else
+	const tess_coord_t reverseLowU = d4;
+	const tess_coord_t reverseHighU = d3;
+#endif
+	tessellator->addVertexWithUV(d7, y + scale, d9, d3, d5);
+	tessellator->addVertexWithUV(d7, y, d9, d3, d6);
+	tessellator->addVertexWithUV(d8, y, d10, d4, d6);
+	tessellator->addVertexWithUV(d8, y + scale, d10, d4, d5);
+	tessellator->addVertexWithUV(d8, y + scale, d10, reverseHighU, d5);
+	tessellator->addVertexWithUV(d8, y, d10, reverseHighU, d6);
+	tessellator->addVertexWithUV(d7, y, d9, reverseLowU, d6);
+	tessellator->addVertexWithUV(d7, y + scale, d9, reverseLowU, d5);
+	tessellator->addVertexWithUV(d7, y + scale, d10, d3, d5);
+	tessellator->addVertexWithUV(d7, y, d10, d3, d6);
+	tessellator->addVertexWithUV(d8, y, d9, d4, d6);
+	tessellator->addVertexWithUV(d8, y + scale, d9, d4, d5);
+	tessellator->addVertexWithUV(d8, y + scale, d9, reverseHighU, d5);
+	tessellator->addVertexWithUV(d8, y, d9, reverseHighU, d6);
+	tessellator->addVertexWithUV(d7, y, d10, reverseLowU, d6);
+	tessellator->addVertexWithUV(d7, y + scale, d10, reverseLowU, d5);
+}
+
+bool RenderBlocks::renderBlockWall(BlockWall *block, int_t x, int_t y, int_t z)
+{
+	bool west = block->canConnectWallTo(blockAccess, x - 1, y, z);
+	bool east = block->canConnectWallTo(blockAccess, x + 1, y, z);
+	bool north = block->canConnectWallTo(blockAccess, x, y, z - 1);
+	bool south = block->canConnectWallTo(blockAccess, x, y, z + 1);
+	bool northSouth = north && south && !west && !east;
+	bool eastWest = !north && !south && west && east;
+	bool aboveAir = accessIsAirBlock(x, y + 1, z);
+	if ((northSouth || eastWest) && aboveAir)
+	{
+		if (northSouth)
+		{
+			block->setBlockBounds(0.3125, 0.0, 0.0, 0.6875, 0.8125, 1.0);
+			renderStandardBlock(block, x, y, z);
+		}
+		else
+		{
+			block->setBlockBounds(0.0, 0.0, 0.3125, 1.0, 0.8125, 0.6875);
+			renderStandardBlock(block, x, y, z);
+		}
+	}
+	else
+	{
+		block->setBlockBounds(0.25, 0.0, 0.25, 0.75, 1.0, 0.75);
+		renderStandardBlock(block, x, y, z);
+		if (west)
+		{
+			block->setBlockBounds(0.0, 0.0, 0.3125, 0.25, 0.8125, 0.6875);
+			renderStandardBlock(block, x, y, z);
+		}
+		if (east)
+		{
+			block->setBlockBounds(0.75, 0.0, 0.3125, 1.0, 0.8125, 0.6875);
+			renderStandardBlock(block, x, y, z);
+		}
+		if (north)
+		{
+			block->setBlockBounds(0.3125, 0.0, 0.0, 0.6875, 0.8125, 0.25);
+			renderStandardBlock(block, x, y, z);
+		}
+		if (south)
+		{
+			block->setBlockBounds(0.3125, 0.0, 0.75, 0.6875, 0.8125, 1.0);
+			renderStandardBlock(block, x, y, z);
+		}
+	}
+	block->setBlockBoundsBasedOnState(blockAccess, x, y, z);
+	return true;
+}
+
+bool RenderBlocks::renderBlockFlowerpot(BlockFlowerPot *block, int_t x, int_t y, int_t z)
+{
+	renderStandardBlock(block, x, y, z);
+	Tessellator &tessellator = Tessellator::instance;
+	tessellator.setBrightness(block->getMixedBrightnessForBlock(blockAccess, x, y, z));
+	float f = 1.0f;
+	int_t color = block->colorMultiplier(blockAccess, x, y, z);
+	int_t tex = block->getBlockTextureFromSide(0);
+	float r = static_cast<float>(color >> 16 & 0xff) / 255.0f;
+	float g = static_cast<float>(color >> 8 & 0xff) / 255.0f;
+	float b = static_cast<float>(color & 0xff) / 255.0f;
+	tessellator.setColorOpaque_F(f * r, f * g, f * b);
+
+	float inset = 0.1865f;
+	renderSouthFace(block, static_cast<double>(static_cast<float>(x) - 0.5f + inset), static_cast<double>(y), static_cast<double>(z), tex);
+	renderNorthFace(block, static_cast<double>(static_cast<float>(x) + 0.5f - inset), static_cast<double>(y), static_cast<double>(z), tex);
+	renderWestFace(block, static_cast<double>(x), static_cast<double>(y), static_cast<double>(static_cast<float>(z) - 0.5f + inset), tex);
+	renderEastFace(block, static_cast<double>(x), static_cast<double>(y), static_cast<double>(static_cast<float>(z) + 0.5f - inset), tex);
+	int_t dirtTex = Block::dirt != nullptr ? Block::dirt->getBlockTextureFromSide(1) : 2;
+	renderTopFace(block, static_cast<double>(x), static_cast<double>(static_cast<float>(y) - 0.5f + inset + 0.1875f), static_cast<double>(z), dirtTex);
+
+	int_t meta = accessGetBlockMetadata(x, y, z);
+	if (meta != 0)
+	{
+		Block *flower = nullptr;
+		switch (meta)
+		{
+		case 1: flower = Block::plantRed; break;
+		case 2: flower = Block::plantYellow; break;
+		case 7: flower = Block::mushroomRed; break;
+		case 8: flower = Block::mushroomBrown; break;
+		default: break;
+		}
+
+		tessellator.addTranslation(0.0f, 4.0f / 16.0f, 0.0f);
+		if (flower != nullptr)
+		{
+			renderBlockByRenderType(flower, x, y, z);
+		}
+		else if (meta == 9 && Block::cactus != nullptr)
+		{
+			renderAllFaces = true;
+			float rCact = 0.125f;
+			Block::cactus->setBlockBounds(0.5f - rCact, 0.0, 0.5f - rCact, 0.5f + rCact, 0.25, 0.5f + rCact);
+			renderStandardBlock(Block::cactus, x, y, z);
+			Block::cactus->setBlockBounds(0.5f - rCact, 0.25, 0.5f - rCact, 0.5f + rCact, 0.5, 0.5f + rCact);
+			renderStandardBlock(Block::cactus, x, y, z);
+			Block::cactus->setBlockBounds(0.5f - rCact, 0.5, 0.5f - rCact, 0.5f + rCact, 0.75, 0.5f + rCact);
+			renderStandardBlock(Block::cactus, x, y, z);
+			renderAllFaces = false;
+			Block::cactus->setBlockBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+		}
+		else if (meta == 3 && Block::sapling != nullptr)
+		{
+			drawCrossedSquares(Block::sapling, 0, x, y, z, 0.75f);
+		}
+		else if (meta == 4 && Block::sapling != nullptr)
+		{
+			drawCrossedSquares(Block::sapling, 1, x, y, z, 0.75f);
+		}
+		else if (meta == 5 && Block::sapling != nullptr)
+		{
+			drawCrossedSquares(Block::sapling, 2, x, y, z, 0.75f);
+		}
+		else if (meta == 6 && Block::sapling != nullptr)
+		{
+			drawCrossedSquares(Block::sapling, 3, x, y, z, 0.75f);
+		}
+		else if (meta == 10 && Block::deadBush != nullptr)
+		{
+			drawCrossedSquares(Block::deadBush, 2, x, y, z, 0.75f);
+		}
+		else if (meta == 11 && Block::tallGrass != nullptr)
+		{
+			int_t c = Block::tallGrass->colorMultiplier(blockAccess, x, y, z);
+			float cr = static_cast<float>(c >> 16 & 0xff) / 255.0f;
+			float cg = static_cast<float>(c >> 8 & 0xff) / 255.0f;
+			float cb = static_cast<float>(c & 0xff) / 255.0f;
+			tessellator.setColorOpaque_F(f * cr, f * cg, f * cb);
+			drawCrossedSquares(Block::tallGrass, 2, x, y, z, 0.75f);
+		}
+		tessellator.addTranslation(0.0f, -4.0f / 16.0f, 0.0f);
+	}
+	return true;
+}
+
+bool RenderBlocks::renderBlockCocoa(BlockCocoa *block, int_t x, int_t y, int_t z)
+{
+	Tessellator &tessellator = Tessellator::instance;
+	tessellator.setBrightness(block->getMixedBrightnessForBlock(blockAccess, x, y, z));
+	tessellator.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+	int_t meta = accessGetBlockMetadata(x, y, z);
+	int_t dir = BlockDirectional::getDirection(meta);
+	int_t stage = BlockCocoa::func_72219_c(meta);
+	int_t tex = BlockCocoa::getCocoaIconForStage(stage);
+	float tileX = static_cast<float>((tex & 15) << 4);
+	float tileY = static_cast<float>(tex & 240);
+	auto interpU = [tileX](double t) -> tess_coord_t { return static_cast<tess_coord_t>((tileX + static_cast<float>(t)) / 256.0f); };
+	auto interpV = [tileY](double t) -> tess_coord_t { return static_cast<tess_coord_t>((tileY + static_cast<float>(t)) / 256.0f); };
+
+	int_t sizeW = 4 + stage * 2;
+	int_t sizeH = 5 + stage * 2;
+	tess_coord_t uMin = interpU(15.0 - static_cast<double>(sizeW));
+	tess_coord_t uMax = interpU(15.0);
+	tess_coord_t vMin = interpV(4.0);
+	tess_coord_t vMax = interpV(4.0 + static_cast<double>(sizeH));
+	double posX = 0.0;
+	double posZ = 0.0;
+	switch (dir)
+	{
+	case 0:
+		posX = 8.0 - static_cast<double>(sizeW / 2);
+		posZ = 15.0 - static_cast<double>(sizeW);
+		break;
+	case 1:
+		posX = 1.0;
+		posZ = 8.0 - static_cast<double>(sizeW / 2);
+		break;
+	case 2:
+		posX = 8.0 - static_cast<double>(sizeW / 2);
+		posZ = 1.0;
+		break;
+	case 3:
+		posX = 15.0 - static_cast<double>(sizeW);
+		posZ = 8.0 - static_cast<double>(sizeW / 2);
+		break;
+	}
+
+	double minX = static_cast<double>(x) + posX / 16.0;
+	double maxX = static_cast<double>(x) + (posX + static_cast<double>(sizeW)) / 16.0;
+	double minY = static_cast<double>(y) + (12.0 - static_cast<double>(sizeH)) / 16.0;
+	double maxY = static_cast<double>(y) + 0.75;
+	double minZ = static_cast<double>(z) + posZ / 16.0;
+	double maxZ = static_cast<double>(z) + (posZ + static_cast<double>(sizeW)) / 16.0;
+
+	tessellator.addVertexWithUV(minX, minY, minZ, uMin, vMax);
+	tessellator.addVertexWithUV(minX, minY, maxZ, uMax, vMax);
+	tessellator.addVertexWithUV(minX, maxY, maxZ, uMax, vMin);
+	tessellator.addVertexWithUV(minX, maxY, minZ, uMin, vMin);
+
+	tessellator.addVertexWithUV(maxX, minY, maxZ, uMin, vMax);
+	tessellator.addVertexWithUV(maxX, minY, minZ, uMax, vMax);
+	tessellator.addVertexWithUV(maxX, maxY, minZ, uMax, vMin);
+	tessellator.addVertexWithUV(maxX, maxY, maxZ, uMin, vMin);
+
+	tessellator.addVertexWithUV(maxX, minY, minZ, uMin, vMax);
+	tessellator.addVertexWithUV(minX, minY, minZ, uMax, vMax);
+	tessellator.addVertexWithUV(minX, maxY, minZ, uMax, vMin);
+	tessellator.addVertexWithUV(maxX, maxY, minZ, uMin, vMin);
+
+	tessellator.addVertexWithUV(minX, minY, maxZ, uMin, vMax);
+	tessellator.addVertexWithUV(maxX, minY, maxZ, uMax, vMax);
+	tessellator.addVertexWithUV(maxX, maxY, maxZ, uMax, vMin);
+	tessellator.addVertexWithUV(minX, maxY, maxZ, uMin, vMin);
+
+	int_t topW = sizeW;
+	if (stage >= 2) topW = sizeW - 1;
+	uMin = interpU(0.0);
+	uMax = interpU(static_cast<double>(topW));
+	vMin = interpV(0.0);
+	vMax = interpV(static_cast<double>(topW));
+
+	tessellator.addVertexWithUV(minX, maxY, maxZ, uMin, vMax);
+	tessellator.addVertexWithUV(maxX, maxY, maxZ, uMax, vMax);
+	tessellator.addVertexWithUV(maxX, maxY, minZ, uMax, vMin);
+	tessellator.addVertexWithUV(minX, maxY, minZ, uMin, vMin);
+
+	tessellator.addVertexWithUV(minX, minY, minZ, uMin, vMin);
+	tessellator.addVertexWithUV(maxX, minY, minZ, uMax, vMin);
+	tessellator.addVertexWithUV(maxX, minY, maxZ, uMax, vMax);
+	tessellator.addVertexWithUV(minX, minY, maxZ, uMin, vMax);
+
+	uMin = interpU(12.0);
+	uMax = interpU(16.0);
+	vMin = interpV(0.0);
+	vMax = interpV(4.0);
+	posX = 8.0;
+	posZ = 0.0;
+	switch (dir)
+	{
+	case 0:
+		posX = 8.0;
+		posZ = 12.0;
+		std::swap(uMin, uMax);
+		break;
+	case 1:
+		posX = 0.0;
+		posZ = 8.0;
+		break;
+	case 2:
+		posX = 8.0;
+		posZ = 0.0;
+		break;
+	case 3:
+		posX = 12.0;
+		posZ = 8.0;
+		std::swap(uMin, uMax);
+		break;
+	}
+
+	minX = static_cast<double>(x) + posX / 16.0;
+	maxX = static_cast<double>(x) + (posX + 4.0) / 16.0;
+	minY = static_cast<double>(y) + 0.75;
+	maxY = static_cast<double>(y) + 1.0;
+	minZ = static_cast<double>(z) + posZ / 16.0;
+	maxZ = static_cast<double>(z) + (posZ + 4.0) / 16.0;
+
+	if (dir == 2 || dir == 0)
+	{
+		tessellator.addVertexWithUV(minX, minY, minZ, uMax, vMax);
+		tessellator.addVertexWithUV(minX, minY, maxZ, uMin, vMax);
+		tessellator.addVertexWithUV(minX, maxY, maxZ, uMin, vMin);
+		tessellator.addVertexWithUV(minX, maxY, minZ, uMax, vMin);
+
+		tessellator.addVertexWithUV(minX, minY, maxZ, uMin, vMax);
+		tessellator.addVertexWithUV(minX, minY, minZ, uMax, vMax);
+		tessellator.addVertexWithUV(minX, maxY, minZ, uMax, vMin);
+		tessellator.addVertexWithUV(minX, maxY, maxZ, uMin, vMin);
+	}
+	else if (dir == 1 || dir == 3)
+	{
+		tessellator.addVertexWithUV(maxX, minY, minZ, uMin, vMax);
+		tessellator.addVertexWithUV(minX, minY, minZ, uMax, vMax);
+		tessellator.addVertexWithUV(minX, maxY, minZ, uMax, vMin);
+		tessellator.addVertexWithUV(maxX, maxY, minZ, uMin, vMin);
+
+		tessellator.addVertexWithUV(minX, minY, minZ, uMax, vMax);
+		tessellator.addVertexWithUV(maxX, minY, minZ, uMin, vMax);
+		tessellator.addVertexWithUV(maxX, maxY, minZ, uMin, vMin);
+		tessellator.addVertexWithUV(minX, maxY, minZ, uMax, vMin);
+	}
+	return true;
+}
+
+bool RenderBlocks::renderBlockQuartz(Block *block, int_t x, int_t y, int_t z)
+{
+	int_t meta = accessGetBlockMetadata(x, y, z);
+	if (meta == 3)
+	{
+		eastFaceRotation = 1;
+		westFaceRotation = 1;
+		topFaceRotation = 1;
+		bottomFaceRotation = 1;
+	}
+	else if (meta == 4)
+	{
+		southFaceRotation = 1;
+		northFaceRotation = 1;
+	}
+	bool result = renderStandardBlock(block, x, y, z);
+	southFaceRotation = 0;
+	eastFaceRotation = 0;
+	westFaceRotation = 0;
+	northFaceRotation = 0;
+	topFaceRotation = 0;
+	bottomFaceRotation = 0;
+	return result;
+}
+
+bool RenderBlocks::renderBlockBeacon(BlockBeacon *block, int_t x, int_t y, int_t z)
+{
+	float h = 0.1875f;
+	overrideBlockTexture = Block::obsidian != nullptr ? Block::obsidian->getBlockTextureFromSide(0) : 37;
+	block->setBlockBounds(0.125, 0.00625, 0.125, 0.875, h, 0.875);
+	renderStandardBlock(block, x, y, z);
+	overrideBlockTexture = Block::glass != nullptr ? Block::glass->getBlockTextureFromSide(0) : 49;
+	block->setBlockBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+	renderStandardBlock(block, x, y, z);
+	overrideBlockTexture = block->getBeaconIcon();
+	block->setBlockBounds(0.1875, h, 0.1875, 0.8125, 0.875, 0.8125);
+	renderStandardBlock(block, x, y, z);
+	overrideBlockTexture = -1;
+	block->setBlockBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+	return true;
+}
+
+bool RenderBlocks::renderBlockAnvil(BlockAnvil *block, int_t x, int_t y, int_t z)
+{
+	return renderBlockAnvilMetadata(block, x, y, z, accessGetBlockMetadata(x, y, z));
+}
+
+bool RenderBlocks::renderBlockAnvilMetadata(BlockAnvil *block, int_t x, int_t y, int_t z, int_t metadata)
+{
+	Tessellator &tessellator = Tessellator::instance;
+	tessellator.setBrightness(block->getMixedBrightnessForBlock(blockAccess, x, y, z));
+	tessellator.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+	return renderBlockAnvilOrient(block, x, y, z, metadata, false);
+}
+
+bool RenderBlocks::renderBlockAnvilOrient(BlockAnvil *block, int_t x, int_t y, int_t z, int_t metadata, bool inventory)
+{
+	int_t dir = inventory ? 0 : (metadata & 3);
+	bool rotated = false;
+	float yOffset = 0.0f;
+	switch (dir)
+	{
+	case 0:
+		southFaceRotation = 2;
+		northFaceRotation = 1;
+		topFaceRotation = 3;
+		bottomFaceRotation = 3;
+		break;
+	case 1:
+		eastFaceRotation = 1;
+		westFaceRotation = 2;
+		topFaceRotation = 2;
+		bottomFaceRotation = 1;
+		rotated = true;
+		break;
+	case 2:
+		southFaceRotation = 1;
+		northFaceRotation = 2;
+		break;
+	case 3:
+		eastFaceRotation = 2;
+		westFaceRotation = 1;
+		topFaceRotation = 1;
+		bottomFaceRotation = 2;
+		rotated = true;
+		break;
+	}
+
+	yOffset = renderBlockAnvilRotate(block, x, y, z, 0, yOffset, 0.75f, 0.25f, 0.75f, rotated, inventory, metadata);
+	yOffset = renderBlockAnvilRotate(block, x, y, z, 1, yOffset, 0.5f, 0.0625f, 0.625f, rotated, inventory, metadata);
+	yOffset = renderBlockAnvilRotate(block, x, y, z, 2, yOffset, 0.25f, 0.3125f, 0.5f, rotated, inventory, metadata);
+	yOffset = renderBlockAnvilRotate(block, x, y, z, 3, yOffset, 0.625f, 0.375f, 1.0f, rotated, inventory, metadata);
+	block->setBlockBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+	eastFaceRotation = 0;
+	westFaceRotation = 0;
+	southFaceRotation = 0;
+	northFaceRotation = 0;
+	topFaceRotation = 0;
+	bottomFaceRotation = 0;
+	return true;
+}
+
+float RenderBlocks::renderBlockAnvilRotate(BlockAnvil *block, int_t x, int_t y, int_t z, int_t part, float yOffset, float sizeX, float sizeY, float sizeZ, bool rotated, bool inventory, int_t metadata)
+{
+	if (rotated)
+	{
+		float temp = sizeX;
+		sizeX = sizeZ;
+		sizeZ = temp;
+	}
+	sizeX /= 2.0f;
+	sizeZ /= 2.0f;
+	block->field_82521_b = part;
+	block->setBlockBounds(0.5f - sizeX, yOffset, 0.5f - sizeZ, 0.5f + sizeX, yOffset + sizeY, 0.5f + sizeZ);
+	if (inventory)
+	{
+		Tessellator &tessellator = Tessellator::instance;
+		tessellator.startDrawingQuads();
+		tessellator.setNormal(0.0f, -1.0f, 0.0f);
+		renderBottomFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(0, metadata));
+		tessellator.setNormal(0.0f, 1.0f, 0.0f);
+		renderTopFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(1, metadata));
+		tessellator.setNormal(0.0f, 0.0f, -1.0f);
+		renderEastFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(2, metadata));
+		tessellator.setNormal(0.0f, 0.0f, 1.0f);
+		renderWestFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(3, metadata));
+		tessellator.setNormal(-1.0f, 0.0f, 0.0f);
+		renderNorthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(4, metadata));
+		tessellator.setNormal(1.0f, 0.0f, 0.0f);
+		renderSouthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(5, metadata));
+		tessellator.draw();
+	}
+	else
+	{
+		renderStandardBlock(block, x, y, z);
+	}
+	return yOffset + sizeY;
 }

@@ -207,6 +207,7 @@ public:
 	static StepSound *soundGlassFootstep;
 	static StepSound *soundClothFootstep;
 	static StepSound *soundSandFootstep;
+	static StepSound *soundAnvilFootstep;
 
 #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
 	static constexpr int_t BLOCK_REGISTRY_SIZE = 256;
@@ -364,6 +365,15 @@ public:
 	static Block *oreNetherQuartz;
 	static Block *blockNetherQuartz;
 	static Block *stairsNetherQuartz;
+	static Block *woodDoubleSlab;
+	static Block *woodSingleSlab;
+	static Block *cocoaPlant;
+	static Block *enderChest;
+	static Block *beacon;
+	static Block *cobblestoneWall;
+	static Block *flowerPot;
+	static Block *skull;
+	static Block *anvil;
 
 	int_t blockIndexInTexture = 0;
 	const int_t blockID;

@@ -1,4 +1,4 @@
-﻿#include "EntityFallingSand.h"
+#include "EntityFallingSand.h"
 #include "java/Arithmetic.h"
 
 #include "Block.h"
@@ -21,6 +21,26 @@ EntityFallingSand::EntityFallingSand(World *world, double d, double d1, double d
 	ensureEntityInit();
 	fallTime = 0;
 	blockID = i;
+	metadata = 0;
+	preventEntitySpawning = true;
+	setSize(0.98f, 0.98f);
+	yOffset = height / 2.0f;
+	setPosition(d, d1, d2);
+	motionX = 0.0;
+	motionY = 0.0;
+	motionZ = 0.0;
+	prevPosX = d;
+	prevPosY = d1;
+	prevPosZ = d2;
+}
+
+EntityFallingSand::EntityFallingSand(World *world, double d, double d1, double d2, int_t i, int_t meta)
+	: Entity(world)
+{
+	ensureEntityInit();
+	fallTime = 0;
+	blockID = i;
+	metadata = meta;
 	preventEntitySpawning = true;
 	setSize(0.98f, 0.98f);
 	yOffset = height / 2.0f;
@@ -85,11 +105,22 @@ void EntityFallingSand::onUpdate()
 		if (worldObj->getBlockId(i, j, k) != Block::pistonMoving->blockID)
 		{
 			setEntityDead();
-			if ((!worldObj->canBlockBePlacedAt(blockID, i, j, k, true, 1) ||
+			if (!worldObj->canBlockBePlacedAt(blockID, i, j, k, true, 1) ||
 			     BlockSand::canFallBelow(worldObj, i, j - 1, k) ||
-			     !worldObj->setBlockWithNotify(i, j, k, blockID)) && !worldObj->multiplayerWorld)
+			     !worldObj->setBlockAndMetadataWithNotify(i, j, k, blockID, metadata))
 			{
-				dropItem(blockID, 1);
+				if (!worldObj->multiplayerWorld)
+				{
+					dropItem(blockID, 1);
+				}
+			}
+			else
+			{
+				BlockSand *sandBlock = dynamic_cast<BlockSand *>(Block::blocksList[blockID]);
+				if (sandBlock != nullptr)
+				{
+					sandBlock->onFinishFalling(worldObj, i, j, k, metadata);
+				}
 			}
 		}
 	}
@@ -103,11 +134,22 @@ void EntityFallingSand::onUpdate()
 void EntityFallingSand::writeEntityToNBT(NBTTagCompound *nbttagcompound)
 {
 	nbttagcompound->setByte("Tile", JavaArithmetic::byteFromBits(static_cast<ubyte_t>(blockID)));
+	nbttagcompound->setByte("Data", JavaArithmetic::byteFromBits(static_cast<ubyte_t>(metadata)));
+	nbttagcompound->setBoolean("HurtEntities", isAnvil);
 }
 
 void EntityFallingSand::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 {
 	blockID = nbttagcompound->getByte("Tile") & 0xFF;
+	metadata = nbttagcompound->getByte("Data") & 0xFF;
+	if (nbttagcompound->hasKey("HurtEntities"))
+	{
+		isAnvil = nbttagcompound->getBoolean("HurtEntities");
+	}
+	else if (Block::anvil != nullptr && blockID == Block::anvil->blockID)
+	{
+		isAnvil = true;
+	}
 }
 
 float EntityFallingSand::getShadowSize()

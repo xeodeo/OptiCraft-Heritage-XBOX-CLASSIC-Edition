@@ -8,6 +8,7 @@
 
 class World;
 class InventoryPlayer;
+class InventoryEnderChest;
 class Container;
 class ChunkCoordinates;
 class Entity;
@@ -198,8 +199,10 @@ public:
 	virtual void travelToTheEnd(int_t dimension);
 	virtual void copyPlayer(EntityPlayer *player);
 	virtual void func_50009_aI();
+	InventoryEnderChest *getInventoryEnderChest();
 
 	InventoryPlayer *inventory;
+	InventoryEnderChest *theInventoryEnderChest;
 	Container *inventorySlots;
 	Container *craftingInventory;
 	byte_t  field_9371_f;

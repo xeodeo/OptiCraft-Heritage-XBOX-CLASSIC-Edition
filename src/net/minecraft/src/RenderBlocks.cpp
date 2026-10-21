@@ -1,5 +1,11 @@
 #include "RenderBlocks.h"
+#include "BlockWall.h"
+#include "BlockFlowerPot.h"
+#include "BlockCocoa.h"
+#include "BlockAnvil.h"
+#include "BlockBeacon.h"
 #include "ChestItemRenderHelper.h"
+#include "Texture152Atlas.h"
 #include "java/Arithmetic.h"
 
 #include "Block.h"
@@ -824,6 +830,30 @@ bool RenderBlocks::renderBlockByRenderType(Block *block, int_t i, int_t j, int_t
 	if (l == 27)
 	{
 		return renderBlockDragonEgg(block, i, j, k);
+	}
+	if (l == 28)
+	{
+		return renderBlockCocoa(dynamic_cast<BlockCocoa *>(block), i, j, k);
+	}
+	if (l == 32)
+	{
+		return renderBlockWall(dynamic_cast<BlockWall *>(block), i, j, k);
+	}
+	if (l == 33)
+	{
+		return renderBlockFlowerpot(dynamic_cast<BlockFlowerPot *>(block), i, j, k);
+	}
+	if (l == 34)
+	{
+		return renderBlockBeacon(dynamic_cast<BlockBeacon *>(block), i, j, k);
+	}
+	if (l == 35)
+	{
+		return renderBlockAnvil(dynamic_cast<BlockAnvil *>(block), i, j, k);
+	}
+	if (l == 39)
+	{
+		return renderBlockQuartz(block, i, j, k);
 	}
 	return false;
 }
@@ -4605,7 +4635,7 @@ void RenderBlocks::renderBlockOnInventory(Block *block, int_t i, float f)
 		renderColor4f(f1 * f, f3 * f, f5 * f, 1.0f);
 	}
 	int_t k = block->getRenderType();
-	if (k == 0 || k == 16)
+	if (k == 0 || k == 16 || k == 39)
 	{
 		if (k == 16)
 		{
@@ -4888,6 +4918,82 @@ void RenderBlocks::renderBlockOnInventory(Block *block, int_t i, float f)
 		ChestItemRenderHelper::instance.renderChest(block, i, f);
 		renderEnable(RenderCapability::RescaleNormal);
 	}
+	else if (k == 32)
+	{
+		for (int_t pass = 0; pass < 2; ++pass)
+		{
+			if (pass == 0)
+			{
+				block->setBlockBounds(0.0, 0.0, 0.3125, 1.0, 0.8125, 0.6875);
+			}
+			if (pass == 1)
+			{
+				block->setBlockBounds(0.25, 0.0, 0.25, 0.75, 1.0, 0.75);
+			}
+			renderTranslate(-0.5f, -0.5f, -0.5f);
+			tessellator->startDrawingQuads();
+			tessellator->setNormal(0.0f, -1.0f, 0.0f);
+			renderBottomFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(0, i));
+			tessellator->setNormal(0.0f, 1.0f, 0.0f);
+			renderTopFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(1, i));
+			tessellator->setNormal(0.0f, 0.0f, -1.0f);
+			renderEastFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(2, i));
+			tessellator->setNormal(0.0f, 0.0f, 1.0f);
+			renderWestFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(3, i));
+			tessellator->setNormal(-1.0f, 0.0f, 0.0f);
+			renderNorthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(4, i));
+			tessellator->setNormal(1.0f, 0.0f, 0.0f);
+			renderSouthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(5, i));
+			tessellator->draw();
+			renderTranslate(0.5f, 0.5f, 0.5f);
+		}
+		block->setBlockBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+	}
+	else if (k == 34)
+	{
+		for (int_t pass = 0; pass < 3; ++pass)
+		{
+			if (pass == 0)
+			{
+				block->setBlockBounds(0.125, 0.0, 0.125, 0.875, 0.1875, 0.875);
+				overrideBlockTexture = Block::obsidian != nullptr ? Block::obsidian->getBlockTextureFromSide(0) : 37;
+			}
+			else if (pass == 1)
+			{
+				block->setBlockBounds(0.1875, 0.1875, 0.1875, 0.8125, 0.875, 0.8125);
+				overrideBlockTexture = Block::beacon != nullptr ? dynamic_cast<BlockBeacon *>(Block::beacon)->getBeaconIcon() : Texture152::blockIcon("beacon.png");
+			}
+			else if (pass == 2)
+			{
+				block->setBlockBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+				overrideBlockTexture = Block::glass != nullptr ? Block::glass->getBlockTextureFromSide(0) : 49;
+			}
+			renderTranslate(-0.5f, -0.5f, -0.5f);
+			tessellator->startDrawingQuads();
+			tessellator->setNormal(0.0f, -1.0f, 0.0f);
+			renderBottomFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(0, i));
+			tessellator->setNormal(0.0f, 1.0f, 0.0f);
+			renderTopFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(1, i));
+			tessellator->setNormal(0.0f, 0.0f, -1.0f);
+			renderEastFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(2, i));
+			tessellator->setNormal(0.0f, 0.0f, 1.0f);
+			renderWestFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(3, i));
+			tessellator->setNormal(-1.0f, 0.0f, 0.0f);
+			renderNorthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(4, i));
+			tessellator->setNormal(1.0f, 0.0f, 0.0f);
+			renderSouthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(5, i));
+			tessellator->draw();
+			renderTranslate(0.5f, 0.5f, 0.5f);
+		}
+		block->setBlockBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+		overrideBlockTexture = -1;
+	}
+	else if (k == 35)
+	{
+		renderTranslate(-0.5f, -0.5f, -0.5f);
+		renderBlockAnvilOrient(dynamic_cast<BlockAnvil *>(block), 0, 0, 0, i, true);
+		renderTranslate(0.5f, 0.5f, 0.5f);
+	}
 }
 
 bool RenderBlocks::renderItemIn3d(int_t i)
@@ -4905,6 +5011,10 @@ bool RenderBlocks::renderItemIn3d(int_t i)
 		return true;
 	}
 	if (i == 11 || i == 22 || i == 21 || i == 27)
+	{
+		return true;
+	}
+	if (i == 31 || i == 32 || i == 34 || i == 35 || i == 39)
 	{
 		return true;
 	}

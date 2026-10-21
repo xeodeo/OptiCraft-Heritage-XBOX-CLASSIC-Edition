@@ -73,7 +73,10 @@ CraftingManager::CraftingManager()
 	addRecipe(new ItemStack(Block::stairSingle, 6, 3),        { "###", '#', Block::cobblestone });
 	addRecipe(new ItemStack(Block::stairSingle, 6, 0),        { "###", '#', Block::stone });
 	addRecipe(new ItemStack(Block::stairSingle, 6, 1),        { "###", '#', Block::sandStone });
-	addRecipe(new ItemStack(Block::stairSingle, 6, 2),        { "###", '#', Block::planks });
+	addRecipe(new ItemStack(Block::woodSingleSlab, 6, 0),     { "###", '#', new ItemStack(Block::planks, 1, 0) });
+	addRecipe(new ItemStack(Block::woodSingleSlab, 6, 1),     { "###", '#', new ItemStack(Block::planks, 1, 1) });
+	addRecipe(new ItemStack(Block::woodSingleSlab, 6, 2),     { "###", '#', new ItemStack(Block::planks, 1, 2) });
+	addRecipe(new ItemStack(Block::woodSingleSlab, 6, 3),     { "###", '#', new ItemStack(Block::planks, 1, 3) });
 	addRecipe(new ItemStack(Block::stairSingle, 6, 4),        { "###", '#', Block::brick });
 	addRecipe(new ItemStack(Block::stairSingle, 6, 5),        { "###", '#', Block::stoneBrick });
 	addRecipe(new ItemStack(Block::stairSingle, 6, 6),        { "###", '#', Block::netherBrick });

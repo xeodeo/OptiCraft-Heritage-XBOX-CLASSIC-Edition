@@ -78,6 +78,7 @@ public:
 	static Material *piston;
 	static Material *pistonBase;
 	static Material *pistonSticky;
+	static Material *anvil;
 
 private:
 	bool canBurn = false;

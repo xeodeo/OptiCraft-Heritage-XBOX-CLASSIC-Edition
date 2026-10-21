@@ -3,6 +3,7 @@
 
 #include "ItemStack.h"
 #include "Material.h"
+#include "World.h"
 
 const char *const BlockQuartz::quartzBlockTypes[3] = {
 	"default",
@@ -48,6 +49,36 @@ int_t BlockQuartz::getBlockTextureFromSideAndMetadata(int_t side, int_t metadata
 int_t BlockQuartz::getBlockTextureFromSide(int_t side)
 {
 	return getBlockTextureFromSideAndMetadata(side, 0);
+}
+
+int_t BlockQuartz::onBlockPlaced(World *world, int_t i, int_t j, int_t k, int_t side, float hitX, float hitY, float hitZ, int_t metadata)
+{
+	(void)world; (void)i; (void)j; (void)k; (void)hitX; (void)hitY; (void)hitZ;
+	if (metadata == 2)
+	{
+		switch (side)
+		{
+		case 0:
+		case 1:
+			metadata = 2;
+			break;
+		case 2:
+		case 3:
+			metadata = 4;
+			break;
+		case 4:
+		case 5:
+			metadata = 3;
+			break;
+		}
+	}
+	return metadata;
+}
+
+void BlockQuartz::onBlockPlaced(World *world, int_t i, int_t j, int_t k, int_t side)
+{
+	int_t meta = onBlockPlaced(world, i, j, k, side, 0.0f, 0.0f, 0.0f, world->getBlockMetadata(i, j, k));
+	world->setBlockMetadataWithNotify(i, j, k, meta);
 }
 
 int_t BlockQuartz::damageDropped(int_t metadata)

@@ -68,6 +68,16 @@
 #include "BlockPressurePlate.h"
 #include "BlockPumpkin.h"
 #include "BlockQuartz.h"
+#include "BlockHalfSlab.h"
+#include "BlockWoodSlab.h"
+#include "BlockWall.h"
+#include "BlockFlowerPot.h"
+#include "BlockCocoa.h"
+#include "BlockSkull.h"
+#include "BlockAnvil.h"
+#include "ItemAnvilBlock.h"
+#include "BlockEnderChest.h"
+#include "BlockBeacon.h"
 #include "BlockRail.h"
 #include "BlockRedstoneOre.h"
 #include "BlockRedstoneRepeater.h"
@@ -133,6 +143,7 @@ StepSound *Block::soundMetalFootstep = nullptr;
 StepSound *Block::soundGlassFootstep = nullptr;
 StepSound *Block::soundClothFootstep = nullptr;
 StepSound *Block::soundSandFootstep = nullptr;
+StepSound *Block::soundAnvilFootstep = nullptr;
 
 Block *Block::blocksList[Block::BLOCK_REGISTRY_SIZE] = {nullptr};
 bool Block::tickOnLoad[Block::BLOCK_REGISTRY_SIZE] = {false};
@@ -285,6 +296,15 @@ Block *Block::blockRedstone = nullptr;
 Block *Block::oreNetherQuartz = nullptr;
 Block *Block::blockNetherQuartz = nullptr;
 Block *Block::stairsNetherQuartz = nullptr;
+Block *Block::woodDoubleSlab = nullptr;
+Block *Block::woodSingleSlab = nullptr;
+Block *Block::cocoaPlant = nullptr;
+Block *Block::enderChest = nullptr;
+Block *Block::beacon = nullptr;
+Block *Block::cobblestoneWall = nullptr;
+Block *Block::flowerPot = nullptr;
+Block *Block::skull = nullptr;
+Block *Block::anvil = nullptr;
 
 static TileEntity *createTileEntitySign()
 {
@@ -952,6 +972,7 @@ void Block::initialize()
 	soundGlassFootstep = new StepSoundStone("stone", 1.0f, 1.0f);
 	soundClothFootstep = new StepSound("cloth", 1.0f, 1.0f);
 	soundSandFootstep = new StepSoundSand("sand", 1.0f, 1.0f);
+	soundAnvilFootstep = new StepSoundAnvil("anvil", 0.3f, 1.0f);
 
 	stone = (new BlockStone(1, 1))->setHardness(1.5f)->setResistance(10.0f)->setStepSound(soundStoneFootstep)->setBlockName("stone");
 	grass = static_cast<BlockGrass *>((new BlockGrass(2))->setHardness(0.6f)->setStepSound(soundGrassFootstep)->setBlockName("grass"));
@@ -1089,13 +1110,27 @@ void Block::initialize()
 	oreNetherQuartz = (new BlockOre(153, TEX152_BLOCK_ICON("netherquartz.png")))->setHardness(3.0f)->setResistance(5.0f)->setStepSound(soundStoneFootstep)->setBlockName("netherquartz"); // 1.5.2 icon: netherquartz.png
 	blockNetherQuartz = (new BlockQuartz(155))->setStepSound(soundStoneFootstep)->setHardness(0.8f)->setBlockName("quartzBlock");
 	stairsNetherQuartz = (new BlockStairs(156, blockNetherQuartz, 0))->setBlockName("stairsQuartz")->setRequiresSelfNotify();
+	woodDoubleSlab = (new BlockWoodSlab(125, true))->setHardness(2.0f)->setResistance(5.0f)->setStepSound(soundWoodFootstep)->setBlockName("woodSlab");
+	woodSingleSlab = (new BlockWoodSlab(126, false))->setHardness(2.0f)->setResistance(5.0f)->setStepSound(soundWoodFootstep)->setBlockName("woodSlab");
+	cocoaPlant = (new BlockCocoa(127))->setHardness(0.2f)->setResistance(5.0f)->setStepSound(soundWoodFootstep)->setBlockName("cocoa");
+	enderChest = (new BlockEnderChest(130))->setHardness(22.5f)->setResistance(1000.0f)->setStepSound(soundStoneFootstep)->setBlockName("enderChest")->setLightValue(0.5f);
+	beacon = (new BlockBeacon(138))->setBlockName("beacon")->setLightValue(1.0f);
+	cobblestoneWall = (new BlockWall(139, cobblestone))->setBlockName("cobbleWall");
+	flowerPot = (new BlockFlowerPot(140))->setHardness(0.0f)->setStepSound(soundPowderFootstep)->setBlockName("flowerPot");
+	skull = (new BlockSkull(144))->setHardness(1.0f)->setStepSound(soundStoneFootstep)->setBlockName("skull");
+	anvil = (new BlockAnvil(145))->setHardness(5.0f)->setStepSound(soundAnvilFootstep)->setResistance(2000.0f)->setBlockName("anvil");
 
 	Item::itemsList[cloth->blockID] = (new ItemCloth(cloth->blockID - 256))->setItemName("cloth");
 	Item::itemsList[wood->blockID] = (new ItemMetadata(wood->blockID - 256, wood))->setItemName("log");
 	Item::itemsList[planks->blockID] = (new ItemMetadata(planks->blockID - 256, planks))->setItemName("wood");
 	Item::itemsList[stoneBrick->blockID] = (new ItemMetadata(stoneBrick->blockID - 256, stoneBrick))->setItemName("stonebricksmooth");
 	Item::itemsList[sandStone->blockID] = (new ItemMetadata(sandStone->blockID - 256, sandStone))->setItemName("sandStone");
-	Item::itemsList[stairSingle->blockID] = (new ItemSlab(stairSingle->blockID - 256))->setItemName("stoneSlab");
+	Item::itemsList[stairSingle->blockID] = (new ItemSlab(stairSingle->blockID - 256, static_cast<BlockHalfSlab *>(stairSingle), static_cast<BlockHalfSlab *>(stairDouble), false))->setItemName("stoneSlab");
+	Item::itemsList[stairDouble->blockID] = (new ItemSlab(stairDouble->blockID - 256, static_cast<BlockHalfSlab *>(stairSingle), static_cast<BlockHalfSlab *>(stairDouble), true))->setItemName("stoneSlab");
+	Item::itemsList[woodSingleSlab->blockID] = (new ItemSlab(woodSingleSlab->blockID - 256, static_cast<BlockHalfSlab *>(woodSingleSlab), static_cast<BlockHalfSlab *>(woodDoubleSlab), false))->setItemName("woodSlab");
+	Item::itemsList[woodDoubleSlab->blockID] = (new ItemSlab(woodDoubleSlab->blockID - 256, static_cast<BlockHalfSlab *>(woodSingleSlab), static_cast<BlockHalfSlab *>(woodDoubleSlab), true))->setItemName("woodSlab");
+	Item::itemsList[cobblestoneWall->blockID] = (new ItemMultiTextureTile(cobblestoneWall->blockID - 256, cobblestoneWall, BlockWall::types, 2))->setItemName("cobbleWall");
+	Item::itemsList[anvil->blockID] = (new ItemAnvilBlock(anvil))->setItemName("anvil");
 	Item::itemsList[sapling->blockID] = (new ItemSapling(sapling->blockID - 256))->setItemName("sapling");
 	Item::itemsList[leaves->blockID] = (new ItemLeaves(leaves->blockID - 256))->setItemName("leaves");
 	Item::itemsList[vine->blockID] = new ItemColored(vine->blockID - 256, false);
@@ -1132,7 +1167,7 @@ void Block::initialize()
 				lightOpacity[i] = blocksList[i]->isOpaqueCube() ? 255 : 0;
 
 			bool neighborBrightness = blocksList[i]->getRenderType() == 10;
-			if (dynamic_cast<BlockStep *>(blocksList[i]) != nullptr ||
+			if (dynamic_cast<BlockHalfSlab *>(blocksList[i]) != nullptr ||
 				i == tilledField->blockID || canBlockGrass[i])
 				neighborBrightness = true;
 			useNeighborBrightness[i] = neighborBrightness;
@@ -1160,6 +1195,7 @@ void Block::cleanup()
 	delete soundGlassFootstep; soundGlassFootstep = nullptr;
 	delete soundClothFootstep; soundClothFootstep = nullptr;
 	delete soundSandFootstep; soundSandFootstep = nullptr;
+	delete soundAnvilFootstep; soundAnvilFootstep = nullptr;
 
 	// Blocks (via blocksList to avoid double-free)
 	for (int i = 0; i < 256; i++)
@@ -1308,4 +1344,22 @@ void Block::cleanup()
 	oreNetherQuartz = nullptr;
 	blockNetherQuartz = nullptr;
 	stairsNetherQuartz = nullptr;
+	woodDoubleSlab = nullptr;
+	woodSingleSlab = nullptr;
+	cocoaPlant = nullptr;
+	enderChest = nullptr;
+	beacon = nullptr;
+	cobblestoneWall = nullptr;
+	flowerPot = nullptr;
+	skull = nullptr;
+	anvil = nullptr;
+	woodDoubleSlab = nullptr;
+	woodSingleSlab = nullptr;
+	cocoaPlant = nullptr;
+	enderChest = nullptr;
+	beacon = nullptr;
+	cobblestoneWall = nullptr;
+	flowerPot = nullptr;
+	skull = nullptr;
+	anvil = nullptr;
 }

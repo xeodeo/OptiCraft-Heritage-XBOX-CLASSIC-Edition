@@ -10,6 +10,11 @@ class PcLegacySectionCache;
 #endif
 class Block;
 class BlockRail;
+class BlockWall;
+class BlockFlowerPot;
+class BlockCocoa;
+class BlockAnvil;
+class BlockBeacon;
 class World;
 class Material;
 class Vec3D;
@@ -131,6 +136,16 @@ public:
 	bool renderBlockBrewingStand(Block *block, int_t i, int_t j, int_t k);
 	bool renderBlockEndPortalFrame(Block *block, int_t i, int_t j, int_t k);
 	bool renderBlockDragonEgg(Block *block, int_t i, int_t j, int_t k);
+	bool renderBlockWall(BlockWall *block, int_t x, int_t y, int_t z);
+	bool renderBlockFlowerpot(BlockFlowerPot *block, int_t x, int_t y, int_t z);
+	bool renderBlockCocoa(BlockCocoa *block, int_t x, int_t y, int_t z);
+	bool renderBlockQuartz(Block *block, int_t x, int_t y, int_t z);
+	bool renderBlockBeacon(BlockBeacon *block, int_t x, int_t y, int_t z);
+	bool renderBlockAnvil(BlockAnvil *block, int_t x, int_t y, int_t z);
+	bool renderBlockAnvilMetadata(BlockAnvil *block, int_t x, int_t y, int_t z, int_t metadata);
+	bool renderBlockAnvilOrient(BlockAnvil *block, int_t x, int_t y, int_t z, int_t metadata, bool inventory);
+	float renderBlockAnvilRotate(BlockAnvil *block, int_t x, int_t y, int_t z, int_t part, float yOffset, float sizeX, float sizeY, float sizeZ, bool rotated, bool inventory, int_t metadata);
+	void drawCrossedSquares(Block *block, int_t i, double d, double d1, double d2, float scale);
 	void renderBlockStemSmall(Block *block, int_t metadata, double height, double x, double y, double z);
 	void renderBlockStemBig(Block *block, int_t metadata, int_t direction, double height, double x, double y, double z);
 	void renderTorchAtAngle(Block *block, tess_coord_t d, tess_coord_t d1, tess_coord_t d2, tess_coord_t d3, tess_coord_t d4);

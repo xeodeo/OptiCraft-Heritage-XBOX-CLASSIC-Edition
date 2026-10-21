@@ -14,6 +14,7 @@ public:
 	virtual float getPitch();
 	virtual jstring getStepSound();
 	virtual jstring getBreakSound();
+	virtual jstring getPlaceSound();
 
 	// Compatibility alias for older OptiCraft callers.
 	virtual jstring stepSoundDir();
@@ -21,4 +22,12 @@ public:
 	const jstring motionZ;
 	const float motionY;
 	const float rotationYaw;
+};
+
+class StepSoundAnvil : public StepSound
+{
+public:
+	StepSoundAnvil(const jstring &s, float f, float f1);
+	jstring getBreakSound() override;
+	jstring getPlaceSound() override;
 };

@@ -225,6 +225,10 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
         Block::melon, Block::pumpkin, Block::pumpkinLantern, Block::vine, Block::fenceIron, Block::thinGlass,
         Block::netherBrick, Block::netherFence, Block::stairsNetherBrick,
         Block::blockNetherQuartz, Block::blockNetherQuartz, Block::blockNetherQuartz, Block::stairsNetherQuartz,
+        Block::woodSingleSlab, Block::woodSingleSlab, Block::woodSingleSlab, Block::woodSingleSlab,
+        Block::cobblestoneWall, Block::cobblestoneWall,
+        Block::enderChest, Block::beacon,
+        Block::anvil, Block::anvil, Block::anvil,
         Block::endPortal, Block::whiteStone,
         Block::mycelium,
         Block::waterlily, Block::tallGrass, Block::tallGrass, Block::chest, Block::workbench, Block::glass,
@@ -249,6 +253,9 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
     int_t stoneBrickMeta = 0;
     int_t sandstoneMeta = 0;
     int_t quartzMeta = 0;
+    int_t woodSlabMeta = 0;
+    int_t wallMeta = 0;
+    int_t anvilMeta = 0;
     int_t leavesMeta = 0;
     int_t tallGrassMeta = 1;
 
@@ -266,6 +273,9 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
         else if (block == Block::stoneBrick) meta = stoneBrickMeta++;
         else if (block == Block::sandStone) meta = sandstoneMeta++;
         else if (block == Block::blockNetherQuartz) meta = quartzMeta++;
+        else if (block == Block::woodSingleSlab) meta = woodSlabMeta++;
+        else if (block == Block::cobblestoneWall) meta = wallMeta++;
+        else if (block == Block::anvil) meta = anvilMeta++;
         else if (block == Block::tallGrass) meta = tallGrassMeta++;
         else if (block == Block::leaves) meta = leavesMeta++;
         addItemStack(new ItemStack(block, 1, meta));
@@ -276,6 +286,12 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
         Item *item = Item::itemsList[id];
         if (item != nullptr && item != Item::potion && item != Item::monsterPlacer)
             addItemStack(new ItemStack(item));
+    }
+
+    if (Item::skull != nullptr)
+    {
+        for (int_t meta = 1; meta < 5; ++meta)
+            addItemStack(new ItemStack(Item::skull, 1, meta));
     }
 
     if (Item::dyePowder != nullptr)

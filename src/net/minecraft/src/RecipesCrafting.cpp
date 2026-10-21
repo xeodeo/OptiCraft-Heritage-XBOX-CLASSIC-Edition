@@ -43,4 +43,16 @@ void RecipesCrafting::addRecipes(CraftingManager *craftingmanager)
 	                           { "#  ", "## ", "###", '#', Block::sandStone });
 	craftingmanager->addRecipe(new ItemStack(Block::stairsNetherQuartz, 4),
 	                           { "#  ", "## ", "###", '#', Block::blockNetherQuartz });
+	craftingmanager->addRecipe(new ItemStack(Block::cobblestoneWall, 6, 0),
+	                           { "###", "###", '#', Block::cobblestone });
+	craftingmanager->addRecipe(new ItemStack(Block::cobblestoneWall, 6, 1),
+	                           { "###", "###", '#', Block::cobblestoneMossy });
+	craftingmanager->addRecipe(new ItemStack(Item::flowerPot, 1),
+	                           { "# #", " # ", '#', Item::brick });
+	craftingmanager->addRecipe(new ItemStack(Block::anvil, 1),
+	                           { "III", " i ", "iii", 'I', Block::blockSteel, 'i', Item::ingotIron });
+	craftingmanager->addRecipe(new ItemStack(Block::enderChest, 1),
+	                           { "###", "#E#", "###", '#', Block::obsidian, 'E', Item::eyeOfEnder });
+	craftingmanager->addRecipe(new ItemStack(Block::beacon, 1),
+	                           { "GGG", "GSG", "OOO", 'G', Block::glass, 'S', Item::netherStar, 'O', Block::obsidian });
 }

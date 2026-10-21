@@ -12,6 +12,9 @@ class EntityFallingSand : public Entity
 public:
 	EntityFallingSand(World *world);
 	EntityFallingSand(World *world, double d, double d1, double d2, int_t i);
+	EntityFallingSand(World *world, double d, double d1, double d2, int_t i, int_t meta);
+
+	void setIsAnvil(bool val) { isAnvil = val; }
 
 protected:
 	bool canTriggerWalking() override;
@@ -26,5 +29,7 @@ public:
 
 public:
 	int_t blockID = 0;
+	int_t metadata = 0;
+	bool isAnvil = false;
 	int_t fallTime;
 };

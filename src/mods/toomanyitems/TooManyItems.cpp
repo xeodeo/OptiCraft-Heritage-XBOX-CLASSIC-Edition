@@ -109,6 +109,21 @@ void TooManyItems::populateItems()
             for (int meta = 0; meta < 8; ++meta)
                 s_items.push_back(new ItemStack(b, 1, meta));
         }
+        else if (Block::woodSingleSlab && b->blockID == Block::woodSingleSlab->blockID)
+        {
+            for (int meta = 0; meta < 4; ++meta)
+                s_items.push_back(new ItemStack(b, 1, meta));
+        }
+        else if (Block::cobblestoneWall && b->blockID == Block::cobblestoneWall->blockID)
+        {
+            for (int meta = 0; meta < 2; ++meta)
+                s_items.push_back(new ItemStack(b, 1, meta));
+        }
+        else if (Block::anvil && b->blockID == Block::anvil->blockID)
+        {
+            for (int meta = 0; meta < 3; ++meta)
+                s_items.push_back(new ItemStack(b, 1, meta));
+        }
         else if (Block::tallGrass && b->blockID == reinterpret_cast<Block*>(Block::tallGrass)->blockID)
         {
             for (int meta = 1; meta <= 2; ++meta)
@@ -129,6 +144,11 @@ void TooManyItems::populateItems()
         if (Item::dyePowder && item->shiftedIndex == Item::dyePowder->shiftedIndex)
         {
             for (int meta = 0; meta < 16; ++meta)
+                s_items.push_back(new ItemStack(item, 1, meta));
+        }
+        else if (Item::skull && item->shiftedIndex == Item::skull->shiftedIndex)
+        {
+            for (int meta = 0; meta < 5; ++meta)
                 s_items.push_back(new ItemStack(item, 1, meta));
         }
         else if (Item::coal && item->shiftedIndex == Item::coal->shiftedIndex)
