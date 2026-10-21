@@ -530,6 +530,17 @@ void WorldRenderer::markDirty()
 #if PC_LEGACY_COALESCE_MESH_REBUILDS
 	if (pcLegacyBuildActive)
 	{
+#if PLATFORM_XBOX
+		// A section takes several frames to mesh on the Xbox, and a redstone clock
+		// changes blocks every 2-4 ticks: restarting here meant the section never
+		// finished, so torches and dust never updated and moving pistons (drawn
+		// only from the list a finished build publishes) looked stuck. Finish the
+		// build in progress and rebuild once more right after it, as
+		// markDirtyFromLighting() already does.
+		pcLegacyBuildDirtyDuringBuild = true;
+		needsUpdate = true;
+		return;
+#endif
 		const int_t chunkX = JavaArithmetic::intShr(posX, 4);
 		const int_t chunkZ = JavaArithmetic::intShr(posZ, 4);
 		if (worldObj != nullptr && worldObj->isChunkPopulationPendingForRendering(chunkX, chunkZ))
