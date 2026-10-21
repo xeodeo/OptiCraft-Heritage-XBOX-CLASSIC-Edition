@@ -1,4 +1,4 @@
-﻿#include "TileEntity.h"
+#include "TileEntity.h"
 
 #include "platform/Log.h"
 #include <iostream>
@@ -23,6 +23,7 @@
 #include "TileEntityEnderChest.h"
 #include "TileEntitySkull.h"
 #include "TileEntityBeacon.h"
+#include "TileEntityDaylightDetector.h"
 
 std::map<std::string, std::function<TileEntity *()>> TileEntity::nameToClassMap;
 std::map<std::string, std::string>                   TileEntity::classToNameMap;
@@ -49,6 +50,7 @@ namespace
 			TileEntity::addMapping<TileEntityEnderChest>("EnderChest");
 			TileEntity::addMapping<TileEntitySkull>("Skull");
 			TileEntity::addMapping<TileEntityBeacon>("Beacon");
+			TileEntity::addMapping<TileEntityDaylightDetector>("DLDetector");
 		}
 	};
 	TileEntityMappingInit tileEntityMappingInit;

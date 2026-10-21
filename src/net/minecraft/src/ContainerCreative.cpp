@@ -44,7 +44,13 @@ static int_t getCreativeCategory(ItemStack *stack)
             (Block::lever != nullptr && id == Block::lever->blockID) ||
             (Block::pressurePlateStone != nullptr && id == Block::pressurePlateStone->blockID) ||
             (Block::pressurePlatePlanks != nullptr && id == Block::pressurePlatePlanks->blockID) ||
+            (Block::pressurePlateGold != nullptr && id == Block::pressurePlateGold->blockID) ||
+            (Block::pressurePlateIron != nullptr && id == Block::pressurePlateIron->blockID) ||
             (Block::torchRedstoneActive != nullptr && id == Block::torchRedstoneActive->blockID) ||
+            (Block::button != nullptr && id == Block::button->blockID) ||
+            (Block::woodenButton != nullptr && id == Block::woodenButton->blockID) ||
+            (Block::tripWireSource != nullptr && id == Block::tripWireSource->blockID) ||
+            (Block::daylightSensor != nullptr && id == Block::daylightSensor->blockID) ||
             (Block::button != nullptr && id == Block::button->blockID) ||
             (Block::trapdoor != nullptr && id == Block::trapdoor->blockID) ||
             (Block::redstoneLampIdle != nullptr && id == Block::redstoneLampIdle->blockID) ||
@@ -241,7 +247,9 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
         Block::stairCompactCobblestone, Block::stairsBrick,
         Block::stairsStoneBrickSmooth, Block::stairsSandStone,
         Block::lever, Block::pressurePlateStone, Block::pressurePlatePlanks,
-        Block::torchRedstoneActive, Block::button, Block::trapdoor, Block::enchantmentTable,
+        Block::pressurePlateGold, Block::pressurePlateIron,
+        Block::torchRedstoneActive, Block::button, Block::woodenButton,
+        Block::tripWireSource, Block::daylightSensor, Block::trapdoor, Block::enchantmentTable,
         Block::redstoneLampIdle
     };
 

@@ -1,4 +1,6 @@
 #include "RenderBlocks.h"
+#include "BlockTripWire.h"
+#include "MathHelper.h"
 
 #include <utility>
 
@@ -1465,3 +1467,454 @@ float RenderBlocks::renderBlockAnvilRotate(BlockAnvil *block, int_t x, int_t y, 
 	}
 	return yOffset + sizeY;
 }
+
+
+struct TripWireVec3
+{
+	double xCoord;
+	double yCoord;
+	double zCoord;
+
+	TripWireVec3(double x = 0.0, double y = 0.0, double z = 0.0) : xCoord(x), yCoord(y), zCoord(z) {}
+
+	void rotateAroundX(float f)
+	{
+		float f1 = MathHelper::cos(f);
+		float f2 = MathHelper::sin(f);
+		double d1 = yCoord * (double)f1 + zCoord * (double)f2;
+		double d2 = zCoord * (double)f1 - yCoord * (double)f2;
+		yCoord = d1;
+		zCoord = d2;
+	}
+
+	void rotateAroundY(float f)
+	{
+		float f1 = MathHelper::cos(f);
+		float f2 = MathHelper::sin(f);
+		double d0 = xCoord * (double)f1 + zCoord * (double)f2;
+		double d2 = zCoord * (double)f1 - xCoord * (double)f2;
+		xCoord = d0;
+		zCoord = d2;
+	}
+};
+
+bool RenderBlocks::renderBlockTripWireSource(Block *block, int_t x, int_t y, int_t z)
+{
+	Tessellator &tess = Tessellator::instance;
+	int_t meta = accessGetBlockMetadata(x, y, z);
+	int_t dir = meta & 3;
+	bool connected = (meta & 4) == 4;
+	bool powered = (meta & 8) == 8;
+	bool suspended = !blockAccess->isBlockNormalCube(x, y - 1, z);
+	bool hasOverride = overrideBlockTexture >= 0;
+	if (!hasOverride)
+	{
+		overrideBlockTexture = Block::planks != nullptr ? Block::planks->getBlockTextureFromSide(0) : 4;
+	}
+
+	float var12 = 0.25f;
+	float var13 = 0.125f;
+	float var14 = 0.125f;
+	float var15 = 0.3f - var12;
+	float var16 = 0.3f + var12;
+	if (dir == 2)
+	{
+		block->setBlockBounds(0.5f - var13, var15, 1.0f - var14, 0.5f + var13, var16, 1.0f);
+	}
+	else if (dir == 0)
+	{
+		block->setBlockBounds(0.5f - var13, var15, 0.0f, 0.5f + var13, var16, var14);
+	}
+	else if (dir == 1)
+	{
+		block->setBlockBounds(1.0f - var14, var15, 0.5f - var13, 1.0f, var16, 0.5f + var13);
+	}
+	else if (dir == 3)
+	{
+		block->setBlockBounds(0.0f, var15, 0.5f - var13, var14, var16, 0.5f + var13);
+	}
+
+	renderStandardBlock(block, x, y, z);
+	if (!hasOverride)
+	{
+		overrideBlockTexture = -1;
+	}
+	block->setBlockBoundsBasedOnState(blockAccess, x, y, z);
+
+	tess.setBrightness(block->getMixedBrightnessForBlock(blockAccess, x, y, z));
+	float color = 1.0f;
+	tess.setColorOpaque_F(color, color, color);
+
+	int_t tex = hasOverride ? overrideBlockTexture : block->getBlockTextureFromSide(0);
+	float tileX = static_cast<float>((tex & 15) << 4);
+	float tileY = static_cast<float>(tex & 240);
+	auto interpU = [tileX](double t) -> tess_coord_t { return static_cast<tess_coord_t>((tileX + static_cast<float>(t)) / 256.0f); };
+	auto interpV = [tileY](double t) -> tess_coord_t { return static_cast<tess_coord_t>((tileY + static_cast<float>(t)) / 256.0f); };
+
+	TripWireVec3 pts[8];
+	float rX = 0.046875f;
+	float rZ = 0.046875f;
+	float rY = 0.3125f;
+	pts[0] = TripWireVec3(-rX, 0.0, -rZ);
+	pts[1] = TripWireVec3( rX, 0.0, -rZ);
+	pts[2] = TripWireVec3( rX, 0.0,  rZ);
+	pts[3] = TripWireVec3(-rX, 0.0,  rZ);
+	pts[4] = TripWireVec3(-rX, rY,  -rZ);
+	pts[5] = TripWireVec3( rX, rY,  -rZ);
+	pts[6] = TripWireVec3( rX, rY,   rZ);
+	pts[7] = TripWireVec3(-rX, rY,   rZ);
+
+	for (int_t i = 0; i < 8; ++i)
+	{
+		pts[i].zCoord += 0.0625;
+		if (powered)
+		{
+			pts[i].rotateAroundX(3.14159265f / 6.0f);
+			pts[i].yCoord -= 0.4375;
+		}
+		else if (connected)
+		{
+			pts[i].rotateAroundX(0.08726647f);
+			pts[i].yCoord -= 0.4375;
+		}
+		else
+		{
+			pts[i].rotateAroundX(-3.14159265f * 2.0f / 9.0f);
+			pts[i].yCoord -= 0.375;
+		}
+
+		pts[i].rotateAroundX(3.14159265f / 2.0f);
+		if (dir == 2) pts[i].rotateAroundY(0.0f);
+		if (dir == 0) pts[i].rotateAroundY(3.14159265f);
+		if (dir == 1) pts[i].rotateAroundY(3.14159265f / 2.0f);
+		if (dir == 3) pts[i].rotateAroundY(-3.14159265f / 2.0f);
+
+		pts[i].xCoord += (double)x + 0.5;
+		pts[i].yCoord += (double)((float)y + 0.3125f);
+		pts[i].zCoord += (double)z + 0.5;
+	}
+
+	TripWireVec3 *v0 = nullptr, *v1 = nullptr, *v2 = nullptr, *v3 = nullptr;
+	tess_coord_t minU = 0, minV = 0, maxU = 0, maxV = 0;
+
+	for (int_t face = 0; face < 6; ++face)
+	{
+		if (face == 0)
+		{
+			v0 = &pts[0]; v1 = &pts[1]; v2 = &pts[2]; v3 = &pts[3];
+			minU = interpU(7.0); minV = interpV(9.0); maxU = interpU(9.0); maxV = interpV(11.0);
+		}
+		else if (face == 1)
+		{
+			v0 = &pts[7]; v1 = &pts[6]; v2 = &pts[5]; v3 = &pts[4];
+		}
+		else if (face == 2)
+		{
+			v0 = &pts[1]; v1 = &pts[0]; v2 = &pts[4]; v3 = &pts[5];
+			minU = interpU(7.0); minV = interpV(9.0); maxU = interpU(9.0); maxV = interpV(16.0);
+		}
+		else if (face == 3)
+		{
+			v0 = &pts[2]; v1 = &pts[1]; v2 = &pts[5]; v3 = &pts[6];
+		}
+		else if (face == 4)
+		{
+			v0 = &pts[3]; v1 = &pts[2]; v2 = &pts[6]; v3 = &pts[7];
+		}
+		else if (face == 5)
+		{
+			v0 = &pts[0]; v1 = &pts[3]; v2 = &pts[7]; v3 = &pts[4];
+		}
+
+		tess.addVertexWithUV(v0->xCoord, v0->yCoord, v0->zCoord, minU, maxV);
+		tess.addVertexWithUV(v1->xCoord, v1->yCoord, v1->zCoord, maxU, maxV);
+		tess.addVertexWithUV(v2->xCoord, v2->yCoord, v2->zCoord, maxU, minV);
+		tess.addVertexWithUV(v3->xCoord, v3->yCoord, v3->zCoord, minU, minV);
+	}
+
+	float hookW = 0.09375f;
+	float hookD = 0.09375f;
+	float hookH = 0.03125f;
+	pts[0] = TripWireVec3(-hookW, 0.0, -hookD);
+	pts[1] = TripWireVec3( hookW, 0.0, -hookD);
+	pts[2] = TripWireVec3( hookW, 0.0,  hookD);
+	pts[3] = TripWireVec3(-hookW, 0.0,  hookD);
+	pts[4] = TripWireVec3(-hookW, hookH, -hookD);
+	pts[5] = TripWireVec3( hookW, hookH, -hookD);
+	pts[6] = TripWireVec3( hookW, hookH,  hookD);
+	pts[7] = TripWireVec3(-hookW, hookH,  hookD);
+
+	for (int_t i = 0; i < 8; ++i)
+	{
+		pts[i].zCoord += 0.21875;
+		if (powered)
+		{
+			pts[i].yCoord -= 0.09375;
+			pts[i].zCoord -= 0.1625;
+			pts[i].rotateAroundX(0.0f);
+		}
+		else if (connected)
+		{
+			pts[i].yCoord += 0.015625;
+			pts[i].zCoord -= 0.171875;
+			pts[i].rotateAroundX(0.17453294f);
+		}
+		else
+		{
+			pts[i].rotateAroundX(0.87266463f);
+		}
+
+		if (dir == 2) pts[i].rotateAroundY(0.0f);
+		if (dir == 0) pts[i].rotateAroundY(3.14159265f);
+		if (dir == 1) pts[i].rotateAroundY(3.14159265f / 2.0f);
+		if (dir == 3) pts[i].rotateAroundY(-3.14159265f / 2.0f);
+
+		pts[i].xCoord += (double)x + 0.5;
+		pts[i].yCoord += (double)((float)y + 0.3125f);
+		pts[i].zCoord += (double)z + 0.5;
+	}
+
+	for (int_t face = 0; face < 6; ++face)
+	{
+		if (face == 0)
+		{
+			v0 = &pts[0]; v1 = &pts[1]; v2 = &pts[2]; v3 = &pts[3];
+			minU = interpU(5.0); minV = interpV(3.0); maxU = interpU(11.0); maxV = interpV(9.0);
+		}
+		else if (face == 1)
+		{
+			v0 = &pts[7]; v1 = &pts[6]; v2 = &pts[5]; v3 = &pts[4];
+		}
+		else if (face == 2)
+		{
+			v0 = &pts[1]; v1 = &pts[0]; v2 = &pts[4]; v3 = &pts[5];
+			minU = interpU(5.0); minV = interpV(3.0); maxU = interpU(11.0); maxV = interpV(5.0);
+		}
+		else if (face == 3)
+		{
+			v0 = &pts[2]; v1 = &pts[1]; v2 = &pts[5]; v3 = &pts[6];
+		}
+		else if (face == 4)
+		{
+			v0 = &pts[3]; v1 = &pts[2]; v2 = &pts[6]; v3 = &pts[7];
+		}
+		else if (face == 5)
+		{
+			v0 = &pts[0]; v1 = &pts[3]; v2 = &pts[7]; v3 = &pts[4];
+		}
+
+		tess.addVertexWithUV(v0->xCoord, v0->yCoord, v0->zCoord, minU, maxV);
+		tess.addVertexWithUV(v1->xCoord, v1->yCoord, v1->zCoord, maxU, maxV);
+		tess.addVertexWithUV(v2->xCoord, v2->yCoord, v2->zCoord, maxU, minV);
+		tess.addVertexWithUV(v3->xCoord, v3->yCoord, v3->zCoord, minU, minV);
+	}
+
+	if (connected)
+	{
+		double hookY = pts[0].yCoord;
+		float stringW = 0.03125f;
+		float stringMin = 0.5f - stringW / 2.0f;
+		float stringMax = stringMin + stringW;
+		int_t wireTex = Block::tripWire != nullptr ? Block::tripWire->getBlockTextureFromSide(0) : TEX152_BLOCK_ICON("tripWire.png");
+		float wTileX = static_cast<float>((wireTex & 15) << 4);
+		float wTileY = static_cast<float>(wireTex & 240);
+		auto wInterpU = [wTileX](double t) -> tess_coord_t { return static_cast<tess_coord_t>((wTileX + static_cast<float>(t)) / 256.0f); };
+		auto wInterpV = [wTileY](double t) -> tess_coord_t { return static_cast<tess_coord_t>((wTileY + static_cast<float>(t)) / 256.0f); };
+
+		tess_coord_t sMinU = wInterpU(0.0);
+		tess_coord_t sMinV = wInterpV(connected ? 2.0 : 0.0);
+		tess_coord_t sMaxU = wInterpU(16.0);
+		tess_coord_t sMaxV = wInterpV(connected ? 4.0 : 2.0);
+		double stringHeight = (double)(suspended ? 3.5f : 1.5f) / 16.0;
+		color = block->getBlockBrightness(blockAccess, x, y, z) * 0.75f;
+		tess.setColorOpaque_F(color, color, color);
+
+		if (dir == 2)
+		{
+			tess.addVertexWithUV((double)((float)x + stringMin), (double)y + stringHeight, (double)z + 0.25, sMinU, sMinV);
+			tess.addVertexWithUV((double)((float)x + stringMax), (double)y + stringHeight, (double)z + 0.25, sMinU, sMaxV);
+			tess.addVertexWithUV((double)((float)x + stringMax), (double)y + stringHeight, (double)z, sMaxU, sMaxV);
+			tess.addVertexWithUV((double)((float)x + stringMin), (double)y + stringHeight, (double)z, sMaxU, sMinV);
+
+			tess.addVertexWithUV((double)((float)x + stringMin), hookY, (double)z + 0.5, sMinU, sMinV);
+			tess.addVertexWithUV((double)((float)x + stringMax), hookY, (double)z + 0.5, sMinU, sMaxV);
+			tess.addVertexWithUV((double)((float)x + stringMax), (double)y + stringHeight, (double)z + 0.25, sMaxU, sMaxV);
+			tess.addVertexWithUV((double)((float)x + stringMin), (double)y + stringHeight, (double)z + 0.25, sMaxU, sMinV);
+		}
+		else if (dir == 0)
+		{
+			tess.addVertexWithUV((double)((float)x + stringMin), (double)y + stringHeight, (double)z + 0.75, sMinU, sMinV);
+			tess.addVertexWithUV((double)((float)x + stringMax), (double)y + stringHeight, (double)z + 0.75, sMinU, sMaxV);
+			tess.addVertexWithUV((double)((float)x + stringMax), hookY, (double)z + 0.5, sMaxU, sMaxV);
+			tess.addVertexWithUV((double)((float)x + stringMin), hookY, (double)z + 0.5, sMaxU, sMinV);
+
+			tess.addVertexWithUV((double)((float)x + stringMin), (double)y + stringHeight, (double)(z + 1), sMinU, sMinV);
+			tess.addVertexWithUV((double)((float)x + stringMax), (double)y + stringHeight, (double)(z + 1), sMinU, sMaxV);
+			tess.addVertexWithUV((double)((float)x + stringMax), (double)y + stringHeight, (double)z + 0.75, sMaxU, sMaxV);
+			tess.addVertexWithUV((double)((float)x + stringMin), (double)y + stringHeight, (double)z + 0.75, sMaxU, sMinV);
+		}
+		else if (dir == 1)
+		{
+			tess.addVertexWithUV((double)x, (double)y + stringHeight, (double)((float)z + stringMax), sMinU, sMaxV);
+			tess.addVertexWithUV((double)x + 0.25, (double)y + stringHeight, (double)((float)z + stringMax), sMaxU, sMaxV);
+			tess.addVertexWithUV((double)x + 0.25, (double)y + stringHeight, (double)((float)z + stringMin), sMaxU, sMinV);
+			tess.addVertexWithUV((double)x, (double)y + stringHeight, (double)((float)z + stringMin), sMinU, sMinV);
+
+			tess.addVertexWithUV((double)x + 0.25, (double)y + stringHeight, (double)((float)z + stringMax), sMinU, sMaxV);
+			tess.addVertexWithUV((double)x + 0.5, hookY, (double)((float)z + stringMax), sMaxU, sMaxV);
+			tess.addVertexWithUV((double)x + 0.5, hookY, (double)((float)z + stringMin), sMaxU, sMinV);
+			tess.addVertexWithUV((double)x + 0.25, (double)y + stringHeight, (double)((float)z + stringMin), sMinU, sMinV);
+		}
+		else
+		{
+			tess.addVertexWithUV((double)x + 0.5, hookY, (double)((float)z + stringMax), sMinU, sMaxV);
+			tess.addVertexWithUV((double)x + 0.75, (double)y + stringHeight, (double)((float)z + stringMax), sMaxU, sMaxV);
+			tess.addVertexWithUV((double)x + 0.75, (double)y + stringHeight, (double)((float)z + stringMin), sMaxU, sMinV);
+			tess.addVertexWithUV((double)x + 0.5, hookY, (double)((float)z + stringMin), sMinU, sMinV);
+
+			tess.addVertexWithUV((double)x + 0.75, (double)y + stringHeight, (double)((float)z + stringMax), sMinU, sMaxV);
+			tess.addVertexWithUV((double)(x + 1), (double)y + stringHeight, (double)((float)z + stringMax), sMaxU, sMaxV);
+			tess.addVertexWithUV((double)(x + 1), (double)y + stringHeight, (double)((float)z + stringMin), sMaxU, sMinV);
+			tess.addVertexWithUV((double)x + 0.75, (double)y + stringHeight, (double)((float)z + stringMin), sMaxU, sMinV);
+		}
+	}
+	return true;
+}
+
+bool RenderBlocks::renderBlockTripWire(Block *block, int_t x, int_t y, int_t z)
+{
+	Tessellator &tess = Tessellator::instance;
+	int_t meta = accessGetBlockMetadata(x, y, z);
+	bool connected = (meta & 4) == 4;
+	bool suspended = (meta & 2) == 2;
+	int_t tex = overrideBlockTexture >= 0 ? overrideBlockTexture : block->getBlockTextureFromSide(0);
+
+	tess.setBrightness(block->getMixedBrightnessForBlock(blockAccess, x, y, z));
+	float color = block->getBlockBrightness(blockAccess, x, y, z) * 0.75f;
+	tess.setColorOpaque_F(color, color, color);
+
+	float tileX = static_cast<float>((tex & 15) << 4);
+	float tileY = static_cast<float>(tex & 240);
+	auto interpU = [tileX](double t) -> tess_coord_t { return static_cast<tess_coord_t>((tileX + static_cast<float>(t)) / 256.0f); };
+	auto interpV = [tileY](double t) -> tess_coord_t { return static_cast<tess_coord_t>((tileY + static_cast<float>(t)) / 256.0f); };
+
+	tess_coord_t minU = interpU(0.0);
+	tess_coord_t minV = interpV(connected ? 2.0 : 0.0);
+	tess_coord_t maxU = interpU(16.0);
+	tess_coord_t maxV = interpV(connected ? 4.0 : 2.0);
+	double height = (double)(suspended ? 3.5f : 1.5f) / 16.0;
+
+	bool connE = BlockTripWire::isConnected(blockAccess, x, y, z, meta, 1);
+	bool connW = BlockTripWire::isConnected(blockAccess, x, y, z, meta, 3);
+	bool connS = BlockTripWire::isConnected(blockAccess, x, y, z, meta, 2);
+	bool connN = BlockTripWire::isConnected(blockAccess, x, y, z, meta, 0);
+
+	float stringW = 0.03125f;
+	float stringMin = 0.5f - stringW / 2.0f;
+	float stringMax = stringMin + stringW;
+
+	if (!connS && !connW && !connN && !connE)
+	{
+		connS = true;
+		connN = true;
+	}
+
+	if (connS)
+	{
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.25, minU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.25, minU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z, maxU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z, maxU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z, maxU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z, maxU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.25, minU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.25, minU, minV);
+	}
+
+	if (connS || (connN && !connW && !connE))
+	{
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.5, minU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.5, minU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.25, maxU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.25, maxU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.25, maxU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.25, maxU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.5, minU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.5, minU, minV);
+	}
+
+	if (connN || (connS && !connW && !connE))
+	{
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.75, minU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.75, minU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.5, maxU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.5, maxU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.5, maxU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.5, maxU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.75, minU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.75, minU, minV);
+	}
+
+	if (connN)
+	{
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)(z + 1), minU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)(z + 1), minU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.75, maxU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.75, maxU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)z + 0.75, maxU, minV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)z + 0.75, maxU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMax), (double)y + height, (double)(z + 1), minU, maxV);
+		tess.addVertexWithUV((double)((float)x + stringMin), (double)y + height, (double)(z + 1), minU, minV);
+	}
+
+	if (connE)
+	{
+		tess.addVertexWithUV((double)x, (double)y + height, (double)((float)z + stringMax), minU, maxV);
+		tess.addVertexWithUV((double)x + 0.25, (double)y + height, (double)((float)z + stringMax), maxU, maxV);
+		tess.addVertexWithUV((double)x + 0.25, (double)y + height, (double)((float)z + stringMin), maxU, minV);
+		tess.addVertexWithUV((double)x, (double)y + height, (double)((float)z + stringMin), minU, minV);
+		tess.addVertexWithUV((double)x, (double)y + height, (double)((float)z + stringMin), minU, minV);
+		tess.addVertexWithUV((double)x + 0.25, (double)y + height, (double)((float)z + stringMin), maxU, minV);
+		tess.addVertexWithUV((double)x + 0.25, (double)y + height, (double)((float)z + stringMax), maxU, maxV);
+		tess.addVertexWithUV((double)x, (double)y + height, (double)((float)z + stringMax), minU, maxV);
+	}
+
+	if (connE || (connW && !connS && !connN))
+	{
+		tess.addVertexWithUV((double)x + 0.25, (double)y + height, (double)((float)z + stringMax), minU, maxV);
+		tess.addVertexWithUV((double)x + 0.5, (double)y + height, (double)((float)z + stringMax), maxU, maxV);
+		tess.addVertexWithUV((double)x + 0.5, (double)y + height, (double)((float)z + stringMin), maxU, minV);
+		tess.addVertexWithUV((double)x + 0.25, (double)y + height, (double)((float)z + stringMin), minU, minV);
+		tess.addVertexWithUV((double)x + 0.25, (double)y + height, (double)((float)z + stringMin), minU, minV);
+		tess.addVertexWithUV((double)x + 0.5, (double)y + height, (double)((float)z + stringMin), maxU, minV);
+		tess.addVertexWithUV((double)x + 0.5, (double)y + height, (double)((float)z + stringMax), maxU, maxV);
+		tess.addVertexWithUV((double)x + 0.25, (double)y + height, (double)((float)z + stringMax), minU, maxV);
+	}
+
+	if (connW || (connE && !connS && !connN))
+	{
+		tess.addVertexWithUV((double)x + 0.5, (double)y + height, (double)((float)z + stringMax), minU, maxV);
+		tess.addVertexWithUV((double)x + 0.75, (double)y + height, (double)((float)z + stringMax), maxU, maxV);
+		tess.addVertexWithUV((double)x + 0.75, (double)y + height, (double)((float)z + stringMin), maxU, minV);
+		tess.addVertexWithUV((double)x + 0.5, (double)y + height, (double)((float)z + stringMin), minU, minV);
+		tess.addVertexWithUV((double)x + 0.5, (double)y + height, (double)((float)z + stringMin), minU, minV);
+		tess.addVertexWithUV((double)x + 0.75, (double)y + height, (double)((float)z + stringMin), maxU, minV);
+		tess.addVertexWithUV((double)x + 0.75, (double)y + height, (double)((float)z + stringMax), maxU, maxV);
+		tess.addVertexWithUV((double)x + 0.5, (double)y + height, (double)((float)z + stringMax), minU, maxV);
+	}
+
+	if (connW)
+	{
+		tess.addVertexWithUV((double)x + 0.75, (double)y + height, (double)((float)z + stringMax), minU, maxV);
+		tess.addVertexWithUV((double)(x + 1), (double)y + height, (double)((float)z + stringMax), maxU, maxV);
+		tess.addVertexWithUV((double)(x + 1), (double)y + height, (double)((float)z + stringMin), maxU, minV);
+		tess.addVertexWithUV((double)x + 0.75, (double)y + height, (double)((float)z + stringMin), minU, minV);
+		tess.addVertexWithUV((double)x + 0.75, (double)y + height, (double)((float)z + stringMin), minU, minV);
+		tess.addVertexWithUV((double)(x + 1), (double)y + height, (double)((float)z + stringMin), maxU, minV);
+		tess.addVertexWithUV((double)(x + 1), (double)y + height, (double)((float)z + stringMax), maxU, maxV);
+		tess.addVertexWithUV((double)x + 0.75, (double)y + height, (double)((float)z + stringMax), minU, maxV);
+	}
+
+	return true;
+}
+

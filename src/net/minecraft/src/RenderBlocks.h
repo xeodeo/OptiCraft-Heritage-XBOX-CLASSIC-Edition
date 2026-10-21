@@ -142,6 +142,8 @@ public:
 	bool renderBlockQuartz(Block *block, int_t x, int_t y, int_t z);
 	bool renderBlockBeacon(BlockBeacon *block, int_t x, int_t y, int_t z);
 	bool renderBlockAnvil(BlockAnvil *block, int_t x, int_t y, int_t z);
+	bool renderBlockTripWireSource(Block *block, int_t x, int_t y, int_t z);
+	bool renderBlockTripWire(Block *block, int_t x, int_t y, int_t z);
 	bool renderBlockAnvilMetadata(BlockAnvil *block, int_t x, int_t y, int_t z, int_t metadata);
 	bool renderBlockAnvilOrient(BlockAnvil *block, int_t x, int_t y, int_t z, int_t metadata, bool inventory);
 	float renderBlockAnvilRotate(BlockAnvil *block, int_t x, int_t y, int_t z, int_t part, float yOffset, float sizeX, float sizeY, float sizeZ, bool rotated, bool inventory, int_t metadata);

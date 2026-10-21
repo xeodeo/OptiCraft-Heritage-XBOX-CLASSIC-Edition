@@ -51,7 +51,7 @@ bool BlockRedstoneWire::canPlaceBlockAt(World *world, int_t i, int_t j, int_t k)
 
 void BlockRedstoneWire::updateAndPropagateCurrentStrength(World *world, int_t i, int_t j, int_t k)
 {
-	updateCurrentStrength(world, i, j, k, i, j, k);
+	calculateCurrentChanges(world, i, j, k, i, j, k);
 	std::vector<ChunkPosition> arraylist = pendingWireUpdates.valuesInIterationOrder();
 	pendingWireUpdates.clear();
 	for (const ChunkPosition &position : arraylist)
@@ -60,106 +60,77 @@ void BlockRedstoneWire::updateAndPropagateCurrentStrength(World *world, int_t i,
 	}
 }
 
-void BlockRedstoneWire::updateCurrentStrength(World *world, int_t i, int_t j, int_t k, int_t l, int_t i1, int_t j1)
+void BlockRedstoneWire::calculateCurrentChanges(World *world, int_t i, int_t j, int_t k, int_t l, int_t i1, int_t j1)
 {
-	int_t k1 = world->getBlockMetadata(i, j, k);
-	int_t l1 = 0;
+	int_t currentMeta = world->getBlockMetadata(i, j, k);
+	int_t targetStrength = 0;
+	targetStrength = getMaxCurrentStrength(world, l, i1, j1, targetStrength);
+
 	wiresProvidePower = false;
-	bool flag = world->isBlockIndirectlyGettingPowered(i, j, k);
+	int_t strongestPower = world->getStrongestIndirectPower(i, j, k);
 	wiresProvidePower = true;
-	if (flag)
+
+	if (strongestPower > 0 && strongestPower > targetStrength - 1)
 	{
-		l1 = 15;
+		targetStrength = strongestPower;
+	}
+
+	int_t neighborMaxWire = 0;
+	for (int_t step = 0; step < 4; ++step)
+	{
+		int_t nx = i;
+		int_t nz = k;
+		if (step == 0) --nx;
+		if (step == 1) ++nx;
+		if (step == 2) --nz;
+		if (step == 3) ++nz;
+
+		if (nx != l || nz != j1)
+		{
+			neighborMaxWire = getMaxCurrentStrength(world, nx, j, nz, neighborMaxWire);
+		}
+
+		if (world->isBlockNormalCube(nx, j, nz) && !world->isBlockNormalCube(i, j + 1, k))
+		{
+			if ((nx != l || nz != j1) && j >= i1)
+			{
+				neighborMaxWire = getMaxCurrentStrength(world, nx, j + 1, nz, neighborMaxWire);
+			}
+		}
+		else if (!world->isBlockNormalCube(nx, j, nz) && (nx != l || nz != j1) && j <= i1)
+		{
+			neighborMaxWire = getMaxCurrentStrength(world, nx, j - 1, nz, neighborMaxWire);
+		}
+	}
+
+	if (neighborMaxWire > targetStrength)
+	{
+		targetStrength = neighborMaxWire - 1;
+	}
+	else if (targetStrength > 0)
+	{
+		--targetStrength;
 	}
 	else
 	{
-		for (int_t i2 = 0; i2 < 4; i2++)
-		{
-			int_t k2 = i;
-			int_t i3 = k;
-			if (i2 == 0) k2--;
-			if (i2 == 1) k2++;
-			if (i2 == 2) i3--;
-			if (i2 == 3) i3++;
-			if (k2 != l || j != i1 || i3 != j1)
-			{
-				l1 = getMaxCurrentStrength(world, k2, j, i3, l1);
-			}
-			if (world->isBlockNormalCube(k2, j, i3) && !world->isBlockNormalCube(i, j + 1, k))
-			{
-				if (k2 != l || j + 1 != i1 || i3 != j1)
-				{
-					l1 = getMaxCurrentStrength(world, k2, j + 1, i3, l1);
-				}
-				continue;
-			}
-			if (!world->isBlockNormalCube(k2, j, i3) && (k2 != l || j - 1 != i1 || i3 != j1))
-			{
-				l1 = getMaxCurrentStrength(world, k2, j - 1, i3, l1);
-			}
-		}
-
-		if (l1 > 0)
-		{
-			l1--;
-		}
-		else
-		{
-			l1 = 0;
-		}
+		targetStrength = 0;
 	}
-	if (k1 != l1)
-	{
-		world->editingBlocks = true;
-		world->setBlockMetadataWithNotify(i, j, k, l1);
-		world->markBlocksDirty(i, j, k, i, j, k);
-		world->editingBlocks = false;
-		for (int_t j2 = 0; j2 < 4; j2++)
-		{
-			int_t l2 = i;
-			int_t j3 = k;
-			int_t k3 = j - 1;
-			if (j2 == 0) l2--;
-			if (j2 == 1) l2++;
-			if (j2 == 2) j3--;
-			if (j2 == 3) j3++;
-			if (world->isBlockNormalCube(l2, j, j3))
-			{
-				k3 += 2;
-			}
-			int_t l3 = 0;
-			l3 = getMaxCurrentStrength(world, l2, j, j3, -1);
-			l1 = world->getBlockMetadata(i, j, k);
-			if (l1 > 0)
-			{
-				l1--;
-			}
-			if (l3 >= 0 && l3 != l1)
-			{
-				updateCurrentStrength(world, l2, j, j3, i, j, k);
-			}
-			l3 = getMaxCurrentStrength(world, l2, k3, j3, -1);
-			l1 = world->getBlockMetadata(i, j, k);
-			if (l1 > 0)
-			{
-				l1--;
-			}
-			if (l3 >= 0 && l3 != l1)
-			{
-				updateCurrentStrength(world, l2, k3, j3, i, j, k);
-			}
-		}
 
-		if (k1 < l1 || l1 == 0)
-		{
-			pendingWireUpdates.add(ChunkPosition(i, j, k));
-			pendingWireUpdates.add(ChunkPosition(i - 1, j, k));
-			pendingWireUpdates.add(ChunkPosition(i + 1, j, k));
-			pendingWireUpdates.add(ChunkPosition(i, j - 1, k));
-			pendingWireUpdates.add(ChunkPosition(i, j + 1, k));
-			pendingWireUpdates.add(ChunkPosition(i, j, k - 1));
-			pendingWireUpdates.add(ChunkPosition(i, j, k + 1));
-		}
+	if (strongestPower > targetStrength - 1)
+	{
+		targetStrength = strongestPower;
+	}
+
+	if (currentMeta != targetStrength)
+	{
+		world->setBlockMetadataWithNotify(i, j, k, targetStrength);
+		pendingWireUpdates.add(ChunkPosition(i, j, k));
+		pendingWireUpdates.add(ChunkPosition(i - 1, j, k));
+		pendingWireUpdates.add(ChunkPosition(i + 1, j, k));
+		pendingWireUpdates.add(ChunkPosition(i, j - 1, k));
+		pendingWireUpdates.add(ChunkPosition(i, j + 1, k));
+		pendingWireUpdates.add(ChunkPosition(i, j, k - 1));
+		pendingWireUpdates.add(ChunkPosition(i, j, k + 1));
 	}
 }
 
@@ -276,60 +247,71 @@ int_t BlockRedstoneWire::idDropped(int_t i, Random &random)
 	return Item::redstone->shiftedIndex;
 }
 
-bool BlockRedstoneWire::isIndirectlyPoweringTo(World *world, int_t i, int_t j, int_t k, int_t l)
+int_t BlockRedstoneWire::isProvidingStrongPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l)
+{
+	return !wiresProvidePower ? 0 : isProvidingWeakPower(iblockaccess, i, j, k, l);
+}
+
+int_t BlockRedstoneWire::isProvidingWeakPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l)
 {
 	if (!wiresProvidePower)
 	{
-		return false;
+		return 0;
 	}
-	else
+	int_t strength = iblockaccess->getBlockMetadata(i, j, k);
+	if (strength == 0)
 	{
-		return isPoweringTo(world, i, j, k, l);
+		return 0;
 	}
+	if (l == 1)
+	{
+		return strength;
+	}
+
+	bool w = isPoweredOrRepeater(iblockaccess, i - 1, j, k, 1) || (!iblockaccess->isBlockNormalCube(i - 1, j, k) && isPoweredOrRepeater(iblockaccess, i - 1, j - 1, k, -1));
+	bool e = isPoweredOrRepeater(iblockaccess, i + 1, j, k, 3) || (!iblockaccess->isBlockNormalCube(i + 1, j, k) && isPoweredOrRepeater(iblockaccess, i + 1, j - 1, k, -1));
+	bool n = isPoweredOrRepeater(iblockaccess, i, j, k - 1, 2) || (!iblockaccess->isBlockNormalCube(i, j, k - 1) && isPoweredOrRepeater(iblockaccess, i, j - 1, k - 1, -1));
+	bool s = isPoweredOrRepeater(iblockaccess, i, j, k + 1, 0) || (!iblockaccess->isBlockNormalCube(i, j, k + 1) && isPoweredOrRepeater(iblockaccess, i, j - 1, k + 1, -1));
+
+	if (!iblockaccess->isBlockNormalCube(i, j + 1, k))
+	{
+		if (iblockaccess->isBlockNormalCube(i - 1, j, k) && isPoweredOrRepeater(iblockaccess, i - 1, j + 1, k, -1)) w = true;
+		if (iblockaccess->isBlockNormalCube(i + 1, j, k) && isPoweredOrRepeater(iblockaccess, i + 1, j + 1, k, -1)) e = true;
+		if (iblockaccess->isBlockNormalCube(i, j, k - 1) && isPoweredOrRepeater(iblockaccess, i, j + 1, k - 1, -1)) n = true;
+		if (iblockaccess->isBlockNormalCube(i, j, k + 1) && isPoweredOrRepeater(iblockaccess, i, j + 1, k + 1, -1)) s = true;
+	}
+
+	if (!n && !e && !w && !s && l >= 2 && l <= 5)
+	{
+		return strength;
+	}
+	if (l == 2 && n && !w && !e)
+	{
+		return strength;
+	}
+	if (l == 3 && s && !w && !e)
+	{
+		return strength;
+	}
+	if (l == 4 && w && !n && !s)
+	{
+		return strength;
+	}
+	if (l == 5 && e && !n && !s)
+	{
+		return strength;
+	}
+	return 0;
 }
 
 bool BlockRedstoneWire::isPoweringTo(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l)
 {
-	if (!wiresProvidePower)
-	{
-		return false;
-	}
-	if (iblockaccess->getBlockMetadata(i, j, k) == 0)
-	{
-		return false;
-	}
-	if (l == 1)
-	{
-		return true;
-	}
-	bool flag = isPowerProviderOrWire(iblockaccess, i - 1, j, k, 1) || !iblockaccess->isBlockNormalCube(i - 1, j, k) && isPowerProviderOrWire(iblockaccess, i - 1, j - 1, k, -1);
-	bool flag1 = isPowerProviderOrWire(iblockaccess, i + 1, j, k, 3) || !iblockaccess->isBlockNormalCube(i + 1, j, k) && isPowerProviderOrWire(iblockaccess, i + 1, j - 1, k, -1);
-	bool flag2 = isPowerProviderOrWire(iblockaccess, i, j, k - 1, 2) || !iblockaccess->isBlockNormalCube(i, j, k - 1) && isPowerProviderOrWire(iblockaccess, i, j - 1, k - 1, -1);
-	bool flag3 = isPowerProviderOrWire(iblockaccess, i, j, k + 1, 0) || !iblockaccess->isBlockNormalCube(i, j, k + 1) && isPowerProviderOrWire(iblockaccess, i, j - 1, k + 1, -1);
-	if (!iblockaccess->isBlockNormalCube(i, j + 1, k))
-	{
-		if (iblockaccess->isBlockNormalCube(i - 1, j, k) && isPowerProviderOrWire(iblockaccess, i - 1, j + 1, k, -1)) flag = true;
-		if (iblockaccess->isBlockNormalCube(i + 1, j, k) && isPowerProviderOrWire(iblockaccess, i + 1, j + 1, k, -1)) flag1 = true;
-		if (iblockaccess->isBlockNormalCube(i, j, k - 1) && isPowerProviderOrWire(iblockaccess, i, j + 1, k - 1, -1)) flag2 = true;
-		if (iblockaccess->isBlockNormalCube(i, j, k + 1) && isPowerProviderOrWire(iblockaccess, i, j + 1, k + 1, -1)) flag3 = true;
-	}
-	if (!flag2 && !flag1 && !flag && !flag3 && l >= 2 && l <= 5)
-	{
-		return true;
-	}
-	if (l == 2 && flag2 && !flag && !flag1)
-	{
-		return true;
-	}
-	if (l == 3 && flag3 && !flag && !flag1)
-	{
-		return true;
-	}
-	if (l == 4 && flag && !flag2 && !flag3)
-	{
-		return true;
-	}
-	return l == 5 && flag1 && !flag2 && !flag3;
+	return isProvidingWeakPower(iblockaccess, i, j, k, l) > 0;
+}
+
+bool BlockRedstoneWire::isIndirectlyPoweringTo(World *world, int_t i, int_t j, int_t k, int_t l)
+{
+	return isProvidingStrongPower(world, i, j, k, l) > 0;
 }
 
 bool BlockRedstoneWire::canProvidePower()
@@ -376,5 +358,20 @@ bool BlockRedstoneWire::isPowerProviderOrWire(IBlockAccess *iblockaccess, int_t 
 	}
 
 	const int_t metadata = iblockaccess->getBlockMetadata(i, j, k) & 3;
-	return l == metadata || l == Direction::footInvisibleFaceRemap[metadata];
+	return l == metadata || l == Direction::rotateOpposite[metadata];
+}
+
+bool BlockRedstoneWire::isPoweredOrRepeater(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l)
+{
+	if (isPowerProviderOrWire(iblockaccess, i, j, k, l))
+	{
+		return true;
+	}
+	int_t i1 = iblockaccess->getBlockId(i, j, k);
+	if (i1 == Block::redstoneRepeaterActive->blockID)
+	{
+		const int_t metadata = iblockaccess->getBlockMetadata(i, j, k) & 3;
+		return l == metadata;
+	}
+	return false;
 }

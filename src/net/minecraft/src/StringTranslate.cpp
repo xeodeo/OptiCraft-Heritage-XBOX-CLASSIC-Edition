@@ -207,6 +207,11 @@ void StringTranslate::setLanguage(const std::string &language)
     const bool isSpanish = (currentLanguage.rfind("es_", 0) == 0);
     const char *port152Defaults[][3] = {
         {"tile.stairsSandStone.name", "Sandstone Stairs", "Escaleras de arenisca"},
+        {"tile.weightedPlate_light.name", "Weighted Pressure Plate (Light)", "Placa de presión ponderada (ligera)"},
+        {"tile.weightedPlate_heavy.name", "Weighted Pressure Plate (Heavy)", "Placa de presión ponderada (pesada)"},
+        {"tile.daylightDetector.name", "Daylight Sensor", "Sensor de luz diurna"},
+        {"tile.tripWireSource.name", "Tripwire Hook", "Gancho de cuerda"},
+        {"tile.tripWire.name", "Tripwire", "Cuerda"},
         {"tile.oreEmerald.name", "Emerald Ore", "Mena de esmeralda"},
         {"tile.blockEmerald.name", "Block of Emerald", "Bloque de esmeralda"},
         {"tile.stairsWoodSpruce.name", "Spruce Wood Stairs", "Escaleras de madera de abeto"},

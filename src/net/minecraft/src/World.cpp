@@ -6032,51 +6032,88 @@ PathEntity* World::getEntityPathToXYZ(Entity* entity, int x, int y, int z, float
 #endif
 }
 
-bool World::isBlockProvidingPowerTo(int x, int y, int z, int side)
+int_t World::isBlockProvidingPowerTo(int x, int y, int z, int side)
 {
     int blockId = getBlockId(x, y, z);
     if (blockId == 0)
     {
-        return false;
+        return 0;
     }
     
-    return Block::blocksList[blockId]->isIndirectlyPoweringTo(this, x, y, z, side);
+    return Block::blocksList[blockId]->isProvidingStrongPower(this, x, y, z, side);
+}
+
+int_t World::getBlockPowerInput(int x, int y, int z)
+{
+    int_t power = 0;
+    power = std::max(power, isBlockProvidingPowerTo(x, y - 1, z, 0));
+    if (power >= 15) return power;
+    power = std::max(power, isBlockProvidingPowerTo(x, y + 1, z, 1));
+    if (power >= 15) return power;
+    power = std::max(power, isBlockProvidingPowerTo(x, y, z - 1, 2));
+    if (power >= 15) return power;
+    power = std::max(power, isBlockProvidingPowerTo(x, y, z + 1, 3));
+    if (power >= 15) return power;
+    power = std::max(power, isBlockProvidingPowerTo(x - 1, y, z, 4));
+    if (power >= 15) return power;
+    power = std::max(power, isBlockProvidingPowerTo(x + 1, y, z, 5));
+    return power;
 }
 
 bool World::isBlockGettingPowered(int x, int y, int z)
 {
-    if (isBlockProvidingPowerTo(x, y - 1, z, 0)) return true;
-    if (isBlockProvidingPowerTo(x, y + 1, z, 1)) return true;
-    if (isBlockProvidingPowerTo(x, y, z - 1, 2)) return true;
-    if (isBlockProvidingPowerTo(x, y, z + 1, 3)) return true;
-    if (isBlockProvidingPowerTo(x - 1, y, z, 4)) return true;
-    return isBlockProvidingPowerTo(x + 1, y, z, 5);
+    return getBlockPowerInput(x, y, z) > 0;
 }
 
-bool World::isBlockIndirectlyProvidingPowerTo(int x, int y, int z, int side)
+int_t World::getIndirectPowerLevelTo(int x, int y, int z, int side)
 {
     if (Block::isNormalCube(getBlockId(x, y, z)))
     {
-        return isBlockGettingPowered(x, y, z);
+        return getBlockPowerInput(x, y, z);
     }
     
     int blockId = getBlockId(x, y, z);
     if (blockId == 0)
     {
-        return false;
+        return 0;
     }
     
-    return Block::blocksList[blockId]->isPoweringTo(this, x, y, z, side);
+    return Block::blocksList[blockId]->isProvidingWeakPower(this, x, y, z, side);
+}
+
+bool World::getIndirectPowerOutput(int x, int y, int z, int side)
+{
+    return getIndirectPowerLevelTo(x, y, z, side) > 0;
+}
+
+bool World::isBlockIndirectlyProvidingPowerTo(int x, int y, int z, int side)
+{
+    return getIndirectPowerLevelTo(x, y, z, side) > 0;
 }
 
 bool World::isBlockIndirectlyGettingPowered(int x, int y, int z)
 {
-    if (isBlockIndirectlyProvidingPowerTo(x, y - 1, z, 0)) return true;
-    if (isBlockIndirectlyProvidingPowerTo(x, y + 1, z, 1)) return true;
-    if (isBlockIndirectlyProvidingPowerTo(x, y, z - 1, 2)) return true;
-    if (isBlockIndirectlyProvidingPowerTo(x, y, z + 1, 3)) return true;
-    if (isBlockIndirectlyProvidingPowerTo(x - 1, y, z, 4)) return true;
-    return isBlockIndirectlyProvidingPowerTo(x + 1, y, z, 5);
+    if (getIndirectPowerLevelTo(x, y - 1, z, 0) > 0) return true;
+    if (getIndirectPowerLevelTo(x, y + 1, z, 1) > 0) return true;
+    if (getIndirectPowerLevelTo(x, y, z - 1, 2) > 0) return true;
+    if (getIndirectPowerLevelTo(x, y, z + 1, 3) > 0) return true;
+    if (getIndirectPowerLevelTo(x - 1, y, z, 4) > 0) return true;
+    return getIndirectPowerLevelTo(x + 1, y, z, 5) > 0;
+}
+
+int_t World::getStrongestIndirectPower(int x, int y, int z)
+{
+    int_t maxPower = 0;
+    static const int offsetsX[6] = {0, 0, 0, 0, -1, 1};
+    static const int offsetsY[6] = {-1, 1, 0, 0, 0, 0};
+    static const int offsetsZ[6] = {0, 0, -1, 1, 0, 0};
+    for (int side = 0; side < 6; ++side)
+    {
+        int_t power = getIndirectPowerLevelTo(x + offsetsX[side], y + offsetsY[side], z + offsetsZ[side], side);
+        if (power >= 15) return 15;
+        if (power > maxPower) maxPower = power;
+    }
+    return maxPower;
 }
 
 EntityPlayer* World::getClosestPlayerToEntity(Entity* entity, double maxDistance)

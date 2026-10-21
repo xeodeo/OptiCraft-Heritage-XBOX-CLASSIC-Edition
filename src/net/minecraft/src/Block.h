@@ -157,6 +157,8 @@ public:
 	virtual int_t getRenderColor(int_t i);
 	virtual int_t colorMultiplier(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k);
 	virtual bool isPoweringTo(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l);
+	virtual int_t isProvidingWeakPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l);
+	virtual int_t isProvidingStrongPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l);
 	virtual bool canProvidePower();
 	virtual void powerBlock(World *world, int_t i, int_t j, int_t k, int_t eventId, int_t eventParam);
 	virtual void onEntityCollidedWithBlock(World *world, int_t i, int_t j, int_t k, Entity *entity);
@@ -374,6 +376,14 @@ public:
 	static Block *flowerPot;
 	static Block *skull;
 	static Block *anvil;
+	static Block *woodenButton;
+	static Block *buttonWood;
+	static Block *pressurePlateGold;
+	static Block *pressurePlateIron;
+	static Block *tripWireSource;
+	static Block *tripWire;
+	static Block *daylightSensor;
+	static Block *daylightDetector;
 
 	int_t blockIndexInTexture = 0;
 	const int_t blockID;

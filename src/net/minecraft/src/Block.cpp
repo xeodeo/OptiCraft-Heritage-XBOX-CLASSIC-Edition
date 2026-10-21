@@ -5,6 +5,8 @@
 #include "BlockBed.h"
 #include "BlockBookshelf.h"
 #include "BlockButton.h"
+#include "BlockButtonStone.h"
+#include "BlockButtonWood.h"
 #include "BlockCactus.h"
 #include "BlockCake.h"
 #include "BlockCarrot.h"
@@ -66,6 +68,10 @@
 #include "BlockPotato.h"
 #include "BlockPoweredOre.h"
 #include "BlockPressurePlate.h"
+#include "BlockPressurePlateWeighted.h"
+#include "BlockDaylightDetector.h"
+#include "BlockTripWireSource.h"
+#include "BlockTripWire.h"
 #include "BlockPumpkin.h"
 #include "BlockQuartz.h"
 #include "BlockHalfSlab.h"
@@ -305,6 +311,14 @@ Block *Block::cobblestoneWall = nullptr;
 Block *Block::flowerPot = nullptr;
 Block *Block::skull = nullptr;
 Block *Block::anvil = nullptr;
+Block *Block::woodenButton = nullptr;
+Block *Block::buttonWood = nullptr;
+Block *Block::pressurePlateGold = nullptr;
+Block *Block::pressurePlateIron = nullptr;
+Block *Block::tripWireSource = nullptr;
+Block *Block::tripWire = nullptr;
+Block *Block::daylightSensor = nullptr;
+Block *Block::daylightDetector = nullptr;
 
 static TileEntity *createTileEntitySign()
 {
@@ -779,6 +793,16 @@ bool Block::isPoweringTo(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, 
 	return false;
 }
 
+int_t Block::isProvidingWeakPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l)
+{
+	return isPoweringTo(iblockaccess, i, j, k, l) ? 15 : 0;
+}
+
+int_t Block::isProvidingStrongPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l)
+{
+	return isIndirectlyPoweringTo(dynamic_cast<World *>(iblockaccess), i, j, k, l) ? 15 : 0;
+}
+
 bool Block::canProvidePower()
 {
 	return false;
@@ -1050,7 +1074,7 @@ void Block::initialize()
 	oreRedstoneGlowing = (new BlockRedstoneOre(74, 51, true))->setLightValue(0.625f)->setHardness(3.0f)->setResistance(5.0f)->setStepSound(soundStoneFootstep)->setBlockName("oreRedstone")->setRequiresSelfNotify();
 	torchRedstoneIdle = (new BlockRedstoneTorch(75, 115, false))->setHardness(0.0f)->setStepSound(soundWoodFootstep)->setBlockName("notGate")->setRequiresSelfNotify();
 	torchRedstoneActive = (new BlockRedstoneTorch(76, 99, true))->setHardness(0.0f)->setLightValue(0.5f)->setStepSound(soundWoodFootstep)->setBlockName("notGate")->setRequiresSelfNotify();
-	button = (new BlockButton(77, stone->blockIndexInTexture))->setHardness(0.5f)->setStepSound(soundStoneFootstep)->setBlockName("button")->setRequiresSelfNotify();
+	button = (new BlockButtonStone(77))->setHardness(0.5f)->setStepSound(soundStoneFootstep)->setBlockName("button")->setRequiresSelfNotify();
 	snow = (new BlockSnow(78, 66))->setHardness(0.1f)->setStepSound(soundClothFootstep)->setBlockName("snow")->setLightOpacity(0);
 	ice = (new BlockIce(79, 67))->setHardness(0.5f)->setLightOpacity(3)->setStepSound(soundGlassFootstep)->setBlockName("ice");
 	blockSnow = (new BlockSnowBlock(80, 66))->setHardness(0.2f)->setStepSound(soundClothFootstep)->setBlockName("snow");
@@ -1108,17 +1132,25 @@ void Block::initialize()
 	potato = (new BlockPotato(142))->setBlockName("potatoes")->disableStats()->setRequiresSelfNotify();
 	blockRedstone = (new BlockPoweredOre(152, TEX152_BLOCK_ICON("blockRedstone.png")))->setHardness(5.0f)->setResistance(10.0f)->setStepSound(soundMetalFootstep)->setBlockName("blockRedstone"); // 1.5.2 icon: blockRedstone.png
 	oreNetherQuartz = (new BlockOre(153, TEX152_BLOCK_ICON("netherquartz.png")))->setHardness(3.0f)->setResistance(5.0f)->setStepSound(soundStoneFootstep)->setBlockName("netherquartz"); // 1.5.2 icon: netherquartz.png
-	blockNetherQuartz = (new BlockQuartz(155))->setStepSound(soundStoneFootstep)->setHardness(0.8f)->setBlockName("quartzBlock");
+	blockNetherQuartz = (new BlockQuartz(155))->setStepSound(soundStoneFootstep)->setHardness(0.8f)->setBlockName("quartzBlock")->setRequiresSelfNotify();
 	stairsNetherQuartz = (new BlockStairs(156, blockNetherQuartz, 0))->setBlockName("stairsQuartz")->setRequiresSelfNotify();
-	woodDoubleSlab = (new BlockWoodSlab(125, true))->setHardness(2.0f)->setResistance(5.0f)->setStepSound(soundWoodFootstep)->setBlockName("woodSlab");
-	woodSingleSlab = (new BlockWoodSlab(126, false))->setHardness(2.0f)->setResistance(5.0f)->setStepSound(soundWoodFootstep)->setBlockName("woodSlab");
-	cocoaPlant = (new BlockCocoa(127))->setHardness(0.2f)->setResistance(5.0f)->setStepSound(soundWoodFootstep)->setBlockName("cocoa");
-	enderChest = (new BlockEnderChest(130))->setHardness(22.5f)->setResistance(1000.0f)->setStepSound(soundStoneFootstep)->setBlockName("enderChest")->setLightValue(0.5f);
-	beacon = (new BlockBeacon(138))->setBlockName("beacon")->setLightValue(1.0f);
-	cobblestoneWall = (new BlockWall(139, cobblestone))->setBlockName("cobbleWall");
-	flowerPot = (new BlockFlowerPot(140))->setHardness(0.0f)->setStepSound(soundPowderFootstep)->setBlockName("flowerPot");
-	skull = (new BlockSkull(144))->setHardness(1.0f)->setStepSound(soundStoneFootstep)->setBlockName("skull");
-	anvil = (new BlockAnvil(145))->setHardness(5.0f)->setStepSound(soundAnvilFootstep)->setResistance(2000.0f)->setBlockName("anvil");
+	woodDoubleSlab = (new BlockWoodSlab(125, true))->setHardness(2.0f)->setResistance(5.0f)->setStepSound(soundWoodFootstep)->setBlockName("woodSlab")->setRequiresSelfNotify();
+	woodSingleSlab = (new BlockWoodSlab(126, false))->setHardness(2.0f)->setResistance(5.0f)->setStepSound(soundWoodFootstep)->setBlockName("woodSlab")->setRequiresSelfNotify();
+	cocoaPlant = (new BlockCocoa(127))->setHardness(0.2f)->setResistance(5.0f)->setStepSound(soundWoodFootstep)->setBlockName("cocoa")->setRequiresSelfNotify();
+	enderChest = (new BlockEnderChest(130))->setHardness(22.5f)->setResistance(1000.0f)->setStepSound(soundStoneFootstep)->setBlockName("enderChest")->setLightValue(0.5f)->setRequiresSelfNotify();
+	beacon = (new BlockBeacon(138))->setBlockName("beacon")->setLightValue(1.0f)->setRequiresSelfNotify();
+	cobblestoneWall = (new BlockWall(139, cobblestone))->setBlockName("cobbleWall")->setRequiresSelfNotify();
+	flowerPot = (new BlockFlowerPot(140))->setHardness(0.0f)->setStepSound(soundPowderFootstep)->setBlockName("flowerPot")->setRequiresSelfNotify();
+	skull = (new BlockSkull(144))->setHardness(1.0f)->setStepSound(soundStoneFootstep)->setBlockName("skull")->setRequiresSelfNotify();
+	anvil = (new BlockAnvil(145))->setHardness(5.0f)->setStepSound(soundAnvilFootstep)->setResistance(2000.0f)->setBlockName("anvil")->setRequiresSelfNotify();
+	tripWireSource = (new BlockTripWireSource(131))->setBlockName("tripWireSource")->setRequiresSelfNotify();
+	tripWire = (new BlockTripWire(132))->setBlockName("tripWire")->setRequiresSelfNotify();
+	woodenButton = (new BlockButtonWood(143))->setHardness(0.5f)->setStepSound(soundWoodFootstep)->setBlockName("button")->setRequiresSelfNotify();
+	buttonWood = woodenButton;
+	pressurePlateGold = (new BlockPressurePlateWeighted(147, blockGold->blockIndexInTexture, Material::iron, 64))->setHardness(0.5f)->setStepSound(soundMetalFootstep)->setBlockName("weightedPlate_light")->setRequiresSelfNotify();
+	pressurePlateIron = (new BlockPressurePlateWeighted(148, blockSteel->blockIndexInTexture, Material::iron, 640))->setHardness(0.5f)->setStepSound(soundMetalFootstep)->setBlockName("weightedPlate_heavy")->setRequiresSelfNotify();
+	daylightSensor = (new BlockDaylightDetector(151))->setHardness(0.2f)->setStepSound(soundWoodFootstep)->setBlockName("daylightDetector")->setRequiresSelfNotify();
+	daylightDetector = daylightSensor;
 
 	Item::itemsList[cloth->blockID] = (new ItemCloth(cloth->blockID - 256))->setItemName("cloth");
 	Item::itemsList[wood->blockID] = (new ItemMetadata(wood->blockID - 256, wood))->setItemName("log");
@@ -1353,13 +1385,12 @@ void Block::cleanup()
 	flowerPot = nullptr;
 	skull = nullptr;
 	anvil = nullptr;
-	woodDoubleSlab = nullptr;
-	woodSingleSlab = nullptr;
-	cocoaPlant = nullptr;
-	enderChest = nullptr;
-	beacon = nullptr;
-	cobblestoneWall = nullptr;
-	flowerPot = nullptr;
-	skull = nullptr;
-	anvil = nullptr;
+	woodenButton = nullptr;
+	buttonWood = nullptr;
+	pressurePlateGold = nullptr;
+	pressurePlateIron = nullptr;
+	tripWireSource = nullptr;
+	tripWire = nullptr;
+	daylightSensor = nullptr;
+	daylightDetector = nullptr;
 }

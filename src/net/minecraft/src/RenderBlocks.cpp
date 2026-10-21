@@ -835,6 +835,14 @@ bool RenderBlocks::renderBlockByRenderType(Block *block, int_t i, int_t j, int_t
 	{
 		return renderBlockCocoa(dynamic_cast<BlockCocoa *>(block), i, j, k);
 	}
+	if (l == 29)
+	{
+		return renderBlockTripWireSource(block, i, j, k);
+	}
+	if (l == 30)
+	{
+		return renderBlockTripWire(block, i, j, k);
+	}
 	if (l == 32)
 	{
 		return renderBlockWall(dynamic_cast<BlockWall *>(block), i, j, k);

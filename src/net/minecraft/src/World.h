@@ -416,10 +416,14 @@ public:
 	PathEntity *getPathToEntity(Entity *entity, Entity *entity1, float f, bool openDoors, bool breakDoors, bool avoidWater, bool canSwim);
 	PathEntity *getEntityPathToXYZ(Entity *entity, int_t i, int_t j, int_t k, float f);
 	PathEntity *getEntityPathToXYZ(Entity *entity, int_t i, int_t j, int_t k, float f, bool openDoors, bool breakDoors, bool avoidWater, bool canSwim);
-	bool isBlockProvidingPowerTo(int_t i, int_t j, int_t k, int_t l);
+	int_t isBlockProvidingPowerTo(int_t i, int_t j, int_t k, int_t l);
+	int_t getBlockPowerInput(int_t i, int_t j, int_t k);
 	bool isBlockGettingPowered(int_t i, int_t j, int_t k);
+	int_t getIndirectPowerLevelTo(int_t i, int_t j, int_t k, int_t l);
+	bool getIndirectPowerOutput(int_t i, int_t j, int_t k, int_t l);
 	bool isBlockIndirectlyProvidingPowerTo(int_t i, int_t j, int_t k, int_t l);
 	bool isBlockIndirectlyGettingPowered(int_t i, int_t j, int_t k);
+	int_t getStrongestIndirectPower(int_t i, int_t j, int_t k);
 	EntityPlayer *getClosestPlayerToEntity(Entity *entity, double d);
 	EntityPlayer *getClosestVulnerablePlayerToEntity(Entity *entity, double distance);
 	EntityPlayer *getClosestPlayer(double d, double d1, double d2, double d3);

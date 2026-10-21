@@ -526,7 +526,7 @@ void Item::initItems() {
     shovelGold = (new ItemSpade(28, EnumToolMaterial::GOLD))->setIconCoord(4, 5)->setItemName("shovelGold");
     pickaxeGold = (new ItemPickaxe(29, EnumToolMaterial::GOLD))->setIconCoord(4, 6)->setItemName("pickaxeGold");
     axeGold = (new ItemAxe(30, EnumToolMaterial::GOLD))->setIconCoord(4, 7)->setItemName("hatchetGold");
-    silk = (new Item(31))->setIconCoord(8, 0)->setItemName("string");
+    silk = (new ItemReed(31, Block::tripWire))->setIconCoord(8, 0)->setItemName("string");
     feather = (new Item(32))->setIconCoord(8, 1)->setItemName("feather");
     gunpowder = (new Item(33))->setIconCoord(8, 2)->setItemName("sulphur")->setPotionEffect(PotionHelper::gunpowderEffect);
     hoeWood = (new ItemHoe(34, EnumToolMaterial::WOOD))->setIconCoord(0, 8)->setItemName("hoeWood");

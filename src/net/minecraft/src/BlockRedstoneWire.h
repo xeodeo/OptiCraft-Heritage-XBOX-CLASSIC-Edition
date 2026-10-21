@@ -24,10 +24,13 @@ public:
 	int_t idDropped(int_t i, Random &random) override;
 	bool isIndirectlyPoweringTo(World *world, int_t i, int_t j, int_t k, int_t l) override;
 	bool isPoweringTo(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l) override;
+	int_t isProvidingWeakPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l) override;
+	int_t isProvidingStrongPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l) override;
 	bool canProvidePower() override;
 	void randomDisplayTick(World *world, int_t i, int_t j, int_t k, Random &random) override;
 
 	static bool isPowerProviderOrWire(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l);
+	static bool isPoweredOrRepeater(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l);
 
 private:
 	struct ChunkPositionHash
@@ -43,7 +46,7 @@ private:
 	};
 
 	void updateAndPropagateCurrentStrength(World *world, int_t i, int_t j, int_t k);
-	void updateCurrentStrength(World *world, int_t i, int_t j, int_t k, int_t l, int_t i1, int_t j1);
+	void calculateCurrentChanges(World *world, int_t i, int_t j, int_t k, int_t l, int_t i1, int_t j1);
 	void notifyWireNeighborsOfNeighborChange(World *world, int_t i, int_t j, int_t k);
 	int_t getMaxCurrentStrength(World *world, int_t i, int_t j, int_t k, int_t l);
 

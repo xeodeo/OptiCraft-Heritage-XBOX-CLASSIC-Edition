@@ -127,9 +127,14 @@ CraftingManager::CraftingManager()
 	addRecipe(new ItemStack(Item::pocketSundial, 1),          { " # ", "#X#", " # ", '#', Item::ingotGold, 'X', Item::redstone });
 	addRecipe(new ItemStack(Item::compass, 1),                { " # ", "#X#", " # ", '#', Item::ingotIron, 'X', Item::redstone });
 	addRecipe(new ItemStack(Item::mapItem, 1),                { "###", "#X#", "###", '#', Item::paper, 'X', Item::compass });
-	addRecipe(new ItemStack(Block::button, 1),                { "#", "#", '#', Block::stone });
+	addRecipe(new ItemStack(Block::button, 1),                { "#", '#', Block::stone });
+	addRecipe(new ItemStack(Block::woodenButton, 1),          { "#", '#', Block::planks });
 	addRecipe(new ItemStack(Block::pressurePlateStone, 1),    { "##", '#', Block::stone });
 	addRecipe(new ItemStack(Block::pressurePlatePlanks, 1),   { "##", '#', Block::planks });
+	addRecipe(new ItemStack(Block::pressurePlateIron, 1),     { "##", '#', Item::ingotIron });
+	addRecipe(new ItemStack(Block::pressurePlateGold, 1),     { "##", '#', Item::ingotGold });
+	addRecipe(new ItemStack(Block::daylightSensor, 1),        { "GGG", "QQQ", "WWW", 'G', Block::glass, 'Q', Item::netherQuartz, 'W', Block::woodSingleSlab });
+	addRecipe(new ItemStack(Block::tripWireSource, 2),        { "I", "S", "#", '#', Block::planks, 'S', Item::stick, 'I', Item::ingotIron });
 	addRecipe(new ItemStack(Block::dispenser, 1),             { "###", "#X#", "#R#", '#', Block::cobblestone, 'X', Item::bow, 'R', Item::redstone });
 	addRecipe(new ItemStack(Block::pistonBase, 1),            { "TTT", "#X#", "#R#", '#', Block::cobblestone, 'X', Item::ingotIron, 'R', Item::redstone, 'T', Block::planks });
 	addRecipe(new ItemStack(Block::pistonStickyBase, 1),      { "S", "P", 'S', Item::slimeBall, 'P', Block::pistonBase });

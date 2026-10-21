@@ -12,4 +12,8 @@ public:
 	static const int enderEyeMetaToDirection[4];
 	static const int field_35868_g[4];
 	static const int bedDirection[4][6];
+
+	static const int rotateOpposite[4];
+	static const int facingToDirection[6];
+	static const int directionToFacing[4];
 };

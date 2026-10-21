@@ -13,3 +13,7 @@ const int Direction::bedDirection[4][6] = {
 	{1, 0, 2, 3, 4, 5},
 	{1, 0, 4, 5, 3, 2}
 };
+
+const int Direction::rotateOpposite[4] = {2, 3, 0, 1};
+const int Direction::facingToDirection[6] = {-1, -1, 2, 0, 1, 3};
+const int Direction::directionToFacing[4] = {3, 4, 2, 5};
