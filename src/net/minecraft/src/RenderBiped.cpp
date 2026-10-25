@@ -14,6 +14,10 @@ RenderBiped::RenderBiped(ModelBiped* modelBiped, float f) : RenderLiving(modelBi
     modelBipedMain = modelBiped;
 }
 
+void RenderBiped::renderEquippedItemTranslate() {
+    renderTranslate(0.0f, 0.1875f, 0.0f);
+}
+
 void RenderBiped::renderEquippedItems(EntityLiving* entityLiving, float f) {
     ItemStack* itemStack = entityLiving->getHeldItem();
     if (itemStack != nullptr && itemStack->isValid()) {
@@ -39,7 +43,7 @@ void RenderBiped::renderEquippedItems(EntityLiving* entityLiving, float f) {
             renderRotate(45.0f, 0.0f, 1.0f, 0.0f);
         } else if (item->isFull3D()) {
             float f2 = 0.625f;
-            renderTranslate(0.0f, 0.1875f, 0.0f);
+            renderEquippedItemTranslate();
             renderScale(f2, -f2, f2);
             renderRotate(-100.0f, 1.0f, 0.0f, 0.0f);
             renderRotate(45.0f, 0.0f, 1.0f, 0.0f);

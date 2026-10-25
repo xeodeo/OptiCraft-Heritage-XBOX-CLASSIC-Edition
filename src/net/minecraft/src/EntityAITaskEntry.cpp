@@ -2,12 +2,15 @@
 
 #include "EntityAIBase.h"
 
-EntityAITaskEntry::EntityAITaskEntry(EntityAITasks *owner, int_t taskPriority, EntityAIBase *taskAction) :
-	action(taskAction), priority(taskPriority), tasks(owner), executing(false)
+EntityAITaskEntry::EntityAITaskEntry(EntityAITasks *owner, int_t taskPriority, EntityAIBase *taskAction, bool owns) :
+	action(taskAction), priority(taskPriority), tasks(owner), executing(false), ownsAction(owns)
 {
 }
 
 EntityAITaskEntry::~EntityAITaskEntry()
 {
-	delete action;
+	if (ownsAction)
+	{
+		delete action;
+	}
 }

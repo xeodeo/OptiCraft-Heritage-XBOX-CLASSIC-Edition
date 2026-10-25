@@ -33,6 +33,8 @@ public:
 	DamageSource &setDamageAllowedInCreativeMode();
 	DamageSource &setFireDamage();
 	bool fireDamage() const;
+	bool isMagicDamage() const;
+	DamageSource &setMagicDamage();
 	const jstring &getDamageType() const;
 
 	static DamageSource inFire;
@@ -47,6 +49,7 @@ public:
 	static DamageSource generic;
 	static DamageSource explosion;
 	static DamageSource magic;
+	static DamageSource wither;
 
 protected:
 	DamageSource(const jstring &type, Entity *directSource, Entity *responsibleEntity);
@@ -60,5 +63,6 @@ private:
 	float hungerDamage;
 	bool fire;
 	bool projectile;
+	bool magicDamage = false;
 	jstring damageType;
 };

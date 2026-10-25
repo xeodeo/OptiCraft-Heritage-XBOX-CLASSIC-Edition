@@ -2,6 +2,7 @@
 
 #include "MathHelper.h"
 #include "ModelRenderer.h"
+#include "platform/RenderAPI.h"
 
 ModelBiped::~ModelBiped()
 {
@@ -24,36 +25,51 @@ ModelBiped::ModelBiped(float f) : ModelBiped(f, 0.0f)
 {
 }
 
-ModelBiped::ModelBiped(float f, float f1)
+ModelBiped::ModelBiped(float f, float f1) : ModelBiped(f, f1, 64, 32)
 {
+}
+
+ModelBiped::ModelBiped(float f, float f1, int texW, int texH)
+{
+	textureWidth = texW;
+	textureHeight = texH;
 	heldItemLeft = 0;
 	heldItemRight = 0;
 	isSneak = false;
 	aimedBow = false;
-	bipedCloak = new ModelRenderer(0, 0);
+	bipedCloak = new ModelRenderer(this, 0, 0);
+	bipedCloak->setTextureSize(texW, texH);
 	bipedCloak->addBox(-5.0f, 0.0f, -1.0f, 10, 16, 1, f);
-	bipedEars = new ModelRenderer(24, 0);
+	bipedEars = new ModelRenderer(this, 24, 0);
+	bipedEars->setTextureSize(texW, texH);
 	bipedEars->addBox(-3.0f, -6.0f, -1.0f, 6, 6, 1, f);
-	bipedHead = new ModelRenderer(0, 0);
+	bipedHead = new ModelRenderer(this, 0, 0);
+	bipedHead->setTextureSize(texW, texH);
 	bipedHead->addBox(-4.0f, -8.0f, -4.0f, 8, 8, 8, f);
 	bipedHead->setRotationPoint(0.0f, 0.0f + f1, 0.0f);
-	bipedHeadwear = new ModelRenderer(32, 0);
+	bipedHeadwear = new ModelRenderer(this, 32, 0);
+	bipedHeadwear->setTextureSize(texW, texH);
 	bipedHeadwear->addBox(-4.0f, -8.0f, -4.0f, 8, 8, 8, f + 0.5f);
 	bipedHeadwear->setRotationPoint(0.0f, 0.0f + f1, 0.0f);
-	bipedBody = new ModelRenderer(16, 16);
+	bipedBody = new ModelRenderer(this, 16, 16);
+	bipedBody->setTextureSize(texW, texH);
 	bipedBody->addBox(-4.0f, 0.0f, -2.0f, 8, 12, 4, f);
 	bipedBody->setRotationPoint(0.0f, 0.0f + f1, 0.0f);
-	bipedRightArm = new ModelRenderer(40, 16);
+	bipedRightArm = new ModelRenderer(this, 40, 16);
+	bipedRightArm->setTextureSize(texW, texH);
 	bipedRightArm->addBox(-3.0f, -2.0f, -2.0f, 4, 12, 4, f);
 	bipedRightArm->setRotationPoint(-5.0f, 2.0f + f1, 0.0f);
-	bipedLeftArm = new ModelRenderer(40, 16);
+	bipedLeftArm = new ModelRenderer(this, 40, 16);
+	bipedLeftArm->setTextureSize(texW, texH);
 	bipedLeftArm->mirror = true;
 	bipedLeftArm->addBox(-1.0f, -2.0f, -2.0f, 4, 12, 4, f);
 	bipedLeftArm->setRotationPoint(5.0f, 2.0f + f1, 0.0f);
-	bipedRightLeg = new ModelRenderer(0, 16);
+	bipedRightLeg = new ModelRenderer(this, 0, 16);
+	bipedRightLeg->setTextureSize(texW, texH);
 	bipedRightLeg->addBox(-2.0f, 0.0f, -2.0f, 4, 12, 4, f);
 	bipedRightLeg->setRotationPoint(-2.0f, 12.0f + f1, 0.0f);
-	bipedLeftLeg = new ModelRenderer(0, 16);
+	bipedLeftLeg = new ModelRenderer(this, 0, 16);
+	bipedLeftLeg->setTextureSize(texW, texH);
 	bipedLeftLeg->mirror = true;
 	bipedLeftLeg->addBox(-2.0f, 0.0f, -2.0f, 4, 12, 4, f);
 	bipedLeftLeg->setRotationPoint(2.0f, 12.0f + f1, 0.0f);
@@ -62,13 +78,35 @@ ModelBiped::ModelBiped(float f, float f1)
 void ModelBiped::render(float f, float f1, float f2, float f3, float f4, float f5)
 {
 	setRotationAngles(f, f1, f2, f3, f4, f5);
-	bipedHead->render(f5);
-	bipedBody->render(f5);
-	bipedRightArm->render(f5);
-	bipedLeftArm->render(f5);
-	bipedRightLeg->render(f5);
-	bipedLeftLeg->render(f5);
-	bipedHeadwear->render(f5);
+	if (isChild)
+	{
+		float f6 = 2.0f;
+		renderPushMatrix();
+		renderScale(1.5f / f6, 1.5f / f6, 1.5f / f6);
+		renderTranslate(0.0f, 16.0f * f5, 0.0f);
+		bipedHead->render(f5);
+		renderPopMatrix();
+		renderPushMatrix();
+		renderScale(1.0f / f6, 1.0f / f6, 1.0f / f6);
+		renderTranslate(0.0f, 24.0f * f5, 0.0f);
+		bipedBody->render(f5);
+		bipedRightArm->render(f5);
+		bipedLeftArm->render(f5);
+		bipedRightLeg->render(f5);
+		bipedLeftLeg->render(f5);
+		bipedHeadwear->render(f5);
+		renderPopMatrix();
+	}
+	else
+	{
+		bipedHead->render(f5);
+		bipedBody->render(f5);
+		bipedRightArm->render(f5);
+		bipedLeftArm->render(f5);
+		bipedRightLeg->render(f5);
+		bipedLeftLeg->render(f5);
+		bipedHeadwear->render(f5);
+	}
 }
 
 void ModelBiped::setRotationAngles(float f, float f1, float f2, float f3, float f4, float f5)

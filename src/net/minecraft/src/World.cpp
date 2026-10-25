@@ -5807,11 +5807,13 @@ int_t World::countEntities(EnumCreatureTypeTag tag)
 	{
 		countedMonsters = 0;
 		countedCreatures = 0;
+		countedAmbientCreatures = 0;
 		countedWaterCreatures = 0;
 		for (Entity *entity : loadedEntityList)
 		{
 			if (entity->isMob()) countedMonsters++;
 			if (entity->isAnimal()) countedCreatures++;
+			if (entity->isAmbientCreature()) countedAmbientCreatures++;
 			if (entity->isWaterMob()) countedWaterCreatures++;
 		}
 		entityCountsDirty = false;
@@ -5823,6 +5825,8 @@ int_t World::countEntities(EnumCreatureTypeTag tag)
 		return countedMonsters;
 	case EnumCreatureTypeTag::creature_tag:
 		return countedCreatures;
+	case EnumCreatureTypeTag::ambient_tag:
+		return countedAmbientCreatures;
 	case EnumCreatureTypeTag::waterCreature_tag:
 		return countedWaterCreatures;
 	}

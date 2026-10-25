@@ -30,6 +30,7 @@ Potion *Potion::nightVision = nullptr;
 Potion *Potion::hunger = nullptr;
 Potion *Potion::weakness = nullptr;
 Potion *Potion::poison = nullptr;
+Potion *Potion::wither = nullptr;
 
 Potion::Potion(int potionId, bool isBadEffect, int color) :
 	id(potionId), name(), statusIconIndex(-1), badEffect(isBadEffect),
@@ -63,6 +64,7 @@ void Potion::initPotions()
 	hunger = (new Potion(17, true, 5797459))->setPotionName("potion.hunger")->setIconIndex(1, 1);
 	weakness = (new Potion(18, true, 4738376))->setPotionName("potion.weakness")->setIconIndex(5, 0);
 	poison = (new Potion(19, true, 5149489))->setPotionName("potion.poison")->setIconIndex(6, 0)->setEffectiveness(0.25);
+	wither = (new Potion(20, true, 3484199))->setPotionName("potion.wither")->setIconIndex(1, 2)->setEffectiveness(0.25);
 }
 
 Potion *Potion::getPotion(int potionId)
@@ -97,6 +99,10 @@ void Potion::performEffect(EntityLiving *entity, int amplifier)
 	{
 		if (entity->getHealth() > 1)
 			entity->attackEntityFrom(DamageSource::magic, 1);
+	}
+	else if (wither != nullptr && id == wither->id)
+	{
+		entity->attackEntityFrom(DamageSource::wither, 1);
 	}
 	else if (id == hunger->id && entity->isPlayer())
 	{
@@ -145,10 +151,17 @@ bool Potion::isInstant() const
 
 bool Potion::isReady(int duration, int amplifier) const
 {
-	if (id != 10 && id != 19)
-		return id == 17;
-	int interval = JavaArithmetic::intShr(25, amplifier);
-	return interval > 0 ? duration % interval == 0 : true;
+	if (id == 10 || id == 19)
+	{
+		int interval = JavaArithmetic::intShr(25, amplifier);
+		return interval > 0 ? duration % interval == 0 : true;
+	}
+	if (id == 20)
+	{
+		int interval = JavaArithmetic::intShr(40, amplifier);
+		return interval > 0 ? duration % interval == 0 : true;
+	}
+	return id == 17;
 }
 
 Potion *Potion::setPotionName(const jstring &potionName)

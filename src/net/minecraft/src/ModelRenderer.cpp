@@ -55,6 +55,9 @@ void ModelRenderer::init(ModelBase* model, const std::string& name, int_t textur
     displayList = 0;
     baseModel = model;
     boxName = name;
+    offsetX = 0.0f;
+    offsetY = 0.0f;
+    offsetZ = 0.0f;
     rotationPointX = 0.0f;
     rotationPointY = 0.0f;
     rotationPointZ = 0.0f;
@@ -189,6 +192,10 @@ void ModelRenderer::render(float scale)
     if (!compiled)
         compileDisplayList(scale);
 
+    const bool hasOffset = (offsetX != 0.0f || offsetY != 0.0f || offsetZ != 0.0f);
+    if (hasOffset)
+        renderTranslate(offsetX, offsetY, offsetZ);
+
     if (rotateAngleX == 0.0f && rotateAngleY == 0.0f && rotateAngleZ == 0.0f)
     {
         if (rotationPointX == 0.0f && rotationPointY == 0.0f && rotationPointZ == 0.0f)
@@ -203,20 +210,24 @@ void ModelRenderer::render(float scale)
             renderChildren(scale);
             renderTranslate(-rotationPointX * scale, -rotationPointY * scale, -rotationPointZ * scale);
         }
-        return;
+    }
+    else
+    {
+        renderPushMatrix();
+        renderTranslate(rotationPointX * scale, rotationPointY * scale, rotationPointZ * scale);
+        if (rotateAngleZ != 0.0f)
+            renderRotate(rotateAngleZ * 57.295776f, 0.0f, 0.0f, 1.0f);
+        if (rotateAngleY != 0.0f)
+            renderRotate(rotateAngleY * 57.295776f, 0.0f, 1.0f, 0.0f);
+        if (rotateAngleX != 0.0f)
+            renderRotate(rotateAngleX * 57.295776f, 1.0f, 0.0f, 0.0f);
+        drawGeometry(scale);
+        renderChildren(scale);
+        renderPopMatrix();
     }
 
-    renderPushMatrix();
-    renderTranslate(rotationPointX * scale, rotationPointY * scale, rotationPointZ * scale);
-    if (rotateAngleZ != 0.0f)
-        renderRotate(rotateAngleZ * 57.295776f, 0.0f, 0.0f, 1.0f);
-    if (rotateAngleY != 0.0f)
-        renderRotate(rotateAngleY * 57.295776f, 0.0f, 1.0f, 0.0f);
-    if (rotateAngleX != 0.0f)
-        renderRotate(rotateAngleX * 57.295776f, 1.0f, 0.0f, 0.0f);
-    drawGeometry(scale);
-    renderChildren(scale);
-    renderPopMatrix();
+    if (hasOffset)
+        renderTranslate(-offsetX, -offsetY, -offsetZ);
 }
 
 void ModelRenderer::renderWithRotation(float scale)

@@ -3235,6 +3235,14 @@ EntityFX *RenderGlobal::spawnParticleEffect(const jstring &name, double x, doubl
 		spell->setBaseSpellTextureIndex(144);
 		effect = spell;
 	}
+	else if (name == "witchMagic")
+	{
+		EntitySpellParticleFX *spell = new EntitySpellParticleFX(worldObj, x, y, z, velocityX, velocityY, velocityZ);
+		spell->setBaseSpellTextureIndex(144);
+		float f = worldObj->rand.nextFloat() * 0.5f + 0.35f;
+		spell->setParticleColor(1.0f * f, 0.0f * f, 1.0f * f);
+		effect = spell;
+	}
 	else if (name == "note")
 		effect = new EntityNoteFX(worldObj, x, y, z, velocityX, velocityY, velocityZ);
 	else if (name == "portal")
@@ -3451,6 +3459,16 @@ void RenderGlobal::playAuxSFX(EntityPlayer *entityplayer, int_t i, int_t j, int_
 		break;
 	case 1012:
 		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.zombie.woodbreak", 2.0f, random.nextFloatDifference() * 0.2f + 1.0f);
+		break;
+
+	case 1015:
+		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.bat.takeoff", 0.05f, (random.nextFloat() - random.nextFloat()) * 0.2f + 1.0f);
+		break;
+	case 1016:
+		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.zombie.infect", 2.0f, (random.nextFloat() - random.nextFloat()) * 0.2f + 1.0f);
+		break;
+	case 1017:
+		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.zombie.unfect", 2.0f, (random.nextFloat() - random.nextFloat()) * 0.2f + 1.0f);
 		break;
 
 	case 2000:

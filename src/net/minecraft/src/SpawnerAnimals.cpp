@@ -141,6 +141,7 @@ int_t SpawnerAnimals::performSpawning(World *world, bool spawnHostiles, bool spa
 #if PLATFORM_MOB_SPAWN_INTERVAL_TICKS > 1 || PLATFORM_MAX_LIVE_MOBS < 0x7fffffff
     int_t liveMobs = world->countEntities(EnumCreatureTypeTag::monster_tag)
                    + world->countEntities(EnumCreatureTypeTag::creature_tag)
+                   + world->countEntities(EnumCreatureTypeTag::ambient_tag)
                    + world->countEntities(EnumCreatureTypeTag::waterCreature_tag);
 
     static int_t s_spawnPhase = 0;
@@ -237,6 +238,7 @@ int_t SpawnerAnimals::performSpawning(World *world, bool spawnHostiles, bool spa
     const EnumCreatureType *creatureTypes[] = {
         &EnumCreatureType::monster,
         &EnumCreatureType::creature,
+        &EnumCreatureType::ambient,
         &EnumCreatureType::waterCreature
     };
 #if PLATFORM_CACHE_SPAWN_CHUNKS
@@ -483,6 +485,8 @@ bool SpawnerAnimals::canCreatureTypeSpawnAtLocation(const EnumCreatureType &type
 
 void SpawnerAnimals::creatureSpecificInit(EntityLiving *entity, World *world, float x, float y, float z)
 {
+    if (entity != nullptr)
+        entity->initCreature();
     if (dynamic_cast<EntitySpider *>(entity) != nullptr && world->rand.nextInt(100) == 0)
     {
         EntitySkeleton *skeleton = new EntitySkeleton(world);

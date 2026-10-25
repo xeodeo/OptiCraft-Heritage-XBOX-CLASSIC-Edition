@@ -27,6 +27,8 @@ public:
 	static int_t bucketInt(int_t i, int_t j);
 	static bool stringNullOrLengthZero(const jstring &s);
 	static int_t getRandomIntegerInRange(Random &random, int_t minimum, int_t maximum);
+	static float wrapAngleTo180_float(float f);
+	static double wrapAngleTo180_double(double d);
 
 private:
 	// Sized by PLATFORM_SIN_TABLE_BITS rather than vanilla's hardcoded 0x10000.

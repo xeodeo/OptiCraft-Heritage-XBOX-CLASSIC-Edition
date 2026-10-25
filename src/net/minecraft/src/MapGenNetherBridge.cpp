@@ -5,6 +5,7 @@
 #include "EntityBlaze.h"
 #include "EntityMagmaCube.h"
 #include "EntityPigZombie.h"
+#include "EntitySkeleton.h"
 #include "StructureNetherBridgeStart.h"
 #include "World.h"
 #include "java/Arithmetic.h"
@@ -14,6 +15,7 @@ MapGenNetherBridge::MapGenNetherBridge()
 	spawnList.emplace_back(typeid(EntityBlaze), 10, 2, 3);
 	spawnList.emplace_back(typeid(EntityPigZombie), 10, 4, 4);
 	spawnList.emplace_back(typeid(EntityMagmaCube), 3, 4, 4);
+	spawnList.emplace_back(typeid(EntitySkeleton), 10, 4, 4);
 }
 
 std::vector<SpawnListEntry> *MapGenNetherBridge::getSpawnList()

@@ -52,6 +52,8 @@
 #include "EntityTNTPrimed.h"
 #include "EntityWolf.h"
 #include "EntityZombie.h"
+#include "EntityBat.h"
+#include "EntityWitch.h"
 #include "NBTTagCompound.h"
 #include "World.h"
 
@@ -228,6 +230,10 @@ static struct EntityListInit
         EntityList::addMapping<EntityMinecartTNT>("MinecartTNT", 45);
         EntityList::addMapping<EntityBoat>("Boat", 41);
 
+        // 1.5.2 Mobs: Bat, Witch
+        EntityList::addMapping<EntityBat>("Bat", 65, 4996656, 986895);
+        EntityList::addMapping<EntityWitch>("Witch", 66, 3407872, 5349438);
+
         // Register EntityLiving subclasses with SpawnerAnimals so performSpawning can instantiate them.
         // Java used reflection (Class.getConstructor().newInstance()); here we register lambdas.
 #define SPAWN_REG(T) SpawnerAnimals_registerFactory(std::type_index(typeid(T)), [](World *w) -> EntityLiving * { return new T(w); })
@@ -256,6 +262,9 @@ static struct EntityListInit
         SPAWN_REG(EntityVillager);
         SPAWN_REG(EntityMob);
         SPAWN_REG(EntityLiving);
+        // 1.5.2 Mobs: Bat, Witch
+        SPAWN_REG(EntityBat);
+        SPAWN_REG(EntityWitch);
 #undef SPAWN_REG
     }
 } entityListInit;

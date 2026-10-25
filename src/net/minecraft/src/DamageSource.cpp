@@ -17,7 +17,8 @@ DamageSource DamageSource::fall = DamageSource("fall").setDamageBypassesArmor();
 DamageSource DamageSource::outOfWorld = DamageSource("outOfWorld").setDamageBypassesArmor().setDamageAllowedInCreativeMode();
 DamageSource DamageSource::generic = DamageSource("generic").setDamageBypassesArmor();
 DamageSource DamageSource::explosion("explosion");
-DamageSource DamageSource::magic = DamageSource("magic").setDamageBypassesArmor();
+DamageSource DamageSource::magic = DamageSource("magic").setDamageBypassesArmor().setMagicDamage();
+DamageSource DamageSource::wither = DamageSource("wither").setDamageBypassesArmor();
 
 DamageSource::DamageSource(const jstring &type)
 	: DamageSource(type, nullptr, nullptr)
@@ -26,7 +27,7 @@ DamageSource::DamageSource(const jstring &type)
 
 DamageSource::DamageSource(const jstring &type, Entity *direct, Entity *responsible)
 	: directSource(direct), responsibleEntity(responsible), unblockable(false), damageAllowedInCreativeMode(false),
-	  hungerDamage(0.3f), fire(false), projectile(false), damageType(type)
+	  hungerDamage(0.3f), fire(false), projectile(false), magicDamage(false), damageType(type)
 {
 }
 
@@ -61,7 +62,7 @@ DamageSource DamageSource::causeThrownDamage(Entity *projectileEntity, Entity *t
 DamageSource DamageSource::causeIndirectMagicDamage(Entity *sourceEntity, Entity *indirectEntity)
 {
 	DamageSource source("indirectMagic", sourceEntity, indirectEntity);
-	return source.setDamageBypassesArmor();
+	return source.setDamageBypassesArmor().setMagicDamage();
 }
 
 bool DamageSource::isProjectile() const
@@ -92,7 +93,7 @@ bool DamageSource::canHarmInCreative() const
 
 Entity *DamageSource::getSourceOfDamage() const
 {
-	return directSource != nullptr ? directSource : getEntity();
+	return directSource;
 }
 
 Entity *DamageSource::getEntity() const
@@ -122,6 +123,17 @@ DamageSource &DamageSource::setFireDamage()
 bool DamageSource::fireDamage() const
 {
 	return fire;
+}
+
+bool DamageSource::isMagicDamage() const
+{
+	return magicDamage;
+}
+
+DamageSource &DamageSource::setMagicDamage()
+{
+	magicDamage = true;
+	return *this;
 }
 
 const jstring &DamageSource::getDamageType() const

@@ -55,6 +55,9 @@ private:
 public:
     float textureWidth;
     float textureHeight;
+    float offsetX;
+    float offsetY;
+    float offsetZ;
     float rotationPointX;
     float rotationPointY;
     float rotationPointZ;

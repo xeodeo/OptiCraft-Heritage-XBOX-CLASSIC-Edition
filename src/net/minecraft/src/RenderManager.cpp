@@ -39,6 +39,13 @@
 #include "ModelChicken.h"
 #include "EntityCreeper.h"
 #include "RenderCreeper.h"
+#include "EntityBat.h"
+#include "EntityWitch.h"
+#include "EntityAmbientCreature.h"
+#include "RenderBat.h"
+#include "RenderWitch.h"
+#include "RenderZombie.h"
+#include "RenderSkeleton.h"
 #include "EntitySkeleton.h"
 #include "RenderBiped.h"
 #include "ModelSkeleton.h"
@@ -169,10 +176,12 @@ void RenderManager::registerRenderers() {
     entityRenderMap[std::type_index(typeid(EntityOcelot))] = new RenderOcelot(new ModelOcelot(), 0.4f);
     entityRenderMap[std::type_index(typeid(EntityChicken))] = new RenderChicken(new ModelChicken(), 0.3f);
     entityRenderMap[std::type_index(typeid(EntityCreeper))] = new RenderCreeper();
-    entityRenderMap[std::type_index(typeid(EntitySkeleton))] = new RenderBiped(new ModelSkeleton(), 0.5f);
-    Render *zombieRenderer = new RenderBiped(new ModelZombie(), 0.5f);
+    entityRenderMap[std::type_index(typeid(EntitySkeleton))] = new RenderSkeleton();
+    Render *zombieRenderer = new RenderZombie();
     entityRenderMap[std::type_index(typeid(EntityZombie))] = zombieRenderer;
     entityRenderMap[std::type_index(typeid(EntityPigZombie))] = zombieRenderer;
+    entityRenderMap[std::type_index(typeid(EntityBat))] = new RenderBat();
+    entityRenderMap[std::type_index(typeid(EntityWitch))] = new RenderWitch();
     entityRenderMap[std::type_index(typeid(EntitySlime))] = new RenderSlime(new ModelSlime(16), new ModelSlime(0), 0.25f);
     entityRenderMap[std::type_index(typeid(EntityMagmaCube))] = new RenderMagmaCube();
     entityRenderMap[std::type_index(typeid(EntityBlaze))] = new RenderBlaze();
@@ -235,6 +244,9 @@ std::type_index parentEntityType(std::type_index type)
     PARENT_OF(EntitySkeleton, EntityMob);
     PARENT_OF(EntityPigZombie, EntityZombie);
     PARENT_OF(EntityZombie, EntityMob);
+    PARENT_OF(EntityBat, EntityAmbientCreature);
+    PARENT_OF(EntityAmbientCreature, EntityLiving);
+    PARENT_OF(EntityWitch, EntityMob);
     PARENT_OF(EntityGiantZombie, EntityMob);
     PARENT_OF(EntityMob, EntityCreature);
     PARENT_OF(EntityAnimal, EntityCreature);
@@ -317,6 +329,8 @@ Render* RenderManager::getEntityRenderObject(Entity* entity) {
     RESOLVE_BASE(EntitySkeleton);
     RESOLVE_BASE(EntityPigZombie);
     RESOLVE_BASE(EntityZombie);
+    RESOLVE_BASE(EntityBat);
+    RESOLVE_BASE(EntityWitch);
     RESOLVE_BASE(EntitySlime);
     RESOLVE_BASE(EntityMagmaCube);
     RESOLVE_BASE(EntityBlaze);

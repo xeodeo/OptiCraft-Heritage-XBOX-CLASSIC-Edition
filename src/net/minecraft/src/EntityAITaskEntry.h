@@ -9,11 +9,12 @@ class EntityAITasks;
 class EntityAITaskEntry
 {
 public:
-	EntityAITaskEntry(EntityAITasks *tasks, int_t priority, EntityAIBase *action);
+	EntityAITaskEntry(EntityAITasks *tasks, int_t priority, EntityAIBase *action, bool ownsAction = true);
 	~EntityAITaskEntry();
 
 	EntityAIBase *action;
 	int_t priority;
 	EntityAITasks *tasks;
 	bool executing;
+	bool ownsAction;
 };

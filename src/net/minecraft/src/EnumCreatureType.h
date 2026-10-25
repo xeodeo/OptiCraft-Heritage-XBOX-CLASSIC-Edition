@@ -9,13 +9,14 @@ class EntityWaterMob;
 
 // net.minecraft.src.EnumCreatureType
 // Java's Class field replaced with a tag enum for type identification
-enum class EnumCreatureTypeTag { monster_tag, creature_tag, waterCreature_tag };
+enum class EnumCreatureTypeTag { monster_tag, creature_tag, ambient_tag, waterCreature_tag };
 
 class EnumCreatureType
 {
 public:
 	static const EnumCreatureType monster;
 	static const EnumCreatureType creature;
+	static const EnumCreatureType ambient;
 	static const EnumCreatureType waterCreature;
 
 	EnumCreatureTypeTag getCreatureTag() const { return creatureTag; }

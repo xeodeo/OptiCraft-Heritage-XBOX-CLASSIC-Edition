@@ -11,6 +11,7 @@ public:
     EntityPotion(World *world, double x, double y, double z, int damage);
 
     int getPotionDamage() const;
+    void setPotionDamage(int damage) { potionDamage = damage; }
 
 protected:
     float getGravityVelocity() const override;

@@ -261,7 +261,10 @@ void StringTranslate::setLanguage(const std::string &language)
         {"item.skull.char.name", "Head", "Cabeza"},
         {"item.skull.creeper.name", "Creeper Head", "Cabeza de creeper"},
         {"item.flowerPot.name", "Flower Pot", "Maceta"},
-        {"item.netherStar.name", "Nether Star", "Estrella del Nether"}
+        {"item.netherStar.name", "Nether Star", "Estrella del Nether"},
+        {"entity.Bat.name", "Bat", "Murciélago"},
+        {"entity.Witch.name", "Witch", "Bruja"},
+        {"entity.WitherSkeleton.name", "Wither Skeleton", "Esqueleto del Wither"}
     };
     for (const auto &entry : port152Defaults)
     {

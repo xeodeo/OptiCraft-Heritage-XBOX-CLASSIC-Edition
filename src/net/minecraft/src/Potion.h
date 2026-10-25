@@ -54,6 +54,7 @@ public:
 	static Potion *hunger;
 	static Potion *weakness;
 	static Potion *poison;
+	static Potion *wither;
 
 	const int id;
 

@@ -209,6 +209,7 @@ public:
 	MovingObjectPosition *rayTrace(double d, float f);
 	virtual int_t getMaxSpawnedInChunk();
 	virtual ItemStack *getHeldItem();
+	virtual void initCreature() {}
 	void handleHealthUpdate(byte_t byte0) override;
 	virtual bool isPlayerSleeping();
 	virtual int_t getItemIcon(ItemStack *itemstack);

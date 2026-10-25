@@ -28,6 +28,8 @@
 #include "EntityEnderman.h"
 #include "EntityPig.h"
 #include "EntitySheep.h"
+#include "EntityBat.h"
+#include "EntityWitch.h"
 #include "EntitySkeleton.h"
 #include "EntitySlime.h"
 #include "EntitySpider.h"
@@ -105,7 +107,9 @@ BiomeGenBase::BiomeGenBase()
     spawnableMonsterList.push_back(SpawnListEntry(std::type_index(typeid(EntityCreeper)), 10, 4, 4));
     spawnableMonsterList.push_back(SpawnListEntry(std::type_index(typeid(EntitySlime)), 10, 4, 4));
     spawnableMonsterList.push_back(SpawnListEntry(std::type_index(typeid(EntityEnderman)), 1, 1, 4));
+    spawnableMonsterList.push_back(SpawnListEntry(std::type_index(typeid(EntityWitch)), 5, 1, 1));
     spawnableWaterCreatureList.push_back(SpawnListEntry(std::type_index(typeid(EntitySquid)), 10, 4, 4));
+    spawnableCaveCreatureList.push_back(SpawnListEntry(std::type_index(typeid(EntityBat)), 10, 8, 8));
     biomeDecorator = createBiomeDecorator();
 }
 
@@ -274,6 +278,8 @@ std::vector<SpawnListEntry> *BiomeGenBase::getSpawnableList(const EnumCreatureTy
         return &spawnableMonsterList;
     if (type.getCreatureTag() == EnumCreatureTypeTag::creature_tag)
         return &spawnableCreatureList;
+    if (type.getCreatureTag() == EnumCreatureTypeTag::ambient_tag)
+        return &spawnableCaveCreatureList;
     if (type.getCreatureTag() == EnumCreatureTypeTag::waterCreature_tag)
         return &spawnableWaterCreatureList;
     return nullptr;

@@ -15,6 +15,7 @@ public:
 
 protected:
     virtual void renderEquippedItems(EntityLiving* entityLiving, float f);
+    virtual void renderEquippedItemTranslate();
 };
 
 #endif

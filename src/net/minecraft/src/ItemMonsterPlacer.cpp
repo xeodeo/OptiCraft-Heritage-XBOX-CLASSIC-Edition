@@ -84,6 +84,7 @@ bool ItemMonsterPlacer::spawnCreature(World *world, int_t entityId, double x, do
 
     EntityLiving *living = static_cast<EntityLiving *>(entity);
     living->setLocationAndAngles(x, y, z, world->rand.nextFloat() * 360.0f, 0.0f);
+    living->initCreature();
     bool spawned = world->spawnEntityInWorld(living);
     living->playLivingSound();
     if (!spawned)

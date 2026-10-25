@@ -155,3 +155,23 @@ int_t MathHelper::getRandomIntegerInRange(Random &random, int_t minimum, int_t m
 	const int_t range = JavaArithmetic::intAdd(JavaArithmetic::intSub(maximum, minimum), 1);
 	return JavaArithmetic::intAdd(random.nextInt(range), minimum);
 }
+
+float MathHelper::wrapAngleTo180_float(float value)
+{
+	value = std::fmod(value, 360.0f);
+	if (value >= 180.0f)
+		value -= 360.0f;
+	if (value < -180.0f)
+		value += 360.0f;
+	return value;
+}
+
+double MathHelper::wrapAngleTo180_double(double value)
+{
+	value = std::fmod(value, 360.0);
+	if (value >= 180.0)
+		value -= 360.0;
+	if (value < -180.0)
+		value += 360.0;
+	return value;
+}

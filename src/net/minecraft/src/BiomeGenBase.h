@@ -100,6 +100,7 @@ protected:
     std::vector<SpawnListEntry> spawnableMonsterList;
     std::vector<SpawnListEntry> spawnableCreatureList;
     std::vector<SpawnListEntry> spawnableWaterCreatureList;
+    std::vector<SpawnListEntry> spawnableCaveCreatureList;
 
     // Java 1.2.5 keeps these generators as persistent BiomeGenBase fields.
     // Some subclasses return these borrowed instances while others allocate a

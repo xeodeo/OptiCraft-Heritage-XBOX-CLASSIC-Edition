@@ -9,11 +9,31 @@ EntityAITasks::EntityAITasks() = default;
 
 EntityAITasks::~EntityAITasks() = default;
 
-void EntityAITasks::addTask(int_t priority, EntityAIBase *action)
+void EntityAITasks::addTask(int_t priority, EntityAIBase *action, bool ownsAction)
 {
 	if (action == nullptr)
 		return;
-	tasksToDo.push_back(std::unique_ptr<EntityAITaskEntry>(new EntityAITaskEntry(this, priority, action)));
+	tasksToDo.push_back(std::unique_ptr<EntityAITaskEntry>(new EntityAITaskEntry(this, priority, action, ownsAction)));
+}
+
+void EntityAITasks::removeTask(EntityAIBase *action)
+{
+	if (action == nullptr)
+		return;
+	for (auto it = tasksToDo.begin(); it != tasksToDo.end(); ++it)
+	{
+		if ((*it)->action == action)
+		{
+			EntityAITaskEntry *entry = it->get();
+			if (isExecuting(entry))
+			{
+				action->resetTask();
+				removeExecuting(entry);
+			}
+			tasksToDo.erase(it);
+			break;
+		}
+	}
 }
 
 void EntityAITasks::onUpdateTasks(bool evaluateTransitions)

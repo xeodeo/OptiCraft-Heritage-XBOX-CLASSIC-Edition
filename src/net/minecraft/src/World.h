@@ -490,6 +490,7 @@ public:
 	bool entityCountsDirty = true;
 	int_t countedMonsters = 0;
 	int_t countedCreatures = 0;
+	int_t countedAmbientCreatures = 0;
 	int_t countedWaterCreatures = 0;
 
 private:

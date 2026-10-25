@@ -15,7 +15,8 @@ public:
 	EntityAITasks();
 	~EntityAITasks();
 
-	void addTask(int_t priority, EntityAIBase *action);
+	void addTask(int_t priority, EntityAIBase *action, bool ownsAction = true);
+	void removeTask(EntityAIBase *action);
 	void onUpdateTasks(bool evaluateTransitions = true);
 
 private:
