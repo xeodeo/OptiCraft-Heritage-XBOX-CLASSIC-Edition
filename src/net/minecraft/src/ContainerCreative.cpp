@@ -102,6 +102,7 @@ static int_t getCreativeCategory(ItemStack *stack)
         (Item::minecartEmpty != nullptr && id == Item::minecartEmpty->shiftedIndex) ||
         (Item::minecartCrate != nullptr && id == Item::minecartCrate->shiftedIndex) ||
         (Item::minecartPowered != nullptr && id == Item::minecartPowered->shiftedIndex) ||
+        (Item::minecartTnt != nullptr && id == Item::minecartTnt->shiftedIndex) ||
         (Item::boat != nullptr && id == Item::boat->shiftedIndex) ||
         (Item::doorWood != nullptr && id == Item::doorWood->shiftedIndex) ||
         (Item::doorSteel != nullptr && id == Item::doorSteel->shiftedIndex))

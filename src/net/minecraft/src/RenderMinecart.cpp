@@ -98,6 +98,13 @@ void RenderMinecart::renderMinecart(EntityMinecart* entityMinecart, double d, do
             renderRotate(-90.0f, 0.0f, 1.0f, 0.0f);
             renderTranslate(0.0f, -(5.0f / 16.0f), 0.0f);
             renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        } else if (entityMinecart->getMinecartType() == 3) {
+            renderTranslate(0.0f, 5.0f / 16.0f, 0.0f);
+            renderRotate(90.0f, 0.0f, 1.0f, 0.0f);
+            renderBlocks->renderBlockAsItem(Block::tnt, 0, entityMinecart->getEntityBrightness(f1));
+            renderRotate(-90.0f, 0.0f, 1.0f, 0.0f);
+            renderTranslate(0.0f, -(5.0f / 16.0f), 0.0f);
+            renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         }
         renderScale(1.0f / blockScale, 1.0f / blockScale, 1.0f / blockScale);
     }

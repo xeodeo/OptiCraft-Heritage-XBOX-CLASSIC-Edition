@@ -11,12 +11,12 @@
 bool BlockRail::isRailBlockAt(World *world, int_t i, int_t j, int_t k)
 {
     int_t l = world->getBlockId(i, j, k);
-    return l == Block::rail->blockID || l == Block::railPowered->blockID || l == Block::railDetector->blockID;
+    return l == Block::rail->blockID || l == Block::railPowered->blockID || l == Block::railDetector->blockID || (Block::railActivator != nullptr && l == Block::railActivator->blockID);
 }
 
 bool BlockRail::isRailBlock(int_t i)
 {
-    return i == Block::rail->blockID || i == Block::railPowered->blockID || i == Block::railDetector->blockID;
+    return i == Block::rail->blockID || i == Block::railPowered->blockID || i == Block::railDetector->blockID || (Block::railActivator != nullptr && i == Block::railActivator->blockID);
 }
 
 BlockRail::BlockRail(int_t i, int_t j, bool flag) : Block(i, j, Material::circuits)

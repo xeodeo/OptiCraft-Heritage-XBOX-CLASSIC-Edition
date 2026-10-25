@@ -33,6 +33,10 @@
 #include "EntityIronGolem.h"
 #include "EntityLiving.h"
 #include "EntityMinecart.h"
+#include "EntityMinecartEmpty.h"
+#include "EntityMinecartChest.h"
+#include "EntityMinecartFurnace.h"
+#include "EntityMinecartTNT.h"
 #include "EntityOcelot.h"
 #include "EntityMob.h"
 #include "EntityPainting.h"
@@ -81,8 +85,13 @@ Entity *EntityList::createEntityFromNBT(NBTTagCompound *nbttagcompound, World *w
     Entity *entity = nullptr;
     try
     {
+        // 1.2.5 saved every cart as "Minecart" and stored its concrete kind
+        // in Type.  Keep that wire/save compatibility before resolving 1.5.2
+        // concrete entity names.
+        if (nbttagcompound->getString("id") == "Minecart")
+            entity = EntityMinecart::createMinecart(world, 0.0, 0.0, 0.0, nbttagcompound->getInteger("Type"));
         auto it = stringToClassMapping.find(nbttagcompound->getString("id"));
-        if (it != stringToClassMapping.end())
+        if (entity == nullptr && it != stringToClassMapping.end())
         {
             entity = it->second(world);
         }
@@ -212,7 +221,11 @@ static struct EntityListInit
         EntityList::addMapping<EntityEnderCrystal>("EnderCrystal", 200);
         EntityList::addMapping<EntityTNTPrimed>("PrimedTnt", 20);
         EntityList::addMapping<EntityFallingSand>("FallingSand", 21);
-        EntityList::addMapping<EntityMinecart>("Minecart", 40);
+        // Legacy worlds use Minecart+Type (handled in createEntityFromNBT).
+        EntityList::addMapping<EntityMinecartEmpty>("MinecartRideable", 42);
+        EntityList::addMapping<EntityMinecartChest>("MinecartChest", 43);
+        EntityList::addMapping<EntityMinecartFurnace>("MinecartFurnace", 44);
+        EntityList::addMapping<EntityMinecartTNT>("MinecartTNT", 45);
         EntityList::addMapping<EntityBoat>("Boat", 41);
 
         // Register EntityLiving subclasses with SpawnerAnimals so performSpawning can instantiate them.

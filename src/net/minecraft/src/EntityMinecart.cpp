@@ -1,4 +1,8 @@
 #include "EntityMinecart.h"
+#include "EntityMinecartEmpty.h"
+#include "EntityMinecartChest.h"
+#include "EntityMinecartFurnace.h"
+#include "EntityMinecartTNT.h"
 #include "java/Arithmetic.h"
 #include "DamageSource.h"
 #include "DataWatcher.h"
@@ -79,6 +83,16 @@ EntityMinecart::EntityMinecart(World *world, double d, double d1, double d2, int
 	prevPosY = d1;
 	prevPosZ = d2;
 	minecartType = i;
+}
+
+EntityMinecart *EntityMinecart::createMinecart(World *world, double x, double y, double z, int_t type)
+{
+    switch (type) {
+    case 1: return new EntityMinecartChest(world, x, y, z);
+    case 2: return new EntityMinecartFurnace(world, x, y, z);
+    case 3: return new EntityMinecartTNT(world, x, y, z);
+    default: return new EntityMinecartEmpty(world, x, y, z);
+    }
 }
 
 EntityMinecart::~EntityMinecart()
@@ -339,6 +353,8 @@ void EntityMinecart::onUpdate()
 			flag1 = (i1 & 8) != 0;
 			flag2 = !flag1;
 		}
+		if (Block::railActivator != nullptr && l == Block::railActivator->blockID)
+			onActivatorRailPass(i, j, k, (i1 & 8) != 0);
 		if (static_cast<BlockRail *>(Block::blocksList[l])->getIsPowered())
 			i1 &= 7;
 

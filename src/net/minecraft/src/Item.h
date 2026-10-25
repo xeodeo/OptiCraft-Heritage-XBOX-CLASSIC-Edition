@@ -229,6 +229,7 @@ public:
     static Item* flowerPot;
     static Item* skull;
     static Item* netherStar;
+    static Item* minecartTnt;
     static Item* record13;
     static Item* recordCat;
     static Item* recordBlocks;

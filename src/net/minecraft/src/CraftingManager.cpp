@@ -99,6 +99,7 @@ CraftingManager::CraftingManager()
 	addRecipe(new ItemStack(Item::glassBottle, 3),            { "# #", " # ", '#', Block::glass });
 	addRecipe(new ItemStack(Block::rail, 16),                 { "X X", "X#X", "X X", 'X', Item::ingotIron, '#', Item::stick });
 	addRecipe(new ItemStack(Block::railPowered, 6),           { "X X", "X#X", "XRX", 'X', Item::ingotGold, 'R', Item::redstone, '#', Item::stick });
+	addRecipe(new ItemStack(Block::railActivator, 6),         { "XSX", "X#X", "XSX", 'X', Item::ingotIron, '#', Block::torchRedstoneActive, 'S', Item::stick });
 	addRecipe(new ItemStack(Block::railDetector, 6),          { "X X", "X#X", "XRX", 'X', Item::ingotIron, 'R', Item::redstone, '#', Block::pressurePlateStone });
 	addRecipe(new ItemStack(Item::minecartEmpty, 1),          { "# #", "###", '#', Item::ingotIron });
 	addRecipe(new ItemStack(Item::cauldron, 1),               { "# #", "# #", "###", '#', Item::ingotIron });
@@ -106,6 +107,7 @@ CraftingManager::CraftingManager()
 	addRecipe(new ItemStack(Block::pumpkinLantern, 1),        { "A", "B", 'A', Block::pumpkin, 'B', Block::torchWood });
 	addRecipe(new ItemStack(Item::minecartCrate, 1),          { "A", "B", 'A', Block::chest, 'B', Item::minecartEmpty });
 	addRecipe(new ItemStack(Item::minecartPowered, 1),        { "A", "B", 'A', Block::stoneOvenIdle, 'B', Item::minecartEmpty });
+	addRecipe(new ItemStack(Item::minecartTnt, 1),            { "A", "B", 'A', Block::tnt, 'B', Item::minecartEmpty });
 	addRecipe(new ItemStack(Item::boat, 1),                   { "# #", "###", '#', Block::planks });
 	addRecipe(new ItemStack(Item::bucketEmpty, 1),            { "# #", " # ", '#', Item::ingotIron });
 	addRecipe(new ItemStack(Item::flintAndSteel, 1),          { "A ", " B", 'A', Item::ingotIron, 'B', Item::flint });

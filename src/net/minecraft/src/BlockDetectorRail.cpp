@@ -41,6 +41,16 @@ bool BlockDetectorRail::isIndirectlyPoweringTo(World *world, int_t i, int_t j, i
     return l == 1;
 }
 
+int_t BlockDetectorRail::isProvidingWeakPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l)
+{
+    return (iblockaccess->getBlockMetadata(i, j, k) & 8) != 0 ? 15 : 0;
+}
+
+int_t BlockDetectorRail::isProvidingStrongPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l)
+{
+    return ((iblockaccess->getBlockMetadata(i, j, k) & 8) != 0 && l == 1) ? 15 : 0;
+}
+
 void BlockDetectorRail::setStateIfMinecartInteractsWithRail(World *world, int_t i, int_t j, int_t k, int_t l)
 {
     bool flag  = (l & 8) != 0;

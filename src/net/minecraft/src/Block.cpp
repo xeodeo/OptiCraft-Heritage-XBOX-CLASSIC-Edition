@@ -85,6 +85,7 @@
 #include "BlockEnderChest.h"
 #include "BlockBeacon.h"
 #include "BlockRail.h"
+#include "BlockRailPowered.h"
 #include "BlockRedstoneOre.h"
 #include "BlockRedstoneRepeater.h"
 #include "BlockRedstoneTorch.h"
@@ -194,6 +195,7 @@ Block *Block::musicBlock = nullptr;
 Block *Block::blockBed = nullptr;
 Block *Block::railPowered = nullptr;
 Block *Block::railDetector = nullptr;
+Block *Block::railActivator = nullptr;
 Block *Block::pistonStickyBase = nullptr;
 Block *Block::web = nullptr;
 BlockTallGrass *Block::tallGrass = nullptr;
@@ -1024,7 +1026,7 @@ void Block::initialize()
 	sandStone = (new BlockSandStone(24))->setStepSound(soundStoneFootstep)->setHardness(0.8f)->setBlockName("sandStone")->setRequiresSelfNotify();
 	musicBlock = (new BlockNote(25))->setHardness(0.8f)->setBlockName("musicBlock")->setRequiresSelfNotify();
 	blockBed = (new BlockBed(26))->setHardness(0.2f)->setBlockName("bed")->disableStats()->setRequiresSelfNotify();
-	railPowered = (new BlockRail(27, 179, true))->setHardness(0.7f)->setStepSound(soundMetalFootstep)->setBlockName("goldenRail")->setRequiresSelfNotify();
+	railPowered = (new BlockRailPowered(27))->setHardness(0.7f)->setStepSound(soundMetalFootstep)->setBlockName("goldenRail")->setRequiresSelfNotify();
 	railDetector = (new BlockDetectorRail(28, 195))->setHardness(0.7f)->setStepSound(soundMetalFootstep)->setBlockName("detectorRail")->setRequiresSelfNotify();
 	pistonStickyBase = (new BlockPistonBase(29, 106, true))->setBlockName("pistonStickyBase")->setRequiresSelfNotify();
 	web = (new BlockWeb(30, 11))->setLightOpacity(1)->setHardness(4.0f)->setBlockName("web");
@@ -1064,6 +1066,7 @@ void Block::initialize()
 	doorWood = (new BlockDoor(64, Material::wood))->setHardness(3.0f)->setStepSound(soundWoodFootstep)->setBlockName("doorWood")->disableStats()->setRequiresSelfNotify();
 	ladder = (new BlockLadder(65, 83))->setHardness(0.4f)->setStepSound(soundWoodFootstep)->setBlockName("ladder")->setRequiresSelfNotify();
 	rail = (new BlockRail(66, 128, false))->setHardness(0.7f)->setStepSound(soundMetalFootstep)->setBlockName("rail")->setRequiresSelfNotify();
+	railActivator = (new BlockRailPowered(157, true))->setHardness(0.7f)->setStepSound(soundMetalFootstep)->setBlockName("activatorRail")->setRequiresSelfNotify();
 	stairCompactCobblestone = (new BlockStairs(67, cobblestone))->setBlockName("stairsStone")->setRequiresSelfNotify();
 	signWall = (new BlockSign(68, createTileEntitySign, false))->setHardness(1.0f)->setStepSound(soundWoodFootstep)->setBlockName("sign")->disableStats()->setRequiresSelfNotify();
 	lever = (new BlockLever(69, 96))->setHardness(0.5f)->setStepSound(soundWoodFootstep)->setBlockName("lever")->setRequiresSelfNotify();
@@ -1268,6 +1271,7 @@ void Block::cleanup()
 	blockBed = nullptr;
 	railPowered = nullptr;
 	railDetector = nullptr;
+	railActivator = nullptr;
 	pistonStickyBase = nullptr;
 	web = nullptr;
 	tallGrass = nullptr;

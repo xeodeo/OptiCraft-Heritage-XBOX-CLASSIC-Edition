@@ -204,6 +204,7 @@ Item* Item::netherQuartz = nullptr;
 Item* Item::flowerPot = nullptr;
 Item* Item::skull = nullptr;
 Item* Item::netherStar = nullptr;
+Item* Item::minecartTnt = nullptr;
 Item* Item::record13 = nullptr;
 Item* Item::recordCat = nullptr;
 Item* Item::recordBlocks = nullptr;
@@ -637,6 +638,7 @@ void Item::initItems() {
     flowerPot = (new ItemReed(134, Block::flowerPot))->setIconIndex(TEX152_ITEM_ICON("flowerPot.png"))->setItemName("flowerPot");
     skull = (new ItemSkull(141))->setItemName("skull");
     netherStar = (new ItemNetherStar(143))->setIconIndex(TEX152_ITEM_ICON("netherStar.png"))->setItemName("netherStar");
+    minecartTnt = (new ItemMinecart(151, 3))->setIconIndex(TEX152_ITEM_ICON("minecartTnt.png"))->setItemName("minecartTnt");
     record13 = (new ItemRecord(2000, "13"))->setIconCoord(0, 15)->setItemName("record");
     recordCat = (new ItemRecord(2001, "cat"))->setIconCoord(1, 15)->setItemName("record");
     recordBlocks = (new ItemRecord(2002, "blocks"))->setIconCoord(2, 15)->setItemName("record");
@@ -782,6 +784,7 @@ void Item::cleanup()
     flowerPot = nullptr;
     skull = nullptr;
     netherStar = nullptr;
+    minecartTnt = nullptr;
     record13 = nullptr;
     recordCat = nullptr;
 }

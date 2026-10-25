@@ -259,6 +259,7 @@ public:
 	static Block *blockBed;
 	static Block *railPowered;
 	static Block *railDetector;
+	static Block *railActivator;
 	static Block *pistonStickyBase;
 	static Block *web;
 	static BlockTallGrass *tallGrass;

@@ -48,7 +48,9 @@ public:
 	Vec3D *getNextRailPosition(double d, double d1, double d2, double d3);
 	Vec3D *getPosOffset(double d, double d1, double d2, double d3) { return getNextRailPosition(d, d1, d2, d3); }
 	// minecartType getter
-	int_t getMinecartType() const { return minecartType; }
+	virtual int_t getMinecartType() const { return minecartType; }
+	static EntityMinecart *createMinecart(World *world, double x, double y, double z, int_t type);
+	virtual void onActivatorRailPass(int_t x, int_t y, int_t z, bool powered) {}
 
 public:
 	void writeEntityToNBT(NBTTagCompound *nbttagcompound) override;
