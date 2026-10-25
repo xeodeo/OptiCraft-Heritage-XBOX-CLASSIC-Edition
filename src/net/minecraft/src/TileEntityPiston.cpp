@@ -101,10 +101,15 @@ void TileEntityPiston::clearPistonTileEntity()
 	if (lastProgress < 1.0f && worldObj != nullptr)
 	{
 		lastProgress = progress = 1.0f;
-		worldObj->removeBlockTileEntity(xCoord, yCoord, zCoord);
-		invalidate();
-		if (worldObj->getBlockId(xCoord, yCoord, zCoord) == Block::pistonMoving->blockID)
-			worldObj->setBlockAndMetadataWithNotify(xCoord, yCoord, zCoord, storedBlockID, storedMetadata);
+		// Outside the tile entity tick removeBlockTileEntity deletes this object
+		// (Java leaves it to the GC), so copy what is needed first and do not
+		// touch a member afterwards. It also invalidates it when it is kept.
+		World *world = worldObj;
+		const int_t x = xCoord, y = yCoord, z = zCoord;
+		const int_t blockId = storedBlockID, metadata = storedMetadata;
+		world->removeBlockTileEntity(x, y, z);
+		if (world->getBlockId(x, y, z) == Block::pistonMoving->blockID)
+			world->setBlockAndMetadataWithNotify(x, y, z, blockId, metadata);
 	}
 }
 
