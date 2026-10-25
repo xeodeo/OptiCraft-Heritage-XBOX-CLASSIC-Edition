@@ -206,6 +206,7 @@ public:
 	virtual bool isAnimal()   const { return false; }
 	virtual bool isWaterMob() const { return false; }
 	virtual bool isAmbientCreature() const { return false; }
+	virtual bool isMinecart() const { return false; }
 	bool isAssignableTo(const std::type_info &type) const;
 	// Concrete-type identity; each leaf class sets CLASS_ID and overrides this
 	virtual int_t getEntityClassID() const { return 0; }

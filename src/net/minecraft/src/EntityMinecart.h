@@ -31,6 +31,7 @@ protected:
 public:
 	AxisAlignedBB *getCollisionBox(Entity *entity) override;
 	AxisAlignedBB *getBoundingBox() override;
+	bool isMinecart() const override { return true; }
 	bool canBePushed() override { return true; }
 	double getMountedYOffset() override;
 	bool attackEntityFrom(Entity *entity, int_t i) override;
@@ -38,6 +39,7 @@ public:
 	void performHurtAnimation() override;
 	bool canBeCollidedWith() override;
 	void setEntityDead() override;
+	virtual void killMinecart(const DamageSource &source);
 	void onUpdate() override;
 	void applyEntityCollision(Entity *entity) override;
 

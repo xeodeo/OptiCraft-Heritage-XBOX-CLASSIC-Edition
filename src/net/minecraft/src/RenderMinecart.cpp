@@ -101,7 +101,7 @@ void RenderMinecart::renderMinecart(EntityMinecart* entityMinecart, double d, do
         } else if (entityMinecart->getMinecartType() == 3) {
             renderTranslate(0.0f, 5.0f / 16.0f, 0.0f);
             renderRotate(90.0f, 0.0f, 1.0f, 0.0f);
-            renderBlocks->renderBlockAsItem(Block::tnt, 0, entityMinecart->getEntityBrightness(f1));
+            renderBlockInMinecart(entityMinecart, f1, Block::tnt, 0);
             renderRotate(-90.0f, 0.0f, 1.0f, 0.0f);
             renderTranslate(0.0f, -(5.0f / 16.0f), 0.0f);
             renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -112,6 +112,10 @@ void RenderMinecart::renderMinecart(EntityMinecart* entityMinecart, double d, do
     renderScale(-1.0f, -1.0f, 1.0f);
     modelMinecart->render(0.0f, 0.0f, -0.1f, 0.0f, 0.0f, 0.0625f);
     renderPopMatrix();
+}
+
+void RenderMinecart::renderBlockInMinecart(EntityMinecart* entityMinecart, float partialTicks, Block* block, int_t metadata) {
+    renderBlocks->renderBlockAsItem(block, metadata, entityMinecart->getEntityBrightness(partialTicks));
 }
 
 void RenderMinecart::doRender(Entity* entity, double d, double d1, double d2, float f, float f1) {

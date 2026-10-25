@@ -178,7 +178,7 @@ double EntityMinecart::getMountedYOffset()
 	return (double)height * 0.0 - 0.30000001192092896;
 }
 
-bool EntityMinecart::attackEntityFrom(Entity *entity, int_t i)
+bool EntityMinecart::attackEntityFrom(const DamageSource &source, int_t damage)
 {
 	if (worldObj->multiplayerWorld || isDead)
 		return true;
@@ -186,56 +186,77 @@ bool EntityMinecart::attackEntityFrom(Entity *entity, int_t i)
 	setForwardDirection(-getForwardDirection());
 	setTimeSinceHit(10);
 	setBeenAttacked();
-	setDamageTaken(JavaArithmetic::intAdd(getDamageTaken(), JavaArithmetic::intMul(i, 10)));
-	if (getDamageTaken() > 40)
+	setDamageTaken(JavaArithmetic::intAdd(getDamageTaken(), JavaArithmetic::intMul(damage, 10)));
+	bool creative = false;
+	if (source.getEntity() != nullptr)
+	{
+		EntityPlayer *player = dynamic_cast<EntityPlayer*>(source.getEntity());
+		if (player != nullptr && player->capabilities.isCreativeMode)
+			creative = true;
+	}
+	if (creative || getDamageTaken() > 40)
 	{
 		if (riddenByEntity != nullptr)
 			riddenByEntity->mountEntity(this);
 
-		setEntityDead();
-		dropItemWithOffset(Item::minecartEmpty->shiftedIndex, 1, 0.0f);
-
-		if (minecartType == 1)
+		if (creative)
 		{
-			for (int_t j = 0; j < getSizeInventory(); j++)
-			{
-				ItemStack *itemstack = getStackInSlot(j);
-				if (itemstack == nullptr)
-					continue;
-				float f  = rand.nextFloat() * 0.8f + 0.1f;
-				float f1 = rand.nextFloat() * 0.8f + 0.1f;
-				float f2 = rand.nextFloat() * 0.8f + 0.1f;
-				while (itemstack->stackSize > 0)
-				{
-					int_t k = rand.nextInt(21) + 10;
-					if (k > itemstack->stackSize)
-						k = itemstack->stackSize;
-					itemstack->stackSize -= k;
-					EntityItem *entityitem = new EntityItem(
-						worldObj,
-						posX + (double)f, posY + (double)f1, posZ + (double)f2,
-						new ItemStack(itemstack->itemID, k, itemstack->getItemDamage()));
-					float f3 = 0.05f;
-					entityitem->motionX = (float)rand.nextGaussian() * f3;
-					entityitem->motionY = (float)rand.nextGaussian() * f3 + 0.2f;
-					entityitem->motionZ = (float)rand.nextGaussian() * f3;
-					if (!worldObj->entityJoinedWorld(entityitem))
-						delete entityitem;
-				}
-			}
-			dropItemWithOffset(Block::chest->blockID, 1, 0.0f);
+			setEntityDead();
 		}
-		else if (minecartType == 2)
+		else
 		{
-			dropItemWithOffset(Block::stoneOvenIdle->blockID, 1, 0.0f);
+			killMinecart(source);
 		}
 	}
 	return true;
 }
 
-bool EntityMinecart::attackEntityFrom(const DamageSource &source, int_t damage)
+bool EntityMinecart::attackEntityFrom(Entity *entity, int_t i)
 {
-	return attackEntityFrom(source.getEntity(), damage);
+	DamageSource ds = DamageSource::generic;
+	return attackEntityFrom(ds, i);
+}
+
+void EntityMinecart::killMinecart(const DamageSource &source)
+{
+	(void)source;
+	setEntityDead();
+	dropItemWithOffset(Item::minecartEmpty->shiftedIndex, 1, 0.0f);
+
+	if (minecartType == 1)
+	{
+		for (int_t j = 0; j < getSizeInventory(); j++)
+		{
+			ItemStack *itemstack = getStackInSlot(j);
+			if (itemstack == nullptr)
+				continue;
+			float f  = rand.nextFloat() * 0.8f + 0.1f;
+			float f1 = rand.nextFloat() * 0.8f + 0.1f;
+			float f2 = rand.nextFloat() * 0.8f + 0.1f;
+			while (itemstack->stackSize > 0)
+			{
+				int_t k = rand.nextInt(21) + 10;
+				if (k > itemstack->stackSize)
+					k = itemstack->stackSize;
+				itemstack->stackSize -= k;
+				EntityItem *entityitem = new EntityItem(
+					worldObj,
+					posX + (double)f, posY + (double)f1, posZ + (double)f2,
+					new ItemStack(itemstack->itemID, k, itemstack->getItemDamage()));
+				float f3 = 0.05f;
+				entityitem->motionX = (float)rand.nextGaussian() * f3;
+				entityitem->motionY = (float)rand.nextGaussian() * f3 + 0.2f;
+				entityitem->motionZ = (float)rand.nextGaussian() * f3;
+				if (!worldObj->entityJoinedWorld(entityitem))
+					delete entityitem;
+			}
+		}
+		dropItemWithOffset(Block::chest->blockID, 1, 0.0f);
+	}
+	else if (minecartType == 2)
+	{
+		dropItemWithOffset(Block::stoneOvenIdle->blockID, 1, 0.0f);
+	}
 }
 
 void EntityMinecart::performHurtAnimation()

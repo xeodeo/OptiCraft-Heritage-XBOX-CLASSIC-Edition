@@ -75,4 +75,5 @@ void BlockDetectorRail::setStateIfMinecartInteractsWithRail(World *world, int_t 
         world->markBlocksDirty(i, j, k, i, j, k);
     }
     if (flag1) world->scheduleBlockUpdate(i, j, k, blockID, tickRate());
+    world->func_96440_m(i, j, k, blockID);
 }

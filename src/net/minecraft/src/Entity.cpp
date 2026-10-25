@@ -16,6 +16,7 @@
 #include "EntityMob.h"
 #include "EntityAnimal.h"
 #include "EntityWaterMob.h"
+#include "EntityMinecart.h"
 #include "EntityList.h"
 #include "ItemStack.h"
 #include "MathHelper.h"
@@ -234,6 +235,8 @@ bool Entity::isAssignableTo(const std::type_info &type) const
 		return isAnimal();
 	if (type == typeid(EntityWaterMob))
 		return isWaterMob();
+	if (type == typeid(EntityMinecart))
+		return isMinecart();
 	return typeid(*this) == type;
 }
 

@@ -86,6 +86,8 @@
 #include "RenderFallingSand.h"
 #include "EntityMinecart.h"
 #include "RenderMinecart.h"
+#include "EntityMinecartTNT.h"
+#include "RenderTntMinecart.h"
 #include "EntityBoat.h"
 #include "RenderBoat.h"
 #include "EntityFish.h"
@@ -217,6 +219,7 @@ void RenderManager::registerRenderers() {
     entityRenderMap[std::type_index(typeid(EntityTNTPrimed))] = new RenderTNTPrimed();
     entityRenderMap[std::type_index(typeid(EntityFallingSand))] = new RenderFallingSand();
     entityRenderMap[std::type_index(typeid(EntityMinecart))] = new RenderMinecart();
+    entityRenderMap[std::type_index(typeid(EntityMinecartTNT))] = new RenderTntMinecart();
     entityRenderMap[std::type_index(typeid(EntityBoat))] = new RenderBoat();
     entityRenderMap[std::type_index(typeid(EntityFish))] = new RenderFish();
     entityRenderMap[std::type_index(typeid(EntityLightningBolt))] = new RenderLightningBolt();
@@ -286,6 +289,7 @@ std::type_index parentEntityType(std::type_index type)
     PARENT_OF(EntityTNTPrimed, Entity);
     PARENT_OF(EntityFallingSand, Entity);
     PARENT_OF(EntityMinecart, Entity);
+    PARENT_OF(EntityMinecartTNT, EntityMinecart);
     PARENT_OF(EntityBoat, Entity);
     PARENT_OF(EntityFish, Entity);
     PARENT_OF(EntityLightningBolt, EntityWeatherEffect);

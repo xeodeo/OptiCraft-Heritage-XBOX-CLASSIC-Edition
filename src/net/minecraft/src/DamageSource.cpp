@@ -125,6 +125,11 @@ bool DamageSource::fireDamage() const
 	return fire;
 }
 
+bool DamageSource::isExplosion() const
+{
+	return damageType == "explosion" || damageType == "explosion.player";
+}
+
 bool DamageSource::isMagicDamage() const
 {
 	return magicDamage;

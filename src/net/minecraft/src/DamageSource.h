@@ -33,6 +33,8 @@ public:
 	DamageSource &setDamageAllowedInCreativeMode();
 	DamageSource &setFireDamage();
 	bool fireDamage() const;
+	bool isFireDamage() const { return fireDamage(); }
+	bool isExplosion() const;
 	bool isMagicDamage() const;
 	DamageSource &setMagicDamage();
 	const jstring &getDamageType() const;

@@ -77,7 +77,7 @@ void BlockRail::onBlockAdded(World *world, int_t i, int_t j, int_t k)
     if (!world->multiplayerWorld)
     {
         getRailDirection(world, i, j, k, true);
-        if (blockID == Block::railPowered->blockID)
+        if (isPowered)
             onNeighborBlockChange(world, i, j, k, blockID);
     }
 }
@@ -99,7 +99,7 @@ void BlockRail::onNeighborBlockChange(World *world, int_t i, int_t j, int_t k, i
         dropBlockAsItem(world, i, j, k, world->getBlockMetadata(i, j, k));
         world->setBlockWithNotify(i, j, k, 0);
     }
-    else if (blockID == Block::railPowered->blockID)
+    else if (isPowered)
     {
         bool flag1 = world->isBlockIndirectlyGettingPowered(i, j, k);
         flag1 = flag1 || getRailDirection(world, i, j, k, i1, true, 0) || getRailDirection(world, i, j, k, i1, false, 0);
@@ -171,7 +171,7 @@ bool BlockRail::getRailDirection(World *world, int_t i, int_t j, int_t k, int_t 
 bool BlockRail::getRailMetadata(World *world, int_t i, int_t j, int_t k, bool flag, int_t l, int_t i1)
 {
     int_t j1 = world->getBlockId(i, j, k);
-    if (j1 == Block::railPowered->blockID)
+    if (j1 == blockID)
     {
         int_t k1 = world->getBlockMetadata(i, j, k);
         int_t l1 = k1 & 7;

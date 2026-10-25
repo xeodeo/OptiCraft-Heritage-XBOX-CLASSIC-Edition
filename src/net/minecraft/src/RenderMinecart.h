@@ -3,6 +3,7 @@
 
 #include "Render.h"
 
+class Block;
 class EntityMinecart;
 class ModelBase;
 
@@ -15,7 +16,9 @@ public:
 
     virtual void doRender(Entity* entity, double d, double d1, double d2, float f, float f1) override;
 
-private:
+protected:
+    virtual void renderBlockInMinecart(EntityMinecart* entityMinecart, float partialTicks, Block* block, int_t metadata);
+
     ModelBase* modelMinecart;
 };
 
