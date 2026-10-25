@@ -498,6 +498,25 @@ def merge_languages(base_lang: Path, old_lang: Path, new_lang: Path, out_lang: P
     return merged_names
 
 
+def copy_sound3(launcher_assets: Path, resources: Path) -> list[str]:
+    """The 1.5 sounds (resources/sound3) are not in the jar: the launcher keeps them
+    hashed under assets/objects, listed in indexes/pre-1.6.json."""
+    index = json.loads((launcher_assets / "indexes" / "pre-1.6.json").read_text(encoding="utf-8"))["objects"]
+    copied = []
+    for name, entry in sorted(index.items()):
+        if not name.startswith("sound3/"):
+            continue
+        digest = entry["hash"]
+        source = launcher_assets / "objects" / digest[:2] / digest
+        if not source.exists():
+            raise FileNotFoundError(f"{name}: {source} not downloaded by the launcher")
+        dest = resources / name
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, dest)
+        copied.append("resources/" + name)
+    return copied
+
+
 def load_make_pak(script: Path):
     spec = importlib.util.spec_from_file_location("make_pak", script)
     if spec is None or spec.loader is None:
@@ -517,6 +536,8 @@ def main() -> int:
     parser.add_argument("--header", type=Path, default=Path("src/net/minecraft/src/Texture152Atlas.h"))
     parser.add_argument("--report-json", type=Path, required=True)
     parser.add_argument("--preview", type=Path, required=True)
+    parser.add_argument("--launcher-assets", type=Path, default=None,
+                        help="Launcher assets/ (indexes/pre-1.6.json + objects/) for the 1.5 sound3 set")
     args = parser.parse_args()
 
     repo = args.repo.resolve()
@@ -554,6 +575,8 @@ def main() -> int:
 
     staged = ["assets/terrain.png", "assets/gui/items.png"]
     copy_source_textures(args.source, assets, staged)
+    sound3 = copy_sound3(args.launcher_assets, output_data / "resources") if args.launcher_assets else []
+    staged += sound3
     merged_langs = merge_languages(args.base_data / "assets/lang", args.source.parent / "src125/lang",
                                    args.source / "lang", assets / "lang")
     staged += [f"assets/lang/{name}" for name in merged_langs]
@@ -586,6 +609,7 @@ def main() -> int:
         "staged1_5Files": staged,
         "iconsWithoutRoom": OVERFLOW,
         "mergedLanguages": len(merged_langs),
+        "sound3Files": len(sound3),
         "pakEntries": count,
         "pakBytes": total_bytes,
         "pakPath": str(args.output_pak.resolve()),

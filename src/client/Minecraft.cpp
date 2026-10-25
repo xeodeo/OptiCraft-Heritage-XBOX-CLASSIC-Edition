@@ -3156,7 +3156,8 @@ void Minecraft::installResource(const std::string &s, const std::string &file)
     std::string s1 = s.substr(0, idx);
     std::string s2 = s.substr(idx + 1);
 
-    if (s1 == "sound" || s1 == "newsound")
+    // sound3 holds the 1.5 sound set (bat, zombie villager, anvil...).
+    if (s1 == "sound" || s1 == "newsound" || s1 == "sound3")
         sndManager->addSound(s2, file);
     else if (s1 == "legacy")
         sndManager->addSound("random/" + s2, file);
