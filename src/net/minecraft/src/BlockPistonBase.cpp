@@ -177,9 +177,10 @@ void BlockPistonBase::playBlock(World *world, int_t i, int_t j, int_t k, int_t l
 				{
 					if (tileentitypiston1->getOrientation() == j1 && tileentitypiston1->isExtending())
 					{
-						tileentitypiston1->clearPistonTileEntity();
+						// Read before clearing: clearPistonTileEntity() can delete it.
 						j2 = tileentitypiston1->getStoredBlockID();
 						k2 = tileentitypiston1->getBlockMetadata();
+						tileentitypiston1->clearPistonTileEntity();
 						flag = true;
 					}
 				}
