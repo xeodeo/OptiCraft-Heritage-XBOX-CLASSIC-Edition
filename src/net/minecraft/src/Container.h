@@ -48,6 +48,8 @@ public:
 
 	virtual bool isUsableByPlayer(EntityPlayer *entityplayer) = 0;
 
+	static int_t calcRedstoneFromInventory(IInventory *iinventory);
+
 	// Not in Java. True when any of this container's slots is backed by
 	// `iinventory`. World::closeContainersUsing() calls this just before a
 	// TileEntity is deleted so the player's open screen is closed while the

@@ -2,6 +2,7 @@
 #include "Material.h"
 #include "World.h"
 #include "TileEntityRecordPlayer.h"
+#include "Item.h"
 #include "EntityItem.h"
 #include "ItemStack.h"
 #include "EntityPlayer.h"
@@ -67,7 +68,22 @@ void BlockJukeBox::ejectRecord(World *world, int_t i, int_t j, int_t k)
 void BlockJukeBox::onBlockRemoval(World *world, int_t i, int_t j, int_t k)
 {
 	ejectRecord(world, i, j, k);
+	world->func_96440_m(i, j, k, blockID);
 	BlockContainer::onBlockRemoval(world, i, j, k);
+}
+
+bool BlockJukeBox::hasComparatorInputOverride()
+{
+	return true;
+}
+
+int_t BlockJukeBox::getComparatorInputOverride(World *world, int_t i, int_t j, int_t k, int_t side)
+{
+	(void)side;
+	TileEntityRecordPlayer *tile = dynamic_cast<TileEntityRecordPlayer *>(world->getBlockTileEntity(i, j, k));
+	if (tile == nullptr || tile->record <= 0 || Item::record13 == nullptr)
+		return 0;
+	return tile->record + 1 - Item::record13->shiftedIndex;
 }
 
 void BlockJukeBox::dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, int_t l, float f, int_t)

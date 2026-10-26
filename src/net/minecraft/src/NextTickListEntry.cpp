@@ -1,4 +1,5 @@
 #include "NextTickListEntry.h"
+#include "Block.h"
 #include "java/Arithmetic.h"
 #include <cstdint>
 
@@ -17,7 +18,7 @@ NextTickListEntry::NextTickListEntry(int_t i, int_t j, int_t k, int_t l)
 bool NextTickListEntry::equals(const NextTickListEntry *nextticklistentry) const
 {
 	if (nextticklistentry != nullptr)
-		return xCoord == nextticklistentry->xCoord && yCoord == nextticklistentry->yCoord && zCoord == nextticklistentry->zCoord && blockID == nextticklistentry->blockID;
+		return xCoord == nextticklistentry->xCoord && yCoord == nextticklistentry->yCoord && zCoord == nextticklistentry->zCoord && Block::isAssociatedBlockID(blockID, nextticklistentry->blockID);
 	else
 		return false;
 }
@@ -27,8 +28,7 @@ int_t NextTickListEntry::hashCode() const
 	std::uint32_t value = static_cast<std::uint32_t>(xCoord) * 1024u * 1024u;
 	value += static_cast<std::uint32_t>(zCoord) * 1024u;
 	value += static_cast<std::uint32_t>(yCoord);
-	value = value * 256u + static_cast<std::uint32_t>(blockID);
-	return JavaArithmetic::intFromBits(value);
+	return JavaArithmetic::intFromBits(value * 256u);
 }
 
 NextTickListEntry *NextTickListEntry::setScheduledTime(long_t l)
@@ -43,6 +43,8 @@ int_t NextTickListEntry::comparer(const NextTickListEntry *nextticklistentry) co
 		return -1;
 	if (scheduledTime > nextticklistentry->scheduledTime)
 		return 1;
+	if (priority != nextticklistentry->priority)
+		return priority - nextticklistentry->priority;
 	if (tickEntryID < nextticklistentry->tickEntryID)
 		return -1;
 	return tickEntryID <= nextticklistentry->tickEntryID ? 0 : 1;

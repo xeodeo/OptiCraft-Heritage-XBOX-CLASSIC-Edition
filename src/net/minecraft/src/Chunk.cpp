@@ -888,10 +888,9 @@ bool Chunk::setBlockIDWithMetadata(int_t i, int_t j, int_t k, int_t l, int_t i1)
 			TileEntity *tileEntity = getChunkBlockTileEntity(i, j, k);
 			if (tileEntity == nullptr)
 			{
-				BlockContainer *container = dynamic_cast<BlockContainer *>(Block::blocksList[l]);
-				if (container != nullptr)
+				tileEntity = Block::blocksList[l]->getBlockEntity();
+				if (tileEntity != nullptr)
 				{
-					tileEntity = container->getBlockEntity();
 					worldObj->setBlockTileEntity(worldX, j, worldZ, tileEntity);
 				}
 			}
@@ -1187,15 +1186,14 @@ TileEntity *Chunk::getChunkBlockTileEntity(int_t i, int_t j, int_t k)
 		const int_t blockId = getBlockID(i, j, k);
 		if (!validBlockId(blockId) || blockId <= 0 || !Block::isBlockContainer[blockId] || Block::blocksList[blockId] == nullptr)
 			return nullptr;
-		BlockContainer *blockcontainer = dynamic_cast<BlockContainer *>(Block::blocksList[blockId]);
-		if (blockcontainer == nullptr || worldObj == nullptr)
+		if (Block::blocksList[blockId] == nullptr || worldObj == nullptr)
 			return nullptr;
 
 		// Minecraft 1.2.5 creates the missing tile entity directly here. Calling
 		// onBlockAdded() is not equivalent: subclasses may perform neighbour or
 		// structure side effects when a block is placed, and a lazy tile-entity
 		// lookup must not replay those effects.
-		tileentity = blockcontainer->getBlockEntity();
+		tileentity = Block::blocksList[blockId]->getBlockEntity();
 		worldObj->setBlockTileEntity(
 			JavaArithmetic::intAdd(JavaArithmetic::intMul(xPosition, 16), i),
 			j,

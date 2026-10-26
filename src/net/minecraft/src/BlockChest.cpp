@@ -11,6 +11,8 @@
 #include "MathHelper.h"
 #include "NBTTagCompound.h"
 #include "TileEntityChest.h"
+#include "Container.h"
+#include "InventoryLargeChest.h"
 #include "World.h"
 #include "java/Arithmetic.h"
 
@@ -229,7 +231,38 @@ void BlockChest::onBlockRemoval(World *world, int_t i, int_t j, int_t k)
 			}
 		}
 	}
+	world->func_96440_m(i, j, k, blockID);
 	BlockContainer::onBlockRemoval(world, i, j, k);
+}
+
+bool BlockChest::hasComparatorInputOverride()
+{
+	return true;
+}
+
+int_t BlockChest::getComparatorInputOverride(World *world, int_t i, int_t j, int_t k, int_t side)
+{
+	(void)side;
+	TileEntityChest *primary = dynamic_cast<TileEntityChest *>(world->getBlockTileEntity(i, j, k));
+	if (primary == nullptr)
+		return 0;
+
+	TileEntityChest *adjacent = nullptr;
+	if (world->getBlockId(i - 1, j, k) == blockID)
+		adjacent = dynamic_cast<TileEntityChest *>(world->getBlockTileEntity(i - 1, j, k));
+	else if (world->getBlockId(i + 1, j, k) == blockID)
+		adjacent = dynamic_cast<TileEntityChest *>(world->getBlockTileEntity(i + 1, j, k));
+	else if (world->getBlockId(i, j, k - 1) == blockID)
+		adjacent = dynamic_cast<TileEntityChest *>(world->getBlockTileEntity(i, j, k - 1));
+	else if (world->getBlockId(i, j, k + 1) == blockID)
+		adjacent = dynamic_cast<TileEntityChest *>(world->getBlockTileEntity(i, j, k + 1));
+
+	if (adjacent != nullptr)
+	{
+		InventoryLargeChest largeChest("Large chest", adjacent, primary);
+		return Container::calcRedstoneFromInventory(&largeChest);
+	}
+	return Container::calcRedstoneFromInventory(primary);
 }
 
 bool BlockChest::isOcelotBlockingChest(World *world, int_t i, int_t j, int_t k)

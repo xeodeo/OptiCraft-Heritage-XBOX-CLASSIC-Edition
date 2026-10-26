@@ -15,6 +15,9 @@ class BlockFlowerPot;
 class BlockCocoa;
 class BlockAnvil;
 class BlockBeacon;
+class BlockRedstoneLogic;
+class BlockComparator;
+class BlockHopper;
 class World;
 class Material;
 class Vec3D;
@@ -103,6 +106,11 @@ private:
 	bool renderBlockTorch(Block *block, int_t i, int_t j, int_t k);
 	bool renderBlockBed(Block *block, int_t i, int_t j, int_t k);
 	bool renderBlockRepeater(Block *block, int_t i, int_t j, int_t k);
+	bool renderBlockRedstoneLogic(BlockRedstoneLogic *block, int_t i, int_t j, int_t k);
+	bool renderBlockComparator(BlockComparator *block, int_t i, int_t j, int_t k);
+	void renderBlockRedstoneLogicMetadata(BlockRedstoneLogic *block, int_t i, int_t j, int_t k, int_t dir);
+	bool renderBlockHopper(BlockHopper *block, int_t i, int_t j, int_t k);
+	bool renderBlockHopperMetadata(BlockHopper *block, int_t i, int_t j, int_t k, int_t meta, bool inventory);
 	// Renombrado de func_31074_b: renderiza base de pistón (no extendido)
 	bool renderPistonBase(Block *block, int_t i, int_t j, int_t k, bool flag);
 	// Renombrado de func_31076_a: renderiza brazo de pistón en X

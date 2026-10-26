@@ -20,6 +20,8 @@ public:
     bool blockActivated(World *world, int_t x, int_t y, int_t z, EntityPlayer *player) override;
     void randomDisplayTick(World *world, int_t x, int_t y, int_t z, Random &random) override;
     void onBlockRemoval(World *world, int_t x, int_t y, int_t z) override;
+    bool hasComparatorInputOverride() override;
+    int_t getComparatorInputOverride(World *world, int_t x, int_t y, int_t z, int_t side) override;
     int_t idDropped(int_t metadata, Random &random) override;
 
 protected:

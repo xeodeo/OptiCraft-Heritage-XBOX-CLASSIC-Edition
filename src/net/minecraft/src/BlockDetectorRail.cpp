@@ -3,6 +3,7 @@
 #include "IBlockAccess.h"
 #include "AxisAlignedBB.h"
 #include "EntityMinecart.h"
+#include "Container.h"
 #include "Entity.h"
 #include <vector>
 
@@ -76,4 +77,31 @@ void BlockDetectorRail::setStateIfMinecartInteractsWithRail(World *world, int_t 
     }
     if (flag1) world->scheduleBlockUpdate(i, j, k, blockID, tickRate());
     world->func_96440_m(i, j, k, blockID);
+}
+
+bool BlockDetectorRail::hasComparatorInputOverride()
+{
+    return true;
+}
+
+int_t BlockDetectorRail::getComparatorInputOverride(World *world, int_t i, int_t j, int_t k, int_t side)
+{
+    (void)side;
+    if ((world->getBlockMetadata(i, j, k) & 8) > 0)
+    {
+        float f = 0.125f;
+        const auto &list = world->getEntitiesWithinAABB(
+            typeid(EntityMinecart),
+            AxisAlignedBB::getBoundingBoxFromPool((float)i + f, (double)j, (float)k + f,
+                                                  (float)(i + 1) - f, (double)j + 0.25, (float)(k + 1) - f));
+        for (Entity *e : list)
+        {
+            IInventory *inv = dynamic_cast<IInventory *>(e);
+            if (inv != nullptr)
+            {
+                return Container::calcRedstoneFromInventory(inv);
+            }
+        }
+    }
+    return 0;
 }

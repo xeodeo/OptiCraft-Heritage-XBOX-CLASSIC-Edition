@@ -7,6 +7,7 @@
 #include "ItemStack.h"
 #include "Material.h"
 #include "TileEntityBrewingStand.h"
+#include "Container.h"
 #include "World.h"
 #include "java/Random.h"
 
@@ -101,7 +102,19 @@ void BlockBrewingStand::onBlockRemoval(World *world, int_t x, int_t y, int_t z)
             }
         }
     }
+    world->func_96440_m(x, y, z, blockID);
     BlockContainer::onBlockRemoval(world, x, y, z);
+}
+
+bool BlockBrewingStand::hasComparatorInputOverride()
+{
+    return true;
+}
+
+int_t BlockBrewingStand::getComparatorInputOverride(World *world, int_t x, int_t y, int_t z, int_t side)
+{
+    (void)side;
+    return Container::calcRedstoneFromInventory(dynamic_cast<IInventory *>(world->getBlockTileEntity(x, y, z)));
 }
 
 int_t BlockBrewingStand::idDropped(int_t, Random &)

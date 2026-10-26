@@ -87,6 +87,7 @@
 #include "EntityMinecart.h"
 #include "RenderMinecart.h"
 #include "EntityMinecartTNT.h"
+#include "EntityMinecartHopper.h"
 #include "RenderTntMinecart.h"
 #include "EntityBoat.h"
 #include "RenderBoat.h"
@@ -290,6 +291,7 @@ std::type_index parentEntityType(std::type_index type)
     PARENT_OF(EntityFallingSand, Entity);
     PARENT_OF(EntityMinecart, Entity);
     PARENT_OF(EntityMinecartTNT, EntityMinecart);
+    PARENT_OF(EntityMinecartHopper, EntityMinecart);
     PARENT_OF(EntityBoat, Entity);
     PARENT_OF(EntityFish, Entity);
     PARENT_OF(EntityLightningBolt, EntityWeatherEffect);

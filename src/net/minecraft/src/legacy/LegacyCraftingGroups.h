@@ -80,8 +80,11 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 143, -1, 4, 33 }, // Tile::button_wood (button)
     { 145, -1, 0, 29 }, // Tile::anvil (device)
     { 152, -1, 6, 13 }, // Tile::blockRedstone (block)
+    { 154, -1, 4, 0 }, // Tile::hopperBlock
     { 155, -1, 0, 19 }, // Tile::quartzBlock (structblock)
     { 156, -1, 0, 15 }, // Tile::stairs_quartz (stairs)
+    { 158, -1, 4, 0 }, // Tile::dropper
+
     { 171, -1, 6, 37 }, // Tile::woolCarpet (carpet)
     { 256, -1, 1, 2 }, // Item::shovel_iron (shovel)
     { 257, -1, 1, 3 }, // Item::pickAxe_iron (pickaxe)
@@ -182,4 +185,7 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 396, 0, 2, 36 }, // Item::carrotGolden (giltFruit)
     { 398, -1, 1, 35 }, // Item::carrotOnAStick (rod)
     { 400, -1, 2, 0 }, // Item::pumpkinPie
+    { 404, -1, 4, 0 }, // Item::comparator
+    { 407, -1, 5, 11 }, // Item::minecartTnt (minecart)
+    { 408, -1, 5, 11 }, // Item::minecartHopper (minecart)
 };

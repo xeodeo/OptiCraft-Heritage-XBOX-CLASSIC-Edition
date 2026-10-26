@@ -41,7 +41,13 @@ EXTRA_ENTRIES = [
     (304, -1, 'A', 'leggings', 'Item::legsChain'),
     (305, -1, 'A', 'boots', 'Item::bootsChain'),
     (152, -1, 'D', 'block', 'Tile::blockRedstone'),
+    (155, -1, 'S', 'structblock', 'Tile::quartzBlock'),
+    (156, -1, 'S', 'stairs', 'Tile::stairs_quartz'),
     (331, -1, 'D', 'treasure', 'Item::redstone'),
+    (154, -1, 'M', 'none', 'Tile::hopperBlock'),
+    (158, -1, 'M', 'none', 'Tile::dropper'),
+    (404, -1, 'M', 'none', 'Item::comparator'),
+    (408, -1, 'V', 'minecart', 'Item::minecartHopper'),
 ]
 
 

@@ -24,6 +24,10 @@
 #include "TileEntitySkull.h"
 #include "TileEntityBeacon.h"
 #include "TileEntityDaylightDetector.h"
+#include "TileEntityComparator.h"
+#include "TileEntityHopper.h"
+#include "TileEntityDropper.h"
+#include "Block.h"
 
 std::map<std::string, std::function<TileEntity *()>> TileEntity::nameToClassMap;
 std::map<std::string, std::string>                   TileEntity::classToNameMap;
@@ -51,6 +55,9 @@ namespace
 			TileEntity::addMapping<TileEntitySkull>("Skull");
 			TileEntity::addMapping<TileEntityBeacon>("Beacon");
 			TileEntity::addMapping<TileEntityDaylightDetector>("DLDetector");
+			TileEntity::addMapping<TileEntityComparator>("Comparator");
+			TileEntity::addMapping<TileEntityHopper>("Hopper");
+			TileEntity::addMapping<TileEntityDropper>("Dropper");
 		}
 	};
 	TileEntityMappingInit tileEntityMappingInit;
@@ -120,6 +127,10 @@ void TileEntity::onInventoryChanged()
 	{
 		blockMetadata = worldObj->getBlockMetadata(xCoord, yCoord, zCoord);
 		worldObj->markTileEntityChunkModified(xCoord, yCoord, zCoord, this);
+		if (getBlockType() != nullptr)
+		{
+			worldObj->func_96440_m(xCoord, yCoord, zCoord, getBlockType()->blockID);
+		}
 	}
 }
 

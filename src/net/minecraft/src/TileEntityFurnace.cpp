@@ -260,3 +260,47 @@ bool TileEntityFurnace::canInteractWith(EntityPlayer *entityplayer)
     }
     return entityplayer->getDistanceSq(xCoord + 0.5, yCoord + 0.5, zCoord + 0.5) <= 64.0;
 }
+
+
+bool TileEntityFurnace::isStackValidForSlot(int_t i, ItemStack *itemstack)
+{
+    if (i == 2)
+    {
+        return false;
+    }
+    else if (i == 1)
+    {
+        return isItemFuel(itemstack);
+    }
+    return true;
+}
+
+std::vector<int_t> TileEntityFurnace::getAccessibleSlotsFromSide(int_t side)
+{
+    if (side == 0)
+    {
+        // Bottom: output (2) and empty bucket (1)
+        return {2, 1};
+    }
+    else if (side == 1)
+    {
+        // Top: input (0)
+        return {0};
+    }
+    else
+    {
+        // Sides: fuel (1)
+        return {1};
+    }
+}
+
+bool TileEntityFurnace::canInsertItem(int_t slot, ItemStack *stack, int_t side)
+{
+    (void)side;
+    return isStackValidForSlot(slot, stack);
+}
+
+bool TileEntityFurnace::canExtractItem(int_t slot, ItemStack *stack, int_t side)
+{
+    return side != 0 || slot != 1 || (stack != nullptr && stack->itemID == Item::bucketEmpty->shiftedIndex);
+}

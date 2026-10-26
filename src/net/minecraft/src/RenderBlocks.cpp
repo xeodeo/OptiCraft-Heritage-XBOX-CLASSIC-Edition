@@ -4,6 +4,10 @@
 #include "BlockCocoa.h"
 #include "BlockAnvil.h"
 #include "BlockBeacon.h"
+#include "BlockRedstoneLogic.h"
+#include "BlockRedstoneRepeater.h"
+#include "BlockComparator.h"
+#include "BlockHopper.h"
 #include "ChestItemRenderHelper.h"
 #include "Texture152Atlas.h"
 #include "java/Arithmetic.h"
@@ -783,9 +787,17 @@ bool RenderBlocks::renderBlockByRenderType(Block *block, int_t i, int_t j, int_t
 	{
 		return renderBlockBed(block, i, j, k);
 	}
-	if (l == 15)
+	if (l == 15 || l == 36)
 	{
-		return renderBlockRepeater(block, i, j, k);
+		return renderBlockRedstoneLogic(dynamic_cast<BlockRedstoneLogic *>(block), i, j, k);
+	}
+	if (l == 37)
+	{
+		return renderBlockComparator(dynamic_cast<BlockComparator *>(block), i, j, k);
+	}
+	if (l == 38)
+	{
+		return renderBlockHopper(dynamic_cast<BlockHopper *>(block), i, j, k);
 	}
 	if (l == 16)
 	{
@@ -5002,6 +5014,346 @@ void RenderBlocks::renderBlockOnInventory(Block *block, int_t i, float f)
 		renderBlockAnvilOrient(dynamic_cast<BlockAnvil *>(block), 0, 0, 0, i, true);
 		renderTranslate(0.5f, 0.5f, 0.5f);
 	}
+	else if (k == 38)
+	{
+		renderTranslate(-0.5f, -0.5f, -0.5f);
+		renderBlockHopperMetadata(dynamic_cast<BlockHopper *>(block), 0, 0, 0, 0, true);
+		renderTranslate(0.5f, 0.5f, 0.5f);
+	}
+}
+
+bool RenderBlocks::renderBlockRedstoneLogic(BlockRedstoneLogic *block, int_t i, int_t j, int_t k)
+{
+	if (block == nullptr) return false;
+	int_t meta = accessGetBlockMetadata(i, j, k);
+	int_t dir = meta & 3;
+	int_t delay = (meta & 0xc) >> 2;
+	renderStandardBlock(block, i, j, k);
+	Tessellator *tessellator = &Tessellator::instance;
+	tessellator->setBrightness(block->getMixedBrightnessForBlock(blockAccess, i, j, k));
+	tessellator->setColorOpaque_F(1.0f, 1.0f, 1.0f);
+	tess_coord_t dy = -0.1875f;
+	bool isLocked = block->func_94476_e(blockAccess, i, j, k, meta);
+	tess_coord_t dx1 = 0.0f;
+	tess_coord_t dz1 = 0.0f;
+	tess_coord_t dx2 = 0.0f;
+	tess_coord_t dz2 = 0.0f;
+	switch (dir)
+	{
+	case 0:
+		dz2 = -0.3125f;
+		dz1 = (tess_coord_t)BlockRedstoneRepeater::isPowered[delay];
+		break;
+	case 2:
+		dz2 = 0.3125f;
+		dz1 = (tess_coord_t)-BlockRedstoneRepeater::isPowered[delay];
+		break;
+	case 3:
+		dx2 = -0.3125f;
+		dx1 = (tess_coord_t)BlockRedstoneRepeater::isPowered[delay];
+		break;
+	case 1:
+		dx2 = 0.3125f;
+		dx1 = (tess_coord_t)-BlockRedstoneRepeater::isPowered[delay];
+		break;
+	}
+
+	if (!isLocked)
+	{
+		renderTorchAtAngle(block, (tess_coord_t)i + dx1, (tess_coord_t)j + dy, (tess_coord_t)k + dz1, 0.0, 0.0);
+	}
+	else
+	{
+		overrideBlockTexture = Block::bedrock->getBlockTextureFromSide(0);
+		float bx1 = 2.0f;
+		float bx2 = 14.0f;
+		float bz1 = 7.0f;
+		float bz2 = 9.0f;
+		if (dir == 1 || dir == 3)
+		{
+			bx1 = 7.0f;
+			bx2 = 9.0f;
+			bz1 = 2.0f;
+			bz2 = 14.0f;
+		}
+		block->setBlockBounds(
+			(float)(bx1 / 16.0f + (float)dx1), 0.125f, (float)(bz1 / 16.0f + (float)dz1),
+			(float)(bx2 / 16.0f + (float)dx1), 0.25f,  (float)(bz2 / 16.0f + (float)dz1)
+		);
+		renderStandardBlock(block, i, j, k);
+		block->setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 0.125f, 1.0f);
+		clearOverrideBlockTexture();
+	}
+	renderTorchAtAngle(block, (tess_coord_t)i + dx2, (tess_coord_t)j + dy, (tess_coord_t)k + dz2, 0.0, 0.0);
+	renderBlockRedstoneLogicMetadata(block, i, j, k, dir);
+	return true;
+}
+
+bool RenderBlocks::renderBlockComparator(BlockComparator *block, int_t i, int_t j, int_t k)
+{
+	if (block == nullptr) return false;
+	int_t meta = accessGetBlockMetadata(i, j, k);
+	int_t dir = meta & 3;
+	double dx = 0.0;
+	double dy = -0.1875;
+	double dz = 0.0;
+	double offX = 0.0;
+	double offZ = 0.0;
+
+	int_t torchTexture;
+	if (block->func_94490_c(meta))
+	{
+		torchTexture = Block::torchRedstoneActive->getBlockTextureFromSide(0);
+	}
+	else
+	{
+		dy -= 0.1875;
+		torchTexture = Block::torchRedstoneIdle->getBlockTextureFromSide(0);
+	}
+
+	renderStandardBlock(block, i, j, k);
+	Tessellator *tessellator = &Tessellator::instance;
+	tessellator->setBrightness(block->getMixedBrightnessForBlock(blockAccess, i, j, k));
+	tessellator->setColorOpaque_F(1.0f, 1.0f, 1.0f);
+
+	switch (dir)
+	{
+	case 0:
+		dz = -0.3125;
+		offX = 0.25;
+		offZ = 0.25;
+		break;
+	case 1:
+		dx = 0.3125;
+		offX = -0.25;
+		offZ = 0.25;
+		break;
+	case 2:
+		dz = 0.3125;
+		offX = -0.25;
+		offZ = -0.25;
+		break;
+	case 3:
+		dx = -0.3125;
+		offX = 0.25;
+		offZ = -0.25;
+		break;
+	}
+
+	overrideBlockTexture = torchTexture;
+	renderTorchAtAngle(block, (tess_coord_t)((double)i + dx), (tess_coord_t)((double)j + dy), (tess_coord_t)((double)k + dz), 0.0, 0.0);
+	overrideBlockTexture = -1;
+	renderTorchAtAngle(block, (tess_coord_t)((double)i + offX), (tess_coord_t)((double)j - 0.1875), (tess_coord_t)((double)k + offZ), 0.0, 0.0);
+	renderTorchAtAngle(block, (tess_coord_t)((double)i + (dir == 0 || dir == 2 ? -offX : offX)), (tess_coord_t)((double)j - 0.1875), (tess_coord_t)((double)k + (dir == 1 || dir == 3 ? -offZ : offZ)), 0.0, 0.0);
+	renderBlockRedstoneLogicMetadata(block, i, j, k, dir);
+	return true;
+}
+
+void RenderBlocks::renderBlockRedstoneLogicMetadata(BlockRedstoneLogic *block, int_t i, int_t j, int_t k, int_t dir)
+{
+	if (block == nullptr) return;
+	int_t tex = block->getBlockTextureFromSideAndMetadata(1, accessGetBlockMetadata(i, j, k));
+	int_t l1 = (tex & 0xf) << 4;
+	int_t i2 = tex & 0xf0;
+	tess_coord_t d5 = (float)l1 / 256.0f;
+	tess_coord_t d6 = ((float)l1 + 15.99f) / 256.0f;
+	tess_coord_t d7 = (float)i2 / 256.0f;
+	tess_coord_t d8 = ((float)i2 + 15.99f) / 256.0f;
+	float f1 = 0.125f;
+	float f2 = i + 1;
+	float f3 = i + 1;
+	float f4 = i + 0;
+	float f5 = i + 0;
+	float f6 = k + 0;
+	float f7 = k + 1;
+	float f8 = k + 1;
+	float f9 = k + 0;
+	float f10 = (float)j + f1;
+	if (dir == 2)
+	{
+		f2 = f3 = i + 0;
+		f4 = f5 = i + 1;
+		f6 = f9 = k + 1;
+		f7 = f8 = k + 0;
+	}
+	else if (dir == 3)
+	{
+		f2 = f5 = i + 0;
+		f3 = f4 = i + 1;
+		f6 = f7 = k + 0;
+		f8 = f9 = k + 1;
+	}
+	else if (dir == 1)
+	{
+		f2 = f5 = i + 1;
+		f3 = f4 = i + 0;
+		f6 = f7 = k + 1;
+		f8 = f9 = k + 0;
+	}
+	Tessellator *tessellator = &Tessellator::instance;
+	tessellator->addVertexWithUV(f5, f10, f9, d5, d7);
+	tessellator->addVertexWithUV(f4, f10, f8, d5, d8);
+	tessellator->addVertexWithUV(f3, f10, f7, d6, d8);
+	tessellator->addVertexWithUV(f2, f10, f6, d6, d7);
+}
+
+bool RenderBlocks::renderBlockHopper(BlockHopper *block, int_t i, int_t j, int_t k)
+{
+	return renderBlockHopperMetadata(block, i, j, k, accessGetBlockMetadata(i, j, k), false);
+}
+
+bool RenderBlocks::renderBlockHopperMetadata(BlockHopper *block, int_t i, int_t j, int_t k, int_t meta, bool inventory)
+{
+	if (block == nullptr) return false;
+	Tessellator *tess = &Tessellator::instance;
+	int_t dir = BlockHopper::getDirectionFromMetadata(meta);
+	double topMinY = 0.625;
+	block->setBlockBounds(0.0f, (float)topMinY, 0.0f, 1.0f, 1.0f, 1.0f);
+	if (inventory)
+	{
+		tess->startDrawingQuads();
+		tess->setNormal(0.0f, -1.0f, 0.0f);
+		renderBottomFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(0, meta));
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(0.0f, 1.0f, 0.0f);
+		renderTopFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(1, meta));
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(0.0f, 0.0f, -1.0f);
+		renderEastFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(2, meta));
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(0.0f, 0.0f, 1.0f);
+		renderWestFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(3, meta));
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(-1.0f, 0.0f, 0.0f);
+		renderNorthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(4, meta));
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(1.0f, 0.0f, 0.0f);
+		renderSouthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(5, meta));
+		tess->draw();
+	}
+	else
+	{
+		renderStandardBlock(block, i, j, k);
+	}
+
+	if (!inventory)
+	{
+		tess->setBrightness(block->getMixedBrightnessForBlock(blockAccess, i, j, k));
+		tess->setColorOpaque_F(1.0f, 1.0f, 1.0f);
+	}
+
+	int_t hopperSideTex = BlockHopper::getHopperIcon("hopper");
+	int_t hopperInsideTex = BlockHopper::getHopperIcon("hopper_inside");
+	float wallThick = 0.125f;
+
+	if (inventory)
+	{
+		tess->startDrawingQuads();
+		tess->setNormal(1.0f, 0.0f, 0.0f);
+		renderSouthFace(block, (double)(-1.0f + wallThick), 0.0, 0.0, hopperSideTex);
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(-1.0f, 0.0f, 0.0f);
+		renderNorthFace(block, (double)(1.0f - wallThick), 0.0, 0.0, hopperSideTex);
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(0.0f, 0.0f, 1.0f);
+		renderWestFace(block, 0.0, 0.0, (double)(-1.0f + wallThick), hopperSideTex);
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(0.0f, 0.0f, -1.0f);
+		renderEastFace(block, 0.0, 0.0, (double)(1.0f - wallThick), hopperSideTex);
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(0.0f, 1.0f, 0.0f);
+		renderTopFace(block, 0.0, -1.0 + topMinY, 0.0, hopperInsideTex);
+		tess->draw();
+	}
+	else
+	{
+		renderSouthFace(block, (double)((float)i - 1.0f + wallThick), (double)j, (double)k, hopperSideTex);
+		renderNorthFace(block, (double)((float)i + 1.0f - wallThick), (double)j, (double)k, hopperSideTex);
+		renderWestFace(block, (double)i, (double)j, (double)((float)k - 1.0f + wallThick), hopperSideTex);
+		renderEastFace(block, (double)i, (double)j, (double)((float)k + 1.0f - wallThick), hopperSideTex);
+		renderTopFace(block, (double)i, (double)((float)j - 1.0f) + topMinY, (double)k, hopperInsideTex);
+	}
+
+	overrideBlockTexture = hopperSideTex;
+	double midHInset = 0.25;
+	double midVBottom = 0.25;
+	block->setBlockBounds((float)midHInset, (float)midVBottom, (float)midHInset, (float)(1.0 - midHInset), (float)(topMinY - 0.002), (float)(1.0 - midHInset));
+	if (inventory)
+	{
+		tess->startDrawingQuads();
+		tess->setNormal(1.0f, 0.0f, 0.0f);
+		renderSouthFace(block, 0.0, 0.0, 0.0, hopperSideTex);
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(-1.0f, 0.0f, 0.0f);
+		renderNorthFace(block, 0.0, 0.0, 0.0, hopperSideTex);
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(0.0f, 0.0f, 1.0f);
+		renderWestFace(block, 0.0, 0.0, 0.0, hopperSideTex);
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(0.0f, 0.0f, -1.0f);
+		renderEastFace(block, 0.0, 0.0, 0.0, hopperSideTex);
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(0.0f, 1.0f, 0.0f);
+		renderTopFace(block, 0.0, 0.0, 0.0, hopperSideTex);
+		tess->draw();
+		tess->startDrawingQuads();
+		tess->setNormal(0.0f, -1.0f, 0.0f);
+		renderBottomFace(block, 0.0, 0.0, 0.0, hopperSideTex);
+		tess->draw();
+	}
+	else
+	{
+		renderStandardBlock(block, i, j, k);
+	}
+
+	if (!inventory)
+	{
+		double spoutHInset = 0.375;
+		double spoutHeight = 0.25;
+		overrideBlockTexture = hopperSideTex;
+		if (dir == 0)
+		{
+			block->setBlockBounds((float)spoutHInset, 0.0f, (float)spoutHInset, (float)(1.0 - spoutHInset), 0.25f, (float)(1.0 - spoutHInset));
+			renderStandardBlock(block, i, j, k);
+		}
+		else if (dir == 2)
+		{
+			block->setBlockBounds((float)spoutHInset, (float)midVBottom, 0.0f, (float)(1.0 - spoutHInset), (float)(midVBottom + spoutHeight), (float)midHInset);
+			renderStandardBlock(block, i, j, k);
+		}
+		else if (dir == 3)
+		{
+			block->setBlockBounds((float)spoutHInset, (float)midVBottom, (float)(1.0 - midHInset), (float)(1.0 - spoutHInset), (float)(midVBottom + spoutHeight), 1.0f);
+			renderStandardBlock(block, i, j, k);
+		}
+		else if (dir == 4)
+		{
+			block->setBlockBounds(0.0f, (float)midVBottom, (float)spoutHInset, (float)midHInset, (float)(midVBottom + spoutHeight), (float)(1.0 - spoutHInset));
+			renderStandardBlock(block, i, j, k);
+		}
+		else if (dir == 5)
+		{
+			block->setBlockBounds((float)(1.0 - midHInset), (float)midVBottom, (float)spoutHInset, 1.0f, (float)(midVBottom + spoutHeight), (float)(1.0 - spoutHInset));
+			renderStandardBlock(block, i, j, k);
+		}
+	}
+
+	block->setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+	clearOverrideBlockTexture();
+	return true;
 }
 
 bool RenderBlocks::renderItemIn3d(int_t i)

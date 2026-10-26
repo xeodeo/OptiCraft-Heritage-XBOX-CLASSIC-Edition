@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "IInventory.h"
+#include "ISidedInventory.h"
 #include "TileEntity.h"
 #include "java/Type.h"
 
@@ -11,7 +11,7 @@ class ItemStack;
 class NBTTagCompound;
 
 // net.minecraft.src.TileEntityFurnace
-class TileEntityFurnace : public TileEntity, public IInventory
+class TileEntityFurnace : public TileEntity, public ISidedInventory
 {
 public:
     TileEntityFurnace();
@@ -36,6 +36,11 @@ public:
     void smeltItem();
     static int_t getItemBurnTime(ItemStack *itemstack);
     static bool isItemFuel(ItemStack *itemstack);
+
+    bool isStackValidForSlot(int_t i, ItemStack *itemstack) override;
+    std::vector<int_t> getAccessibleSlotsFromSide(int_t side) override;
+    bool canInsertItem(int_t slot, ItemStack *stack, int_t side) override;
+    bool canExtractItem(int_t slot, ItemStack *stack, int_t side) override;
 
 public:
     ItemStack *furnaceItemStacks[3];

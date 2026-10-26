@@ -70,6 +70,9 @@
 #include "BlockPressurePlate.h"
 #include "BlockPressurePlateWeighted.h"
 #include "BlockDaylightDetector.h"
+#include "BlockComparator.h"
+#include "BlockHopper.h"
+#include "BlockDropper.h"
 #include "BlockTripWireSource.h"
 #include "BlockTripWire.h"
 #include "BlockPumpkin.h"
@@ -321,6 +324,10 @@ Block *Block::tripWireSource = nullptr;
 Block *Block::tripWire = nullptr;
 Block *Block::daylightSensor = nullptr;
 Block *Block::daylightDetector = nullptr;
+Block *Block::redstoneComparatorIdle = nullptr;
+Block *Block::redstoneComparatorActive = nullptr;
+Block *Block::hopperBlock = nullptr;
+Block *Block::dropper = nullptr;
 
 static TileEntity *createTileEntitySign()
 {
@@ -969,6 +976,11 @@ int_t Block::getComparatorInputOverride(World *world, int_t x, int_t y, int_t z,
 	return 0;
 }
 
+TileEntity *Block::getBlockEntity()
+{
+	return nullptr;
+}
+
 bool Block::isAssociatedBlockID(int_t blockId, int_t otherBlockId)
 {
 	if (blockId == otherBlockId)
@@ -982,9 +994,7 @@ bool Block::isAssociatedBlockID(int_t blockId, int_t otherBlockId)
 
 bool Block::isComparatorId(int_t blockId)
 {
-	// The comparator block is not registered in this port yet.
-	(void)blockId;
-	return false;
+	return blockId == 149 || blockId == 150;
 }
 
 void Block::initialize()
@@ -1154,6 +1164,10 @@ void Block::initialize()
 	pressurePlateIron = (new BlockPressurePlateWeighted(148, blockSteel->blockIndexInTexture, Material::iron, 640))->setHardness(0.5f)->setStepSound(soundMetalFootstep)->setBlockName("weightedPlate_heavy")->setRequiresSelfNotify();
 	daylightSensor = (new BlockDaylightDetector(151))->setHardness(0.2f)->setStepSound(soundWoodFootstep)->setBlockName("daylightDetector")->setRequiresSelfNotify();
 	daylightDetector = daylightSensor;
+	redstoneComparatorIdle = (new BlockComparator(149, false))->setHardness(0.0f)->setStepSound(soundWoodFootstep)->setBlockName("comparator")->disableStats()->setRequiresSelfNotify();
+	redstoneComparatorActive = (new BlockComparator(150, true))->setHardness(0.0f)->setLightValue(0.625f)->setStepSound(soundWoodFootstep)->setBlockName("comparator")->disableStats()->setRequiresSelfNotify();
+	hopperBlock = (new BlockHopper(154))->setHardness(3.0f)->setResistance(8.0f)->setStepSound(soundWoodFootstep)->setBlockName("hopper")->setRequiresSelfNotify();
+	dropper = (new BlockDropper(158))->setHardness(3.5f)->setStepSound(soundStoneFootstep)->setBlockName("dropper")->setRequiresSelfNotify();
 
 	Item::itemsList[cloth->blockID] = (new ItemCloth(cloth->blockID - 256))->setItemName("cloth");
 	Item::itemsList[wood->blockID] = (new ItemMetadata(wood->blockID - 256, wood))->setItemName("log");
@@ -1397,4 +1411,8 @@ void Block::cleanup()
 	tripWire = nullptr;
 	daylightSensor = nullptr;
 	daylightDetector = nullptr;
+	redstoneComparatorIdle = nullptr;
+	redstoneComparatorActive = nullptr;
+	hopperBlock = nullptr;
+	dropper = nullptr;
 }

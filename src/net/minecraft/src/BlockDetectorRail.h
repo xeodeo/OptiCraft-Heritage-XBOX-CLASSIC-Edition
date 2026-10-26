@@ -16,6 +16,8 @@ public:
     bool isIndirectlyPoweringTo(World *world, int_t i, int_t j, int_t k, int_t l) override;
     int_t isProvidingWeakPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l) override;
     int_t isProvidingStrongPower(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l) override;
+    bool hasComparatorInputOverride() override;
+    int_t getComparatorInputOverride(World *world, int_t i, int_t j, int_t k, int_t side) override;
 
 private:
     void setStateIfMinecartInteractsWithRail(World *world, int_t i, int_t j, int_t k, int_t l);

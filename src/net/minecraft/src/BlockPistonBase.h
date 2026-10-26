@@ -31,11 +31,11 @@ public:
 	static int_t getPistonOrientation(int_t i);
 	static bool isPowered(int_t i);
 	static bool isExtended(int_t i);
+	static int_t getOrientationFromEntity(World *world, int_t i, int_t j, int_t k, EntityLiving *entityliving);
 
 private:
 	void updatePistonState(World *world, int_t i, int_t j, int_t k);
 	bool isIndirectlyPowered(World *world, int_t i, int_t j, int_t k, int_t l);
-	static int_t getOrientationFromEntity(World *world, int_t i, int_t j, int_t k, EntityLiving *entityliving);
 	static bool canPushBlock(int_t i, World *world, int_t j, int_t k, int_t l, bool flag);
 	static bool canExtend(World *world, int_t i, int_t j, int_t k, int_t l);
 	bool tryExtend(World *world, int_t i, int_t j, int_t k, int_t l);

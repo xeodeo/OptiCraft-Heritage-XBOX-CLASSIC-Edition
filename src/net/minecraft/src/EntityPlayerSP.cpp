@@ -18,6 +18,7 @@
 #include "EntityPickupFX.h"
 #include "EntityCrit2FX.h"
 #include "GuiChest.h"
+#include "GuiHopper.h"
 #include "legacy/LegacyCraftingScreen.h"
 #include "platform/PlatformConfig.h"
 #include "GuiCrafting.h"
@@ -324,6 +325,28 @@ void EntityPlayerSP::closeScreen()
 	}
 #endif
 	mc->displayGuiScreen(nullptr);
+}
+
+void EntityPlayerSP::displayGUIHopper(TileEntityHopper *tileentityhopper)
+{
+	if (mc != nullptr && mc->isSplitScreenActive())
+	{
+		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
+		mc->displayPlayerScreen(pIdx, new GuiHopper(inventory, (IInventory*)tileentityhopper, this));
+		return;
+	}
+	mc->displayGuiScreen(new GuiHopper(inventory, (IInventory*)tileentityhopper, this));
+}
+
+void EntityPlayerSP::displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper)
+{
+	if (mc != nullptr && mc->isSplitScreenActive())
+	{
+		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
+		mc->displayPlayerScreen(pIdx, new GuiHopper(inventory, (IInventory*)entityminecarthopper, this));
+		return;
+	}
+	mc->displayGuiScreen(new GuiHopper(inventory, (IInventory*)entityminecarthopper, this));
 }
 
 void EntityPlayerSP::displayGUIEditSign(TileEntitySign *tileentitysign)

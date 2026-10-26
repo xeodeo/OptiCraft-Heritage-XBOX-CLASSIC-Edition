@@ -25,6 +25,8 @@ public:
 	bool canPlaceBlockAt(World *world, int_t i, int_t j, int_t k) override;
 	void onNeighborBlockChange(World *world, int_t i, int_t j, int_t k, int_t l) override;
 	void onBlockRemoval(World *world, int_t i, int_t j, int_t k) override;
+	bool hasComparatorInputOverride() override;
+	int_t getComparatorInputOverride(World *world, int_t i, int_t j, int_t k, int_t side) override;
 	bool blockActivated(World *world, int_t i, int_t j, int_t k, EntityPlayer *entityplayer) override;
 
 protected:

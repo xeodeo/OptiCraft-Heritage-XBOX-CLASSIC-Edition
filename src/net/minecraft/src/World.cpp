@@ -3280,6 +3280,54 @@ void World::scheduleBlockUpdate(int x, int y, int z, int blockId, int delay)
 #endif
 }
 
+bool World::isBlockTickScheduled(int_t x, int_t y, int_t z, int_t blockId)
+{
+	NextTickListEntry entry(x, y, z, blockId);
+	return scheduledTickSet.find(&entry) != scheduledTickSet.end();
+}
+
+void World::func_82740_a(int_t x, int_t y, int_t z, int_t blockId, int_t delay, int_t priority)
+{
+	const int RANGE = 8;
+	if (scheduledUpdatesAreImmediate)
+	{
+		if (checkChunksExist(JavaArithmetic::intSub(x, RANGE), JavaArithmetic::intSub(y, RANGE), JavaArithmetic::intSub(z, RANGE),
+							 JavaArithmetic::intAdd(x, RANGE), JavaArithmetic::intAdd(y, RANGE), JavaArithmetic::intAdd(z, RANGE)))
+		{
+			int currentBlockId = getBlockId(x, y, z);
+			if (currentBlockId == blockId && currentBlockId > 0)
+			{
+				Block::blocksList[currentBlockId]->updateTick(this, x, y, z, rand);
+			}
+		}
+		return;
+	}
+
+	if (!checkChunksExist(JavaArithmetic::intSub(x, RANGE), JavaArithmetic::intSub(y, RANGE), JavaArithmetic::intSub(z, RANGE),
+						  JavaArithmetic::intAdd(x, RANGE), JavaArithmetic::intAdd(y, RANGE), JavaArithmetic::intAdd(z, RANGE)))
+	{
+		return;
+	}
+
+	if (blockId > 0)
+	{
+		NextTickListEntry *entry = new NextTickListEntry(x, y, z, blockId);
+		entry->setScheduledTime(JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTime()));
+		entry->func_82753_a(priority);
+
+		auto inserted = scheduledTickSet.insert(entry);
+		if (inserted.second)
+		{
+			scheduledTickTreeSet.insert(entry);
+			scheduledTickOrder.add(entry);
+		}
+		else
+		{
+			delete entry;
+		}
+	}
+}
+
 void World::scheduleBlockUpdateFromLoad(int_t x, int_t y, int_t z, int_t blockId, int_t delay)
 {
     const long_t scheduledTime = blockId > 0

@@ -23,6 +23,8 @@ class TileEntityFurnace;
 class TileEntityBrewingStand;
 class TileEntityDispenser;
 class TileEntitySign;
+class TileEntityHopper;
+class EntityMinecartHopper;
 class StatBase;
 enum class EnumStatus;
 
@@ -119,6 +121,8 @@ public:
 	virtual void displayGUIBrewingStand(TileEntityBrewingStand *tileentitybrewingstand);
 	virtual void displayGUIDispenser(TileEntityDispenser *tileentitydispenser);
 	virtual void displayGUIEditSign(TileEntitySign *tileentitysign);
+	virtual void displayGUIHopper(TileEntityHopper *tileentityhopper);
+	virtual void displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper);
 	void useCurrentItemOnEntity(Entity *entity);
 	ItemStack *getCurrentEquippedItem();
 	void destroyCurrentEquippedItem();

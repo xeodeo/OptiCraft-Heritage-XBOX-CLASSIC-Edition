@@ -25,6 +25,9 @@ public:
 	int_t zCoord;
 	int_t blockID;
 	long_t scheduledTime = 0;
+	int_t priority = 0;
+
+	void func_82753_a(int_t p) { priority = p; }
 
 private:
 	long_t tickEntryID;

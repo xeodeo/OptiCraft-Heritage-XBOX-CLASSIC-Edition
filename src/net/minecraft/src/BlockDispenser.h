@@ -22,12 +22,12 @@ public:
     void updateTick(World *world, int_t i, int_t j, int_t k, Random &random) override;
     void onBlockPlacedBy(World *world, int_t i, int_t j, int_t k, EntityLiving *entityliving) override;
     void onBlockRemoval(World *world, int_t i, int_t j, int_t k) override;
+    bool hasComparatorInputOverride() override;
+    int_t getComparatorInputOverride(World *world, int_t x, int_t y, int_t z, int_t side) override;
 
 protected:
     TileEntity *getBlockEntity() override;
-
-private:
-    void setDispenserDefaultDirection(World *world, int_t i, int_t j, int_t k);
-    void dispenseItem(World *world, int_t i, int_t j, int_t k, Random &random);
+    virtual void setDispenserDefaultDirection(World *world, int_t i, int_t j, int_t k);
+    virtual void dispenseItem(World *world, int_t i, int_t j, int_t k, Random &random);
     Random random;
 };

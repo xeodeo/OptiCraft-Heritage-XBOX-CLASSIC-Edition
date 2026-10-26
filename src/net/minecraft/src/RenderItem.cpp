@@ -250,7 +250,7 @@ void RenderItem::drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* rende
         renderEnable(RenderCapability::Lighting);
     } else if (k >= 0) {
         renderDisable(RenderCapability::Lighting);
-        if (i < 256) {
+        if (i < 256 && (Block::blocksList[i] == nullptr || Block::blocksList[i]->getItemIconName() == nullptr)) {
             renderengine->bindTexture(renderengine->getTexture("/terrain.png"));
         } else {
             renderengine->bindTexture(renderengine->getTexture("/gui/items.png"));

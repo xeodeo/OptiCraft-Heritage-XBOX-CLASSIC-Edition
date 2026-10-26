@@ -19,6 +19,7 @@ class Entity;
 class ItemStack;
 class StepSound;
 class Explosion;
+class TileEntity;
 
 class BlockGrass;
 class BlockLeaves;
@@ -195,6 +196,8 @@ public:
 	virtual bool isAssociatedBlockID(int_t blockId);
 	virtual bool hasComparatorInputOverride();
 	virtual int_t getComparatorInputOverride(World *world, int_t x, int_t y, int_t z, int_t side);
+	virtual const char *getItemIconName() const { return nullptr; }
+	virtual TileEntity *getBlockEntity();
 
 	static bool isAssociatedBlockID(int_t blockId, int_t otherBlockId);
 	// Returns false until the comparator block is ported and registered.
@@ -385,6 +388,10 @@ public:
 	static Block *tripWire;
 	static Block *daylightSensor;
 	static Block *daylightDetector;
+	static Block *redstoneComparatorIdle;
+	static Block *redstoneComparatorActive;
+	static Block *hopperBlock;
+	static Block *dropper;
 
 	int_t blockIndexInTexture = 0;
 	const int_t blockID;

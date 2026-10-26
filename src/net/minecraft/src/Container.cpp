@@ -6,6 +6,8 @@
 #include "EntityPlayer.h"
 #include "InventoryPlayer.h"
 #include "IInventory.h"
+#include "MathHelper.h"
+#include <algorithm>
 
 Container::Container()
 {
@@ -337,4 +339,38 @@ bool Container::mergeItemStack(ItemStack *itemstack, int_t startSlot, int_t endS
 	}
 
 	return changed;
+}
+
+
+int_t Container::calcRedstoneFromInventory(IInventory *inventory)
+{
+	if (inventory == nullptr)
+	{
+		return 0;
+	}
+
+	int_t itemsCount = 0;
+	float_t fillRatio = 0.0f;
+	const int_t size = inventory->getSizeInventory();
+	if (size <= 0)
+	{
+		return 0;
+	}
+
+	for (int_t slot = 0; slot < size; ++slot)
+	{
+		ItemStack *stack = inventory->getStackInSlot(slot);
+		if (stack != nullptr)
+		{
+			const int_t limit = std::min(inventory->getInventoryStackLimit(), stack->getMaxStackSize());
+			if (limit > 0)
+			{
+				fillRatio += (float_t)stack->stackSize / (float_t)limit;
+			}
+			itemsCount++;
+		}
+	}
+
+	fillRatio /= (float_t)size;
+	return MathHelper::floor_float(fillRatio * 14.0f) + (itemsCount > 0 ? 1 : 0);
 }

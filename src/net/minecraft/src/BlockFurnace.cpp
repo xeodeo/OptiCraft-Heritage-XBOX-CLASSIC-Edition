@@ -4,6 +4,7 @@
 #include "World.h"
 #include "IBlockAccess.h"
 #include "TileEntityFurnace.h"
+#include "Container.h"
 #include "TileEntity.h"
 #include "EntityPlayer.h"
 #include "EntityLiving.h"
@@ -155,6 +156,7 @@ void BlockFurnace::onBlockRemoval(World *world, int_t i, int_t j, int_t k)
 {
     if (!keepFurnaceInventory)
     {
+        world->func_96440_m(i, j, k, blockID);
         TileEntityFurnace *tileentityfurnace = (TileEntityFurnace*)world->getBlockTileEntity(i, j, k);
         if (tileentityfurnace == nullptr)
         {
@@ -186,4 +188,15 @@ void BlockFurnace::onBlockRemoval(World *world, int_t i, int_t j, int_t k)
         }
     }
     BlockContainer::onBlockRemoval(world, i, j, k);
+}
+
+bool BlockFurnace::hasComparatorInputOverride()
+{
+    return true;
+}
+
+int_t BlockFurnace::getComparatorInputOverride(World *world, int_t i, int_t j, int_t k, int_t side)
+{
+    (void)side;
+    return Container::calcRedstoneFromInventory(dynamic_cast<TileEntityFurnace *>(world->getBlockTileEntity(i, j, k)));
 }

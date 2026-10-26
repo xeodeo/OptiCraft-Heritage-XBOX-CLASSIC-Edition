@@ -8,11 +8,25 @@
 #include "Material.h"
 #include "StepSound.h"
 #include "EntityPlayer.h"
+#include "Texture152Atlas.h"
 
 ItemBlock::ItemBlock(int i)
     : Item(i) {
     blockID = i + 256;
-    setIconIndex(Block::blocksList[i + 256]->getBlockTextureFromSide(2));
+    Block *block = blockID >= 0 && blockID < Block::BLOCK_REGISTRY_SIZE ? Block::blocksList[blockID] : nullptr;
+    if (block != nullptr && block->getItemIconName() != nullptr) {
+        setIconIndex(Texture152::itemIcon(block->getItemIconName()));
+    } else if (block != nullptr) {
+        setIconIndex(block->getBlockTextureFromSide(2));
+    }
+}
+
+int ItemBlock::getIconFromDamage(int damage) {
+    Block *block = blockID >= 0 && blockID < Block::BLOCK_REGISTRY_SIZE ? Block::blocksList[blockID] : nullptr;
+    if (block != nullptr && block->getItemIconName() != nullptr) {
+        return iconIndex;
+    }
+    return Item::getIconFromDamage(damage);
 }
 
 int ItemBlock::getBlockID() const {

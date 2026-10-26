@@ -140,6 +140,10 @@ CraftingManager::CraftingManager()
 	addRecipe(new ItemStack(Block::dispenser, 1),             { "###", "#X#", "#R#", '#', Block::cobblestone, 'X', Item::bow, 'R', Item::redstone });
 	addRecipe(new ItemStack(Block::pistonBase, 1),            { "TTT", "#X#", "#R#", '#', Block::cobblestone, 'X', Item::ingotIron, 'R', Item::redstone, 'T', Block::planks });
 	addRecipe(new ItemStack(Block::pistonStickyBase, 1),      { "S", "P", 'S', Item::slimeBall, 'P', Block::pistonBase });
+	addRecipe(new ItemStack(Item::comparator, 1),             { " # ", "#X#", "III", '#', Block::torchRedstoneActive, 'X', Item::netherQuartz, 'I', Block::stone });
+	addRecipe(new ItemStack(Block::dropper, 1),               { "###", "# #", "#R#", '#', Block::cobblestone, 'R', Item::redstone });
+	addRecipe(new ItemStack(Block::hopperBlock, 1),           { "I I", "ICI", " I ", 'I', Item::ingotIron, 'C', Block::chest });
+	addRecipe(new ItemStack(Item::minecartHopper, 1),         { "A", "B", 'A', Block::hopperBlock, 'B', Item::minecartEmpty });
 	addRecipe(new ItemStack(Item::bed, 1),                    { "###", "XXX", '#', Block::cloth, 'X', Block::planks });
 	addRecipe(new ItemStack(Block::enchantmentTable, 1),      { " B ", "D#D", "###", '#', Block::obsidian, 'B', Item::book, 'D', Item::diamond });
 	addShapelessRecipe(new ItemStack(Item::eyeOfEnder, 1),         { Item::enderPearl, Item::blazePowder });

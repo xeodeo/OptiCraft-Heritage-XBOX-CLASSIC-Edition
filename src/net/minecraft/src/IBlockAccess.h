@@ -27,4 +27,5 @@ public:
 	virtual int_t getHeight() = 0;
 	virtual bool func_48452_a() = 0;
 	virtual WorldChunkManager *getWorldChunkManager() = 0;
+	virtual int_t isBlockProvidingPowerTo(int_t i, int_t j, int_t k, int_t l) { (void)i; (void)j; (void)k; (void)l; return 0; }
 };

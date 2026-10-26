@@ -54,7 +54,9 @@ static int_t getCreativeCategory(ItemStack *stack)
             (Block::button != nullptr && id == Block::button->blockID) ||
             (Block::trapdoor != nullptr && id == Block::trapdoor->blockID) ||
             (Block::redstoneLampIdle != nullptr && id == Block::redstoneLampIdle->blockID) ||
-            (Block::blockRedstone != nullptr && id == Block::blockRedstone->blockID))
+            (Block::blockRedstone != nullptr && id == Block::blockRedstone->blockID) ||
+            (Block::hopperBlock != nullptr && id == Block::hopperBlock->blockID) ||
+            (Block::dropper != nullptr && id == Block::dropper->blockID))
         {
             return CREATIVE_TAB_REDSTONE_TRANSPORT;
         }
@@ -103,6 +105,8 @@ static int_t getCreativeCategory(ItemStack *stack)
         (Item::minecartCrate != nullptr && id == Item::minecartCrate->shiftedIndex) ||
         (Item::minecartPowered != nullptr && id == Item::minecartPowered->shiftedIndex) ||
         (Item::minecartTnt != nullptr && id == Item::minecartTnt->shiftedIndex) ||
+        (Item::minecartHopper != nullptr && id == Item::minecartHopper->shiftedIndex) ||
+        (Item::comparator != nullptr && id == Item::comparator->shiftedIndex) ||
         (Item::boat != nullptr && id == Item::boat->shiftedIndex) ||
         (Item::doorWood != nullptr && id == Item::doorWood->shiftedIndex) ||
         (Item::doorSteel != nullptr && id == Item::doorSteel->shiftedIndex))
@@ -251,7 +255,7 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
         Block::pressurePlateGold, Block::pressurePlateIron,
         Block::torchRedstoneActive, Block::button, Block::woodenButton,
         Block::tripWireSource, Block::daylightSensor, Block::trapdoor, Block::enchantmentTable,
-        Block::redstoneLampIdle
+        Block::redstoneLampIdle, Block::hopperBlock, Block::dropper
     };
 
     int_t clothMeta = 0;

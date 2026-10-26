@@ -860,6 +860,8 @@ void EntityPlayer::displayGUIFurnace(TileEntityFurnace *tileentityfurnace) {}
 void EntityPlayer::displayGUIBrewingStand(TileEntityBrewingStand *tileentitybrewingstand) {}
 void EntityPlayer::displayGUIDispenser(TileEntityDispenser *tileentitydispenser) {}
 void EntityPlayer::displayGUIEditSign(TileEntitySign *tileentitysign) {}
+void EntityPlayer::displayGUIHopper(TileEntityHopper *tileentityhopper) { (void)tileentityhopper; }
+void EntityPlayer::displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper) { (void)entityminecarthopper; }
 
 void EntityPlayer::useCurrentItemOnEntity(Entity *entity)
 {

@@ -230,6 +230,8 @@ public:
     static Item* skull;
     static Item* netherStar;
     static Item* minecartTnt;
+    static Item* comparator;
+    static Item* minecartHopper;
     static Item* record13;
     static Item* recordCat;
     static Item* recordBlocks;

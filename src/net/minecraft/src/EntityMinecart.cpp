@@ -3,6 +3,7 @@
 #include "EntityMinecartChest.h"
 #include "EntityMinecartFurnace.h"
 #include "EntityMinecartTNT.h"
+#include "EntityMinecartHopper.h"
 #include "java/Arithmetic.h"
 #include "DamageSource.h"
 #include "DataWatcher.h"
@@ -91,6 +92,7 @@ EntityMinecart *EntityMinecart::createMinecart(World *world, double x, double y,
     case 1: return new EntityMinecartChest(world, x, y, z);
     case 2: return new EntityMinecartFurnace(world, x, y, z);
     case 3: return new EntityMinecartTNT(world, x, y, z);
+    case 5: return new EntityMinecartHopper(world, x, y, z);
     default: return new EntityMinecartEmpty(world, x, y, z);
     }
 }
@@ -223,7 +225,7 @@ void EntityMinecart::killMinecart(const DamageSource &source)
 	setEntityDead();
 	dropItemWithOffset(Item::minecartEmpty->shiftedIndex, 1, 0.0f);
 
-	if (minecartType == 1)
+	if (minecartType == 1 || minecartType == 5)
 	{
 		for (int_t j = 0; j < getSizeInventory(); j++)
 		{
@@ -760,7 +762,7 @@ void EntityMinecart::writeEntityToNBT(NBTTagCompound *nbttagcompound)
 		nbttagcompound->setDouble("PushZ", pushZ);
 		nbttagcompound->setShort("Fuel", JavaArithmetic::shortFromBits(static_cast<ushort_t>(fuel)));
 	}
-	else if (minecartType == 1)
+	else if (minecartType == 1 || minecartType == 5)
 	{
 		NBTTagList *nbttaglist = new NBTTagList();
 		for (int_t i = 0; i < getSizeInventory(); i++)
@@ -786,7 +788,7 @@ void EntityMinecart::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 		pushZ = nbttagcompound->getDouble("PushZ");
 		fuel  = nbttagcompound->getShort("Fuel");
 	}
-	else if (minecartType == 1)
+	else if (minecartType == 1 || minecartType == 5)
 	{
 		NBTTagList *nbttaglist = nbttagcompound->getTagList("Items");
 		// cargoItems is already sized 36 from the constructor; Java rebuilds it
@@ -896,6 +898,7 @@ void EntityMinecart::applyEntityCollision(Entity *entity)
 
 int_t EntityMinecart::getSizeInventory()
 {
+	if (minecartType == 5) return 5;
 	return 27;
 }
 
@@ -977,7 +980,7 @@ bool EntityMinecart::interact(EntityPlayer *entityplayer)
 		if (!worldObj->multiplayerWorld)
 			entityplayer->mountEntity(this);
 	}
-	else if (minecartType == 1)
+	else if (minecartType == 1 || minecartType == 5)
 	{
 		if (!worldObj->multiplayerWorld)
 			entityplayer->displayGUIChest(this);

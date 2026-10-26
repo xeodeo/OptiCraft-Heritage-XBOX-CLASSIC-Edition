@@ -10,6 +10,7 @@ public:
     bool onItemUse(ItemStack* itemstack, EntityPlayer* entityplayer, World* world, int i, int j, int k, int l) override;
     std::string getItemNameIS(ItemStack* itemstack) override;
     std::string getItemName() override;
+    int getIconFromDamage(int damage) override;
 
 protected:
     int blockID;

@@ -24,4 +24,5 @@ public:
 	virtual bool canInteractWith(EntityPlayer *entityplayer) = 0;
 	virtual void openChest() {}
 	virtual void closeChest() {}
+	virtual bool isStackValidForSlot(int_t i, ItemStack *itemstack) { (void)i; (void)itemstack; return true; }
 };

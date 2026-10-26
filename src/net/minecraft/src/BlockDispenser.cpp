@@ -20,6 +20,7 @@
 #include "EntityItem.h"
 #include "MathHelper.h"
 #include "TileEntity.h"
+#include "Container.h"
 
 BlockDispenser::BlockDispenser(int_t i) : BlockContainer(i, Material::rock)
 {
@@ -245,5 +246,17 @@ void BlockDispenser::onBlockRemoval(World *world, int_t i, int_t j, int_t k)
                 delete entityitem;
         }
     }
+    world->func_96440_m(i, j, k, blockID);
     BlockContainer::onBlockRemoval(world, i, j, k);
+}
+
+bool BlockDispenser::hasComparatorInputOverride()
+{
+    return true;
+}
+
+int_t BlockDispenser::getComparatorInputOverride(World *world, int_t x, int_t y, int_t z, int_t side)
+{
+    (void)side;
+    return Container::calcRedstoneFromInventory(dynamic_cast<IInventory *>(world->getBlockTileEntity(x, y, z)));
 }

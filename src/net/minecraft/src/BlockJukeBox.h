@@ -15,6 +15,8 @@ public:
 	void insertRecord(World *world, int_t i, int_t j, int_t k, int_t recordId);
 	void ejectRecord(World *world, int_t i, int_t j, int_t k);
 	void onBlockRemoval(World *world, int_t i, int_t j, int_t k) override;
+	bool hasComparatorInputOverride() override;
+	int_t getComparatorInputOverride(World *world, int_t i, int_t j, int_t k, int_t side) override;
 	void dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, int_t l, float f, int_t fortune) override;
 
 protected:
