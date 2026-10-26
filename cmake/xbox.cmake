@@ -131,7 +131,26 @@ else()
 endif()
 
 # --- Target -------------------------------------------------------------------
+# Build stamp (version, time, commit) regenerated at every build; see
+# cmake/xbox_build_stamp.cmake and src/xbox/system/XboxBuildStamp.h.
+set(XBOX_VERSION_LABEL "1.2.5" CACHE STRING "Game version shown in the build stamp")
+set(_xbox_stamp_cpp "${CMAKE_BINARY_DIR}/generated/XboxBuildStamp.cpp")
+if(NOT XBOX_LAUNCHER)
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/generated")
+    if(NOT EXISTS "${_xbox_stamp_cpp}")
+        file(WRITE "${_xbox_stamp_cpp}" "extern \"C\" const char *xboxBuildStamp() { return \"?\"; }\n")
+    endif()
+    add_custom_target(xbox_build_stamp
+        COMMAND ${CMAKE_COMMAND} -DOUT=${_xbox_stamp_cpp} -DLABEL=${XBOX_VERSION_LABEL}
+                -DSOURCE_DIR=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/xbox_build_stamp.cmake
+        BYPRODUCTS ${_xbox_stamp_cpp}
+        COMMENT "Xbox build stamp")
+    list(APPEND XBOX_SOURCES ${_xbox_stamp_cpp})
+endif()
 add_executable(OptiCraft ${XBOX_SOURCES} ${XBOX_RUNTIME_SOURCES})
+if(NOT XBOX_LAUNCHER)
+    add_dependencies(OptiCraft xbox_build_stamp)
+endif()
 set_target_properties(OptiCraft PROPERTIES
     SUFFIX ".exe"
     CXX_STANDARD 17

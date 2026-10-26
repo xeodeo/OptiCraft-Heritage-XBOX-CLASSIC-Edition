@@ -1,3 +1,7 @@
+#include "platform/PlatformConfig.h"
+#if PLATFORM_XBOX
+#include "xbox/system/XboxBuildStamp.h"
+#endif
 #include "net/minecraft/src/UiStrings.h"
 #include "GuiMainMenu.h"
 #include "platform/Log.h"
@@ -618,6 +622,10 @@ void GuiMainMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         syncLegacySelection();
         drawLegacyMenuHints(mc, width, height, false);
     }
+#if PLATFORM_XBOX
+    // Which XBE this is (version, build time, commit): the console gives no other way to tell.
+    drawString(fontRenderer, xboxBuildStamp(), 2, 2, 0x808080);
+#endif
 
     GuiScreen::drawScreen(mouseX, mouseY, partialTick);
 }
