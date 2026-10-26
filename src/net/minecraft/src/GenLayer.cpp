@@ -86,7 +86,7 @@ std::array<GenLayer::Ptr, 3> GenLayer::func_48425_a(long_t worldSeed, WorldType 
     layer = std::make_shared<GenLayerAddIsland>(4LL, layer);
     Ptr mushroomLayer = std::make_shared<GenLayerAddMushroomIsland>(5LL, layer);
 
-    constexpr int_t biomeSize = 4;
+    const int_t biomeSize = (worldType == WorldType::LARGE_BIOMES) ? 6 : 4;
 
     Ptr riverLayer = GenLayerZoom::func_35515_a(1000LL, mushroomLayer, 0);
     riverLayer = std::make_shared<GenLayerRiverInit>(100LL, riverLayer);

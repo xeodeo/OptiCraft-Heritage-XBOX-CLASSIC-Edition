@@ -32,6 +32,8 @@ GuiCreateWorld::GuiCreateWorld(GuiScreen *parent)
     , generateStructuresButton(nullptr)
     , worldTypeButton(nullptr)
     , worldSizeButton(nullptr)
+    , bonusItemsButton(nullptr)
+    , bonusItems(false)
     , limitedWorld(false)
     , worldSizeType(0)
     , seed("")
@@ -75,6 +77,8 @@ void GuiCreateWorld::initGui()
     worldTypeButton->enabled2 = false;
     controlList.push_back(worldSizeButton = new GuiButton(7, width / 2 - 75, 125, 150, 20, ""));
     worldSizeButton->enabled2 = false;
+    controlList.push_back(bonusItemsButton = new GuiButton(8, width / 2 - 155, 125, 150, 20, ""));
+    bonusItemsButton->enabled2 = false;
 
     delete textboxWorldName;
     textboxWorldName = new GuiTextField(this, fontRenderer, width / 2 - 100, 60, 200, 20, "");
@@ -156,6 +160,13 @@ void GuiCreateWorld::updateButtonText()
         type = WorldType::DEFAULT;
     worldTypeButton->displayString = tr->translateKey("selectWorld.mapType") + " " +
         tr->translateKey(type->getTranslateName());
+
+    if (bonusItemsButton != nullptr)
+    {
+        bonusItemsButton->displayString = tr->translateKey("selectWorld.bonusItems") + " " +
+            tr->translateKey((bonusItems && !hardcore) ? "options.on" : "options.off");
+        bonusItemsButton->enabled = !hardcore;
+    }
 
     if (worldSizeButton != nullptr)
     {
@@ -268,6 +279,10 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
         }
 
         WorldSettings settings(worldSeed, gameType, generateStructures, hardcore, type, worldSizeType);
+        if (bonusItems && !hardcore)
+        {
+            settings.enableBonusChest();
+        }
         mc->startWorld(folderName, textboxWorldName->getText(), &settings);
         mc->displayGuiScreen(nullptr);
     }
@@ -279,6 +294,8 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
         worldTypeButton->enabled2 = moreOptions;
         if (worldSizeButton != nullptr)
             worldSizeButton->enabled2 = moreOptions;
+        if (bonusItemsButton != nullptr)
+            bonusItemsButton->enabled2 = moreOptions;
         moreWorldOptionsButton->displayString = StringTranslate::getInstance()->translateKey(
             moreOptions ? "gui.done" : "selectWorld.moreWorldOptions");
     }
@@ -286,6 +303,11 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
     {
         worldSizeType = (worldSizeType + 1) % 3;
         limitedWorld = (worldSizeType != 0);
+        updateButtonText();
+    }
+    else if (button->id == 8)
+    {
+        bonusItems = !bonusItems;
         updateButtonText();
     }
     else if (button->id == 2)

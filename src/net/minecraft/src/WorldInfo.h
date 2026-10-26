@@ -75,6 +75,8 @@ public:
 	int_t getLimitedWorldMinChunk() const;
 	int_t getLimitedWorldMaxChunk() const;
 	double getLimitedWorldBoundary() const;
+	bool isBonusChestEnabled() const { return bonusChestEnabled; }
+	void setBonusChestEnabled(bool enabled) { bonusChestEnabled = enabled; }
 
 private:
 	long_t randomSeed;
@@ -99,4 +101,5 @@ private:
 	int_t thunderTime;
 	bool limitedWorld;
 	int_t worldSizeType;
+	bool bonusChestEnabled;
 };

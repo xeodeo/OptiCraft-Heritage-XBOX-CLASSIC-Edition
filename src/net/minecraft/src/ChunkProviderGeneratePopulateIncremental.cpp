@@ -10,6 +10,7 @@
 #include "BlockSand.h"
 #include "MapGenMineshaft.h"
 #include "MapGenStronghold.h"
+#include "MapGenScatteredFeature.h"
 #include "MapGenVillage.h"
 #include "SpawnerAnimals.h"
 #include "World.h"
@@ -102,6 +103,8 @@ bool ChunkProviderGenerate::advancePopulateTask()
                 task.villageGenerated = villageGenerator->generateStructuresInChunk(
                     worldObj, random, task.chunkX, task.chunkZ);
                 strongholdGenerator->generateStructuresInChunk(worldObj, random, task.chunkX, task.chunkZ);
+                if (scatteredFeatureGenerator != nullptr)
+                    scatteredFeatureGenerator->generateStructuresInChunk(worldObj, random, task.chunkX, task.chunkZ);
             }
             else
             {

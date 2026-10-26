@@ -31,6 +31,8 @@ public:
 		return creatureTag == EnumCreatureTypeTag::waterCreature_tag ? Material::water : Material::air;
 	}
 	bool getPeacefulCreature() const { return isPeacefulCreature; }
+	bool operator==(const EnumCreatureType &other) const { return creatureTag == other.creatureTag; }
+	bool operator!=(const EnumCreatureType &other) const { return creatureTag != other.creatureTag; }
 
 private:
 	EnumCreatureType(EnumCreatureTypeTag tag, int_t j, Material *material, bool flag)

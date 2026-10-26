@@ -13,7 +13,7 @@
 MapGenNetherBridge::MapGenNetherBridge()
 {
 	spawnList.emplace_back(typeid(EntityBlaze), 10, 2, 3);
-	spawnList.emplace_back(typeid(EntityPigZombie), 10, 4, 4);
+	spawnList.emplace_back(typeid(EntityPigZombie), 5, 4, 4);
 	spawnList.emplace_back(typeid(EntityMagmaCube), 3, 4, 4);
 	spawnList.emplace_back(typeid(EntitySkeleton), 10, 4, 4);
 }

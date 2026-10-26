@@ -63,6 +63,13 @@
 #include "SpawnListEntry.h"
 #include "IProgressUpdate.h"
 #include "Chunk.h"
+#include "BlockHalfSlab.h"
+#include "BlockHopper.h"
+#include "BlockSnow.h"
+#include "BlockStairs.h"
+#include "WorldGeneratorBonusChest.h"
+#include "WeightedRandomChestContent.h"
+#include "Item.h"
 #include "ChunkPosition.h"
 #include "ExtendedBlockStorage.h"
 #include "Material.h"
@@ -737,6 +744,10 @@ void World::generateSpawnPoint()
 
     worldInfo->setSpawn(spawnX, spawnY, spawnZ);
     findingSpawnPoint = false;
+    if (worldInfo->isBonusChestEnabled())
+    {
+        createBonusChest();
+    }
 }
 
 void World::getInitialSpawnLocation()
@@ -6728,3 +6739,52 @@ bool World::func_48452_a()
 {
     return false;
 }
+bool World::doesBlockHaveSolidTopSurface(int_t x, int_t y, int_t z)
+{
+	const int_t id = getBlockId(x, y, z);
+	Block *block = (id > 0 && id < Block::BLOCK_REGISTRY_SIZE) ? Block::blocksList[id] : nullptr;
+	return isBlockTopFacingSurfaceSolid(block, getBlockMetadata(x, y, z));
+}
+
+bool World::isBlockTopFacingSurfaceSolid(Block *block, int_t metadata)
+{
+	if (block == nullptr || block->blockMaterial == nullptr)
+		return false;
+	if (block->blockMaterial->isOpaque() && block->renderAsNormalBlock())
+		return true;
+	if (dynamic_cast<BlockStairs *>(block) != nullptr)
+		return (metadata & 4) == 4;
+	if (dynamic_cast<BlockHalfSlab *>(block) != nullptr)
+		return (metadata & 8) == 8;
+	if (dynamic_cast<BlockHopper *>(block) != nullptr)
+		return true;
+	if (dynamic_cast<BlockSnow *>(block) != nullptr)
+		return (metadata & 7) == 7;
+	return false;
+}
+
+void World::createBonusChest()
+{
+	static const WeightedRandomChestContent bonusChestContent[] = {
+		WeightedRandomChestContent(Item::stick != nullptr ? Item::stick->itemID : 280, 0, 1, 3, 10),
+		WeightedRandomChestContent(Block::planks != nullptr ? Block::planks->blockID : 5, 0, 1, 3, 10),
+		WeightedRandomChestContent(Block::wood != nullptr ? Block::wood->blockID : 17, 0, 1, 3, 10),
+		WeightedRandomChestContent(Item::axeStone != nullptr ? Item::axeStone->itemID : 275, 0, 1, 1, 3),
+		WeightedRandomChestContent(Item::axeWood != nullptr ? Item::axeWood->itemID : 271, 0, 1, 1, 5),
+		WeightedRandomChestContent(Item::pickaxeStone != nullptr ? Item::pickaxeStone->itemID : 274, 0, 1, 1, 3),
+		WeightedRandomChestContent(Item::pickaxeWood != nullptr ? Item::pickaxeWood->itemID : 270, 0, 1, 1, 5),
+		WeightedRandomChestContent(Item::appleRed != nullptr ? Item::appleRed->itemID : 260, 0, 2, 3, 5),
+		WeightedRandomChestContent(Item::bread != nullptr ? Item::bread->itemID : 297, 0, 2, 3, 3)
+	};
+
+	WorldGeneratorBonusChest bonusChestGen(bonusChestContent, sizeof(bonusChestContent) / sizeof(bonusChestContent[0]), 10);
+	for (int_t attempt = 0; attempt < 10; ++attempt)
+	{
+		int_t chestX = worldInfo->getSpawnX() + rand.nextInt(6) - rand.nextInt(6);
+		int_t chestZ = worldInfo->getSpawnZ() + rand.nextInt(6) - rand.nextInt(6);
+		int_t chestY = getTopSolidOrLiquidBlock(chestX, chestZ) + 1;
+		if (bonusChestGen.generate(this, rand, chestX, chestY, chestZ))
+			break;
+	}
+}
+

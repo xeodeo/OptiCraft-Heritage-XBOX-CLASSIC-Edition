@@ -3,6 +3,7 @@
 WorldType *WorldType::worldTypes[WorldType::WORLD_TYPE_COUNT] = {};
 WorldType *WorldType::DEFAULT = nullptr;
 WorldType *WorldType::FLAT = nullptr;
+WorldType *WorldType::LARGE_BIOMES = nullptr;
 WorldType *WorldType::DEFAULT_1_1 = nullptr;
 
 WorldType::WorldType(int_t id, const jstring &name, int_t version)
@@ -23,6 +24,7 @@ void WorldType::initialize()
 
     DEFAULT = (new WorldType(0, "default", 1))->func_48631_f();
     FLAT = new WorldType(1, "flat");
+    LARGE_BIOMES = new WorldType(2, "largeBiomes");
     DEFAULT_1_1 = (new WorldType(8, "default_1_1", 0))->setCanBeCreated(false);
 }
 
@@ -35,6 +37,7 @@ void WorldType::cleanup()
     }
     DEFAULT = nullptr;
     FLAT = nullptr;
+    LARGE_BIOMES = nullptr;
     DEFAULT_1_1 = nullptr;
 }
 

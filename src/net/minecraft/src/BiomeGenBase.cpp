@@ -371,7 +371,7 @@ void BiomeGenBase::initialize()
     ocean = (new BiomeGenOcean())->registerBiome(0)->setColor(112)->setBiomeName("Ocean")->setMinMaxHeight(-1.0f, 0.4f);
     plains = (new BiomeGenPlains())->registerBiome(1)->setColor(9286496)->setBiomeName("Plains")->setTemperatureRainfall(0.8f, 0.4f);
     desert = (new BiomeGenDesert())->registerBiome(2)->setColor(16421912)->setBiomeName("Desert")->setDisableRain()->setTemperatureRainfall(2.0f, 0.0f)->setMinMaxHeight(0.1f, 0.2f);
-    extremeHills = (new BiomeGenHills())->registerBiome(3)->setColor(6316128)->setBiomeName("Extreme Hills")->setMinMaxHeight(0.2f, 1.3f)->setTemperatureRainfall(0.2f, 0.3f);
+    extremeHills = (new BiomeGenHills())->registerBiome(3)->setColor(6316128)->setBiomeName("Extreme Hills")->setMinMaxHeight(0.3f, 1.5f)->setTemperatureRainfall(0.2f, 0.3f);
     forest = (new BiomeGenForest())->registerBiome(4)->setColor(353825)->setBiomeName("Forest")->getBiomeAtCoords(5159473)->setTemperatureRainfall(0.7f, 0.8f);
     taiga = (new BiomeGenTaiga())->registerBiome(5)->setColor(747097)->setBiomeName("Taiga")->getBiomeAtCoords(5159473)->setEnableSnow()->setTemperatureRainfall(0.05f, 0.8f)->setMinMaxHeight(0.1f, 0.4f);
     swampland = (new BiomeGenSwamp())->registerBiome(6)->setColor(522674)->setBiomeName("Swampland")->getBiomeAtCoords(9154376)->setMinMaxHeight(-0.2f, 0.1f)->setTemperatureRainfall(0.8f, 0.9f);
@@ -381,16 +381,16 @@ void BiomeGenBase::initialize()
     frozenOcean = (new BiomeGenOcean())->registerBiome(10)->setColor(9474208)->setBiomeName("FrozenOcean")->setEnableSnow()->setMinMaxHeight(-1.0f, 0.5f)->setTemperatureRainfall(0.0f, 0.5f);
     frozenRiver = (new BiomeGenRiver())->registerBiome(11)->setColor(10526975)->setBiomeName("FrozenRiver")->setEnableSnow()->setMinMaxHeight(-0.5f, 0.0f)->setTemperatureRainfall(0.0f, 0.5f);
     icePlains = (new BiomeGenSnow())->registerBiome(12)->setColor(16777215)->setBiomeName("Ice Plains")->setEnableSnow()->setTemperatureRainfall(0.0f, 0.5f);
-    iceMountains = (new BiomeGenSnow())->registerBiome(13)->setColor(10526880)->setBiomeName("Ice Mountains")->setEnableSnow()->setMinMaxHeight(0.2f, 1.2f)->setTemperatureRainfall(0.0f, 0.5f);
+    iceMountains = (new BiomeGenSnow())->registerBiome(13)->setColor(10526880)->setBiomeName("Ice Mountains")->setEnableSnow()->setMinMaxHeight(0.3f, 1.3f)->setTemperatureRainfall(0.0f, 0.5f);
     mushroomIsland = (new BiomeGenMushroomIsland())->registerBiome(14)->setColor(16711935)->setBiomeName("MushroomIsland")->setTemperatureRainfall(0.9f, 1.0f)->setMinMaxHeight(0.2f, 1.0f);
     mushroomIslandShore = (new BiomeGenMushroomIsland())->registerBiome(15)->setColor(10486015)->setBiomeName("MushroomIslandShore")->setTemperatureRainfall(0.9f, 1.0f)->setMinMaxHeight(-1.0f, 0.1f);
     beach = (new BiomeGenBeach())->registerBiome(16)->setColor(16440917)->setBiomeName("Beach")->setTemperatureRainfall(0.8f, 0.4f)->setMinMaxHeight(0.0f, 0.1f);
-    desertHills = (new BiomeGenDesert())->registerBiome(17)->setColor(13786898)->setBiomeName("DesertHills")->setDisableRain()->setTemperatureRainfall(2.0f, 0.0f)->setMinMaxHeight(0.2f, 0.7f);
-    forestHills = (new BiomeGenForest())->registerBiome(18)->setColor(2250012)->setBiomeName("ForestHills")->getBiomeAtCoords(5159473)->setTemperatureRainfall(0.7f, 0.8f)->setMinMaxHeight(0.2f, 0.6f);
-    taigaHills = (new BiomeGenTaiga())->registerBiome(19)->setColor(1456435)->setBiomeName("TaigaHills")->setEnableSnow()->getBiomeAtCoords(5159473)->setTemperatureRainfall(0.05f, 0.8f)->setMinMaxHeight(0.2f, 0.7f);
+    desertHills = (new BiomeGenDesert())->registerBiome(17)->setColor(13786898)->setBiomeName("DesertHills")->setDisableRain()->setTemperatureRainfall(2.0f, 0.0f)->setMinMaxHeight(0.3f, 0.8f);
+    forestHills = (new BiomeGenForest())->registerBiome(18)->setColor(2250012)->setBiomeName("ForestHills")->getBiomeAtCoords(5159473)->setTemperatureRainfall(0.7f, 0.8f)->setMinMaxHeight(0.3f, 0.7f);
+    taigaHills = (new BiomeGenTaiga())->registerBiome(19)->setColor(1456435)->setBiomeName("TaigaHills")->setEnableSnow()->getBiomeAtCoords(5159473)->setTemperatureRainfall(0.05f, 0.8f)->setMinMaxHeight(0.3f, 0.8f);
     extremeHillsEdge = (new BiomeGenHills())->registerBiome(20)->setColor(7501978)->setBiomeName("Extreme Hills Edge")->setMinMaxHeight(0.2f, 0.8f)->setTemperatureRainfall(0.2f, 0.3f);
     jungle = (new BiomeGenJungle())->registerBiome(21)->setColor(5470985)->setBiomeName("Jungle")->getBiomeAtCoords(5470985)->setTemperatureRainfall(1.2f, 0.9f)->setMinMaxHeight(0.2f, 0.4f);
-    jungleHills = (new BiomeGenJungle())->registerBiome(22)->setColor(2900485)->setBiomeName("JungleHills")->getBiomeAtCoords(5470985)->setTemperatureRainfall(1.2f, 0.9f)->setMinMaxHeight(1.8f, 0.2f);
+    jungleHills = (new BiomeGenJungle())->registerBiome(22)->setColor(2900485)->setBiomeName("JungleHills")->getBiomeAtCoords(5470985)->setTemperatureRainfall(1.2f, 0.9f)->setMinMaxHeight(1.8f, 0.5f);
 
 }
 

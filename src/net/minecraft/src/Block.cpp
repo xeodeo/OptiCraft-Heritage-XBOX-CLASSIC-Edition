@@ -301,6 +301,12 @@ Block *Block::blockEmerald = nullptr;
 Block *Block::stairsWoodSpruce = nullptr;
 Block *Block::stairsWoodBirch = nullptr;
 Block *Block::stairsWoodJungle = nullptr;
+Block *Block::stairsCobblestone = nullptr;
+Block *Block::stairsWoodOak = nullptr;
+Block *Block::stairsStoneBrick = nullptr;
+Block *Block::stoneSingleSlab = nullptr;
+Block *Block::stoneButton = nullptr;
+Block *Block::doorIron = nullptr;
 Block *Block::carrot = nullptr;
 Block *Block::potato = nullptr;
 Block *Block::blockRedstone = nullptr;
@@ -1228,6 +1234,12 @@ void Block::initialize()
 		treeReplaceableLookup[leaves->blockID] = true;
 
 	canBlockGrass[0] = true;
+	stairsCobblestone = stairCompactCobblestone;
+	stairsWoodOak = stairCompactPlanks;
+	stairsStoneBrick = stairsStoneBrickSmooth;
+	stoneSingleSlab = stairSingle;
+	stoneButton = button;
+	doorIron = doorSteel;
 	StatList::initBlockStats(); // func_25154_a (also triggers StatList::initStats internally)
 }
 
@@ -1415,4 +1427,10 @@ void Block::cleanup()
 	redstoneComparatorActive = nullptr;
 	hopperBlock = nullptr;
 	dropper = nullptr;
+	stairsCobblestone = nullptr;
+	stairsWoodOak = nullptr;
+	stairsStoneBrick = nullptr;
+	stoneSingleSlab = nullptr;
+	stoneButton = nullptr;
+	doorIron = nullptr;
 }

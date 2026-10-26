@@ -42,5 +42,16 @@ int_t WorldSettings::getWorldSizeType() const
 	return worldSizeType;
 }
 
+WorldSettings *WorldSettings::enableBonusChest()
+{
+	bonusChestEnabled = true;
+	return this;
+}
+
+bool WorldSettings::isBonusChestEnabled() const
+{
+	return bonusChestEnabled;
+}
+
 
 

@@ -12,6 +12,7 @@ WorldInfo::WorldInfo(NBTTagCompound *nbttagcompound)
 	randomSeed = nbttagcompound->getLong("RandomSeed");
 	gameType = nbttagcompound->getInteger("GameType");
 	mapFeaturesEnabled = nbttagcompound->hasKey("MapFeatures") ? nbttagcompound->getBoolean("MapFeatures") : true;
+	bonusChestEnabled = nbttagcompound->hasKey("bonusChestEnabled") ? nbttagcompound->getBoolean("bonusChestEnabled") : false;
 	hardcore = nbttagcompound->getBoolean("hardcore");
 	terrainType = WorldType::DEFAULT;
 	if (nbttagcompound->hasKey("generatorName"))
@@ -84,6 +85,7 @@ WorldInfo::WorldInfo(long_t l, const jstring &s)
 	gameType = 0;
 	mapFeaturesEnabled = true;
 	hardcore = false;
+	bonusChestEnabled = false;
 	raining = false;
 	rainTime = 0;
 	thundering = false;
@@ -100,6 +102,7 @@ WorldInfo::WorldInfo(WorldSettings *settings, const jstring &s)
 	gameType = settings != nullptr ? settings->getGameType() : 0;
 	mapFeaturesEnabled = settings == nullptr || settings->isMapFeaturesEnabled();
 	hardcore = settings != nullptr && settings->getHardcoreEnabled();
+	bonusChestEnabled = settings != nullptr && settings->isBonusChestEnabled();
 	worldSizeType = settings != nullptr ? settings->getWorldSizeType() : 0;
 	limitedWorld = (worldSizeType != 0);
 	levelName = s;
@@ -126,6 +129,7 @@ WorldInfo::WorldInfo(WorldInfo *worldinfo)
 	gameType = worldinfo->gameType;
 	mapFeaturesEnabled = worldinfo->mapFeaturesEnabled;
 	hardcore = worldinfo->hardcore;
+	bonusChestEnabled = worldinfo->bonusChestEnabled;
 	limitedWorld = worldinfo->limitedWorld;
 	worldSizeType = worldinfo->worldSizeType;
 	spawnX = worldinfo->spawnX;
@@ -210,6 +214,7 @@ void WorldInfo::updateTagCompound(NBTTagCompound *nbttagcompound, NBTTagCompound
 	}
 	nbttagcompound->setInteger("GameType", gameType);
 	nbttagcompound->setBoolean("MapFeatures", mapFeaturesEnabled);
+	nbttagcompound->setBoolean("bonusChestEnabled", bonusChestEnabled);
 	nbttagcompound->setInteger("SpawnX", spawnX);
 	nbttagcompound->setInteger("SpawnY", spawnY);
 	nbttagcompound->setInteger("SpawnZ", spawnZ);

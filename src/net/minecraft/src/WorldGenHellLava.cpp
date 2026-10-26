@@ -4,9 +4,10 @@
 #include "Block.h"
 #include "World.h"
 
-WorldGenHellLava::WorldGenHellLava(int_t i)
+WorldGenHellLava::WorldGenHellLava(int_t i, bool allowSolid)
 {
 	field_4158_a = i;
+	field_94524_b = allowSolid;
 }
 
 bool WorldGenHellLava::generate(World *world, Random &random, int_t i, int_t j, int_t k)
@@ -27,7 +28,7 @@ bool WorldGenHellLava::generate(World *world, Random &random, int_t i, int_t j, 
 	if (world->isAirBlock(i, j, JavaArithmetic::intSub(k, 1))) i1++;
 	if (world->isAirBlock(i, j, JavaArithmetic::intAdd(k, 1))) i1++;
 	if (world->isAirBlock(i, j - 1, k)) i1++;
-	if (l == 4 && i1 == 1)
+	if ((!field_94524_b && l == 4 && i1 == 1) || l == 5)
 	{
 		world->setBlockWithNotify(i, j, k, field_4158_a);
 		world->scheduledUpdatesAreImmediate = true;

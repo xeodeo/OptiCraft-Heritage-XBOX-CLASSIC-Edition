@@ -250,7 +250,11 @@ public:
     static Item* recordWard;
     static Item* record11;
 
-    int shiftedIndex;
+    union
+    {
+        int shiftedIndex;
+        int itemID;
+    };
 
 protected:
     int maxStackSize;

@@ -56,7 +56,7 @@ void drawPanelTitle(FontRenderer *font, const std::string &text, int_t centerX, 
 }
 
 LegacyCreateWorldScreen::LegacyCreateWorldScreen(GuiScreen *parent)
-    : GuiCreateWorld(parent), difficultySlider(nullptr), legacyWorldSizeButton(nullptr),
+    : GuiCreateWorld(parent), difficultySlider(nullptr), legacyWorldSizeButton(nullptr), bonusChestButton(nullptr),
       textFieldHeight(0), labelOffsetY(0), selectedControlIndex(0), hoveredControlIndex(-1),
       panoramaAvailable(false)
 {
@@ -88,6 +88,9 @@ void LegacyCreateWorldScreen::initGui()
     controlList.push_back(legacyWorldSizeButton = new LegacyGuiButton(BUTTON_WORLD_SIZE, layout.contentX,
         layout.rowY(3), layout.contentWidth, layout.rowHeight, ""));
     worldSizeButton = legacyWorldSizeButton;
+    controlList.push_back(bonusChestButton = new LegacyGuiButton(8, layout.contentX,
+        layout.rowY(3), layout.contentWidth, layout.rowHeight, ""));
+    bonusItemsButton = bonusChestButton;
     controlList.push_back(moreWorldOptionsButton = new LegacyGuiButton(BUTTON_MORE_OPTIONS, layout.contentX,
         layout.rowY(4), layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.moreWorldOptions")));
     controlList.push_back(generateStructuresButton = new LegacyGuiButton(BUTTON_GENERATE_STRUCTURES,
@@ -122,8 +125,10 @@ void LegacyCreateWorldScreen::updateControlVisibility()
     difficultySlider->enabled2 = !moreOptions;
     generateStructuresButton->enabled2 = moreOptions;
     worldTypeButton->enabled2 = moreOptions;
-    if (worldSizeButton != nullptr)
-        worldSizeButton->enabled2 = true;
+    if (legacyWorldSizeButton != nullptr)
+        legacyWorldSizeButton->enabled2 = !moreOptions;
+    if (bonusChestButton != nullptr)
+        bonusChestButton->enabled2 = moreOptions;
 }
 
 void LegacyCreateWorldScreen::updateDifficultyControl()
@@ -135,6 +140,8 @@ void LegacyCreateWorldScreen::updateDifficultyControl()
     // told about rather than a string pushed into it.
     difficultySlider->enabled = !hardcore;
     difficultySlider->setHardcore(hardcore);
+    if (bonusChestButton != nullptr)
+        bonusChestButton->enabled = !hardcore;
 }
 
 GuiButton *LegacyCreateWorldScreen::buttonForSelection(int_t index) const
@@ -143,7 +150,7 @@ GuiButton *LegacyCreateWorldScreen::buttonForSelection(int_t index) const
     {
     case 1: return moreOptions ? generateStructuresButton : gameModeButton;
     case 2: return moreOptions ? worldTypeButton : static_cast<GuiButton *>(difficultySlider);
-    case 3: return worldSizeButton;
+    case 3: return moreOptions ? static_cast<GuiButton *>(bonusChestButton) : static_cast<GuiButton *>(worldSizeButton);
     case 4: return moreWorldOptionsButton;
     case 5: return !controlList.empty() ? controlList[0] : nullptr;
     default: return nullptr;
@@ -158,7 +165,7 @@ int_t LegacyCreateWorldScreen::selectionForButton(const GuiButton *button) const
         return 1;
     if (button == difficultySlider || button == worldTypeButton)
         return 2;
-    if (button == worldSizeButton)
+    if (button == worldSizeButton || button == bonusChestButton)
         return 3;
     if (button == moreWorldOptionsButton)
         return 4;

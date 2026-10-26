@@ -28,4 +28,5 @@ public:
 	virtual bool func_48452_a() = 0;
 	virtual WorldChunkManager *getWorldChunkManager() = 0;
 	virtual int_t isBlockProvidingPowerTo(int_t i, int_t j, int_t k, int_t l) { (void)i; (void)j; (void)k; (void)l; return 0; }
+	virtual bool doesBlockHaveSolidTopSurface(int_t i, int_t j, int_t k) { (void)i; (void)j; (void)k; return false; }
 };

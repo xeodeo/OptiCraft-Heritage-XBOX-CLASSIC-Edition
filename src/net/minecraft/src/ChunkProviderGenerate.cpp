@@ -19,6 +19,7 @@
 #include "MapGenMineshaft.h"
 #include "MapGenVillage.h"
 #include "MapGenStronghold.h"
+#include "MapGenScatteredFeature.h"
 #include "SpawnerAnimals.h"
 #include "WorldChunkManager.h"
 #include "WorldGenLakes.h"
@@ -122,12 +123,14 @@ ChunkProviderGenerate::ChunkProviderGenerate(World *world, long_t seed, bool map
 		mineshaftGenerator = new MapGenMineshaft();
 		villageGenerator = new MapGenVillage(0);
 		strongholdGenerator = new MapGenStronghold();
+		scatteredFeatureGenerator = new MapGenScatteredFeature();
 	}
 	else
 	{
 		mineshaftGenerator = nullptr;
 		villageGenerator = nullptr;
 		strongholdGenerator = nullptr;
+		scatteredFeatureGenerator = nullptr;
 	}
 	std::memset(field_914_i, 0, sizeof(field_914_i));
 #if PLATFORM_FAST_BIOME_BLEND
@@ -157,6 +160,7 @@ ChunkProviderGenerate::~ChunkProviderGenerate()
 	delete mineshaftGenerator;
 	delete villageGenerator;
 	delete strongholdGenerator;
+	delete scatteredFeatureGenerator;
 }
 
 WorldChunkManager *ChunkProviderGenerate::generationWorldChunkManager() const
@@ -486,11 +490,11 @@ bool ChunkProviderGenerate::generateRavinesStep(int_t chunkX, int_t chunkZ, byte
 
 bool ChunkProviderGenerate::generateStructuresStep(int_t chunkX, int_t chunkZ, byte_t *blocks, int_t &cursor)
 {
-	MapGenStructure *structureMapGenerators[3];
+	MapGenStructure *structureMapGenerators[4];
 	const int_t count = structureGenerators(structureMapGenerators);
 	if (count == 0)
 		return true;
-	MapGenBase *generators[3];
+	MapGenBase *generators[4];
 	for (int_t index = 0; index < count; ++index)
 		generators[index] = structureMapGenerators[index];
 	WorldLoadTrace::step("structures");
@@ -499,24 +503,24 @@ bool ChunkProviderGenerate::generateStructuresStep(int_t chunkX, int_t chunkZ, b
 }
 #endif
 
-int_t ChunkProviderGenerate::structureGenerators(MapGenStructure *out[3]) const
+int_t ChunkProviderGenerate::structureGenerators(MapGenStructure *out[4]) const
 {
 	if (!mapFeaturesEnabled)
 		return 0;
-	// Same order the three separate sweeps ran in.
 	out[0] = mineshaftGenerator;
 	out[1] = villageGenerator;
 	out[2] = strongholdGenerator;
-	return 3;
+	out[3] = scatteredFeatureGenerator;
+	return 4;
 }
 
 void ChunkProviderGenerate::generateStructures(int_t chunkX, int_t chunkZ, byte_t *blocks)
 {
-	MapGenStructure *structureMapGenerators[3];
+	MapGenStructure *structureMapGenerators[4];
 	const int_t count = structureGenerators(structureMapGenerators);
 	if (count == 0)
 		return;
-	MapGenBase *generators[3];
+	MapGenBase *generators[4];
 	for (int_t index = 0; index < count; ++index)
 		generators[index] = structureMapGenerators[index];
 	WorldLoadTrace::step("structures");
@@ -538,6 +542,7 @@ void ChunkProviderGenerate::trimStructureStarts(int_t chunkX, int_t chunkZ)
 	mineshaftGenerator->trimStructureStarts(minX, minZ, maxX, maxZ);
 	villageGenerator->trimStructureStarts(minX, minZ, maxX, maxZ);
 	strongholdGenerator->trimStructureStarts(minX, minZ, maxX, maxZ);
+	scatteredFeatureGenerator->trimStructureStarts(minX, minZ, maxX, maxZ);
 #else
 	(void)chunkX;
 	(void)chunkZ;
@@ -1018,6 +1023,7 @@ void ChunkProviderGenerate::populate(IChunkProvider *ichunkprovider, int_t i, in
 		mineshaftGenerator->generateStructuresInChunk(worldObj, rand, i, j);
 		villageGenerated = villageGenerator->generateStructuresInChunk(worldObj, rand, i, j);
 		strongholdGenerator->generateStructuresInChunk(worldObj, rand, i, j);
+		scatteredFeatureGenerator->generateStructuresInChunk(worldObj, rand, i, j);
 	}
 
 #if PLATFORM_POPULATE_LAKES
@@ -1132,7 +1138,30 @@ jstring ChunkProviderGenerate::makeString()
 std::vector<SpawnListEntry> *ChunkProviderGenerate::getPossibleCreatures(const EnumCreatureType &type, int_t x, int_t y, int_t z)
 {
 	BiomeGenBase *biome = worldObj->getBiomeGenForCoords(x, z);
-	return biome != nullptr ? biome->getSpawnableList(type) : nullptr;
+	if (biome == nullptr)
+		return nullptr;
+	if (mapFeaturesEnabled && scatteredFeatureGenerator != nullptr &&
+	    biome == BiomeGenBase::swampland && type == EnumCreatureType::monster &&
+	    scatteredFeatureGenerator->hasStructureAt(x, y, z))
+	{
+		return &scatteredFeatureGenerator->getScatteredFeatureSpawnList();
+	}
+	return biome->getSpawnableList(type);
+}
+
+void ChunkProviderGenerate::recreateStructures(int_t x, int_t z)
+{
+	if (mapFeaturesEnabled)
+	{
+		if (mineshaftGenerator != nullptr)
+			mineshaftGenerator->generate(this, worldObj, x, z, nullptr);
+		if (villageGenerator != nullptr)
+			villageGenerator->generate(this, worldObj, x, z, nullptr);
+		if (strongholdGenerator != nullptr)
+			strongholdGenerator->generate(this, worldObj, x, z, nullptr);
+		if (scatteredFeatureGenerator != nullptr)
+			scatteredFeatureGenerator->generate(this, worldObj, x, z, nullptr);
+	}
 }
 
 ChunkPosition *ChunkProviderGenerate::findClosestStructure(World *world, const jstring &name, int_t x, int_t y, int_t z)

@@ -19,6 +19,9 @@ public:
 	bool isLimitedWorld() const;
 	int_t getWorldSizeType() const;
 
+	WorldSettings *enableBonusChest();
+	bool isBonusChestEnabled() const;
+
 private:
 	int64_t seed;
 	int_t gameType;
@@ -26,5 +29,6 @@ private:
 	bool hardcoreEnabled;
 	WorldType *terrainType;
 	int_t worldSizeType;
+	bool bonusChestEnabled{false};
 };
 

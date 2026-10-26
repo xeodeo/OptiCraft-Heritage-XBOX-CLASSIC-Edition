@@ -365,6 +365,12 @@ public:
 	static Block *stairsWoodSpruce;
 	static Block *stairsWoodBirch;
 	static Block *stairsWoodJungle;
+	static Block *stairsCobblestone;
+	static Block *stairsWoodOak;
+	static Block *stairsStoneBrick;
+	static Block *stoneSingleSlab;
+	static Block *stoneButton;
+	static Block *doorIron;
 	static Block *carrot;
 	static Block *potato;
 	static Block *blockRedstone;

@@ -7,10 +7,12 @@ class WorldGenMinable : public WorldGenerator
 {
 public:
 	WorldGenMinable(int_t i, int_t j);
+	WorldGenMinable(int_t i, int_t j, int_t targetBlockId);
 
 	bool generate(World *world, Random &random, int_t i, int_t j, int_t k) override;
 
 private:
 	int_t minableBlockId;
 	int_t numberOfBlocks;
+	int_t targetBlockId;
 };

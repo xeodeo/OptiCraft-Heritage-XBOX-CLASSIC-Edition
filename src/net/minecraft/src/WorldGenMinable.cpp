@@ -10,6 +10,15 @@ WorldGenMinable::WorldGenMinable(int_t i, int_t j)
 {
 	minableBlockId = i;
 	numberOfBlocks = j;
+	targetBlockId = Block::stone != nullptr ? Block::stone->blockID : 1;
+}
+
+WorldGenMinable::WorldGenMinable(int_t i, int_t j, int_t target)
+{
+	minableBlockId = i;
+	numberOfBlocks = j;
+	targetBlockId = target;
+	numberOfBlocks = j;
 }
 
 // Vein placement is the dominant cost of chunk decoration on console, and it is
@@ -52,7 +61,7 @@ bool WorldGenMinable::generate(World *world, Random &random, int_t i, int_t j, i
 	gen_real_t d5 = JavaArithmetic::intSub(JavaArithmetic::intAdd(j, random.nextInt(3)), 2);
 	// Block::stone is a fixed pointer; the original re-read blockID through it on
 	// every voxel test.
-	const int_t stoneId = Block::stone->blockID;
+	const int_t stoneId = targetBlockId;
 #if PLATFORM_FLOAT_ORE_VEINS
 	const gen_real_t inverseBlockCount = GEN_R(1.0) / static_cast<gen_real_t>(numberOfBlocks);
 #endif

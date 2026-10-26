@@ -12,6 +12,7 @@
 #include "MapGenCavesHell.h"
 #include "MapGenNetherBridge.h"
 #include "WorldGenHellLava.h"
+#include "WorldGenMinable.h"
 #include "WorldGenFire.h"
 #include "WorldGenGlowStone1.h"
 #include "WorldGenGlowStone2.h"
@@ -416,6 +417,26 @@ void ChunkProviderHell::populate(IChunkProvider *ichunkprovider, int_t i, int_t 
 		WorldGenFlowers(Block::mushroomRed->blockID).generate(worldObj, hellRNG, l2, j4, l5);
 	}
 
+	if (Block::oreNetherQuartz != nullptr && Block::netherrack != nullptr)
+	{
+		WorldGenMinable quartzGen(Block::oreNetherQuartz->blockID, 13, Block::netherrack->blockID);
+		for (int_t i = 0; i < 16; ++i)
+		{
+			int_t x = JavaArithmetic::intAdd(k, hellRNG.nextInt(16));
+			int_t y = hellRNG.nextInt(108) + 10;
+			int_t z = JavaArithmetic::intAdd(l, hellRNG.nextInt(16));
+			quartzGen.generate(worldObj, hellRNG, x, y, z);
+		}
+	}
+
+	for (int_t i = 0; i < 16; ++i)
+	{
+		int_t x = JavaArithmetic::intAdd(k, hellRNG.nextInt(16));
+		int_t y = hellRNG.nextInt(108) + 10;
+		int_t z = JavaArithmetic::intAdd(l, hellRNG.nextInt(16));
+		WorldGenHellLava(Block::lavaMoving->blockID, true).generate(worldObj, hellRNG, x, y, z);
+	}
+
 	BlockSand::fallInstantly = false;
 }
 
@@ -427,6 +448,12 @@ std::vector<SpawnListEntry> *ChunkProviderHell::getPossibleCreatures(const EnumC
 
 	BiomeGenBase *biome = worldObj->getBiomeGenForCoords(x, z);
 	return biome == nullptr ? nullptr : biome->getSpawnableList(type);
+}
+
+void ChunkProviderHell::recreateStructures(int_t x, int_t z)
+{
+	if (netherBridgeGenerator != nullptr)
+		netherBridgeGenerator->generate(this, worldObj, x, z, nullptr);
 }
 
 ChunkPosition *ChunkProviderHell::findClosestStructure(World *, const jstring &, int_t, int_t, int_t)

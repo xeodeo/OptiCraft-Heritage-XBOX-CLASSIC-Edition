@@ -33,6 +33,7 @@
 #include "WorldHeight.h"
 #include "MapDataBase.h"
 
+class Block;
 class WorldProvider;
 class WorldInfo;
 class WorldSettings;
@@ -143,6 +144,10 @@ public:
 	Chunk *getChunkFromChunkCoords(int_t i, int_t j);
 	virtual bool setBlockAndMetadata(int_t i, int_t j, int_t k, int_t l, int_t i1);
 	virtual bool setBlock(int_t i, int_t j, int_t k, int_t l);
+	bool setBlock(int_t x, int_t y, int_t z, int_t blockId, int_t metadata, int_t flags)
+	{
+		return setBlockNotify152(x, y, z, blockId, metadata, flags);
+	}
 	// Minecraft 1.5.2 block mutation API. Flags: 1 = notify neighbours,
 	// 2 = update the client/render, 4 = suppress render update on a remote world.
 	bool setBlockNotify152(int_t x, int_t y, int_t z, int_t blockId, int_t metadata, int_t flags);
@@ -242,6 +247,9 @@ public:
 	bool func_48452_a() override;
 	int_t getPrecipitationHeight(int_t x, int_t z);
 	int_t getTopSolidOrLiquidBlock(int_t x, int_t z);
+	bool doesBlockHaveSolidTopSurface(int_t x, int_t y, int_t z) override;
+	bool isBlockTopFacingSurfaceSolid(Block *block, int_t metadata);
+	void createBonusChest();
 	BiomeGenBase *getBiomeGenForCoords(int_t x, int_t z) override;
 	bool isBlockHydratedDirectly(int_t x, int_t y, int_t z);
 	bool isBlockHydratedIndirectly(int_t x, int_t y, int_t z);

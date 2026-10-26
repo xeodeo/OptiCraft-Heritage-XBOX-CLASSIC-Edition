@@ -24,6 +24,7 @@ public:
 
 	bool generateStructuresInChunk(World *world, Random &random, int_t chunkX, int_t chunkZ);
 	bool isInsideStructure(int_t x, int_t y, int_t z) const;
+	bool hasStructureAt(int_t x, int_t y, int_t z) const { return isInsideStructure(x, y, z); }
 	void appendIntersectingComponentBounds(const StructureBoundingBox &area,
 	                                      std::vector<StructureBoundingBox> &out,
 	                                      int_t horizontalPadding = 0) const;

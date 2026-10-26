@@ -69,4 +69,9 @@ public:
 	}
 	virtual std::vector<Chunk *> getLoadedChunksSnapshot() const { return {}; }
 	virtual void removeEntityFromLoadedChunks(Entity *entity) { (void)entity; }
+	virtual void recreateStructures(int_t x, int_t z)
+	{
+		(void)x;
+		(void)z;
+	}
 };

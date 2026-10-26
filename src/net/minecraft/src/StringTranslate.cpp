@@ -271,7 +271,9 @@ void StringTranslate::setLanguage(const std::string &language)
         {"item.netherStar.name", "Nether Star", "Estrella del Nether"},
         {"entity.Bat.name", "Bat", "Murciélago"},
         {"entity.Witch.name", "Witch", "Bruja"},
-        {"entity.WitherSkeleton.name", "Wither Skeleton", "Esqueleto del Wither"}
+        {"entity.WitherSkeleton.name", "Wither Skeleton", "Esqueleto del Wither"},
+        {"generator.largeBiomes", "Large Biomes", "Biomas grandes"},
+        {"selectWorld.bonusItems", "Bonus Chest:", "Cofre extra:"}
     };
     for (const auto &entry : port152Defaults)
     {

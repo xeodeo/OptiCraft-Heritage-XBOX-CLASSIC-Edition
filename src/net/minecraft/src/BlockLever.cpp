@@ -1,4 +1,4 @@
-﻿#include "BlockLever.h"
+#include "BlockLever.h"
 #include "Material.h"
 #include "World.h"
 #include "IBlockAccess.h"
@@ -164,3 +164,17 @@ bool BlockLever::isIndirectlyPoweringTo(World *world, int_t i, int_t j, int_t k,
 }
 
 bool BlockLever::canProvidePower() { return true; }
+
+int_t BlockLever::invertMetadata(int_t meta)
+{
+    switch (meta)
+    {
+    case 0: return 0;
+    case 1: return 5;
+    case 2: return 4;
+    case 3: return 3;
+    case 4: return 2;
+    case 5: return 1;
+    default: return -1;
+    }
+}

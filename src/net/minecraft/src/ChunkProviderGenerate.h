@@ -24,6 +24,7 @@ class MapGenMineshaft;
 class MapGenStructure;
 class MapGenVillage;
 class MapGenStronghold;
+class MapGenScatteredFeature;
 class IProgressUpdate;
 class WorldChunkManager;
 
@@ -63,6 +64,7 @@ public:
 	std::vector<SpawnListEntry> *getPossibleCreatures(const EnumCreatureType &type, int_t x, int_t y, int_t z) override;
 
 	ChunkPosition *findClosestStructure(World *world, const jstring &name, int_t x, int_t y, int_t z) override;
+	void recreateStructures(int_t x, int_t z) override;
 
 #if PLATFORM_INCREMENTAL_CHUNK_GENERATION
 	bool beginGenerationTask(int_t chunkX, int_t chunkZ);
@@ -98,7 +100,7 @@ private:
 	// (MapGenBase::generateRangeShared); the three used to walk the same 17x17
 	// columns and derive the same per-column seed independently.
 	void generateStructures(int_t chunkX, int_t chunkZ, byte_t *blocks);
-	int_t structureGenerators(MapGenStructure *out[3]) const;
+	int_t structureGenerators(MapGenStructure *out[4]) const;
 	// Bounds the three structure caches around the chunk just generated; see
 	// PLATFORM_STRUCTURE_START_RETENTION_BLOCKS.
 	void trimStructureStarts(int_t chunkX, int_t chunkZ);
@@ -152,6 +154,7 @@ private:
 	MapGenMineshaft *mineshaftGenerator;
 	MapGenVillage *villageGenerator;
 	MapGenStronghold *strongholdGenerator;
+	MapGenScatteredFeature *scatteredFeatureGenerator;
 
 	std::vector<BiomeGenBase *> biomesForGeneration;
 #if PLATFORM_USE_HEIGHTMAP_TERRAIN

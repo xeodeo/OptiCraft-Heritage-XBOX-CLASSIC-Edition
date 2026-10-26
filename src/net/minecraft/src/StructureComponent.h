@@ -10,6 +10,7 @@ class Random;
 class StructureBoundingBox;
 class StructurePieceBlockSelector;
 class StructurePieceTreasure;
+class WeightedRandomChestContent;
 class World;
 
 // net.minecraft.src.StructureComponent
@@ -47,6 +48,10 @@ protected:
 	                    int_t minX, int_t minY, int_t minZ,
 	                    int_t maxX, int_t maxY, int_t maxZ,
 	                    int_t boundaryBlockId, int_t insideBlockId, bool onlyReplaceNonAir) const;
+	void fillWithMetadataBlocks(World *world, const StructureBoundingBox &chunkBounds, int_t minX, int_t minY, int_t minZ, int_t maxX, int_t maxY, int_t maxZ, int_t boundaryBlockId, int_t boundaryMetadata, int_t insideBlockId, int_t insideMetadata, bool onlyReplaceNonAir) const;
+	void fillWithAir(World *world, const StructureBoundingBox &chunkBounds, int_t minX, int_t minY, int_t minZ, int_t maxX, int_t maxY, int_t maxZ) const;
+	bool generateStructureChestContents(World *world, const StructureBoundingBox &chunkBounds, Random &random, int_t x, int_t y, int_t z, const WeightedRandomChestContent *loot, std::size_t lootCount, int_t rolls) const;
+	bool generateStructureDispenserContents(World *world, const StructureBoundingBox &chunkBounds, Random &random, int_t x, int_t y, int_t z, int_t facing, const WeightedRandomChestContent *loot, std::size_t lootCount, int_t rolls) const;
 	void fillWithRandomizedBlocks(World *world, const StructureBoundingBox &chunkBounds,
 	                              int_t minX, int_t minY, int_t minZ,
 	                              int_t maxX, int_t maxY, int_t maxZ,

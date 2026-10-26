@@ -1056,6 +1056,8 @@ Chunk *ChunkProvider::loadChunkFromFile(int_t i, int_t j, bool &readFailed)
 		readFailed = status == ChunkLoadStatus::ReadError;
 		if (chunk != nullptr)
 			chunk->lastSaveTime = worldObj->getWorldTime();
+			if (chunkProvider != nullptr)
+				chunkProvider->recreateStructures(i, j);
 		return chunk;
 	}
 	catch (...)
@@ -1737,4 +1739,10 @@ bool ChunkProvider::hasPendingAsyncWork() const
 #else
 	return false;
 #endif
+}
+
+void ChunkProvider::recreateStructures(int_t x, int_t z)
+{
+	if (chunkProvider != nullptr)
+		chunkProvider->recreateStructures(x, z);
 }

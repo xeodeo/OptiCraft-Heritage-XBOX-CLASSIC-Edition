@@ -42,6 +42,7 @@ private:
     LegacyOptionsPanel panelRenderer;
     LegacyDifficultySlider *difficultySlider;
     LegacyGuiButton *legacyWorldSizeButton;
+    LegacyGuiButton *bonusChestButton;
     int_t textFieldHeight;
     int_t labelOffsetY;
     int_t selectedControlIndex;

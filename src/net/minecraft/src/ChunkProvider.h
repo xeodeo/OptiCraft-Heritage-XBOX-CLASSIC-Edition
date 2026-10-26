@@ -77,6 +77,7 @@ public:
 	bool isChunkPopulationPending(int_t i, int_t j) const override;
 	std::vector<Chunk *> getLoadedChunksSnapshot() const override { return chunkList; }
 	void    removeEntityFromLoadedChunks(Entity *entity) override;
+	void    recreateStructures(int_t x, int_t z) override;
 
 private:
 	static std::uint64_t chunkKey(int_t i, int_t j);

@@ -12,6 +12,9 @@
 #include "StructureBoundingBox.h"
 #include "StructurePieceBlockSelector.h"
 #include "StructurePieceTreasure.h"
+#include "BlockDirectional.h"
+#include "TileEntityDispenser.h"
+#include "WeightedRandomChestContent.h"
 #include "TileEntity.h"
 #include "TileEntityChest.h"
 #include "WeightedRandom.h"
@@ -183,7 +186,11 @@ int_t StructureComponent::getMetadataWithOffset(int_t blockId, int_t metadata) c
 		const bool isStairs =
 			(Block::stairCompactCobblestone != nullptr && blockId == Block::stairCompactCobblestone->blockID) ||
 			(Block::stairCompactPlanks != nullptr && blockId == Block::stairCompactPlanks->blockID) ||
-			blockId == 109 || blockId == 114;
+			(Block::stairsSandStone != nullptr && blockId == Block::stairsSandStone->blockID) ||
+			(Block::stairsWoodSpruce != nullptr && blockId == Block::stairsWoodSpruce->blockID) ||
+			(Block::stairsWoodBirch != nullptr && blockId == Block::stairsWoodBirch->blockID) ||
+			(Block::stairsWoodJungle != nullptr && blockId == Block::stairsWoodJungle->blockID) ||
+			blockId == 109 || blockId == 114 || blockId == 128;
 		if (isStairs)
 		{
 			if (coordBaseMode == 0)
@@ -248,6 +255,62 @@ int_t StructureComponent::getMetadataWithOffset(int_t blockId, int_t metadata) c
 				if (metadata == 4) return 1;
 				if (metadata == 2) return 3;
 				if (metadata == 1) return 4;
+			}
+		}
+		else if (blockId != (Block::tripWireSource != nullptr ? Block::tripWireSource->blockID : 131) &&
+		         (blockId <= 0 || blockId >= Block::BLOCK_REGISTRY_SIZE || Block::blocksList[blockId] == nullptr ||
+		          dynamic_cast<BlockDirectional *>(Block::blocksList[blockId]) == nullptr))
+		{
+			if ((Block::pistonBase != nullptr && blockId == Block::pistonBase->blockID) ||
+			    (Block::pistonStickyBase != nullptr && blockId == Block::pistonStickyBase->blockID) ||
+			    (Block::lever != nullptr && blockId == Block::lever->blockID) ||
+			    (Block::dispenser != nullptr && blockId == Block::dispenser->blockID))
+			{
+				if (coordBaseMode == 0)
+				{
+					if (metadata == 2 || metadata == 3)
+					{
+						return metadata == 2 ? 3 : 2;
+					}
+				}
+				else if (coordBaseMode == 1)
+				{
+					if (metadata == 2) return 4;
+					if (metadata == 3) return 5;
+					if (metadata == 4) return 2;
+					if (metadata == 5) return 3;
+				}
+				else if (coordBaseMode == 3)
+				{
+					if (metadata == 2) return 5;
+					if (metadata == 3) return 4;
+					if (metadata == 4) return 2;
+					if (metadata == 5) return 3;
+				}
+			}
+		}
+		else
+		{
+			if (coordBaseMode == 0)
+			{
+				if (metadata == 0 || metadata == 2)
+				{
+					return metadata == 0 ? 2 : 0;
+				}
+			}
+			else if (coordBaseMode == 1)
+			{
+				if (metadata == 0) return 1;
+				if (metadata == 1) return 3;
+				if (metadata == 2) return 2;
+				if (metadata == 3) return 0;
+			}
+			else if (coordBaseMode == 3)
+			{
+				if (metadata == 0) return 3;
+				if (metadata == 1) return 0;
+				if (metadata == 2) return 1;
+				if (metadata == 3) return 2;
 			}
 		}
 	}
@@ -483,3 +546,80 @@ void StructureComponent::placeDoorAtCurrentPosition(
 	if (chunkBounds.isVecInside(worldX, worldY, worldZ))
 		ItemDoor::placeDoorBlock(world, worldX, worldY, worldZ, direction, Block::doorWood);
 }
+void StructureComponent::fillWithMetadataBlocks(
+	World *world, const StructureBoundingBox &chunkBounds,
+	int_t minX, int_t minY, int_t minZ,
+	int_t maxX, int_t maxY, int_t maxZ,
+	int_t boundaryBlockId, int_t boundaryMetadata,
+	int_t insideBlockId, int_t insideMetadata,
+	bool onlyReplaceNonAir) const
+{
+	for (int_t y = minY; y <= maxY; ++y)
+	{
+		for (int_t x = minX; x <= maxX; ++x)
+		{
+			for (int_t z = minZ; z <= maxZ; ++z)
+			{
+				if (onlyReplaceNonAir && getBlockIdAtCurrentPosition(world, x, y, z, chunkBounds) == 0)
+					continue;
+				const bool boundary = y == minY || y == maxY || x == minX || x == maxX || z == minZ || z == maxZ;
+				placeBlockAtCurrentPosition(world, boundary ? boundaryBlockId : insideBlockId,
+				                            boundary ? boundaryMetadata : insideMetadata,
+				                            x, y, z, chunkBounds);
+			}
+		}
+	}
+}
+
+void StructureComponent::fillWithAir(
+	World *world, const StructureBoundingBox &chunkBounds,
+	int_t minX, int_t minY, int_t minZ,
+	int_t maxX, int_t maxY, int_t maxZ) const
+{
+	fillWithBlocks(world, chunkBounds, minX, minY, minZ, maxX, maxY, maxZ, 0, 0, false);
+}
+
+bool StructureComponent::generateStructureChestContents(
+	World *world, const StructureBoundingBox &chunkBounds,
+	Random &random, int_t x, int_t y, int_t z,
+	const WeightedRandomChestContent *loot, std::size_t lootCount, int_t rolls) const
+{
+	const int_t worldX = getXWithOffset(x, z);
+	const int_t worldY = getYWithOffset(y);
+	const int_t worldZ = getZWithOffset(x, z);
+	if (chunkBounds.isVecInside(worldX, worldY, worldZ) &&
+	    (world->getBlockId(worldX, worldY, worldZ) != Block::chest->blockID))
+	{
+		world->setBlockAndMetadata(worldX, worldY, worldZ, Block::chest->blockID, 0);
+		TileEntityChest *chest = dynamic_cast<TileEntityChest *>(world->getBlockTileEntity(worldX, worldY, worldZ));
+		if (chest != nullptr)
+		{
+			WeightedRandomChestContent::generateChestContents(random, loot, lootCount, chest, rolls);
+		}
+		return true;
+	}
+	return false;
+}
+
+bool StructureComponent::generateStructureDispenserContents(
+	World *world, const StructureBoundingBox &chunkBounds,
+	Random &random, int_t x, int_t y, int_t z, int_t facing,
+	const WeightedRandomChestContent *loot, std::size_t lootCount, int_t rolls) const
+{
+	const int_t worldX = getXWithOffset(x, z);
+	const int_t worldY = getYWithOffset(y);
+	const int_t worldZ = getZWithOffset(x, z);
+	if (chunkBounds.isVecInside(worldX, worldY, worldZ) &&
+	    (world->getBlockId(worldX, worldY, worldZ) != Block::dispenser->blockID))
+	{
+		world->setBlockAndMetadata(worldX, worldY, worldZ, Block::dispenser->blockID, getMetadataWithOffset(Block::dispenser->blockID, facing));
+		TileEntityDispenser *dispenser = dynamic_cast<TileEntityDispenser *>(world->getBlockTileEntity(worldX, worldY, worldZ));
+		if (dispenser != nullptr)
+		{
+			WeightedRandomChestContent::generateDispenserContents(random, loot, lootCount, dispenser, rolls);
+		}
+		return true;
+	}
+	return false;
+}
+

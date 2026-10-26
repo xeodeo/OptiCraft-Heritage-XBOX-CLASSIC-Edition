@@ -23,6 +23,7 @@ public:
     bool isPoweringTo(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l) override;
     bool isIndirectlyPoweringTo(World *world, int_t i, int_t j, int_t k, int_t l) override;
     bool canProvidePower() override;
+    static int_t invertMetadata(int_t meta);
 
 private:
     bool checkIfAttachedToBlock(World *world, int_t i, int_t j, int_t k);

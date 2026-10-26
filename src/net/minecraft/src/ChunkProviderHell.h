@@ -37,6 +37,7 @@ public:
 	jstring makeString() override;
 	std::vector<SpawnListEntry> *getPossibleCreatures(const EnumCreatureType &type, int_t x, int_t y, int_t z) override;
 	ChunkPosition *findClosestStructure(World *world, const jstring &name, int_t x, int_t y, int_t z) override;
+	void recreateStructures(int_t x, int_t z) override;
 
 private:
 	TerrainNoiseBuffer &generateNoiseField(TerrainNoiseBuffer &ad, int_t i, int_t j, int_t k,

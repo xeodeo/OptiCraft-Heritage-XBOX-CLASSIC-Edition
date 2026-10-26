@@ -11,6 +11,7 @@ public:
     static WorldType *worldTypes[WORLD_TYPE_COUNT];
     static WorldType *DEFAULT;
     static WorldType *FLAT;
+    static WorldType *LARGE_BIOMES;
     static WorldType *DEFAULT_1_1;
 
     static void initialize();
