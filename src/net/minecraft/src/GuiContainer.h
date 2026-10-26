@@ -55,10 +55,8 @@ public:
 	void updateScreen() override;
 	bool allowsPlatformPointerInput() const override { return true; }
 
-private:
-	static RenderItem *itemRenderer;
-
 protected:
+	static RenderItem *itemRenderer;
 	int_t xSize;
 	int_t ySize;
 	int_t guiLeft;

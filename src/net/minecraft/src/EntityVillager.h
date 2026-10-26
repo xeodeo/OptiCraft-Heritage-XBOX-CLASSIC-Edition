@@ -2,7 +2,9 @@
 
 #include "EntityAgeable.h"
 #include "IMerchant.h"
+#include "DamageSource.h"
 #include <memory>
+#include <string>
 
 // net.minecraft.src.EntityVillager
 class Village;
@@ -35,16 +37,26 @@ public:
 	void setIsMatingFlag(bool value);
 	void setIsPlayingFlag(bool value);
 	bool getIsPlayingFlag() const;
+	bool isMating() const { return getIsMatingFlag(); }
+	void setMating(bool v) { setIsMatingFlag(v); }
+	bool isPlaying() const { return getIsPlayingFlag(); }
+	void setPlaying(bool v) { setIsPlayingFlag(v); }
+
 	bool interact(EntityPlayer *player) override;
 	void setCustomer(EntityPlayer *player) override;
 	EntityPlayer *getCustomer() const override;
 	MerchantRecipeList *getRecipes(EntityPlayer *player) override;
 	void useRecipe(MerchantRecipe *recipe) override;
-	void setRecipes(MerchantRecipeList *recipes);
+	void setRecipes(MerchantRecipeList *recipes) override;
 	bool isTrading() const;
 	void initCreature() override;
 	void handleHealthUpdate(byte_t state) override;
+	void onDeath(const DamageSource &source) override;
 	void onDeath(Entity *entity) override;
+
+	void func_82187_q();
+	EntityVillager *func_90012_b(EntityAgeable *other);
+	std::string func_94057_bL() const;
 
 protected:
 	void entityInit() override;
@@ -65,8 +77,10 @@ private:
 	bool needsInitialization = false;
 	int_t wealth = 0;
 	jstring lastBuyingPlayer;
-	bool boostReputation = false;
-	float recipeMultiplier = 0.0f;
+	bool field_82190_bM = false;
+	float field_82191_bN = 0.0f;
+
+	float func_82188_j(float base);
 	void addDefaultEquipmentAndRecipies(int_t count);
 	void generateTradeParticles(const char *particle);
 };

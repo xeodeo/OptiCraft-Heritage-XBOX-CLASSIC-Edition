@@ -38,11 +38,10 @@ MerchantRecipe *MerchantRecipeList::canRecipeBeUsed(ItemStack *first, ItemStack 
 }
 void MerchantRecipeList::readRecipiesFromTags(NBTTagCompound *tag)
 {
-	if (!tag) return;
+	if (!tag || !tag->hasKey("Recipes")) return;
 	NBTTagList *list = tag->getTagList("Recipes");
 	for (int i = 0; i < list->tagCount(); ++i)
 		if (auto *entry = dynamic_cast<NBTTagCompound *>(list->tagAt(i))) add(new MerchantRecipe(entry));
-	delete list;
 }
 NBTTagCompound *MerchantRecipeList::getRecipiesAsTags() const
 {

@@ -12,5 +12,6 @@ public:
 	virtual void setCustomer(EntityPlayer *player) = 0;
 	virtual EntityPlayer *getCustomer() const = 0;
 	virtual MerchantRecipeList *getRecipes(EntityPlayer *player) = 0;
+	virtual void setRecipes(MerchantRecipeList *recipes) = 0;
 	virtual void useRecipe(MerchantRecipe *recipe) = 0;
 };

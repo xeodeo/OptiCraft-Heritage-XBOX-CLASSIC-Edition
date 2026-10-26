@@ -43,6 +43,7 @@ public:
 	void displayGUIDispenser(TileEntityDispenser *tileentitydispenser) override;
 	void displayGUIEnchantment(int_t i, int_t j, int_t k) override;
 	void displayGUIBrewingStand(TileEntityBrewingStand *tileentitybrewingstand) override;
+	void displayGUIMerchant(IMerchant *merchant, const std::string &title = "") override;
 	void displayGUIMerchant(IMerchant *merchant, MerchantRecipeList *recipes) override;
 	void onCriticalHit(Entity *entity) override;
 	void onEnchantmentCritical(Entity *entity) override;
