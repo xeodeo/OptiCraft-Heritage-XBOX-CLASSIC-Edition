@@ -3583,7 +3583,17 @@ void World::updateEntities()
             const int_t chunkZ = JavaArithmetic::intShr(tileEntity->zCoord, 4);
             Chunk *chunk = getChunkIfExists(chunkX, chunkZ);
             if (chunk != nullptr)
-                chunk->removeChunkBlockTileEntity(tileEntity->xCoord & 0xf, tileEntity->yCoord, tileEntity->zCoord & 0xf);
+            {
+                // Only if the chunk still maps this tile entity. Java keeps tile
+                // entities queued during this pass out of the chunk map, but our
+                // Chunk::getChunkBlockTileEntity installs a queued one when asked.
+                // A sticky piston on a 1-tick clock places its pulled block here,
+                // which re-extends it at once and queues a new moving head on this
+                // same block: removing by position invalidated that head, and the
+                // piston stayed stuck behind a moving block that never finished.
+                chunk->removeChunkBlockTileEntityIfSame(tileEntity->xCoord & 0xf, tileEntity->yCoord,
+                                                        tileEntity->zCoord & 0xf, tileEntity);
+            }
             // The pending queue below is walked after this loop and would
             // otherwise dereference this pointer -- and could even reinstall it
             // into the chunk map. Java's list held a live reference, ours holds

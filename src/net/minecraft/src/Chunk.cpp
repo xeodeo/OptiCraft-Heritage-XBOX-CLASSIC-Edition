@@ -1272,6 +1272,15 @@ void Chunk::setChunkBlockTileEntity(int_t i, int_t j, int_t k, TileEntity *tilee
 	chunkTileEntityMap[chunkposition] = tileentity;
 }
 
+void Chunk::removeChunkBlockTileEntityIfSame(int_t i, int_t j, int_t k, TileEntity *tileentity)
+{
+	if (!isValidLocalPosition(i, j, k))
+		return;
+	auto it = chunkTileEntityMap.find(ChunkPosition(i, j, k));
+	if (it != chunkTileEntityMap.end() && it->second == tileentity)
+		removeChunkBlockTileEntity(i, j, k);
+}
+
 void Chunk::removeChunkBlockTileEntity(int_t i, int_t j, int_t k)
 {
 	if (!isValidLocalPosition(i, j, k))
