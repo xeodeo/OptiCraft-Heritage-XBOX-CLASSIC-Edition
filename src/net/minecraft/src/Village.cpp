@@ -258,20 +258,24 @@ void Village::readVillageDataFromNBT(NBTTagCompound *tag)
 	center.set(tag->getInteger("CX"), tag->getInteger("CY"), tag->getInteger("CZ"));
 	centerHelper.set(tag->getInteger("ACX"), tag->getInteger("ACY"), tag->getInteger("ACZ"));
 	villageDoorInfoList.clear(); playerReputation.clear();
-	NBTTagList *doors = tag->getTagList("Doors");
-	for (int_t i = 0; i < doors->tagCount(); ++i)
+	if (tag->hasKey("Doors"))
 	{
-		auto *door = dynamic_cast<NBTTagCompound *>(doors->tagAt(i)); if (!door) continue;
-		villageDoorInfoList.emplace_back(new VillageDoorInfo(door->getInteger("X"), door->getInteger("Y"), door->getInteger("Z"), door->getInteger("IDX"), door->getInteger("IDZ"), door->getInteger("TS")));
+		NBTTagList *doors = tag->getTagList("Doors");
+		for (int_t i = 0; i < doors->tagCount(); ++i)
+		{
+			auto *door = dynamic_cast<NBTTagCompound *>(doors->tagAt(i)); if (!door) continue;
+			villageDoorInfoList.emplace_back(new VillageDoorInfo(door->getInteger("X"), door->getInteger("Y"), door->getInteger("Z"), door->getInteger("IDX"), door->getInteger("IDZ"), door->getInteger("TS")));
+		}
 	}
-	delete doors;
-	NBTTagList *players = tag->getTagList("Players");
-	for (int_t i = 0; i < players->tagCount(); ++i)
+	if (tag->hasKey("Players"))
 	{
-		auto *player = dynamic_cast<NBTTagCompound *>(players->tagAt(i));
-		if (player) playerReputation[player->getString("Name")] = player->getInteger("S");
+		NBTTagList *players = tag->getTagList("Players");
+		for (int_t i = 0; i < players->tagCount(); ++i)
+		{
+			auto *player = dynamic_cast<NBTTagCompound *>(players->tagAt(i));
+			if (player) playerReputation[player->getString("Name")] = player->getInteger("S");
+		}
 	}
-	delete players;
 }
 
 void Village::writeVillageDataToNBT(NBTTagCompound *tag) const

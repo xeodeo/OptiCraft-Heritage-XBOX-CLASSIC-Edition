@@ -57,8 +57,6 @@ public:
 
 protected:
 	static RenderItem *itemRenderer;
-
-protected:
 	int_t xSize;
 	int_t ySize;
 	int_t guiLeft;

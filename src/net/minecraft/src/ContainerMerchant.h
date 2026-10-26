@@ -18,6 +18,7 @@ public:
 	void onCraftMatrixChanged(IInventory *inventory) override;
 	void onCraftGuiClosed(EntityPlayer *player) override;
 	bool isUsableByPlayer(EntityPlayer *player) override;
+	ItemStack *getStackInSlot(int_t slotIndex) override;
 
 private:
 	IMerchant *theMerchant;

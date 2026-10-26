@@ -68,16 +68,18 @@ void VillageCollection::readFromNBT(NBTTagCompound *tag)
 	if (tag == nullptr) return;
 	tickCounter = tag->getInteger("Tick");
 	villageList.clear();
-	NBTTagList *villages = tag->getTagList("Villages");
-	for (int_t i = 0; i < villages->tagCount(); ++i)
+	if (tag->hasKey("Villages"))
 	{
-		auto *entry = dynamic_cast<NBTTagCompound *>(villages->tagAt(i));
-		if (entry == nullptr) continue;
-		std::unique_ptr<Village> village(new Village(worldObj));
-		village->readVillageDataFromNBT(entry);
-		villageList.push_back(std::move(village));
+		NBTTagList *villages = tag->getTagList("Villages");
+		for (int_t i = 0; i < villages->tagCount(); ++i)
+		{
+			auto *entry = dynamic_cast<NBTTagCompound *>(villages->tagAt(i));
+			if (entry == nullptr) continue;
+			std::unique_ptr<Village> village(new Village(worldObj));
+			village->readVillageDataFromNBT(entry);
+			villageList.push_back(std::move(village));
+		}
 	}
-	delete villages;
 }
 
 void VillageCollection::writeToNBT(NBTTagCompound *tag)

@@ -404,11 +404,23 @@ void EntityPlayerSP::displayGUIChest(IInventory *iinventory)
 	mc->displayGuiScreen(new GuiChest(inventory, iinventory, this));
 }
 
-void EntityPlayerSP::displayGUIMerchant(IMerchant *merchant, MerchantRecipeList *recipes)
+void EntityPlayerSP::displayGUIMerchant(IMerchant *merchant, const std::string &title)
 {
 	if (!mc) return;
-	if (mc->isSplitScreenActive()) mc->displayPlayerScreen(this == mc->thePlayer2 ? 1 : 0, new GuiMerchant(inventory, merchant, recipes, this));
-	else mc->displayGuiScreen(new GuiMerchant(inventory, merchant, recipes, this));
+	if (mc->isSplitScreenActive())
+	{
+		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
+		mc->displayPlayerScreen(pIdx, new GuiMerchant(inventory, merchant, worldObj, title, this));
+	}
+	else
+	{
+		mc->displayGuiScreen(new GuiMerchant(inventory, merchant, worldObj, title, this));
+	}
+}
+
+void EntityPlayerSP::displayGUIMerchant(IMerchant *merchant, MerchantRecipeList *)
+{
+	displayGUIMerchant(merchant, "");
 }
 
 void EntityPlayerSP::displayWorkbenchGUI(int_t i, int_t j, int_t k)
