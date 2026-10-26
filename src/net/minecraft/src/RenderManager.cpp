@@ -70,6 +70,7 @@
 #include "ModelBiped.h"
 #include "EntityPainting.h"
 #include "EntityItemFrame.h"
+#include "RenderItemFrame.h"
 #include "RenderPainting.h"
 #include "EntityArrow.h"
 #include "RenderArrow.h"
@@ -208,7 +209,7 @@ void RenderManager::registerRenderers() {
     entityRenderMap[std::type_index(typeid(EntityLiving))] = new RenderLiving(new ModelBiped(), 0.5f);
     entityRenderMap[std::type_index(typeid(Entity))] = new RenderEntity();
     entityRenderMap[std::type_index(typeid(EntityPainting))] = new RenderPainting();
-    entityRenderMap[std::type_index(typeid(EntityItemFrame))] = entityRenderMap[std::type_index(typeid(EntityPainting))];
+    entityRenderMap[std::type_index(typeid(EntityItemFrame))] = new RenderItemFrame();
     entityRenderMap[std::type_index(typeid(EntityArrow))] = new RenderArrow();
     entityRenderMap[std::type_index(typeid(EntitySnowball))] = new RenderSnowball(Item::snowball->getIconFromDamage(0));
     entityRenderMap[std::type_index(typeid(EntityEnderPearl))] = new RenderSnowball(Item::enderPearl->getIconFromDamage(0));

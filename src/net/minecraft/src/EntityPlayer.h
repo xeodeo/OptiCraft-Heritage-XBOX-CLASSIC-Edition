@@ -126,6 +126,7 @@ public:
 	virtual void displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper);
 	virtual void displayGUIRepair(int_t x, int_t y, int_t z);
 	virtual void displayGUIBeacon(TileEntityBeacon *beacon);
+	virtual void displayGUIBook(ItemStack *book);
 	void useCurrentItemOnEntity(Entity *entity);
 	ItemStack *getCurrentEquippedItem();
 	void destroyCurrentEquippedItem();
