@@ -26,4 +26,9 @@ public:
     int clampLevel(int level) const;
     void setStoredLevel(ItemStack*,int,int);
     std::string storedDescription(ItemStack*);
+    bool storedIsCompatible(ItemStack*,int);
+    std::string enchantmentSummary(ItemStack*);
+    bool hasAnyStored(ItemStack*);
+    int firstStoredId(ItemStack*);
+    int firstStoredLevel(ItemStack*);
 };

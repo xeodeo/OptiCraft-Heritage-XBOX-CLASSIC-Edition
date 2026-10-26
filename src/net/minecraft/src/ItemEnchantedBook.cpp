@@ -26,3 +26,8 @@ bool ItemEnchantedBook::canApplyToItem(ItemStack*s,int id){return s!=nullptr&&id
 int ItemEnchantedBook::clampLevel(int level)const{return level<1?1:(level>5?5:level);}
 void ItemEnchantedBook::setStoredLevel(ItemStack*s,int id,int level){if(!s)return;mergeEnchantment(s,id,clampLevel(level));}
 std::string ItemEnchantedBook::storedDescription(ItemStack*s){std::string out;for(int i=0;i<storedCount(s);++i){if(!out.empty())out+="; ";out+="Enchantment "+std::to_string(storedId(s,i))+" "+std::to_string(storedLevel(s,i));}return out;}
+bool ItemEnchantedBook::storedIsCompatible(ItemStack*s,int id){return canApplyToItem(s,id)&&!hasStoredEnchantment(s,id);}
+std::string ItemEnchantedBook::enchantmentSummary(ItemStack*s){std::string summary=storedDescription(s);if(summary.empty())return "";return "["+summary+"]";}
+bool ItemEnchantedBook::hasAnyStored(ItemStack*s){return storedCount(s)>0;}
+int ItemEnchantedBook::firstStoredId(ItemStack*s){return storedId(s,0);}
+int ItemEnchantedBook::firstStoredLevel(ItemStack*s){return storedLevel(s,0);}
