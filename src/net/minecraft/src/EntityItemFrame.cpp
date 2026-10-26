@@ -1,4 +1,5 @@
 #include "EntityItemFrame.h"
+
 #include "DataWatcher.h"
 #include "EntityPlayer.h"
 #include "InventoryPlayer.h"
@@ -6,48 +7,153 @@
 #include "ItemStack.h"
 #include "NBTTagCompound.h"
 #include "World.h"
+#include "java/Random.h"
 
-EntityItemFrame::EntityItemFrame(World *world) : EntityPainting(world) { ensureEntityInit(); }
-EntityItemFrame::EntityItemFrame(World *world, int_t x, int_t y, int_t z, int_t dir) : EntityPainting(world, x, y, z, dir) { ensureEntityInit(); setDirection(dir); }
-EntityItemFrame::~EntityItemFrame() = default;
-void EntityItemFrame::entityInit() {
-    if (!getDataWatcher()->hasObject(2)) getDataWatcher()->addObject(2, static_cast<ItemStack *>(nullptr));
-    if (!getDataWatcher()->hasObject(3)) getDataWatcher()->addObject(3, static_cast<byte_t>(0));
+EntityItemFrame::EntityItemFrame(World *world)
+    : EntityHanging(world)
+{
+    ensureEntityInit();
 }
-ItemStack *EntityItemFrame::getDisplayedItem() const { return const_cast<EntityItemFrame *>(this)->getDataWatcher()->getWatchableObjectItemStack(2); }
-void EntityItemFrame::setDisplayedItem(ItemStack *stack) {
-    ItemStack *copy = stack == nullptr ? nullptr : stack->copy();
-    if (copy != nullptr) copy->stackSize = 1;
-    getDataWatcher()->updateObject(2, copy);
+
+EntityItemFrame::EntityItemFrame(World *world, int x, int y, int z, int dir)
+    : EntityHanging(world, x, y, z, dir)
+{
+    ensureEntityInit();
+    setDirection(dir);
 }
-int_t EntityItemFrame::getRotation() const { return const_cast<EntityItemFrame *>(this)->getDataWatcher()->getWatchableObjectByte(3); }
-void EntityItemFrame::setItemRotation(int_t rotation) { getDataWatcher()->updateObject(3, static_cast<byte_t>(rotation & 3)); }
-void EntityItemFrame::dropItemStack() {
-    if (worldObj->multiplayerWorld) return;
-    entityDropItem(new ItemStack(Item::itemFrame), 0.0f);
-    if (getDisplayedItem() != nullptr) entityDropItem(getDisplayedItem()->copy(), 0.0f);
-    setDisplayedItem(nullptr);
+
+void EntityItemFrame::entityInit()
+{
+    dataWatcher->addObjectByDataType(2, 5);
+    dataWatcher->addObject(3, static_cast<byte_t>(0));
 }
-bool EntityItemFrame::interact(EntityPlayer *player) {
-    if (getDisplayedItem() == nullptr) {
-        ItemStack *held = player->inventory->getCurrentItem();
-        if (held != nullptr && !worldObj->multiplayerWorld) {
+
+int EntityItemFrame::func_82329_d()
+{
+    return 9;
+}
+
+int EntityItemFrame::func_82330_g()
+{
+    return 9;
+}
+
+bool EntityItemFrame::isInRangeToRenderDist(double dist)
+{
+    double maxDist = 16.0 * 64.0 * renderDistanceWeight;
+    return dist < maxDist * maxDist;
+}
+
+void EntityItemFrame::dropItemStack()
+{
+    if (Item::itemFrame != nullptr)
+    {
+        entityDropItem(new ItemStack(Item::itemFrame), 0.0f);
+    }
+
+    ItemStack *stack = getDisplayedItem();
+    if (stack != nullptr && rand.nextFloat() < itemDropChance)
+    {
+        ItemStack *drop = stack->copy();
+        drop->setItemFrame(nullptr);
+        entityDropItem(drop, 0.0f);
+    }
+}
+
+ItemStack *EntityItemFrame::getDisplayedItem()
+{
+    return dataWatcher->getWatchableObjectItemStack(2);
+}
+
+void EntityItemFrame::setDisplayedItem(ItemStack *stack)
+{
+    if (stack != nullptr)
+    {
+        ItemStack *copy = stack->copy();
+        copy->stackSize = 1;
+        copy->setItemFrame(this);
+        dataWatcher->updateObject(2, copy);
+        dataWatcher->setObjectWatched(2);
+    }
+    else
+    {
+        dataWatcher->updateObject(2, static_cast<ItemStack *>(nullptr));
+        dataWatcher->setObjectWatched(2);
+    }
+}
+
+int EntityItemFrame::getRotation()
+{
+    return static_cast<int>(dataWatcher->getWatchableObjectByte(3));
+}
+
+void EntityItemFrame::setItemRotation(int rot)
+{
+    dataWatcher->updateObject(3, static_cast<byte_t>(rot % 4));
+}
+
+void EntityItemFrame::writeEntityToNBT(NBTTagCompound *nbt)
+{
+    if (nbt == nullptr)
+        return;
+
+    ItemStack *stack = getDisplayedItem();
+    if (stack != nullptr)
+    {
+        NBTTagCompound *itemTag = new NBTTagCompound();
+        stack->writeToNBT(itemTag);
+        nbt->setCompoundTag("Item", itemTag);
+        nbt->setByte("ItemRotation", static_cast<byte_t>(getRotation()));
+        nbt->setFloat("ItemDropChance", itemDropChance);
+    }
+
+    EntityHanging::writeEntityToNBT(nbt);
+}
+
+void EntityItemFrame::readEntityFromNBT(NBTTagCompound *nbt)
+{
+    if (nbt == nullptr)
+        return;
+
+    NBTTagCompound *itemTag = nbt->getCompoundTag("Item");
+    if (itemTag != nullptr && !itemTag->hasNoTags())
+    {
+        ItemStack *loaded = ItemStack::loadItemStackFromNBT(itemTag);
+        setDisplayedItem(loaded);
+        setItemRotation(nbt->getByte("ItemRotation"));
+        if (nbt->hasKey("ItemDropChance"))
+        {
+            itemDropChance = nbt->getFloat("ItemDropChance");
+        }
+    }
+
+    EntityHanging::readEntityFromNBT(nbt);
+}
+
+bool EntityItemFrame::interact(EntityPlayer *player)
+{
+    if (player == nullptr)
+        return false;
+
+    if (getDisplayedItem() == nullptr)
+    {
+        ItemStack *held = player->getHeldItem();
+        if (held != nullptr && worldObj != nullptr && !worldObj->multiplayerWorld)
+        {
             setDisplayedItem(held);
-            if (!player->capabilities.isCreativeMode) {
-                --held->stackSize;
-                if (held->stackSize <= 0) player->inventory->setInventorySlotContents(player->inventory->currentItem, nullptr);
+            if (!player->capabilities.isCreativeMode)
+            {
+                if (--held->stackSize <= 0)
+                {
+                    player->inventory->setInventorySlotContents(player->inventory->currentItem, nullptr);
+                }
             }
         }
-    } else if (!worldObj->multiplayerWorld) setItemRotation(getRotation() + 1);
+    }
+    else if (worldObj != nullptr && !worldObj->multiplayerWorld)
+    {
+        setItemRotation(getRotation() + 1);
+    }
+
     return true;
-}
-bool EntityItemFrame::attackEntityFrom(Entity *entity, int_t damage) { if (!isDead && !worldObj->multiplayerWorld) { setEntityDead(); dropItemStack(); } return true; }
-void EntityItemFrame::writeEntityToNBT(NBTTagCompound *tag) {
-    EntityPainting::writeEntityToNBT(tag);
-    if (getDisplayedItem() != nullptr) { tag->setCompoundTag("Item", getDisplayedItem()->writeToNBT(new NBTTagCompound())); tag->setByte("ItemRotation", static_cast<byte_t>(getRotation())); tag->setFloat("ItemDropChance", itemDropChance); }
-}
-void EntityItemFrame::readEntityFromNBT(NBTTagCompound *tag) {
-    NBTTagCompound *item = tag->getCompoundTag("Item");
-    if (item != nullptr && item->getTags().size() > 0) { setDisplayedItem(ItemStack::loadItemStackFromNBT(item)); setItemRotation(tag->getByte("ItemRotation")); if (tag->hasKey("ItemDropChance")) itemDropChance = tag->getFloat("ItemDropChance"); }
-    EntityPainting::readEntityFromNBT(tag);
 }

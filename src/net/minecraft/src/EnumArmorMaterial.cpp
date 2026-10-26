@@ -1,4 +1,5 @@
 #include "EnumArmorMaterial.h"
+#include "Item.h"
 
 namespace
 {
@@ -49,4 +50,17 @@ int EnumArmorMaterialHelper::getEnchantability(EnumArmorMaterial material)
     case EnumArmorMaterial::DIAMOND: return 10;
     }
     return 0;
+}
+
+int EnumArmorMaterialHelper::getArmorCraftingMaterial(EnumArmorMaterial material)
+{
+    switch (material)
+    {
+    case EnumArmorMaterial::CLOTH: return (Item::leather != nullptr ? Item::leather->shiftedIndex : 334);
+    case EnumArmorMaterial::CHAIN: return (Item::ingotIron != nullptr ? Item::ingotIron->shiftedIndex : 265);
+    case EnumArmorMaterial::IRON: return (Item::ingotIron != nullptr ? Item::ingotIron->shiftedIndex : 265);
+    case EnumArmorMaterial::GOLD: return (Item::ingotGold != nullptr ? Item::ingotGold->shiftedIndex : 266);
+    case EnumArmorMaterial::DIAMOND: return (Item::diamond != nullptr ? Item::diamond->shiftedIndex : 264);
+    default: return 0;
+    }
 }

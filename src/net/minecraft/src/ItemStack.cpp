@@ -80,6 +80,8 @@ ItemStack* ItemStack::splitStack(int i) {
     ItemStack* result = new ItemStack(itemID, i, itemDamage);
     if (stackTagCompound != nullptr)
         result->stackTagCompound = static_cast<NBTTagCompound*>(stackTagCompound->copy());
+    result->itemFrame = itemFrame;
+    result->animationsToGo = animationsToGo;
     stackSize -= i;
     return result;
 }
@@ -261,6 +263,8 @@ ItemStack* ItemStack::copy() {
     ItemStack* result = new ItemStack(itemID, stackSize, itemDamage);
     if (stackTagCompound != nullptr)
         result->stackTagCompound = static_cast<NBTTagCompound*>(stackTagCompound->copy());
+    result->itemFrame = itemFrame;
+    result->animationsToGo = animationsToGo;
     return result;
 }
 
@@ -420,4 +424,63 @@ void ItemStack::addEnchantment(Enchantment* enchantment, int level) {
 
 bool ItemStack::isItemEnchanted() const {
     return stackTagCompound != nullptr && stackTagCompound->hasKey("ench");
+}
+
+std::string ItemStack::getDisplayName() {
+    std::string name = (getItem() != nullptr) ? getItem()->getItemDisplayName(this) : "";
+    if (stackTagCompound != nullptr && stackTagCompound->hasKey("display")) {
+        NBTTagCompound* display = stackTagCompound->getCompoundTag("display");
+        if (display != nullptr && display->hasKey("Name")) {
+            name = display->getString("Name");
+        }
+    }
+    return name;
+}
+
+void ItemStack::setItemName(const std::string& name) {
+    if (stackTagCompound == nullptr) {
+        stackTagCompound = new NBTTagCompound("tag");
+    }
+    if (!stackTagCompound->hasKey("display")) {
+        stackTagCompound->setCompoundTag("display", new NBTTagCompound());
+    }
+    stackTagCompound->getCompoundTag("display")->setString("Name", name);
+}
+
+bool ItemStack::hasDisplayName() const {
+    if (stackTagCompound == nullptr)
+        return false;
+    if (!stackTagCompound->hasKey("display"))
+        return false;
+    return stackTagCompound->getCompoundTag("display")->hasKey("Name");
+}
+
+void ItemStack::setTagInfo(const std::string& key, NBTBase* tag) {
+    if (stackTagCompound == nullptr) {
+        stackTagCompound = new NBTTagCompound("tag");
+    }
+    stackTagCompound->setTag(key, tag);
+}
+
+int ItemStack::getRepairCost() const {
+    return (hasTagCompound() && stackTagCompound->hasKey("RepairCost")) ? stackTagCompound->getInteger("RepairCost") : 0;
+}
+
+void ItemStack::setRepairCost(int cost) {
+    if (!hasTagCompound()) {
+        stackTagCompound = new NBTTagCompound("tag");
+    }
+    stackTagCompound->setInteger("RepairCost", cost);
+}
+
+bool ItemStack::isOnItemFrame() const {
+    return itemFrame != nullptr;
+}
+
+void ItemStack::setItemFrame(EntityItemFrame* frame) {
+    itemFrame = frame;
+}
+
+EntityItemFrame* ItemStack::getItemFrame() const {
+    return itemFrame;
 }

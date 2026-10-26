@@ -3467,6 +3467,15 @@ void RenderGlobal::playAuxSFX(EntityPlayer *entityplayer, int_t i, int_t j, int_
 	case 1016:
 		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.zombie.infect", 2.0f, (random.nextFloat() - random.nextFloat()) * 0.2f + 1.0f);
 		break;
+	case 1020:
+		worldObj->playSoundEffect((double)((float)j + 0.5f), (double)((float)k + 0.5f), (double)((float)l + 0.5f), "random.anvil_break", 1.0f, worldObj->rand.nextFloat() * 0.1f + 0.9f);
+		break;
+	case 1021:
+		worldObj->playSoundEffect((double)((float)j + 0.5f), (double)((float)k + 0.5f), (double)((float)l + 0.5f), "random.anvil_use", 1.0f, worldObj->rand.nextFloat() * 0.1f + 0.9f);
+		break;
+	case 1022:
+		worldObj->playSoundEffect((double)((float)j + 0.5f), (double)((float)k + 0.5f), (double)((float)l + 0.5f), "random.anvil_land", 0.3f, worldObj->rand.nextFloat() * 0.1f + 0.9f);
+		break;
 	case 1017:
 		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.zombie.unfect", 2.0f, (random.nextFloat() - random.nextFloat()) * 0.2f + 1.0f);
 		break;

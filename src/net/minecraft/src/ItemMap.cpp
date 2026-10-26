@@ -1,4 +1,5 @@
 #include "ItemMap.h"
+#include "NBTTagCompound.h"
 #include "java/Arithmetic.h"
 #include "MapData.h"
 #include "World.h"
@@ -217,6 +218,28 @@ void ItemMap::onUpdate(ItemStack* itemstack, World* world, Entity* entity, int i
 }
 
 void ItemMap::onCreated(ItemStack* itemstack, World* world, EntityPlayer* entityplayer) {
+    if (itemstack != nullptr && itemstack->hasTagCompound() && itemstack->getTagCompound()->getBoolean("map_is_scaling")) {
+        MapData* var4 = getMapData(itemstack, world);
+        itemstack->getTagCompound()->removeTag("map_is_scaling");
+        if (itemstack->getTagCompound()->hasNoTags()) {
+            itemstack->setTagCompound(nullptr);
+        }
+        if (var4 != nullptr) {
+            itemstack->setItemDamage(world->getUniqueDataId("map"));
+            std::string s = "map_" + std::to_string(itemstack->getItemDamage());
+            MapData* var5 = new MapData(s);
+            var5->scale = (byte_t)(var4->scale + 1);
+            if (var5->scale > 4) {
+                var5->scale = 4;
+            }
+            var5->xCenter = var4->xCenter;
+            var5->zCenter = var4->zCenter;
+            var5->dimension = var4->dimension;
+            var5->markDirty();
+            world->setItemData(s, var5);
+        }
+        return;
+    }
     itemstack->setItemDamage(world->getUniqueDataId("map"));
     std::string s = "map_" + std::to_string(itemstack->getItemDamage());
     MapData* mapdata = new MapData(s);

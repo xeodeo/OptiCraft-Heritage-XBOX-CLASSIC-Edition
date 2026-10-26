@@ -22,6 +22,11 @@ NBTTagCompound::NBTTagCompound()
 {
 }
 
+NBTTagCompound::NBTTagCompound(const jstring &name)
+	: NBTBase(name)
+{
+}
+
 NBTTagCompound::~NBTTagCompound()
 {
 	clearTags();
@@ -257,7 +262,7 @@ jstring NBTTagCompound::getString(const jstring &s)
 	if (it == tagMap.end()) return "";
 	NBTTagString *tag = dynamic_cast<NBTTagString *>(it->second);
 	if (tag == nullptr) throw std::bad_cast();
-	return tag->stringValue;
+	return tag->data;
 }
 
 std::vector<byte_t> NBTTagCompound::getByteArray(const jstring &s)

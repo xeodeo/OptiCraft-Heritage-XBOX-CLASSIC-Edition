@@ -126,6 +126,7 @@ public:
 	virtual void displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper);
 	virtual void displayGUIRepair(int_t x, int_t y, int_t z);
 	virtual void displayGUIBeacon(TileEntityBeacon *beacon);
+	virtual void displayGUIBook(ItemStack *book);
 	void useCurrentItemOnEntity(Entity *entity);
 	ItemStack *getCurrentEquippedItem();
 	void destroyCurrentEquippedItem();
@@ -196,6 +197,7 @@ public:
 	void addExperience(int_t amount);
 	void removeExperience(int_t amount);
 	void increaseLevel();
+	void addExperienceLevel(int_t level) { experienceLevel += level; if (experienceLevel < 0) experienceLevel = 0; }
 	int_t xpBarCap() const;
 	void addExhaustion(float exhaustion);
 	FoodStats *getFoodStats();
@@ -203,6 +205,7 @@ public:
 	bool shouldHeal() const;
 	void setItemInUse(ItemStack *itemstack, int_t duration);
 	bool canPlayerEdit(int_t x, int_t y, int_t z) const;
+	bool canPlayerEdit(int_t x, int_t y, int_t z, int_t side, ItemStack *itemstack) const;
 	virtual void travelToTheEnd(int_t dimension);
 	virtual void copyPlayer(EntityPlayer *player);
 	virtual void func_50009_aI();

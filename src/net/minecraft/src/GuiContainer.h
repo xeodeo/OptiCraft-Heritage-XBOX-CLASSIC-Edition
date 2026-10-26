@@ -55,7 +55,7 @@ public:
 	void updateScreen() override;
 	bool allowsPlatformPointerInput() const override { return true; }
 
-private:
+protected:
 	static RenderItem *itemRenderer;
 
 protected:

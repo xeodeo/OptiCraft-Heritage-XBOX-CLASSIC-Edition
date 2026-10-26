@@ -1,4 +1,6 @@
 #include "EnumToolMaterial.h"
+#include "Block.h"
+#include "Item.h"
 
 int EnumToolMaterialHelper::getMaxUses(EnumToolMaterial material) {
     switch (material) {
@@ -51,6 +53,17 @@ int EnumToolMaterialHelper::getEnchantability(EnumToolMaterial material) {
         case EnumToolMaterial::IRON: return 14;
         case EnumToolMaterial::EMERALD: return 10;
         case EnumToolMaterial::GOLD: return 22;
+        default: return 0;
+    }
+}
+
+int EnumToolMaterialHelper::getToolCraftingMaterial(EnumToolMaterial material) {
+    switch (material) {
+        case EnumToolMaterial::WOOD: return (Block::planks != nullptr ? Block::planks->blockID : 5);
+        case EnumToolMaterial::STONE: return (Block::cobblestone != nullptr ? Block::cobblestone->blockID : 4);
+        case EnumToolMaterial::IRON: return (Item::ingotIron != nullptr ? Item::ingotIron->shiftedIndex : 265);
+        case EnumToolMaterial::EMERALD: return (Item::diamond != nullptr ? Item::diamond->shiftedIndex : 264);
+        case EnumToolMaterial::GOLD: return (Item::ingotGold != nullptr ? Item::ingotGold->shiftedIndex : 266);
         default: return 0;
     }
 }

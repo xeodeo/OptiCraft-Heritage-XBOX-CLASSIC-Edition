@@ -1,9 +1,32 @@
 #pragma once
+
 #include "InventoryBasic.h"
-class ContainerRepair;
-class InventoryRepair final : public InventoryBasic {
+#include "ContainerRepair.h"
+
+class InventoryRepair : public InventoryBasic
+{
 public:
-    explicit InventoryRepair(ContainerRepair *owner) : InventoryBasic("Repair",2), owner(owner) {}
+    InventoryRepair(ContainerRepair *container, const std::string &title, bool isCustom, int slotCount)
+        : InventoryBasic(title, slotCount), theContainer(container)
+    {
+    }
+
+    void onInventoryChanged() override
+    {
+        InventoryBasic::onInventoryChanged();
+        if (theContainer != nullptr)
+        {
+            theContainer->onCraftMatrixChanged(this);
+        }
+    }
+
+    bool isStackValidForSlot(int slot, ItemStack *stack) override
+    {
+        (void)slot;
+        (void)stack;
+        return true;
+    }
+
 private:
-    ContainerRepair *owner;
+    ContainerRepair *theContainer = nullptr;
 };

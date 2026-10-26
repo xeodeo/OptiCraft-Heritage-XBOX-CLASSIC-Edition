@@ -26,6 +26,7 @@ public:
 
     bool field_27004_a;
     float zLevel;
+    static bool renderInFrame;
 
 private:
     void renderQuad(Tessellator* tessellator, int i, int j, int k, int l, int i1);

@@ -17,6 +17,7 @@ public:
     int getMaxItemUseDuration(ItemStack* itemstack) override;
     ItemStack* onItemRightClick(ItemStack* itemstack, World* world, EntityPlayer* entityplayer) override;
     int getItemEnchantability() override;
+    bool getIsRepairable(ItemStack* stack1, ItemStack* stack2) override;
 
 private:
     int weaponDamage;

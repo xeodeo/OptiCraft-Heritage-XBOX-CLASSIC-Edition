@@ -1,12 +1,51 @@
 #include "ItemEmptyMap.h"
-#include "Item.h"
 #include "ItemStack.h"
+#include "Item.h"
+#include "World.h"
 #include "EntityPlayer.h"
 #include "InventoryPlayer.h"
 #include "MapData.h"
-#include "World.h"
-#include "WorldInfo.h"
 #include "WorldProvider.h"
-ItemStack *ItemEmptyMap::onItemRightClick(ItemStack *stack, World *world, EntityPlayer *player) {
-    int id=world->getUniqueDataId("map"); ItemStack *map=new ItemStack(Item::mapItem,1,id); std::string key="map_"+std::to_string(id); MapData *data=new MapData(key); data->scale=0; int size=128; data->xCenter=(int)(player->posX/size)*size; data->zCenter=(int)(player->posZ/size)*size; data->dimension=(byte_t)world->worldProvider->worldType; data->markDirty(); world->setItemData(key,data); --stack->stackSize; if(stack->stackSize<=0){delete stack;return map;} if(!player->inventory->addItemStackToInventory(map->copy())) player->dropPlayerItem(map); delete map; return stack;
+#include "MathHelper.h"
+#include <cmath>
+
+ItemEmptyMap::ItemEmptyMap(int id)
+    : ItemMapBase(id)
+{
+}
+
+ItemStack *ItemEmptyMap::onItemRightClick(ItemStack *itemstack, World *world, EntityPlayer *entityplayer)
+{
+    if (world == nullptr || entityplayer == nullptr || itemstack == nullptr)
+    {
+        return itemstack;
+    }
+
+    ItemStack *mapStack = new ItemStack(Item::mapItem, 1, world->getUniqueDataId("map"));
+    std::string s = "map_" + std::to_string(mapStack->getItemDamage());
+    MapData *mapData = new MapData(s);
+    world->setItemData(s, mapData);
+
+    mapData->scale = 0;
+    int scaleFactor = 128 * (1 << mapData->scale);
+    mapData->xCenter = (int)(std::round(entityplayer->posX / (double)scaleFactor) * (long)scaleFactor);
+    mapData->zCenter = (int)(std::round(entityplayer->posZ / (double)scaleFactor) * (long)scaleFactor);
+    if (world->worldProvider != nullptr)
+    {
+        mapData->dimension = (byte_t)world->worldProvider->worldType;
+    }
+    mapData->markDirty();
+
+    itemstack->stackSize--;
+    if (itemstack->stackSize <= 0)
+    {
+        return mapStack;
+    }
+
+    if (!entityplayer->inventory->addItemStackToInventory(mapStack->copy()))
+    {
+        entityplayer->dropPlayerItem(mapStack);
+    }
+
+    return itemstack;
 }

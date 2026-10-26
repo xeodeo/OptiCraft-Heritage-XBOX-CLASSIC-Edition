@@ -95,6 +95,8 @@ void RenderItem::renderAABB(AxisAlignedBB *aabb)
 }
 
 
+bool RenderItem::renderInFrame = false;
+
 RenderItem::RenderItem() {
     random = Random();
     field_27004_a = true;
@@ -126,10 +128,21 @@ void RenderItem::doRenderItem(EntityItem* entityitem, double d, double d1, doubl
     if (itemstack->stackSize > 20) {
         byte0 = 4;
     }
+    if (renderInFrame) {
+        f2 = 0.0f;
+        f3 = 0.0f;
+        byte0 = 1;
+    }
     renderTranslate((float)d, (float)d1 + f2, (float)d2);
     renderEnable(RenderCapability::RescaleNormal);
     if (itemstack->itemID >= 0 && itemstack->itemID < 256 && Block::blocksList[itemstack->itemID] != nullptr && RenderBlocks::renderItemIn3d(Block::blocksList[itemstack->itemID]->getRenderType())) {
-        renderRotate(f3, 0.0f, 1.0f, 0.0f);
+        if (renderInFrame) {
+            renderScale(1.25f, 1.25f, 1.25f);
+            renderTranslate(0.0f, 0.05f, 0.0f);
+            renderRotate(-90.0f, 0.0f, 1.0f, 0.0f);
+        } else {
+            renderRotate(f3, 0.0f, 1.0f, 0.0f);
+        }
         loadTexture("/terrain.png");
         float f4 = 0.25f;
         const int renderType = Block::blocksList[itemstack->itemID]->getRenderType();
@@ -149,7 +162,12 @@ void RenderItem::doRenderItem(EntityItem* entityitem, double d, double d1, doubl
             renderPopMatrix();
         }
     } else {
-        renderScale(0.5f, 0.5f, 0.5f);
+        if (renderInFrame) {
+            renderScale(0.5128205f, 0.5128205f, 0.5128205f);
+            renderTranslate(0.0f, -0.05f, 0.0f);
+        } else {
+            renderScale(0.5f, 0.5f, 0.5f);
+        }
         loadTexture("/gui/items.png");
         const int renderPasses = item->func_46058_c() ? 2 : 1;
         for (int renderPass = 0; renderPass < renderPasses; ++renderPass) {
@@ -185,7 +203,9 @@ void RenderItem::doRenderItem(EntityItem* entityitem, double d, double d1, doubl
                     const float offsetZ = (random.nextFloat() * 2.0f - 1.0f) * 0.3f;
                     renderTranslate(offsetX, offsetY, offsetZ);
                 }
-                renderRotate(180.0f - renderManager->playerViewY, 0.0f, 1.0f, 0.0f);
+                if (!renderInFrame) {
+                    renderRotate(180.0f - renderManager->playerViewY, 0.0f, 1.0f, 0.0f);
+                }
                 tessellator->startDrawingQuads();
                 tessellator->setNormal(0.0f, 1.0f, 0.0f);
                 tessellator->addVertexWithUV(-xOffset, -yOffset, 0.0f, minU, maxV);

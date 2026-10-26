@@ -4,6 +4,7 @@
 
 class IInventory;
 class ItemStack;
+class EntityPlayer;
 
 // net.minecraft.src.Slot
 class Slot
@@ -14,6 +15,8 @@ public:
 
 	void onSlotChange(ItemStack *currentStack, ItemStack *originalStack);
 	virtual void onPickupFromSlot(ItemStack *itemstack);
+	virtual void onPickupFromSlot(EntityPlayer *player, ItemStack *itemstack) { onPickupFromSlot(itemstack); }
+	virtual bool canTakeStack(EntityPlayer *player) { return true; }
 	virtual bool isItemValid(ItemStack *itemstack);
 	ItemStack *getStack();
 	bool getHasStack();

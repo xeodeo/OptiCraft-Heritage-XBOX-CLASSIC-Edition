@@ -11,6 +11,22 @@ NBTTagList::NBTTagList()
 {
 }
 
+NBTTagList::NBTTagList(const jstring &name)
+	: NBTBase(name)
+{
+}
+
+NBTBase *NBTTagList::removeTag(int_t index)
+{
+	if (index >= 0 && index < static_cast<int_t>(tagList.size()))
+	{
+		NBTBase *tag = tagList[index];
+		tagList.erase(tagList.begin() + index);
+		return tag;
+	}
+	return nullptr;
+}
+
 NBTTagList::~NBTTagList()
 {
 	clearTags();

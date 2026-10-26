@@ -13,6 +13,7 @@ public:
     int getDamageVsEntity(Entity* entity) override;
     bool isFull3D() override;
     int getItemEnchantability() override;
+    bool getIsRepairable(ItemStack* stack1, ItemStack* stack2) override;
 
 protected:
     Block** blocksEffectiveAgainst;

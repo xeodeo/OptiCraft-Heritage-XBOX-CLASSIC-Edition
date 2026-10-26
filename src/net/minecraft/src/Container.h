@@ -24,6 +24,11 @@ protected:
 
 public:
 	virtual void updateCraftingResults();
+	virtual void detectAndSendChanges() { updateCraftingResults(); }
+	virtual void addCraftingToCrafters(ICrafting *icrafting);
+	virtual void removeCraftingFromCrafters(ICrafting *icrafting);
+	virtual ItemStack *transferStackInSlot(EntityPlayer *player, int_t slotIndex) { return nullptr; }
+	virtual bool canInteractWith(EntityPlayer *player) { return isUsableByPlayer(player); }
 	virtual bool enchantItem(EntityPlayer *entityplayer, int_t enchantment);
 	Slot *getSlot(int_t i);
 	virtual ItemStack *getStackInSlot(int_t i);

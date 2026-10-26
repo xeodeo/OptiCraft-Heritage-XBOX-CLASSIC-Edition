@@ -15,7 +15,7 @@ void RenderPainting::renderPainting(EntityPainting* entityPainting, double d, do
     renderEnable(RenderCapability::RescaleNormal);
     loadTexture("/art/kz.png");
 
-    EnumArt* enumart = entityPainting->art;
+    const EnumArt* enumart = entityPainting->art;
     if (enumart != nullptr) {
         const float scale = 0.0625f;
         renderScale(scale, scale, scale);
@@ -107,16 +107,16 @@ void RenderPainting::setPaintingBrightness(EntityPainting* entityPainting, float
     const int blockY = MathHelper::floor_double(entityPainting->posY + (double)(y / 16.0f));
     int blockZ = MathHelper::floor_double(entityPainting->posZ);
 
-    if (entityPainting->direction == 0) {
+    if (entityPainting->hangingDirection == 2) {
         blockX = MathHelper::floor_double(entityPainting->posX + (double)(x / 16.0f));
     }
-    if (entityPainting->direction == 1) {
+    if (entityPainting->hangingDirection == 1) {
         blockZ = MathHelper::floor_double(entityPainting->posZ - (double)(x / 16.0f));
     }
-    if (entityPainting->direction == 2) {
+    if (entityPainting->hangingDirection == 0) {
         blockX = MathHelper::floor_double(entityPainting->posX - (double)(x / 16.0f));
     }
-    if (entityPainting->direction == 3) {
+    if (entityPainting->hangingDirection == 3) {
         blockZ = MathHelper::floor_double(entityPainting->posZ + (double)(x / 16.0f));
     }
 

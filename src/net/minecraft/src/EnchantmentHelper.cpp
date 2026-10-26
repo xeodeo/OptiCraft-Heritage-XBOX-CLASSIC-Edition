@@ -11,6 +11,7 @@
 #include "EnumEnchantmentType.h"
 #include "InventoryPlayer.h"
 #include "Item.h"
+#include "ItemEnchantedBook.h"
 #include "ItemStack.h"
 #include "NBTTagCompound.h"
 #include "NBTTagList.h"
@@ -254,4 +255,83 @@ std::vector<EnchantmentData> EnchantmentHelper::mapEnchantmentData(int enchantab
     }
     reorderLikeJavaIntegerHashMap(result);
     return result;
+}
+
+std::map<int, int> EnchantmentHelper::getEnchantments(ItemStack *stack)
+{
+    std::map<int, int> result;
+    if (stack == nullptr)
+        return result;
+
+    NBTTagList *tagList = nullptr;
+    if (Item::enchantedBook != nullptr && stack->itemID == Item::enchantedBook->itemID)
+    {
+        ItemEnchantedBook *enchantedBookItem = dynamic_cast<ItemEnchantedBook *>(Item::enchantedBook);
+        if (enchantedBookItem != nullptr)
+            tagList = enchantedBookItem->func_92110_g(stack);
+    }
+    else
+    {
+        tagList = stack->getEnchantmentTagList();
+    }
+
+    if (tagList != nullptr)
+    {
+        for (int_t i = 0; i < tagList->tagCount(); ++i)
+        {
+            NBTTagCompound *tag = dynamic_cast<NBTTagCompound *>(tagList->tagAt(i));
+            if (tag != nullptr)
+            {
+                short_t id = tag->getShort("id");
+                short_t lvl = tag->getShort("lvl");
+                result[static_cast<int>(id)] = static_cast<int>(lvl);
+            }
+        }
+    }
+    return result;
+}
+
+void EnchantmentHelper::setEnchantments(const std::map<int, int> &enchMap, ItemStack *stack)
+{
+    if (stack == nullptr)
+        return;
+
+    NBTTagList *tagList = new NBTTagList();
+    ItemEnchantedBook *enchantedBookItem = nullptr;
+    if (Item::enchantedBook != nullptr && stack->itemID == Item::enchantedBook->itemID)
+    {
+        enchantedBookItem = dynamic_cast<ItemEnchantedBook *>(Item::enchantedBook);
+    }
+
+    for (const auto &pair : enchMap)
+    {
+        NBTTagCompound *entry = new NBTTagCompound();
+        entry->setShort("id", static_cast<short_t>(pair.first));
+        entry->setShort("lvl", static_cast<short_t>(pair.second));
+        tagList->appendTag(entry);
+        if (enchantedBookItem != nullptr && pair.first >= 0 && pair.first < 256 && Enchantment::enchantmentsList[pair.first] != nullptr)
+        {
+            enchantedBookItem->func_92115_a(stack, EnchantmentData(Enchantment::enchantmentsList[pair.first], pair.second));
+        }
+    }
+
+    if (tagList->tagCount() > 0)
+    {
+        if (enchantedBookItem == nullptr)
+        {
+            stack->setTagInfo("ench", tagList);
+        }
+        else
+        {
+            delete tagList;
+        }
+    }
+    else
+    {
+        delete tagList;
+        if (stack->hasTagCompound())
+        {
+            stack->getTagCompound()->removeTag("ench");
+        }
+    }
 }

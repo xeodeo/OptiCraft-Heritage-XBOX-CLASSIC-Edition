@@ -1,30 +1,44 @@
 #pragma once
+
+#include <string>
 #include "Container.h"
 #include "IInventory.h"
-#include "IInvBasic.h"
-#include "InventoryBasic.h"
-#include "InventoryCraftResult.h"
+
+class EntityPlayer;
 class InventoryPlayer;
+class ICrafting;
+class ItemStack;
 class World;
-class ContainerRepair : public Container, public IInvBasic {
+
+class ContainerRepair : public Container
+{
 public:
-    ContainerRepair(InventoryPlayer *player, World *world, int x, int y, int z, EntityPlayer *owner);
+    ContainerRepair(InventoryPlayer *playerInv, World *world, int x, int y, int z, EntityPlayer *player);
     ~ContainerRepair() override;
-    bool isUsableByPlayer(EntityPlayer *player) override;
-    void onCraftMatrixChanged(IInventory *inventory) override;
-    void onInventoryChanged(IInventory *inventory) override;
+
+    void onCraftMatrixChanged(IInventory *inv) override;
     void updateRepairOutput();
-    void takeOutput(EntityPlayer *player);
+    void addCraftingToCrafters(ICrafting *crafter) override;
+    void updateProgressBar(int id, int value) override;
+    void onCraftGuiClosed(EntityPlayer *player) override;
+    bool isUsableByPlayer(EntityPlayer *player) override;
+    bool canInteractWith(EntityPlayer *player) override { return isUsableByPlayer(player); }
+    ItemStack *transferStackInSlot(EntityPlayer *player, int slotIndex) override;
     void updateItemName(const std::string &name);
-    ItemStack *getStackInSlot(int_t index) override;
-    IInventory *getRepairInventory() const { return input; }
+
+    IInventory *getInputSlots() const { return inputSlots; }
+    int getStackSizeToBeUsedInRepair() const { return stackSizeToBeUsedInRepair; }
+
     int maximumCost = 0;
+
 private:
-    InventoryBasic *input;
-    InventoryCraftResult *output;
-    InventoryPlayer *playerInventory;
-    World *world;
-    EntityPlayer *owner;
-    int x, y, z;
+    IInventory *outputSlot = nullptr;
+    IInventory *inputSlots = nullptr;
+    World *theWorld = nullptr;
+    int field_82861_i = 0;
+    int field_82858_j = 0;
+    int field_82859_k = 0;
+    int stackSizeToBeUsedInRepair = 0;
     std::string repairedItemName;
+    EntityPlayer *thePlayer = nullptr;
 };

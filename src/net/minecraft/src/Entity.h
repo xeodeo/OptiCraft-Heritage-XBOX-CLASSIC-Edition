@@ -133,6 +133,7 @@ public:
 	virtual bool attackEntityFrom(Entity *entity, int_t i);
 	virtual bool attackEntityFrom(const DamageSource &source, int_t damage);
 	virtual bool canBeCollidedWith();
+	virtual bool func_85031_j(Entity *entity) { return false; }
 	virtual bool canAttackWithItem();
 	virtual bool canBePushed();
 	virtual void addToPlayerScore(Entity *entity, int_t i);
@@ -142,6 +143,7 @@ public:
 	virtual const char *getTexture();
 	virtual std::vector<Entity *> getParts() const;
 	bool isImmuneToFire() const;
+	virtual bool isEntityInvulnerable() const { return invulnerable; }
 
 	bool addEntityID(NBTTagCompound *nbttagcompound);
 	void writeToNBT(NBTTagCompound *nbttagcompound);
@@ -286,6 +288,7 @@ public:
 	bool isInWeb;
 	bool field_9293_aM;
 	bool isDead;
+	bool invulnerable = false;
 	float yOffset;
 	float width;
 	float height;

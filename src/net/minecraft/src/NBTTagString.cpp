@@ -11,17 +11,23 @@ NBTTagString::NBTTagString()
 
 NBTTagString::NBTTagString(const jstring &s)
 {
-	stringValue = s;
+	data = s;
+}
+
+NBTTagString::NBTTagString(const jstring &name, const jstring &s)
+	: NBTBase(name)
+{
+	data = s;
 }
 
 void NBTTagString::writeTagContents(std::ostream &dataoutput)
 {
-	IOUtil::writeUTF(dataoutput, stringValue);
+	IOUtil::writeUTF(dataoutput, data);
 }
 
 void NBTTagString::readTagContents(std::istream &datainput)
 {
-	stringValue = IOUtil::readUTF(datainput);
+	data = IOUtil::readUTF(datainput);
 }
 
 byte_t NBTTagString::getType()
@@ -31,24 +37,24 @@ byte_t NBTTagString::getType()
 
 NBTBase *NBTTagString::copy()
 {
-	NBTTagString *tag = new NBTTagString(stringValue);
+	NBTTagString *tag = new NBTTagString(data);
 	tag->setKey(getKey());
 	return tag;
 }
 
 jstring NBTTagString::toString()
 {
-	return stringValue;
+	return data;
 }
 
 bool NBTTagString::equals(NBTBase *other)
 {
 	if (!NBTBase::equals(other)) return false;
 	auto *tag = dynamic_cast<NBTTagString *>(other);
-	return tag != nullptr && stringValue == tag->stringValue;
+	return tag != nullptr && data == tag->data;
 }
 
 int_t NBTTagString::hashCode()
 {
-	return NBTBase::hashCode() ^ String::hashCode(stringValue);
+	return NBTBase::hashCode() ^ String::hashCode(data);
 }

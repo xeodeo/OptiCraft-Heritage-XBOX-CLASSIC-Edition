@@ -76,6 +76,7 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 134, -1, 0, 15 }, // Tile::woodStairsDark (stairs)
     { 135, -1, 0, 15 }, // Tile::woodStairsBirch (stairs)
     { 136, -1, 0, 15 }, // Tile::woodStairsJungle (stairs)
+    { 138, -1, 6, 0 }, // Tile::beacon
     { 139, -1, 0, 28 }, // Tile::cobbleWall (fence)
     { 143, -1, 4, 33 }, // Tile::button_wood (button)
     { 145, -1, 0, 29 }, // Tile::anvil (device)
@@ -179,9 +180,11 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 381, -1, 1, 24 }, // Item::eyeOfEnder (pockettool)
     { 382, -1, 2, 36 }, // Item::speckledMelon (giltFruit)
     { 385, -1, 1, 22 }, // Item::fireball (torch)
+    { 386, -1, 1, 24 }, // Item::writingBook (pockettool)
     { 388, -1, 6, 30 }, // Item::emerald (treasure)
     { 389, -1, 6, 32 }, // Item::frame (HangingItem)
     { 390, -1, 6, 0 }, // Item::flowerPot
+    { 395, -1, 1, 24 }, // Item::emptyMap (pockettool)
     { 396, 0, 2, 36 }, // Item::carrotGolden (giltFruit)
     { 398, -1, 1, 35 }, // Item::carrotOnAStick (rod)
     { 400, -1, 2, 0 }, // Item::pumpkinPie

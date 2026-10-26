@@ -864,6 +864,7 @@ void EntityPlayer::displayGUIHopper(TileEntityHopper *tileentityhopper) { (void)
 void EntityPlayer::displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper) { (void)entityminecarthopper; }
 void EntityPlayer::displayGUIRepair(int_t, int_t, int_t) {}
 void EntityPlayer::displayGUIBeacon(TileEntityBeacon *) {}
+void EntityPlayer::displayGUIBook(ItemStack *) {}
 
 void EntityPlayer::useCurrentItemOnEntity(Entity *entity)
 {
@@ -1479,6 +1480,11 @@ void EntityPlayer::setItemInUse(ItemStack *itemstack, int_t duration)
 }
 
 bool EntityPlayer::canPlayerEdit(int_t, int_t, int_t) const
+{
+	return true;
+}
+
+bool EntityPlayer::canPlayerEdit(int_t, int_t, int_t, int_t, ItemStack *) const
 {
 	return true;
 }

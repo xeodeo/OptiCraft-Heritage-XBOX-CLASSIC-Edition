@@ -9,6 +9,7 @@ class NBTTagList : public NBTBase
 {
 public:
 	NBTTagList();
+	explicit NBTTagList(const jstring &name);
 	~NBTTagList() override;
 
 	void writeTagContents(std::ostream &dataoutput) override;
@@ -23,6 +24,7 @@ public:
 	void appendTag(NBTBase *nbtbase) { setTag(nbtbase); }
 	NBTBase *tagAt(int_t i);
 	int_t tagCount();
+	NBTBase *removeTag(int_t index);
 
 private:
 	void clearTags();

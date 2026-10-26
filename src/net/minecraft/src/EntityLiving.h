@@ -71,6 +71,7 @@ public:
 	void func_48098_g(float value);
 	float func_48101_aR() const;
 	virtual bool isAIEnabled();
+	virtual bool canBeSteered() { return false; }
 	void setPositionAndUpdate(double x, double y, double z);
 	virtual bool isChild();
 	virtual bool isBlocking();

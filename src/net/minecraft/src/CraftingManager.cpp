@@ -23,6 +23,8 @@
 #include "RecipesWeapons.h"
 #include "ShapedRecipes.h"
 #include "ShapelessRecipes.h"
+#include "RecipesMapCloning.h"
+#include "RecipesMapExtending.h"
 
 CraftingManager *CraftingManager::instance = nullptr;
 
@@ -149,6 +151,14 @@ CraftingManager::CraftingManager()
 	addShapelessRecipe(new ItemStack(Item::eyeOfEnder, 1),         { Item::enderPearl, Item::blazePowder });
 	addShapelessRecipe(new ItemStack(Item::fireballCharge, 3),     { Item::gunpowder, Item::blazePowder, Item::coal });
 	addShapelessRecipe(new ItemStack(Item::fireballCharge, 3),     { Item::gunpowder, Item::blazePowder, new ItemStack(Item::coal, 1, 1) });
+	addRecipe(new ItemStack(Block::anvil, 1),                 { "III", " i ", "iii", 'I', Block::blockSteel, 'i', Item::ingotIron });
+	addRecipe(new ItemStack(Block::beacon, 1),                { "GGG", "GSG", "OOO", 'G', Block::glass, 'S', Item::netherStar, 'O', Block::obsidian });
+	addRecipe(new ItemStack(Item::itemFrame, 1),              { "###", "#X#", "###", '#', Item::stick, 'X', Item::leather });
+	addRecipe(new ItemStack(Item::emptyMap, 1),              { "###", "#X#", "###", '#', Item::paper, 'X', Item::compass });
+	addShapelessRecipe(new ItemStack(Item::carrotOnAStick, 1), { Item::fishingRod, Item::carrot });
+	addShapelessRecipe(new ItemStack(Item::writableBook, 1),   { Item::book, Item::feather, new ItemStack(Item::dyePowder, 1, 0) });
+	recipes.push_back(new RecipesMapCloning());
+	recipes.push_back(new RecipesMapExtending());
 
 	std::stable_sort(recipes.begin(), recipes.end(), RecipeSorter(this));
 	MC_LOG_INFO("recipe", "%u recipes\n", static_cast<unsigned>(recipes.size()));

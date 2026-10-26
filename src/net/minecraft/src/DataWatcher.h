@@ -29,6 +29,7 @@ public:
     ~DataWatcher();
 
     void addObject(int_t id, std::any obj);
+    void addObjectByDataType(int_t id, int_t type);
     bool hasObject(int_t id) const;
 
     byte_t getWatchableObjectByte(int_t id);

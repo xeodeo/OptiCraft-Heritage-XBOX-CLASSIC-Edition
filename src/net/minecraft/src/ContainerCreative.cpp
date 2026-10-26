@@ -109,6 +109,7 @@ static int_t getCreativeCategory(ItemStack *stack)
         (Item::comparator != nullptr && id == Item::comparator->shiftedIndex) ||
         (Item::boat != nullptr && id == Item::boat->shiftedIndex) ||
         (Item::doorWood != nullptr && id == Item::doorWood->shiftedIndex) ||
+        (Item::carrotOnAStick != nullptr && id == Item::carrotOnAStick->shiftedIndex) ||
         (Item::doorSteel != nullptr && id == Item::doorSteel->shiftedIndex))
     {
         return CREATIVE_TAB_REDSTONE_TRANSPORT;
@@ -150,6 +151,7 @@ static int_t getCreativeCategory(ItemStack *stack)
         (Item::compass != nullptr && id == Item::compass->shiftedIndex) ||
         (Item::pocketSundial != nullptr && id == Item::pocketSundial->shiftedIndex) ||
         (Item::mapItem != nullptr && id == Item::mapItem->shiftedIndex) ||
+        (Item::emptyMap != nullptr && id == Item::emptyMap->shiftedIndex) ||
         (Item::pickaxeWood != nullptr && id == Item::pickaxeWood->shiftedIndex) ||
         (Item::pickaxeStone != nullptr && id == Item::pickaxeStone->shiftedIndex) ||
         (Item::pickaxeSteel != nullptr && id == Item::pickaxeSteel->shiftedIndex) ||
@@ -197,6 +199,10 @@ static int_t getCreativeCategory(ItemStack *stack)
     // Decoration items
     if ((Item::painting != nullptr && id == Item::painting->shiftedIndex) ||
         (Item::sign != nullptr && id == Item::sign->shiftedIndex) ||
+        (Item::itemFrame != nullptr && id == Item::itemFrame->shiftedIndex) ||
+        (Item::writableBook != nullptr && id == Item::writableBook->shiftedIndex) ||
+        (Item::writtenBook != nullptr && id == Item::writtenBook->shiftedIndex) ||
+        (Item::enchantedBook != nullptr && id == Item::enchantedBook->shiftedIndex) ||
         (Item::bed != nullptr && id == Item::bed->shiftedIndex))
     {
         return CREATIVE_TAB_DECORATION;

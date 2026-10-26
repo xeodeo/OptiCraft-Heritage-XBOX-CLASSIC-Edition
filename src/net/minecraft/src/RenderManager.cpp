@@ -71,6 +71,8 @@
 #include "EntityPainting.h"
 #include "EntityItemFrame.h"
 #include "RenderPainting.h"
+#include "RenderItemFrame.h"
+#include "EntityHanging.h"
 #include "EntityArrow.h"
 #include "RenderArrow.h"
 #include "EntitySnowball.h"
@@ -208,7 +210,7 @@ void RenderManager::registerRenderers() {
     entityRenderMap[std::type_index(typeid(EntityLiving))] = new RenderLiving(new ModelBiped(), 0.5f);
     entityRenderMap[std::type_index(typeid(Entity))] = new RenderEntity();
     entityRenderMap[std::type_index(typeid(EntityPainting))] = new RenderPainting();
-    entityRenderMap[std::type_index(typeid(EntityItemFrame))] = entityRenderMap[std::type_index(typeid(EntityPainting))];
+    entityRenderMap[std::type_index(typeid(EntityItemFrame))] = new RenderItemFrame();
     entityRenderMap[std::type_index(typeid(EntityArrow))] = new RenderArrow();
     entityRenderMap[std::type_index(typeid(EntitySnowball))] = new RenderSnowball(Item::snowball->getIconFromDamage(0));
     entityRenderMap[std::type_index(typeid(EntityEnderPearl))] = new RenderSnowball(Item::enderPearl->getIconFromDamage(0));
@@ -278,8 +280,9 @@ std::type_index parentEntityType(std::type_index type)
     PARENT_OF(EntityPlayer, EntityLiving);
     PARENT_OF(EntitySquid, EntityWaterMob);
     PARENT_OF(EntityLiving, Entity);
-    PARENT_OF(EntityPainting, Entity);
-    PARENT_OF(EntityItemFrame, EntityPainting);
+    PARENT_OF(EntityHanging, Entity);
+    PARENT_OF(EntityPainting, EntityHanging);
+    PARENT_OF(EntityItemFrame, EntityHanging);
     PARENT_OF(EntityArrow, Entity);
     PARENT_OF(EntitySnowball, Entity);
     PARENT_OF(EntityEnderPearl, Entity);
@@ -358,6 +361,7 @@ Render* RenderManager::getEntityRenderObject(Entity* entity) {
     RESOLVE_BASE(EntitySquid);
     RESOLVE_BASE(EntityPainting);
     RESOLVE_BASE(EntityItemFrame);
+    RESOLVE_BASE(EntityHanging);
     RESOLVE_BASE(EntityArrow);
     RESOLVE_BASE(EntitySnowball);
     RESOLVE_BASE(EntityEnderPearl);

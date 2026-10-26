@@ -156,6 +156,7 @@ public:
 	Material *getBlockMaterial(int_t i, int_t j, int_t k) override;
 	int_t getBlockMetadata(int_t i, int_t j, int_t k) override;
 	void setBlockMetadataWithNotify(int_t i, int_t j, int_t k, int_t l);
+	bool setBlockMetadataWithNotify(int_t x, int_t y, int_t z, int_t metadata, int_t flags) { return setBlockMetadataWithNotify152(x, y, z, metadata, flags); }
 	virtual bool setBlockMetadata(int_t i, int_t j, int_t k, int_t l);
 	bool setBlockWithNotify(int_t i, int_t j, int_t k, int_t l);
 	bool setBlockAndMetadataWithNotify(int_t i, int_t j, int_t k, int_t l, int_t i1);

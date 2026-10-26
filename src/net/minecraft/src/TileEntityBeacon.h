@@ -3,6 +3,8 @@
 #include "TileEntity.h"
 #include "IInventory.h"
 
+class Potion;
+
 // net.minecraft.src.TileEntityBeacon
 class TileEntityBeacon : public TileEntity, public IInventory
 {
@@ -16,9 +18,9 @@ public:
 	int_t getLevels() const { return levels; }
 	void setLevels(int_t l) { levels = l; }
 	int_t getPrimaryEffect() const { return primaryEffect; }
-	void setPrimaryEffect(int_t eff) { primaryEffect = eff; }
+	void setPrimaryEffect(int_t eff);
 	int_t getSecondaryEffect() const { return secondaryEffect; }
-	void setSecondaryEffect(int_t eff) { secondaryEffect = eff; }
+	void setSecondaryEffect(int_t eff);
 
 	void readFromNBT(NBTTagCompound *nbttagcompound) override;
 	void writeToNBT(NBTTagCompound *nbttagcompound) override;
@@ -32,6 +34,10 @@ public:
 	int_t getInventoryStackLimit() override { return 1; }
 	void onInventoryChanged() override {}
 	bool canInteractWith(EntityPlayer *entityplayer) override;
+	bool isStackValidForSlot(int_t slot, ItemStack *stack) override;
+
+	static const Potion *effectsList[4][2];
+	static const int effectsCount[4];
 
 private:
 	void updateState();

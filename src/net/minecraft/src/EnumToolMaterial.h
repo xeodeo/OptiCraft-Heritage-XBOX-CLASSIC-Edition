@@ -14,4 +14,5 @@ namespace EnumToolMaterialHelper {
     int getDamageVsEntity(EnumToolMaterial material);
     int getHarvestLevel(EnumToolMaterial material);
     int getEnchantability(EnumToolMaterial material);
+    int getToolCraftingMaterial(EnumToolMaterial material);
 }

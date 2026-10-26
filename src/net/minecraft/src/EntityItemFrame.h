@@ -1,23 +1,36 @@
 #pragma once
-#include "EntityPainting.h"
 
-class EntityItemFrame : public EntityPainting {
+#include "EntityHanging.h"
+
+class World;
+class ItemStack;
+class NBTTagCompound;
+class EntityPlayer;
+
+class EntityItemFrame : public EntityHanging
+{
 public:
     explicit EntityItemFrame(World *world);
-    EntityItemFrame(World *world, int_t x, int_t y, int_t z, int_t dir);
-    ~EntityItemFrame() override;
+    EntityItemFrame(World *world, int x, int y, int z, int dir);
+    ~EntityItemFrame() override = default;
+
+    int func_82329_d() override;
+    int func_82330_g() override;
+    bool isInRangeToRenderDist(double dist) override;
+    void dropItemStack() override;
+
+    ItemStack *getDisplayedItem();
+    void setDisplayedItem(ItemStack *stack);
+    int getRotation();
+    void setItemRotation(int rot);
+
+    void writeEntityToNBT(NBTTagCompound *nbt) override;
+    void readEntityFromNBT(NBTTagCompound *nbt) override;
+    bool interact(EntityPlayer *player) override;
+
 protected:
     void entityInit() override;
-public:
-    ItemStack *getDisplayedItem() const;
-    void setDisplayedItem(ItemStack *stack);
-    int_t getRotation() const;
-    void setItemRotation(int_t rotation);
-    bool interact(EntityPlayer *player) override;
-    void writeEntityToNBT(NBTTagCompound *tag) override;
-    void readEntityFromNBT(NBTTagCompound *tag) override;
-    bool attackEntityFrom(Entity *entity, int_t damage) override;
+
 private:
-    void dropItemStack();
     float itemDropChance = 1.0f;
 };

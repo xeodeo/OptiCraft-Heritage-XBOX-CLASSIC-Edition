@@ -10,7 +10,7 @@ Packet25EntityPainting::Packet25EntityPainting(EntityPainting *entitypainting)
 	xPosition = entitypainting->xPosition;
 	yPosition = entitypainting->yPosition;
 	zPosition = entitypainting->zPosition;
-	direction = entitypainting->direction;
+	direction = entitypainting->hangingDirection;
 	if (entitypainting->art != nullptr)
 		title = entitypainting->art->title;
 }

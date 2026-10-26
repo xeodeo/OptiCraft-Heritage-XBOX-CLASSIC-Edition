@@ -368,6 +368,10 @@ bool Item::isFull3D() {
     return bFull3D;
 }
 
+bool Item::getIsRepairable(ItemStack*, ItemStack*) {
+    return false;
+}
+
 bool Item::shouldRotateAroundWhenRendering() {
     return false;
 }

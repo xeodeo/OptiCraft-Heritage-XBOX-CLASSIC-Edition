@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 
 #include "EnchantmentData.h"
 
@@ -14,6 +15,8 @@ class EnchantmentHelper
 {
 public:
     static int getEnchantmentLevel(int effectId, ItemStack *stack);
+    static std::map<int, int> getEnchantments(ItemStack *stack);
+    static void setEnchantments(const std::map<int, int> &enchMap, ItemStack *stack);
     static int getEnchantmentModifierDamage(InventoryPlayer *inventory, const DamageSource &source);
     static int getEnchantmentModifierLiving(InventoryPlayer *inventory, EntityLiving *living);
     static int getKnockbackModifier(InventoryPlayer *inventory, EntityLiving *living);

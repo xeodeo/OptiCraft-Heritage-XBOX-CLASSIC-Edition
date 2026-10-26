@@ -55,6 +55,7 @@ public:
     virtual std::string getItemNameIS(ItemStack* itemstack);
     virtual std::string getLocalItemName(ItemStack* itemstack);
     virtual std::string getItemDisplayName(ItemStack* itemstack);
+    virtual bool getIsRepairable(ItemStack* stack1, ItemStack* stack2);
     virtual void addInformation(ItemStack* itemstack, std::vector<std::string>& information);
     Item* setContainerItem(Item* item);
     Item* getContainerItem();
@@ -70,6 +71,7 @@ public:
     virtual bool isItemTool(ItemStack* itemstack);
     virtual int getItemEnchantability();
     virtual bool func_46056_k();
+    virtual bool getShareTag() { return true; }
     Item* setPotionEffect(const std::string& effect);
     const std::string& getPotionEffect() const;
     bool isPotionIngredient() const;
@@ -196,6 +198,7 @@ public:
     static Item* redstoneRepeater;
     static Item* cookie;
     static Item* mapItem;
+    static inline Item*& map = mapItem;
     static Item* shears;
     static Item* melon;
     static Item* pumpkinSeeds;

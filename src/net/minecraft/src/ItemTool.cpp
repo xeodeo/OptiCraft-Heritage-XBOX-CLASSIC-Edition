@@ -43,3 +43,12 @@ bool ItemTool::isFull3D() {
 }
 
 int ItemTool::getItemEnchantability() { return EnumToolMaterialHelper::getEnchantability(toolMaterial); }
+
+bool ItemTool::getIsRepairable(ItemStack* stack1, ItemStack* stack2)
+{
+    if (stack2 != nullptr && EnumToolMaterialHelper::getToolCraftingMaterial(toolMaterial) == stack2->itemID)
+    {
+        return true;
+    }
+    return Item::getIsRepairable(stack1, stack2);
+}

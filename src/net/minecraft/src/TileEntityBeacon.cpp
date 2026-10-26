@@ -3,11 +3,20 @@
 #include "AxisAlignedBB.h"
 #include "Block.h"
 #include "EntityPlayer.h"
+#include "Item.h"
 #include "ItemStack.h"
 #include "NBTTagCompound.h"
 #include "Potion.h"
 #include "PotionEffect.h"
 #include "World.h"
+
+const Potion *TileEntityBeacon::effectsList[4][2] = {
+	{ Potion::moveSpeed, Potion::digSpeed },
+	{ Potion::resistance, Potion::jump },
+	{ Potion::damageBoost, nullptr },
+	{ Potion::regeneration, nullptr }
+};
+const int TileEntityBeacon::effectsCount[4] = { 2, 2, 1, 1 };
 
 TileEntityBeacon::TileEntityBeacon()
 {
@@ -25,6 +34,41 @@ void TileEntityBeacon::updateEntity()
 	{
 		updateState();
 		addEffectsToPlayers();
+	}
+}
+
+void TileEntityBeacon::setPrimaryEffect(int_t eff)
+{
+	primaryEffect = 0;
+	for (int tier = 0; tier < levels && tier < 3; ++tier)
+	{
+		for (int i = 0; i < effectsCount[tier]; ++i)
+		{
+			if (effectsList[tier][i] != nullptr && effectsList[tier][i]->id == eff)
+			{
+				primaryEffect = eff;
+				return;
+			}
+		}
+	}
+}
+
+void TileEntityBeacon::setSecondaryEffect(int_t eff)
+{
+	secondaryEffect = 0;
+	if (levels >= 4)
+	{
+		for (int tier = 0; tier < 4; ++tier)
+		{
+			for (int i = 0; i < effectsCount[tier]; ++i)
+			{
+				if (effectsList[tier][i] != nullptr && effectsList[tier][i]->id == eff)
+				{
+					secondaryEffect = eff;
+					return;
+				}
+			}
+		}
 	}
 }
 
@@ -199,4 +243,15 @@ bool TileEntityBeacon::canInteractWith(EntityPlayer *entityplayer)
 		return false;
 	}
 	return entityplayer->getDistanceSq((double)xCoord + 0.5, (double)yCoord + 0.5, (double)zCoord + 0.5) <= 64.0;
+}
+
+bool TileEntityBeacon::isStackValidForSlot(int_t slot, ItemStack *stack)
+{
+	if (slot != 0 || stack == nullptr)
+		return false;
+
+	return (Item::emerald != nullptr && stack->itemID == Item::emerald->itemID) ||
+	       (Item::diamond != nullptr && stack->itemID == Item::diamond->itemID) ||
+	       (Item::ingotGold != nullptr && stack->itemID == Item::ingotGold->itemID) ||
+	       (Item::ingotIron != nullptr && stack->itemID == Item::ingotIron->itemID);
 }

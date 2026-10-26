@@ -43,3 +43,12 @@ EnumAction ItemSword::getItemUseAction(ItemStack*) { return EnumAction::block; }
 int ItemSword::getMaxItemUseDuration(ItemStack*) { return 72000; }
 ItemStack* ItemSword::onItemRightClick(ItemStack* itemstack, World*, EntityPlayer* entityplayer) { entityplayer->setItemInUse(itemstack, getMaxItemUseDuration(itemstack)); return itemstack; }
 int ItemSword::getItemEnchantability() { return EnumToolMaterialHelper::getEnchantability(toolMaterial); }
+
+bool ItemSword::getIsRepairable(ItemStack* stack1, ItemStack* stack2)
+{
+    if (stack2 != nullptr && EnumToolMaterialHelper::getToolCraftingMaterial(toolMaterial) == stack2->itemID)
+    {
+        return true;
+    }
+    return Item::getIsRepairable(stack1, stack2);
+}

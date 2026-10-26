@@ -13,6 +13,7 @@ class NBTTagCompound : public NBTBase
 {
 public:
 	NBTTagCompound();
+	explicit NBTTagCompound(const jstring &name);
 	~NBTTagCompound() override;
 
 	void writeTagContents(std::ostream &dataoutput) override;
@@ -36,6 +37,8 @@ public:
 	void func_48183_a(const jstring &s, const std::vector<int_t> &values);
 	void setCompoundTag(const jstring &s, NBTTagCompound *nbttagcompound);
 	void setBoolean(const jstring &s, bool flag);
+	void removeTag(const jstring &s) { setTag(s, nullptr); }
+	bool hasNoTags() const { return tagMap.empty(); }
 
 	bool hasKey(const jstring &s);
 	byte_t getByte(const jstring &s);

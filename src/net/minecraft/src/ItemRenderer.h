@@ -32,6 +32,7 @@ private:
     void renderWarpedTextureOverlay(float f);
     void renderFireInFirstPerson(float f);
 
+public:
     Minecraft* mc;
     ItemStack* itemToRender;
     float equippedProgress;

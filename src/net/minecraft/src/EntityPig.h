@@ -7,6 +7,7 @@ class NBTTagCompound;
 class EntityPlayer;
 class EntityLightningBolt;
 class ItemStack;
+class EntityAIControlledByPlayer;
 
 // net.minecraft.src.EntityPig
 class EntityPig : public EntityAnimal
@@ -18,6 +19,8 @@ public:
 	int_t getEntityClassID() const override { return CLASS_ID; }
 
 	bool isAIEnabled() override;
+	bool canBeSteered() override;
+	EntityAIControlledByPlayer *getAIControlledByPlayer() { return aiControlledByPlayer; }
 	int_t getMaxHealth() const;
 	void writeEntityToNBT(NBTTagCompound *nbttagcompound) override;
 	void readEntityFromNBT(NBTTagCompound *nbttagcompound) override;
@@ -35,4 +38,7 @@ protected:
 	jstring getDeathSound() override;
 	int_t getDropItemId() override;
 	void fall(float f) override;
+
+private:
+	EntityAIControlledByPlayer *aiControlledByPlayer = nullptr;
 };

@@ -27,6 +27,7 @@ public:
     PathEntity *createEntityPathTo(Entity *entity, Entity *target, float maxDistance);
     PathEntity *createEntityPathTo(Entity *entity, int_t x, int_t y, int_t z, float maxDistance);
     PathEntity *createEntityPathTo(Entity *entity, double x, double y, double z, float maxDistance);
+    static int_t func_82565_a(Entity *var0, int_t var1, int_t var2, int_t var3, PathPoint *var4, bool var5, bool var6, bool var7);
 
 private:
     struct PointMapSlot

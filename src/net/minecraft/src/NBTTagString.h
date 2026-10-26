@@ -8,6 +8,7 @@ class NBTTagString : public NBTBase
 public:
 	NBTTagString();
 	NBTTagString(const jstring &s);
+	NBTTagString(const jstring &name, const jstring &s);
 
 	void writeTagContents(std::ostream &dataoutput) override;
 	void readTagContents(std::istream &datainput) override;
@@ -17,5 +18,5 @@ public:
 	int_t hashCode() override;
 	jstring toString() override;
 
-	jstring stringValue;
+	jstring data;
 };

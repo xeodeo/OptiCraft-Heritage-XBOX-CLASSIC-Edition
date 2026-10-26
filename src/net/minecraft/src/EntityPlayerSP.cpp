@@ -30,6 +30,7 @@
 #include "GuiEnchantment.h"
 #include "GuiRepair.h"
 #include "GuiBeacon.h"
+#include "GuiScreenBook.h"
 #include "GuiEditSign.h"
 #include "GuiFurnace.h"
 #include "GuiBrewingStand.h"
@@ -358,6 +359,17 @@ void EntityPlayerSP::displayGUIRepair(int_t x, int_t y, int_t z)
 {
     if (mc != nullptr && mc->isSplitScreenActive()) { mc->displayPlayerScreen(this == mc->thePlayer2 ? 1 : 0, new GuiRepair(inventory, worldObj, x,y,z,this)); return; }
     mc->displayGuiScreen(new GuiRepair(inventory, worldObj, x,y,z,this));
+}
+
+void EntityPlayerSP::displayGUIBook(ItemStack *book)
+{
+    bool isUnsigned = book != nullptr && Item::writableBook != nullptr && book->itemID == Item::writableBook->shiftedIndex;
+    if (mc != nullptr && mc->isSplitScreenActive())
+    {
+        mc->displayPlayerScreen(this == mc->thePlayer2 ? 1 : 0, new GuiScreenBook(this, book, isUnsigned));
+        return;
+    }
+    mc->displayGuiScreen(new GuiScreenBook(this, book, isUnsigned));
 }
 
 void EntityPlayerSP::displayGUIBeacon(TileEntityBeacon *beacon)

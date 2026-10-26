@@ -1,11 +1,13 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "EnumEnchantmentType.h"
 
 class DamageSource;
 class EntityLiving;
+class ItemStack;
 
 class Enchantment
 {
@@ -21,6 +23,7 @@ public:
     virtual int calcModifierDamage(int level, const DamageSource &source) const;
     virtual int calcModifierLiving(int level, EntityLiving *living) const;
     virtual bool canApplyTogether(const Enchantment *other) const;
+    virtual bool canApply(ItemStack *stack) const;
     Enchantment *setName(const std::string &name);
     virtual std::string getName() const;
     std::string getTranslatedName(int level) const;
@@ -29,6 +32,7 @@ public:
     static void cleanup();
 
     static Enchantment *enchantmentsList[256];
+    static std::vector<Enchantment *> field_92090_c;
     static Enchantment *protection;
     static Enchantment *fireProtection;
     static Enchantment *featherFalling;

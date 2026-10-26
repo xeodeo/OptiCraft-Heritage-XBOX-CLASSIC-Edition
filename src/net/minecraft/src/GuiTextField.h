@@ -42,6 +42,8 @@ public:
 	void setSelectionPos(int_t position);
 	void setCanLoseFocus(bool canLoseFocus);
 	void setEnabled(bool enabled) { isEnabled = enabled; }
+	void setTextColor(int_t color) { enabledColor = color; }
+	void setDisabledTextColour(int_t color) { disabledColor = color; }
 
 	// MCP 1.2.5 compatibility names.
 	jstring func_50039_c() const { return getSelectedText(); }

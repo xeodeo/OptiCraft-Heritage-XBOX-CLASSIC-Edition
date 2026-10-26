@@ -54,6 +54,19 @@ void Container::updateCraftingResults()
 	}
 }
 
+void Container::addCraftingToCrafters(ICrafting *icrafting)
+{
+	if (icrafting != nullptr)
+	{
+		crafters.push_back(icrafting);
+	}
+}
+
+void Container::removeCraftingFromCrafters(ICrafting *icrafting)
+{
+	crafters.erase(std::remove(crafters.begin(), crafters.end(), icrafting), crafters.end());
+}
+
 bool Container::enchantItem(EntityPlayer *, int_t)
 {
 	return false;

@@ -7,6 +7,8 @@
 
 class Item;
 class Block;
+class NBTBase;
+class EntityItemFrame;
 class NBTTagCompound;
 class NBTTagList;
 class Enchantment;
@@ -84,6 +86,15 @@ public:
     bool isItemEnchantable();
     void addEnchantment(Enchantment* enchantment, int level);
     bool isItemEnchanted() const;
+    std::string getDisplayName();
+    void setItemName(const std::string& name);
+    bool hasDisplayName() const;
+    void setTagInfo(const std::string& key, NBTBase* tag);
+    int getRepairCost() const;
+    void setRepairCost(int cost);
+    bool isOnItemFrame() const;
+    void setItemFrame(EntityItemFrame* frame);
+    EntityItemFrame* getItemFrame() const;
 
     int stackSize;
     // Java defaults this to 0. The ItemStack(NBTTagCompound*) ctor doesn't set it, so items LOADED
@@ -95,4 +106,5 @@ public:
 private:
     int itemDamage;
     NBTTagCompound* stackTagCompound = nullptr;
+    EntityItemFrame* itemFrame = nullptr;
 };

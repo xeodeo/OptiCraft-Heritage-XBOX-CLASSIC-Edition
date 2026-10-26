@@ -1,4 +1,5 @@
 #include "Enchantment.h"
+#include "ItemStack.h"
 
 #include <stdexcept>
 
@@ -19,6 +20,7 @@
 #include "StatCollector.h"
 
 Enchantment *Enchantment::enchantmentsList[256] = { nullptr };
+std::vector<Enchantment *> Enchantment::field_92090_c;
 Enchantment *Enchantment::protection = nullptr;
 Enchantment *Enchantment::fireProtection = nullptr;
 Enchantment *Enchantment::featherFalling = nullptr;
@@ -59,6 +61,7 @@ int Enchantment::getMaxEnchantability(int level) const { return getMinEnchantabi
 int Enchantment::calcModifierDamage(int, const DamageSource &) const { return 0; }
 int Enchantment::calcModifierLiving(int, EntityLiving *) const { return 0; }
 bool Enchantment::canApplyTogether(const Enchantment *other) const { return this != other; }
+bool Enchantment::canApply(ItemStack *stack) const { return stack != nullptr && EnumEnchantmentTypeHelper::canEnchantItem(type, stack->getItem()); }
 Enchantment *Enchantment::setName(const std::string &value) { name = value; return this; }
 std::string Enchantment::getName() const { return "enchantment." + name; }
 
@@ -93,10 +96,17 @@ void Enchantment::initEnchantments()
     punch = new EnchantmentArrowKnockback(49, 2);
     flame = new EnchantmentArrowFire(50, 2);
     infinity = new EnchantmentArrowInfinite(51, 1);
+
+    field_92090_c.clear();
+    for (Enchantment *ench : enchantmentsList)
+    {
+        if (ench != nullptr)
+            field_92090_c.push_back(ench);
+    }
 }
 
-void Enchantment::cleanup()
-{
+void Enchantment::cleanup() {
+    field_92090_c.clear();
     for (Enchantment *&entry : enchantmentsList)
     {
         delete entry;

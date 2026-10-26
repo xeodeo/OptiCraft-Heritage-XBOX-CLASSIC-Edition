@@ -1,6 +1,7 @@
 #include "EntityPig.h"
 
 #include "AchievementList.h"
+#include "EntityAIControlledByPlayer.h"
 #include "DataWatcher.h"
 #include "EntityAIFollowParent.h"
 #include "EntityAILookIdle.h"
@@ -29,7 +30,10 @@ EntityPig::EntityPig(World *world)
 	const float speed = 0.25f;
 	tasks.addTask(0, new EntityAISwimming(this));
 	tasks.addTask(1, new EntityAIPanic(this, 0.38f));
-	tasks.addTask(2, new EntityAIMate(this, speed));
+	tasks.addTask(2, aiControlledByPlayer = new EntityAIControlledByPlayer(this, 0.34f));
+	tasks.addTask(3, new EntityAIMate(this, speed));
+	if (Item::carrotOnAStick != nullptr)
+		tasks.addTask(4, new EntityAITempt(this, 0.3f, Item::carrotOnAStick->shiftedIndex, false));
 	tasks.addTask(4, new EntityAITempt(this, 0.3f, Item::carrot->shiftedIndex, false));
 	tasks.addTask(5, new EntityAIFollowParent(this, 0.28f));
 	tasks.addTask(6, new EntityAIWander(this, speed));
@@ -41,6 +45,16 @@ EntityPig::EntityPig(World *world)
 bool EntityPig::isAIEnabled()
 {
 	return true;
+}
+
+bool EntityPig::canBeSteered()
+{
+	if (riddenByEntity != nullptr && dynamic_cast<EntityPlayer *>(riddenByEntity) != nullptr)
+	{
+		ItemStack *stack = ((EntityPlayer *)riddenByEntity)->getHeldItem();
+		return stack != nullptr && Item::carrotOnAStick != nullptr && stack->itemID == Item::carrotOnAStick->shiftedIndex;
+	}
+	return false;
 }
 
 int_t EntityPig::getMaxHealth() const

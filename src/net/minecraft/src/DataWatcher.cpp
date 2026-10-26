@@ -62,6 +62,17 @@ void DataWatcher::addObject(int_t id, std::any obj)
     watchedObjectOrder.add(id);
 }
 
+void DataWatcher::addObjectByDataType(int_t id, int_t type)
+{
+    if (type == 0) addObject(id, static_cast<byte_t>(0));
+    else if (type == 1) addObject(id, static_cast<short_t>(0));
+    else if (type == 2) addObject(id, static_cast<int_t>(0));
+    else if (type == 3) addObject(id, 0.0f);
+    else if (type == 4) addObject(id, std::string(""));
+    else if (type == 5) addObject(id, static_cast<ItemStack *>(nullptr));
+    else if (type == 6) addObject(id, static_cast<ChunkCoordinates *>(nullptr));
+}
+
 byte_t DataWatcher::getWatchableObjectByte(int_t id)
 {
     return std::any_cast<byte_t>(watchedObjects.at(id)->getObject());
@@ -121,9 +132,12 @@ void DataWatcher::updateObject(int_t id, std::any obj)
 
 void DataWatcher::setObjectWatched(int_t id)
 {
-    WatchableObject *object = watchedObjects.at(id);
-    object->setWatching(true);
-    objectChanged = true;
+    auto it = watchedObjects.find(id);
+    if (it != watchedObjects.end() && it->second != nullptr)
+    {
+        it->second->setWatching(true);
+        objectChanged = true;
+    }
 }
 
 void DataWatcher::writeWatchableObject(std::ostream &os, WatchableObject *wo)

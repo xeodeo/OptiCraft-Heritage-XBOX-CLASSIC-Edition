@@ -1,4 +1,5 @@
 #include "PathFinder.h"
+#include "World.h"
 
 #include "platform/PlatformTuning.h"
 
@@ -403,4 +404,12 @@ PathEntity *Pathfinder::createEntityPath(PathPoint *pathpoint, PathPoint *pathpo
 		apathpoint[--i] = pathpoint3;
 	}
 	return new PathEntity(apathpoint);
+}
+
+int_t Pathfinder::func_82565_a(Entity *var0, int_t var1, int_t var2, int_t var3, PathPoint *var4, bool var5, bool var6, bool var7)
+{
+	if (var0 == nullptr || var0->worldObj == nullptr || var4 == nullptr)
+		return 0;
+	Pathfinder pf(var0->worldObj, var7, var6, var5, false);
+	return pf.getVerticalOffset(var0, var1, var2, var3, var4);
 }

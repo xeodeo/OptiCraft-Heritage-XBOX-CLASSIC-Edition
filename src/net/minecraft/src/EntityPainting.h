@@ -1,51 +1,30 @@
 #pragma once
 
-#include "Entity.h"
+#include "EntityHanging.h"
 #include "java/Type.h"
 
 class World;
 class EnumArt;
-class EntityPlayer;
 class NBTTagCompound;
-class ItemStack;
 
 // net.minecraft.src.EntityPainting
-class EntityPainting : public Entity
+class EntityPainting : public EntityHanging
 {
 public:
-	EntityPainting(World *world);
+	explicit EntityPainting(World *world);
 	EntityPainting(World *world, int_t i, int_t j, int_t k, int_t l);
-	EntityPainting(World *world, int_t i, int_t j, int_t k, int_t l, jstring s);
+	EntityPainting(World *world, int_t i, int_t j, int_t k, int_t l, const jstring &s);
 
-	static constexpr int_t CLASS_ID = 10;
+	static constexpr int_t CLASS_ID = 9;
 	int_t getEntityClassID() const override { return CLASS_ID; }
 
-protected:
-	void entityInit() override;
-
-public:
-	void setDirection(int_t i);
-	void onUpdate() override;
-	bool onValidSurface();
-	bool canBeCollidedWith() override;
-	bool attackEntityFrom(Entity *entity, int_t i) override;
-	bool attackEntityFrom(const DamageSource &source, int_t damage) override;
-	void moveEntity(double d, double d1, double d2) override;
-	void addVelocity(double d, double d1, double d2) override;
 	void writeEntityToNBT(NBTTagCompound *nbttagcompound) override;
 	void readEntityFromNBT(NBTTagCompound *nbttagcompound) override;
 
-private:
-	float getOffsetForSize(int_t i);
-	void dropPaintingItem();
+	int func_82329_d() override;
+	int func_82330_g() override;
+	void dropItemStack() override;
 
 public:
-	int_t xPosition = 0;
-	int_t yPosition = 0;
-	int_t zPosition = 0;
-	int_t direction;
-	EnumArt *art = nullptr;
-
-private:
-	int_t field_695_c;
+	const EnumArt *art = nullptr;
 };
