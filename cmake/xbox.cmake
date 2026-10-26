@@ -133,7 +133,7 @@ endif()
 # --- Target -------------------------------------------------------------------
 # Build stamp (version, time, commit) regenerated at every build; see
 # cmake/xbox_build_stamp.cmake and src/xbox/system/XboxBuildStamp.h.
-set(XBOX_VERSION_LABEL "1.2.5" CACHE STRING "Game version shown in the build stamp")
+set(XBOX_VERSION_LABEL "1.5.2" CACHE STRING "Game version shown in the build stamp")
 set(_xbox_stamp_cpp "${CMAKE_BINARY_DIR}/generated/XboxBuildStamp.cpp")
 if(NOT XBOX_LAUNCHER)
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/generated")
