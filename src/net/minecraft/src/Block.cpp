@@ -225,6 +225,7 @@ BlockFire *Block::fire = nullptr;
 Block *Block::mobSpawner = nullptr;
 Block *Block::stairCompactPlanks = nullptr;
 Block *Block::chest = nullptr;
+Block *Block::chestTrapped = nullptr;
 Block *Block::redstoneWire = nullptr;
 Block *Block::oreDiamond = nullptr;
 Block *Block::blockDiamond = nullptr;
@@ -1166,6 +1167,7 @@ void Block::initialize()
 	tripWire = (new BlockTripWire(132))->setBlockName("tripWire")->setRequiresSelfNotify();
 	woodenButton = (new BlockButtonWood(143))->setHardness(0.5f)->setStepSound(soundWoodFootstep)->setBlockName("button")->setRequiresSelfNotify();
 	buttonWood = woodenButton;
+	chestTrapped = (new BlockChest(146, 1))->setHardness(2.5f)->setStepSound(soundWoodFootstep)->setBlockName("chestTrap")->setRequiresSelfNotify();
 	pressurePlateGold = (new BlockPressurePlateWeighted(147, blockGold->blockIndexInTexture, Material::iron, 64))->setHardness(0.5f)->setStepSound(soundMetalFootstep)->setBlockName("weightedPlate_light")->setRequiresSelfNotify();
 	pressurePlateIron = (new BlockPressurePlateWeighted(148, blockSteel->blockIndexInTexture, Material::iron, 640))->setHardness(0.5f)->setStepSound(soundMetalFootstep)->setBlockName("weightedPlate_heavy")->setRequiresSelfNotify();
 	daylightSensor = (new BlockDaylightDetector(151))->setHardness(0.2f)->setStepSound(soundWoodFootstep)->setBlockName("daylightDetector")->setRequiresSelfNotify();
@@ -1324,6 +1326,7 @@ void Block::cleanup()
 	mobSpawner = nullptr;
 	stairCompactPlanks = nullptr;
 	chest = nullptr;
+	chestTrapped = nullptr;
 	redstoneWire = nullptr;
 	oreDiamond = nullptr;
 	blockDiamond = nullptr;
@@ -1433,4 +1436,21 @@ void Block::cleanup()
 	stoneSingleSlab = nullptr;
 	stoneButton = nullptr;
 	doorIron = nullptr;
+}
+
+Block *Block::setCreativeTab(CreativeTabs *tab)
+{
+	displayOnCreativeTab = tab;
+	return this;
+}
+
+CreativeTabs *Block::getCreativeTabToDisplayOn() const
+{
+	return displayOnCreativeTab;
+}
+
+void Block::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	list.push_back(new ItemStack(id, 1, 0));
 }

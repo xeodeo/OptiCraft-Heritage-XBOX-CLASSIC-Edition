@@ -71,6 +71,7 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 126, 0, 0, 21 }, // Tile::woodSlabHalf (halfslab)
     { 128, -1, 0, 15 }, // Tile::stairs_sandstone (stairs)
     { 130, -1, 0, 34 }, // Tile::enderChest (chest)
+    { 146, -1, 0, 34 }, // Tile::chestTrapped (chest)
     { 131, -1, 4, 0 }, // Tile::tripWireSource
     { 133, -1, 6, 13 }, // Tile::emeraldBlock (block)
     { 134, -1, 0, 15 }, // Tile::woodStairsDark (stairs)

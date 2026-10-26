@@ -1,4 +1,5 @@
 #include "BlockSapling.h"
+#include "ItemStack.h"
 #include "World.h"
 #include "WorldGenTaiga2.h"
 #include "WorldGenForest.h"
@@ -126,3 +127,10 @@ bool BlockSapling::isSameSapling(World *world, int_t i, int_t j, int_t k, int_t 
 }
 
 int_t BlockSapling::damageDropped(int_t i) { return i & 3; }
+
+void BlockSapling::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	for (int_t i = 0; i < 4; ++i)
+		list.push_back(new ItemStack(id, 1, i));
+}

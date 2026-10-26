@@ -24,7 +24,6 @@ CELL = 16
 ATLAS_SIZE = 256
 CELL_COUNT = (ATLAS_SIZE // CELL) ** 2
 SKIP_CONSOLE_GUI = {
-    "gui/allitems.png",
     "gui/gui.png",
     "gui/icons.png",
     "gui/inventory.png",

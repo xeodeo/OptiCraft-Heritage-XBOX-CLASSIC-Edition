@@ -14,6 +14,7 @@ class Entity;
 class Block;
 class NBTTagCompound;
 class MovingObjectPosition;
+class CreativeTabs;
 
 class Item {
 public:
@@ -77,6 +78,11 @@ public:
     bool isPotionIngredient() const;
     virtual bool func_46058_c();
     virtual int func_46057_a(int damage, int renderPass);
+
+    CreativeTabs *tabToDisplayOn = nullptr;
+    Item *setCreativeTab(CreativeTabs *tab);
+    virtual CreativeTabs *getCreativeTab() const;
+    virtual void getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list);
 
     static void initItems();
     static void cleanup();

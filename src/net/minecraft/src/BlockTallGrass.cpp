@@ -72,6 +72,13 @@ int_t BlockTallGrass::quantityDroppedWithBonus(int_t fortune, Random &random)
 	return 1 + random.nextInt(fortune * 2 + 1);
 }
 
+void BlockTallGrass::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	list.push_back(new ItemStack(id, 1, 1));
+	list.push_back(new ItemStack(id, 1, 2));
+}
+
 void BlockTallGrass::harvestBlock(World *world, EntityPlayer *entityplayer, int_t i, int_t j, int_t k, int_t metadata)
 {
 	ItemStack *equipped = entityplayer->getCurrentEquippedItem();

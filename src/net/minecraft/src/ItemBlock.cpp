@@ -81,3 +81,17 @@ std::string ItemBlock::getItemNameIS(ItemStack* itemstack) {
 std::string ItemBlock::getItemName() {
     return Block::blocksList[blockID]->getBlockName();
 }
+
+CreativeTabs *ItemBlock::getCreativeTab() const {
+    Block *b = blockID >= 0 && blockID < Block::BLOCK_REGISTRY_SIZE ? Block::blocksList[blockID] : nullptr;
+    return b != nullptr ? b->getCreativeTabToDisplayOn() : nullptr;
+}
+
+void ItemBlock::getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list) {
+    Block *b = blockID >= 0 && blockID < Block::BLOCK_REGISTRY_SIZE ? Block::blocksList[blockID] : nullptr;
+    if (b != nullptr) {
+        b->getSubBlocks(id, tab, list);
+    } else {
+        Item::getSubItems(id, tab, list);
+    }
+}

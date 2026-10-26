@@ -20,6 +20,7 @@ class ItemStack;
 class StepSound;
 class Explosion;
 class TileEntity;
+class CreativeTabs;
 
 class BlockGrass;
 class BlockLeaves;
@@ -289,6 +290,7 @@ public:
 	static Block *mobSpawner;
 	static Block *stairCompactPlanks;
 	static Block *chest;
+	static Block *chestTrapped;
 	static Block *redstoneWire;
 	static Block *oreDiamond;
 	static Block *blockDiamond;
@@ -424,6 +426,11 @@ public:
 	float blockParticleGravity;
 	Material *const blockMaterial;
 	float slipperiness;
+
+	CreativeTabs *displayOnCreativeTab = nullptr;
+	Block *setCreativeTab(CreativeTabs *tab);
+	CreativeTabs *getCreativeTabToDisplayOn() const;
+	virtual void getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list);
 
 private:
 	const char *blockName = nullptr;

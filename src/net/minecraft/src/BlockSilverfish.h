@@ -13,6 +13,7 @@ public:
 	void onBlockDestroyedByPlayer(World *world, int_t x, int_t y, int_t z, int_t metadata) override;
 	int_t quantityDropped(Random &random) override;
 	ItemStack *createStackedBlock(int_t metadata) override;
+	void getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 
 	static bool getPosingIdByMetadata(int_t blockId);
 	static int_t getMetadataForBlockType(int_t blockId);

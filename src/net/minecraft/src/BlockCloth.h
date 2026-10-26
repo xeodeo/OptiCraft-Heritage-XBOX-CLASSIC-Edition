@@ -8,6 +8,7 @@ class BlockCloth : public Block
 public:
 	BlockCloth();
 	int_t getBlockTextureFromSideAndMetadata(int_t i, int_t j) override;
+	void getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 
 	static int_t getColorFromDamage(int_t i);
 	static int_t getColorFromItemStack(int_t i);

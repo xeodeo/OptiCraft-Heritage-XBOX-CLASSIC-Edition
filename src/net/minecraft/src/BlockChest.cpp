@@ -1,3 +1,4 @@
+#include "CreativeTabs.h"
 #include "BlockChest.h"
 
 #include "AxisAlignedBB.h"
@@ -16,10 +17,11 @@
 #include "World.h"
 #include "java/Arithmetic.h"
 
-BlockChest::BlockChest(int_t i)
-	: BlockContainer(i, Material::wood)
+BlockChest::BlockChest(int_t i, int_t trapped)
+	: BlockContainer(i, Material::wood), isTrapped(trapped)
 {
 	blockIndexInTexture = 4; // planks, as in 1.5.2
+	setCreativeTab(isTrapped == 1 ? CreativeTabs::tabRedstone : CreativeTabs::tabDecorations);
 }
 
 bool BlockChest::isOpaqueCube()
@@ -315,5 +317,26 @@ bool BlockChest::blockActivated(World *world, int_t i, int_t j, int_t k, EntityP
 
 TileEntity *BlockChest::getBlockEntity()
 {
-	return new TileEntityChest();
+	return new TileEntityChest(isTrapped);
+}
+
+bool BlockChest::canProvidePower()
+{
+	return isTrapped == 1;
+}
+
+int_t BlockChest::isProvidingWeakPower(IBlockAccess *world, int_t i, int_t j, int_t k, int_t side)
+{
+	(void)side;
+	if (!canProvidePower() || world == nullptr)
+		return 0;
+	TileEntityChest *chest = dynamic_cast<TileEntityChest *>(world->getBlockTileEntity(i, j, k));
+	if (chest == nullptr)
+		return 0;
+	return MathHelper::clamp_int(chest->numUsingPlayers, 0, 15);
+}
+
+int_t BlockChest::isProvidingStrongPower(IBlockAccess *world, int_t i, int_t j, int_t k, int_t side)
+{
+	return side == 1 ? isProvidingWeakPower(world, i, j, k, side) : 0;
 }

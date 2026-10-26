@@ -1,4 +1,5 @@
 #include "BlockWood.h"
+#include "ItemStack.h"
 
 #include "Material.h"
 
@@ -21,4 +22,11 @@ int_t BlockWood::getBlockTextureFromSideAndMetadata(int_t side, int_t metadata)
 int_t BlockWood::damageDropped(int_t metadata)
 {
 	return metadata;
+}
+
+void BlockWood::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	for (int_t i = 0; i < 4; ++i)
+		list.push_back(new ItemStack(id, 1, i));
 }

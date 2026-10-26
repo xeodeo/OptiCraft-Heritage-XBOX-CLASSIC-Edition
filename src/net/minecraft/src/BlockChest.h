@@ -11,7 +11,7 @@ class TileEntityChest;
 class BlockChest : public BlockContainer
 {
 public:
-	BlockChest(int_t i);
+	BlockChest(int_t i, int_t isTrapped = 0);
 
 	bool isOpaqueCube() override;
 	bool renderAsNormalBlock() override;
@@ -28,6 +28,12 @@ public:
 	bool hasComparatorInputOverride() override;
 	int_t getComparatorInputOverride(World *world, int_t i, int_t j, int_t k, int_t side) override;
 	bool blockActivated(World *world, int_t i, int_t j, int_t k, EntityPlayer *entityplayer) override;
+
+	bool canProvidePower() override;
+	int_t isProvidingWeakPower(IBlockAccess *world, int_t i, int_t j, int_t k, int_t side) override;
+	int_t isProvidingStrongPower(IBlockAccess *world, int_t i, int_t j, int_t k, int_t side) override;
+
+	const int_t isTrapped;
 
 protected:
 	TileEntity *getBlockEntity() override;

@@ -1,13 +1,14 @@
 #include "TileEntityChest.h"
 
 #include "Block.h"
+#include "BlockChest.h"
 #include "EntityPlayer.h"
 #include "ItemStack.h"
 #include "NBTTagCompound.h"
 #include "NBTTagList.h"
 #include "World.h"
 
-TileEntityChest::TileEntityChest()
+TileEntityChest::TileEntityChest(int_t type)
 	: adjacentChestChecked(false),
 	  adjacentChestZNeg(nullptr),
 	  adjacentChestXPos(nullptr),
@@ -16,7 +17,8 @@ TileEntityChest::TileEntityChest()
 	  lidAngle(0.0f),
 	  prevLidAngle(0.0f),
 	  numUsingPlayers(0),
-	  ticksSinceSync(0)
+	  ticksSinceSync(0),
+	  field_94046_i(type)
 {
 	for (int_t i = 0; i < 36; ++i)
 		chestContents[i] = nullptr;
@@ -154,6 +156,27 @@ void TileEntityChest::updateContainingBlockInfo()
 	adjacentChestChecked = false;
 }
 
+int_t TileEntityChest::func_98041_l()
+{
+	if (field_94046_i == -1)
+	{
+		if (worldObj == nullptr || dynamic_cast<BlockChest *>(getBlockType()) == nullptr)
+			return 0;
+		field_94046_i = static_cast<BlockChest *>(getBlockType())->isTrapped;
+	}
+	return field_94046_i;
+}
+
+bool TileEntityChest::func_94044_a(int_t x, int_t y, int_t z)
+{
+	if (worldObj == nullptr)
+		return false;
+	int_t id = worldObj->getBlockId(x, y, z);
+	Block *b = (id >= 0 && id < Block::BLOCK_REGISTRY_SIZE) ? Block::blocksList[id] : nullptr;
+	return b != nullptr && dynamic_cast<BlockChest *>(b) != nullptr
+		? (static_cast<BlockChest *>(b)->isTrapped == func_98041_l()) : false;
+}
+
 void TileEntityChest::checkForAdjacentChests()
 {
 	if (adjacentChestChecked || worldObj == nullptr)
@@ -165,17 +188,14 @@ void TileEntityChest::checkForAdjacentChests()
 	adjacentChestXNeg = nullptr;
 	adjacentChestZPos = nullptr;
 
-	auto getAdjacent = [this](int_t x, int_t y, int_t z) -> TileEntityChest *
-	{
-		if (worldObj->getBlockId(x, y, z) != Block::chest->blockID)
-			return nullptr;
-		return dynamic_cast<TileEntityChest *>(worldObj->getBlockTileEntity(x, y, z));
-	};
-
-	adjacentChestXNeg = getAdjacent(xCoord - 1, yCoord, zCoord);
-	adjacentChestXPos = getAdjacent(xCoord + 1, yCoord, zCoord);
-	adjacentChestZNeg = getAdjacent(xCoord, yCoord, zCoord - 1);
-	adjacentChestZPos = getAdjacent(xCoord, yCoord, zCoord + 1);
+	if (func_94044_a(xCoord - 1, yCoord, zCoord))
+		adjacentChestXNeg = dynamic_cast<TileEntityChest *>(worldObj->getBlockTileEntity(xCoord - 1, yCoord, zCoord));
+	if (func_94044_a(xCoord + 1, yCoord, zCoord))
+		adjacentChestXPos = dynamic_cast<TileEntityChest *>(worldObj->getBlockTileEntity(xCoord + 1, yCoord, zCoord));
+	if (func_94044_a(xCoord, yCoord, zCoord - 1))
+		adjacentChestZNeg = dynamic_cast<TileEntityChest *>(worldObj->getBlockTileEntity(xCoord, yCoord, zCoord - 1));
+	if (func_94044_a(xCoord, yCoord, zCoord + 1))
+		adjacentChestZPos = dynamic_cast<TileEntityChest *>(worldObj->getBlockTileEntity(xCoord, yCoord, zCoord + 1));
 
 	if (adjacentChestZNeg != nullptr)
 		adjacentChestZNeg->updateContainingBlockInfo();
@@ -241,16 +261,32 @@ void TileEntityChest::onTileEntityPowered(int_t eventId, int_t eventData)
 
 void TileEntityChest::openChest()
 {
+	if (numUsingPlayers < 0)
+		numUsingPlayers = 0;
 	++numUsingPlayers;
 	if (worldObj != nullptr)
+	{
 		worldObj->playNoteAt(xCoord, yCoord, zCoord, 1, numUsingPlayers);
+		if (getBlockType() != nullptr)
+		{
+			worldObj->notifyBlocksOfNeighborChange(xCoord, yCoord, zCoord, getBlockType()->blockID);
+			worldObj->notifyBlocksOfNeighborChange(xCoord, yCoord - 1, zCoord, getBlockType()->blockID);
+		}
+	}
 }
 
 void TileEntityChest::closeChest()
 {
-	--numUsingPlayers;
-	if (worldObj != nullptr)
-		worldObj->playNoteAt(xCoord, yCoord, zCoord, 1, numUsingPlayers);
+	if (getBlockType() != nullptr && dynamic_cast<BlockChest *>(getBlockType()) != nullptr)
+	{
+		--numUsingPlayers;
+		if (worldObj != nullptr)
+		{
+			worldObj->playNoteAt(xCoord, yCoord, zCoord, 1, numUsingPlayers);
+			worldObj->notifyBlocksOfNeighborChange(xCoord, yCoord, zCoord, getBlockType()->blockID);
+			worldObj->notifyBlocksOfNeighborChange(xCoord, yCoord - 1, zCoord, getBlockType()->blockID);
+		}
+	}
 }
 
 void TileEntityChest::invalidate()
