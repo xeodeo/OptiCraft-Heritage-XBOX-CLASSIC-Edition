@@ -17,6 +17,7 @@ extern "C" int __isa_available;  // vcruntime CPU dispatch level
 
 #include "xbox/system/XboxCrashLog.h"
 #include "xbox/system/XboxGameDrive.h"
+#include "xbox/system/XboxBuildStamp.h"
 namespace XboxSelfTest { void run(); }
 
 // T:\debug.log. McLog closes and reopens it after every line so a hang still
@@ -73,6 +74,7 @@ void __cdecl main()
 #else
 	const char* logState = "disabled";
 #endif
+	MC_LOG_INFO("xbox", "BUILD %s\n", xboxBuildStamp());
 	MC_LOG_INFO("xbox", "writable root %s, debug.log %s, build %s %s\n", writableRoot,
 	            logState, __DATE__, __TIME__);
 	pinCpuFeaturesToPentiumIII();
