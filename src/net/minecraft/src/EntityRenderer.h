@@ -86,6 +86,7 @@ private:
     void setupFog(int fogMode, float partialTicks);
     void updateTorchFlicker();
     void updateLightmap();
+    float getNightVisionBrightness(float partialTicks);
     
     // Utility
     void setupFogColorBuffer(float r, float g, float b, float a);

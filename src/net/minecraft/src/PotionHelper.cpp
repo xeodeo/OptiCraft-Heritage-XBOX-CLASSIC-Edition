@@ -52,7 +52,7 @@ void PotionHelper::ensureInitialized()
     potionRequirements[Potion::harm->getId()] = "!0 & !1 & 2 & 3";
     potionRequirements[Potion::moveSlowdown->getId()] = "!0 & 1 & !2 & 3 & 3+6";
     potionRequirements[Potion::damageBoost->getId()] = "0 & !1 & !2 & 3 & 3+6";
-    potionRequirements[Potion::nightVision->getId()] = "!0 & 1 & !2 & 3 & 2+6";
+    potionRequirements[Potion::nightVision->getId()] = "!0 & 1 & 2 & !3 & 2+6";
     potionRequirements[Potion::invisibility->getId()] = "!0 & 1 & 2 & 3 & 2+6";
 
     potionAmplifiers[Potion::moveSpeed->getId()] = "5";

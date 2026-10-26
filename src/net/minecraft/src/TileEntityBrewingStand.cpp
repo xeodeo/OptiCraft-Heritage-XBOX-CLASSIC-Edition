@@ -44,8 +44,11 @@ TileEntityBrewingStand::~TileEntityBrewingStand()
 
 std::string TileEntityBrewingStand::getInvName()
 {
-    return "container.brewing";
+	return isInvNameLocalized() ? customName : "container.brewing";
 }
+
+bool TileEntityBrewingStand::isInvNameLocalized() const { return !customName.empty(); }
+void TileEntityBrewingStand::setCustomName(const std::string &name) { customName = name; }
 
 int_t TileEntityBrewingStand::getSizeInventory()
 {
@@ -84,7 +87,7 @@ void TileEntityBrewingStand::updateEntity()
     {
         filledSlots = newFilledSlots;
         if (worldObj != nullptr)
-            worldObj->setBlockMetadataWithNotify(xCoord, yCoord, zCoord, filledSlots);
+            worldObj->setBlockMetadataWithNotify152(xCoord, yCoord, zCoord, filledSlots, 2);
     }
 
     TileEntity::updateEntity();
@@ -120,10 +123,12 @@ bool TileEntityBrewingStand::canBrew() const
         if (!ItemPotion::isSplash(oldDamage) && ItemPotion::isSplash(newDamage))
             return true;
 
-        const auto &oldEffects = potionItem->getEffects(oldDamage);
+        const auto oldEffects = potionItem->getEffectsForStack(stack);
         const auto &newEffects = potionItem->getEffects(newDamage);
-        if (oldDamage != newDamage &&
-            (oldEffects.empty() || (!potionEffectsEqual(oldEffects, newEffects) && !newEffects.empty())))
+        const bool sameEffectList = !potionItem->hasCustomPotionEffects(stack) && oldDamage == newDamage;
+        if ((oldDamage <= 0 || !sameEffectList) &&
+            (oldEffects.empty() || (!potionEffectsEqual(oldEffects, newEffects) && !newEffects.empty())) &&
+            oldDamage != newDamage)
             return true;
     }
     return false;
@@ -147,9 +152,9 @@ void TileEntityBrewingStand::brewPotions()
 
         const int oldDamage = stack->getItemDamage();
         const int newDamage = getPotionResult(oldDamage, ingredient);
-        const auto &oldEffects = potionItem->getEffects(oldDamage);
+        const auto oldEffects = potionItem->getEffectsForStack(stack);
         const auto &newEffects = potionItem->getEffects(newDamage);
-        const bool sameCachedPotion = oldDamage > 0 && oldDamage == newDamage;
+        const bool sameCachedPotion = oldDamage > 0 && oldDamage == newDamage && !potionItem->hasCustomPotionEffects(stack);
         const bool preservesOrRemovesEffects = !oldEffects.empty() &&
                                                (potionEffectsEqual(oldEffects, newEffects) || newEffects.empty());
         if (sameCachedPotion || preservesOrRemovesEffects)
@@ -218,6 +223,7 @@ void TileEntityBrewingStand::readFromNBT(NBTTagCompound *compound)
         }
     }
     brewTime = compound->getShort("BrewTime");
+    customName = compound->hasKey("CustomName") ? compound->getString("CustomName") : std::string();
 }
 
 void TileEntityBrewingStand::writeToNBT(NBTTagCompound *compound)
@@ -235,6 +241,8 @@ void TileEntityBrewingStand::writeToNBT(NBTTagCompound *compound)
         items->appendTag(itemTag);
     }
     compound->setTag("Items", items);
+    if (isInvNameLocalized())
+        compound->setString("CustomName", customName);
 }
 
 ItemStack *TileEntityBrewingStand::getStackInSlot(int_t slot)
@@ -279,7 +287,7 @@ int_t TileEntityBrewingStand::getInventoryStackLimit()
 
 bool TileEntityBrewingStand::canInteractWith(EntityPlayer *player)
 {
-    if (worldObj == nullptr || worldObj->getBlockTileEntity(xCoord, yCoord, zCoord) != this)
+    if (player == nullptr || worldObj == nullptr || worldObj->getBlockTileEntity(xCoord, yCoord, zCoord) != this)
         return false;
     return player->getDistanceSq(static_cast<double>(xCoord) + 0.5,
                                  static_cast<double>(yCoord) + 0.5,
@@ -300,4 +308,32 @@ int_t TileEntityBrewingStand::getFilledSlots() const
             result |= 1 << i;
     }
     return result;
+}
+
+bool TileEntityBrewingStand::isStackValidForSlot(int_t slot, ItemStack *stack)
+{
+    if (stack == nullptr || !ItemStack::isValidItemID(stack->itemID))
+        return false;
+    if (slot == 3)
+    {
+        Item *item = Item::itemsList[stack->itemID];
+        return item != nullptr && item->isPotionIngredient();
+    }
+    return Item::potion != nullptr && Item::glassBottle != nullptr &&
+           (stack->itemID == Item::potion->shiftedIndex || stack->itemID == Item::glassBottle->shiftedIndex);
+}
+
+std::vector<int_t> TileEntityBrewingStand::getAccessibleSlotsFromSide(int_t side)
+{
+    return side == 1 ? std::vector<int_t>{3} : std::vector<int_t>{0, 1, 2};
+}
+
+bool TileEntityBrewingStand::canInsertItem(int_t slot, ItemStack *stack, int_t)
+{
+    return isStackValidForSlot(slot, stack);
+}
+
+bool TileEntityBrewingStand::canExtractItem(int_t, ItemStack *, int_t)
+{
+    return true;
 }

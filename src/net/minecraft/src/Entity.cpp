@@ -1705,6 +1705,16 @@ void Entity::setEating(bool value)
 	setEntityFlag(4, value);
 }
 
+bool Entity::isInvisible()
+{
+	return getEntityFlag(5);
+}
+
+void Entity::setInvisible(bool invisible)
+{
+	setEntityFlag(5, invisible);
+}
+
 bool Entity::getEntityFlag(int_t i)
 {
 	return (dataWatcher->getWatchableObjectByte(0) & JavaArithmetic::intShl(1, i)) != 0;

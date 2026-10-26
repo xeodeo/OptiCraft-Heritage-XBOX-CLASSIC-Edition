@@ -14,6 +14,9 @@ public:
 
     const std::vector<PotionEffect> &getEffects(ItemStack *itemstack);
     const std::vector<PotionEffect> &getEffects(int damage);
+    std::vector<PotionEffect> getEffectsForStack(ItemStack *itemstack);
+    bool hasCustomPotionEffects(ItemStack *itemstack) const;
+    std::vector<int> getSubItemDamageValues();
     ItemStack *onFoodEaten(ItemStack *itemstack, World *world, EntityPlayer *player) override;
     int getMaxItemUseDuration(ItemStack *itemstack) override;
     EnumAction getItemUseAction(ItemStack *itemstack) override;

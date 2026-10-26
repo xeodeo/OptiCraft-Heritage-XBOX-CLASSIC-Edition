@@ -130,7 +130,7 @@ void BlockDispenser::dispenseItem(World *world, int_t i, int_t j, int_t k, Rando
     }
     else if (stack->itemID == Item::potion->shiftedIndex && ItemPotion::isSplash(stack->getItemDamage()))
     {
-        EntityPotion *entity = new EntityPotion(world, x, y, z, stack->getItemDamage());
+        EntityPotion *entity = new EntityPotion(world, x, y, z, stack);
         entity->setThrowableHeading(xDirection, 0.10000000149011612, zDirection, 1.375f, 3.0f);
         if (!world->entityJoinedWorld(entity)) delete entity;
         world->isTrapdoorOpen(1002, i, j, k, 0);

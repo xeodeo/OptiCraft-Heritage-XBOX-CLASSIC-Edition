@@ -576,7 +576,7 @@ void Item::initItems() {
     porkRaw = (new ItemFood(63, 3, 0.3f, true))->setIconCoord(7, 5)->setItemName("porkchopRaw");
     porkCooked = (new ItemFood(64, 8, 0.8f, true))->setIconCoord(8, 5)->setItemName("porkchopCooked");
     painting = (new ItemPainting(65))->setIconCoord(10, 1)->setItemName("painting");
-    appleGold = (new ItemAppleGold(66, 4, 1.2f, false))->setAlwaysEdible()->setPotionEffect(Potion::regeneration->id, 5, 0, 1.0f)->setIconCoord(11, 0)->setItemName("appleGold");
+    appleGold = (new ItemAppleGold(66, 4, 1.2f, false))->setAlwaysEdible()->setIconCoord(11, 0)->setItemName("appleGold");
     sign = (new ItemSign(67))->setIconCoord(10, 2)->setItemName("sign");
     doorWood = (new ItemDoor(68, Material::wood))->setIconCoord(11, 2)->setItemName("doorWood");
     bucketEmpty = (new ItemBucket(69, 0))->setIconCoord(10, 4)->setItemName("bucket");

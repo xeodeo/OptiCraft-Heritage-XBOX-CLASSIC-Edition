@@ -468,6 +468,17 @@ void EntityRenderer::updateLightmap()
             blue = 0.25f + blueBlock * 0.75f;
         }
 
+        if (mc->thePlayer != nullptr && mc->thePlayer->isPotionActive(Potion::nightVision))
+        {
+            const float nightVision = getNightVisionBrightness(1.0f);
+            float inverseBrightness = red > 0.0f ? 1.0f / red : 1.0f;
+            if (green > 0.0f && inverseBrightness > 1.0f / green) inverseBrightness = 1.0f / green;
+            if (blue > 0.0f && inverseBrightness > 1.0f / blue) inverseBrightness = 1.0f / blue;
+            red = red * (1.0f - nightVision) + red * inverseBrightness * nightVision;
+            green = green * (1.0f - nightVision) + green * inverseBrightness * nightVision;
+            blue = blue * (1.0f - nightVision) + blue * inverseBrightness * nightVision;
+        }
+
         const float gamma = mc->gameSettings->ofBrightness;
         red = std::min(1.0f, red);
         green = std::min(1.0f, green);
@@ -530,6 +541,17 @@ void EntityRenderer::updateLightmap()
             world->field_27172_i > 0, mc->gameSettings->legacyLook);
     }
 #endif
+}
+
+float EntityRenderer::getNightVisionBrightness(float partialTicks)
+{
+    if (mc == nullptr || mc->thePlayer == nullptr)
+        return 0.0f;
+    PotionEffect *effect = mc->thePlayer->getActivePotionEffect(Potion::nightVision);
+    if (effect == nullptr)
+        return 0.0f;
+    const int duration = effect->getDuration();
+    return duration > 200 ? 1.0f : 0.7f + MathHelper::sin(((float)duration - partialTicks) * 3.14159265358979323846f * 0.2f) * 0.3f;
 }
 
 void EntityRenderer::disableLightmap(double)
@@ -2800,6 +2822,17 @@ void EntityRenderer::updateFogColor(float partialTicks)
         fogColorRed = static_cast<float>(fogColorRed * voidFog);
         fogColorGreen = static_cast<float>(fogColorGreen * voidFog);
         fogColorBlue = static_cast<float>(fogColorBlue * voidFog);
+    }
+
+    if (entityliving->isPotionActive(Potion::nightVision))
+    {
+        const float nightVision = getNightVisionBrightness(partialTicks);
+        float inverseBrightness = fogColorRed > 0.0f ? 1.0f / fogColorRed : 1.0f;
+        if (fogColorGreen > 0.0f && inverseBrightness > 1.0f / fogColorGreen) inverseBrightness = 1.0f / fogColorGreen;
+        if (fogColorBlue > 0.0f && inverseBrightness > 1.0f / fogColorBlue) inverseBrightness = 1.0f / fogColorBlue;
+        fogColorRed = fogColorRed * (1.0f - nightVision) + fogColorRed * inverseBrightness * nightVision;
+        fogColorGreen = fogColorGreen * (1.0f - nightVision) + fogColorGreen * inverseBrightness * nightVision;
+        fogColorBlue = fogColorBlue * (1.0f - nightVision) + fogColorBlue * inverseBrightness * nightVision;
     }
 
 #if PLATFORM_PS2

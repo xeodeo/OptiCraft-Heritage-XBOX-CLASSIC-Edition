@@ -15,6 +15,7 @@ public:
     bool isItemValid(ItemStack *itemstack) override;
     int_t getSlotStackLimit() override;
     void onPickupFromSlot(ItemStack *itemstack) override;
+    static bool canHoldPotion(ItemStack *itemstack);
 
 private:
     ContainerBrewingStand *container;

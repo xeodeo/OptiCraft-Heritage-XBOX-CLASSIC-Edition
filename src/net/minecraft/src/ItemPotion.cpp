@@ -6,6 +6,8 @@
 #include "EntityPotion.h"
 #include "InventoryPlayer.h"
 #include "ItemStack.h"
+#include "NBTTagCompound.h"
+#include "NBTTagList.h"
 #include "Potion.h"
 #include "PotionHelper.h"
 #include "StatCollector.h"
@@ -23,6 +25,76 @@ const std::vector<PotionEffect> &ItemPotion::getEffects(ItemStack *itemstack)
     return getEffects(itemstack != nullptr ? itemstack->getItemDamage() : 0);
 }
 
+std::vector<PotionEffect> ItemPotion::getEffectsForStack(ItemStack *itemstack)
+{
+    if (itemstack == nullptr || !itemstack->hasTagCompound())
+        return getEffects(itemstack);
+    NBTTagCompound *tag = itemstack->getTagCompound();
+    if (tag == nullptr || !tag->hasKey("CustomPotionEffects"))
+        return getEffects(itemstack);
+    std::vector<PotionEffect> effects;
+    NBTTagList *list = tag->getTagList("CustomPotionEffects");
+    if (list == nullptr)
+        return effects;
+    for (int i = 0; i < list->tagCount(); ++i)
+    {
+        NBTTagCompound *effectTag = dynamic_cast<NBTTagCompound *>(list->tagAt(i));
+        PotionEffect *effect = PotionEffect::readCustomPotionEffectFromNBT(effectTag);
+        if (effect != nullptr)
+        {
+            effects.push_back(*effect);
+            delete effect;
+        }
+    }
+    return effects;
+}
+
+bool ItemPotion::hasCustomPotionEffects(ItemStack *itemstack) const
+{
+    NBTTagCompound *tag = itemstack != nullptr ? itemstack->getTagCompound() : nullptr;
+    return tag != nullptr && tag->hasKey("CustomPotionEffects");
+}
+
+std::vector<int> ItemPotion::getSubItemDamageValues()
+{
+    std::vector<int> damages{0};
+    std::vector<std::vector<PotionEffect>> representedEffects;
+    for (int base = 0; base <= 15; ++base)
+    {
+        for (int splash = 0; splash <= 1; ++splash)
+        {
+            const int form = base | (splash == 0 ? 8192 : 16384);
+            for (int level = 0; level <= 2; ++level)
+            {
+                const int damage = form | (level == 1 ? 32 : (level == 2 ? 64 : 0));
+                const std::vector<PotionEffect> &effects = getEffects(damage);
+                if (effects.empty())
+                    continue;
+                bool duplicate = false;
+                for (const auto &previous : representedEffects)
+                {
+                    if (previous.size() != effects.size())
+                        continue;
+                    bool same = true;
+                    for (std::size_t i = 0; i < effects.size(); ++i)
+                        same = same && previous[i].equals(effects[i]);
+                    if (same)
+                    {
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if (!duplicate)
+                {
+                    representedEffects.push_back(effects);
+                    damages.push_back(damage);
+                }
+            }
+        }
+    }
+    return damages;
+}
+
 const std::vector<PotionEffect> &ItemPotion::getEffects(int damage)
 {
     auto it = effectCache.find(damage);
@@ -33,20 +105,24 @@ const std::vector<PotionEffect> &ItemPotion::getEffects(int damage)
 
 ItemStack *ItemPotion::onFoodEaten(ItemStack *itemstack, World *world, EntityPlayer *player)
 {
-    --itemstack->stackSize;
+    if (!player->capabilities.isCreativeMode)
+        --itemstack->stackSize;
     if (!world->multiplayerWorld)
     {
-        const auto &effects = getEffects(itemstack);
+        const auto effects = getEffectsForStack(itemstack);
         for (const PotionEffect &effect : effects)
             player->addPotionEffect(new PotionEffect(effect));
     }
 
-    if (itemstack->stackSize <= 0)
+    if (!player->capabilities.isCreativeMode && itemstack->stackSize <= 0)
         return new ItemStack(Item::glassBottle);
 
-    std::unique_ptr<ItemStack> bottle(new ItemStack(Item::glassBottle));
-    if (!player->inventory->addItemStackToInventory(bottle.get()))
-        player->dropPlayerItem(bottle.release());
+    if (!player->capabilities.isCreativeMode)
+    {
+        ItemStack *bottle = new ItemStack(Item::glassBottle);
+        if (!player->inventory->addItemStackToInventory(bottle))
+            delete bottle;
+    }
     return itemstack;
 }
 
@@ -64,11 +140,12 @@ ItemStack *ItemPotion::onItemRightClick(ItemStack *itemstack, World *world, Enti
 {
     if (isSplash(itemstack->getItemDamage()))
     {
-        --itemstack->stackSize;
+        if (!player->capabilities.isCreativeMode)
+            --itemstack->stackSize;
         world->playSoundAtEntity(player, "random.bow", 0.5f, 0.4f / (itemRand.nextFloat() * 0.4f + 0.8f));
         if (!world->multiplayerWorld)
         {
-            EntityPotion *potion = new EntityPotion(world, player, itemstack->getItemDamage());
+            EntityPotion *potion = new EntityPotion(world, player, itemstack);
             if (!world->spawnEntityInWorld(potion))
                 delete potion;
         }
@@ -128,7 +205,7 @@ bool ItemPotion::isEffectInstant(int damage)
 
 bool ItemPotion::hasEffect(ItemStack *itemstack)
 {
-    return itemstack != nullptr && !getEffects(itemstack).empty();
+    return itemstack != nullptr && !getEffectsForStack(itemstack).empty();
 }
 
 std::string ItemPotion::getItemDisplayName(ItemStack *itemstack)
@@ -140,7 +217,7 @@ std::string ItemPotion::getItemDisplayName(ItemStack *itemstack)
     if (isSplash(itemstack->getItemDamage()))
         prefix = StatCollector::translateToLocal("potion.prefix.grenade") + " ";
 
-    const std::vector<PotionEffect>& effects = getEffects(itemstack);
+    const std::vector<PotionEffect> effects = getEffectsForStack(itemstack);
     if (!effects.empty())
         return prefix + StatCollector::translateToLocal(effects.front().getEffectName() + ".postfix");
 
@@ -153,7 +230,7 @@ void ItemPotion::addInformation(ItemStack *itemstack, std::vector<std::string>& 
     if (itemstack == nullptr || itemstack->getItemDamage() == 0)
         return;
 
-    const std::vector<PotionEffect>& effects = getEffects(itemstack);
+    const std::vector<PotionEffect> effects = getEffectsForStack(itemstack);
     if (effects.empty())
     {
         information.push_back(u8"§7" + StatCollector::translateToLocal("potion.empty"));

@@ -253,7 +253,10 @@ void RenderLiving::renderModel(EntityLiving* entityliving, float f, float f1, fl
     const std::string &renderTexture = baseTexture;
 #endif
     loadDownloadableImageTexture(entityliving->skinUrl, renderTexture);
-    mainModel->render(entityliving, f, f1, f2, f3, f4, f5);
+    if (!entityliving->isInvisible())
+        mainModel->render(entityliving, f, f1, f2, f3, f4, f5);
+    else
+        mainModel->setRotationAngles(f, f1, f2, f3, f4, f5);
 }
 
 int RenderLiving::inheritRenderPass(EntityLiving* entityliving, int i, float f) {

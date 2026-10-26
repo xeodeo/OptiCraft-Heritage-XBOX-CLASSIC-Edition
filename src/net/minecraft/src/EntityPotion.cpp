@@ -9,24 +9,38 @@
 #include "EntityLiving.h"
 #include "Item.h"
 #include "ItemPotion.h"
+#include "ItemStack.h"
+#include "NBTTagCompound.h"
 #include "MovingObjectPosition.h"
 #include "Potion.h"
 #include "PotionEffect.h"
 #include "World.h"
 
-EntityPotion::EntityPotion(World *world) : EntityThrowable(world)
+EntityPotion::EntityPotion(World *world) : EntityThrowable(world), potionStack(new ItemStack(Item::potion, 1, 0))
 {
 }
 
 EntityPotion::EntityPotion(World *world, EntityLiving *thrower, int damage)
-    : EntityThrowable(world, thrower), potionDamage(damage)
+    : EntityThrowable(world, thrower), potionStack(new ItemStack(Item::potion, 1, damage))
 {
 }
 
 EntityPotion::EntityPotion(World *world, double x, double y, double z, int damage)
-    : EntityThrowable(world, x, y, z), potionDamage(damage)
+    : EntityThrowable(world, x, y, z), potionStack(new ItemStack(Item::potion, 1, damage))
 {
 }
+
+EntityPotion::EntityPotion(World *world, EntityLiving *thrower, ItemStack *stack)
+    : EntityThrowable(world, thrower), potionStack(stack ? stack->copy() : new ItemStack(Item::potion, 1, 0))
+{
+}
+
+EntityPotion::EntityPotion(World *world, double x, double y, double z, ItemStack *stack)
+    : EntityThrowable(world, x, y, z), potionStack(stack ? stack->copy() : new ItemStack(Item::potion, 1, 0))
+{
+}
+
+EntityPotion::~EntityPotion() { delete potionStack; }
 
 float EntityPotion::getGravityVelocity() const
 {
@@ -45,7 +59,14 @@ float EntityPotion::getInaccuracyPitchOffset() const
 
 int EntityPotion::getPotionDamage() const
 {
-    return potionDamage;
+    return potionStack ? potionStack->getItemDamage() : 0;
+}
+
+void EntityPotion::setPotionDamage(int damage)
+{
+    if (potionStack == nullptr)
+        potionStack = new ItemStack(Item::potion, 1, 0);
+    potionStack->setItemDamage(damage);
 }
 
 void EntityPotion::onImpact(MovingObjectPosition *hit)
@@ -56,7 +77,7 @@ void EntityPotion::onImpact(MovingObjectPosition *hit)
     ItemPotion *potionItem = dynamic_cast<ItemPotion *>(Item::potion);
     if (potionItem != nullptr)
     {
-        const auto &effects = potionItem->getEffects(potionDamage);
+        const auto effects = potionItem->getEffectsForStack(potionStack);
         if (!effects.empty())
         {
             AxisAlignedBB *area = boundingBox->expand(4.0, 2.0, 4.0);
@@ -99,6 +120,23 @@ void EntityPotion::onImpact(MovingObjectPosition *hit)
                          JavaArithmetic::longToInt(JavaArithmetic::roundDouble(posX)),
                          JavaArithmetic::longToInt(JavaArithmetic::roundDouble(posY)),
                          JavaArithmetic::longToInt(JavaArithmetic::roundDouble(posZ)),
-                         potionDamage);
+                         getPotionDamage());
     setEntityDead();
+}
+
+void EntityPotion::readEntityFromNBT(NBTTagCompound *tag)
+{
+    EntityThrowable::readEntityFromNBT(tag);
+    delete potionStack;
+    potionStack = tag->hasKey("Potion") ? ItemStack::loadItemStackFromNBT(tag->getCompoundTag("Potion")) :
+                  new ItemStack(Item::potion, 1, tag->getInteger("potionValue"));
+    if (potionStack == nullptr)
+        setEntityDead();
+}
+
+void EntityPotion::writeEntityToNBT(NBTTagCompound *tag)
+{
+    EntityThrowable::writeEntityToNBT(tag);
+    if (potionStack != nullptr)
+        tag->setCompoundTag("Potion", potionStack->writeToNBT(new NBTTagCompound()));
 }

@@ -167,6 +167,8 @@ EntityLiving::EntityLiving(World *world)
 	preventEntitySpawning = true;
 	if (!dataWatcher->hasObject(8))
 		dataWatcher->addObject(8, (int_t)0);
+	if (!dataWatcher->hasObject(9))
+		dataWatcher->addObject(9, (byte_t)0);
 	setPosition(posX, posY, posZ);
 	rotationYaw = (float)(Math::random() * 3.1415927410125732 * 2.0);
 	rotationYawHead = rotationYaw;
@@ -191,6 +193,8 @@ void EntityLiving::entityInit()
 {
 	if (!dataWatcher->hasObject(8))
 		dataWatcher->addObject(8, (int_t)0);
+	if (!dataWatcher->hasObject(9))
+		dataWatcher->addObject(9, (byte_t)0);
 }
 
 bool EntityLiving::canEntityBeSeen(Entity *entity)
@@ -1435,6 +1439,7 @@ void EntityLiving::writeEntityToNBT(NBTTagCompound *nbttagcompound)
 			tag->setByte("Id", JavaArithmetic::byteFromBits(static_cast<ubyte_t>(effect->getPotionID())));
 			tag->setByte("Amplifier", JavaArithmetic::byteFromBits(static_cast<ubyte_t>(effect->getAmplifier())));
 			tag->setInteger("Duration", effect->getDuration());
+			tag->setBoolean("Ambient", effect->getIsAmbient());
 			effects->appendTag(tag);
 		}
 		nbttagcompound->setTag("ActiveEffects", effects);
@@ -1471,11 +1476,11 @@ void EntityLiving::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 				if (existing != activePotionsMap.end())
 				{
 					delete existing->second;
-					existing->second = new PotionEffect(id, duration, amplifier);
+					existing->second = new PotionEffect(id, duration, amplifier, tag->getBoolean("Ambient"));
 				}
 				else
 				{
-					activePotionsMap[id] = new PotionEffect(id, duration, amplifier);
+					activePotionsMap[id] = new PotionEffect(id, duration, amplifier, tag->getBoolean("Ambient"));
 					activePotionOrder.add(id);
 				}
 			}
@@ -1655,6 +1660,10 @@ void EntityLiving::updatePotionEffects()
 		if (!worldObj->multiplayerWorld)
 		{
 			int_t color = 0;
+			bool ambient = false;
+			bool invisible = false;
+			Potion::initPotions();
+			invisible = isPotionActive(Potion::invisibility);
 			if (!activePotionsMap.empty())
 			{
 				float red = 0.0f;
@@ -1669,6 +1678,7 @@ void EntityLiving::updatePotionEffects()
 					Potion *potion = effect != nullptr ? Potion::getPotion(effect->getPotionID()) : nullptr;
 					if (potion == nullptr)
 						continue;
+					ambient = ambient || effect->getIsAmbient();
 					int_t liquid = potion->getLiquidColor();
 					for (int_t i = 0; i <= effect->getAmplifier(); ++i)
 					{
@@ -1687,11 +1697,18 @@ void EntityLiving::updatePotionEffects()
 				}
 			}
 			dataWatcher->updateObject(8, color);
+			dataWatcher->updateObject(9, (byte_t)(ambient ? 1 : 0));
+			setInvisible(invisible);
 		}
 		potionsNeedUpdate = false;
 	}
 
-	if (rand.nextBoolean())
+	const bool invisible = isInvisible();
+	bool emitParticle = invisible ? rand.nextInt(15) == 0 : rand.nextBoolean();
+	const bool ambient = dataWatcher->getWatchableObjectByte(9) > 0;
+	if (ambient)
+		emitParticle = emitParticle && rand.nextInt(5) == 0;
+	if (emitParticle)
 	{
 		int_t color = dataWatcher->getWatchableObjectInt(8);
 		if (color > 0)
@@ -1702,7 +1719,7 @@ void EntityLiving::updatePotionEffects()
 			const double particleX = posX + (rand.nextDouble() - 0.5) * (double)width;
 			const double particleY = posY + rand.nextDouble() * (double)height - (double)yOffset;
 			const double particleZ = posZ + (rand.nextDouble() - 0.5) * (double)width;
-			worldObj->spawnParticle("mobSpell", particleX, particleY, particleZ, red, green, blue);
+			worldObj->spawnParticle(ambient ? "mobSpellAmbient" : "mobSpell", particleX, particleY, particleZ, red, green, blue);
 		}
 	}
 }

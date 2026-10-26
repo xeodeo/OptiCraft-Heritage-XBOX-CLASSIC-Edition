@@ -188,6 +188,8 @@ public:
 	virtual void setSprinting(bool value);
 	bool isEating();
 	void setEating(bool value);
+	virtual bool isInvisible();
+	virtual void setInvisible(bool invisible);
 
 protected:
 	bool getEntityFlag(int_t i);

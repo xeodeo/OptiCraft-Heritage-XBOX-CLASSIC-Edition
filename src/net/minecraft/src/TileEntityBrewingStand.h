@@ -1,20 +1,23 @@
 #pragma once
 
-#include "IInventory.h"
+#include "ISidedInventory.h"
 #include "TileEntity.h"
 
 class ItemStack;
 class NBTTagCompound;
 class EntityPlayer;
+class Item;
 
 // net.minecraft.src.TileEntityBrewingStand
-class TileEntityBrewingStand : public TileEntity, public IInventory
+class TileEntityBrewingStand : public TileEntity, public ISidedInventory
 {
 public:
     TileEntityBrewingStand();
     ~TileEntityBrewingStand() override;
 
     std::string getInvName() override;
+    bool isInvNameLocalized() const;
+    void setCustomName(const std::string &name);
     int_t getSizeInventory() override;
     void updateEntity() override;
     int_t getBrewTime() const;
@@ -29,6 +32,10 @@ public:
     void writeToNBT(NBTTagCompound *compound) override;
     void setBrewTime(int_t time);
     int_t getFilledSlots() const;
+    bool isStackValidForSlot(int_t slot, ItemStack *stack) override;
+    std::vector<int_t> getAccessibleSlotsFromSide(int_t side) override;
+    bool canInsertItem(int_t slot, ItemStack *stack, int_t side) override;
+    bool canExtractItem(int_t slot, ItemStack *stack, int_t side) override;
 
 private:
     bool canBrew() const;
@@ -39,4 +46,5 @@ private:
     int_t brewTime = 0;
     int_t filledSlots = 0;
     int_t ingredientID = -1;
+    std::string customName;
 };

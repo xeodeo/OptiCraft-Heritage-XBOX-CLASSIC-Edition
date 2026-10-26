@@ -4,9 +4,15 @@
 
 #include "EntityLiving.h"
 #include "Potion.h"
+#include "NBTTagCompound.h"
 
 PotionEffect::PotionEffect(int id, int effectDuration, int effectAmplifier) :
 	potionID(id), duration(effectDuration), amplifier(effectAmplifier)
+{
+}
+
+PotionEffect::PotionEffect(int id, int effectDuration, int effectAmplifier, bool effectAmbient) :
+	potionID(id), duration(effectDuration), amplifier(effectAmplifier), ambient(effectAmbient)
 {
 }
 
@@ -29,6 +35,10 @@ void PotionEffect::combine(const PotionEffect &other)
 	{
 		duration = other.duration;
 	}
+	else if (!other.ambient && ambient)
+	{
+		ambient = false;
+	}
 }
 
 int PotionEffect::getPotionID() const
@@ -44,6 +54,29 @@ int PotionEffect::getDuration() const
 int PotionEffect::getAmplifier() const
 {
 	return amplifier;
+}
+
+bool PotionEffect::isSplashPotionEffect() const { return splashPotion; }
+void PotionEffect::setSplashPotion(bool splash) { splashPotion = splash; }
+bool PotionEffect::getIsAmbient() const { return ambient; }
+bool PotionEffect::getIsPotionDurationMax() const { return potionDurationMax; }
+void PotionEffect::setPotionDurationMax(bool value) { potionDurationMax = value; }
+
+NBTTagCompound *PotionEffect::writeCustomPotionEffectToNBT(NBTTagCompound *tag) const
+{
+	if (tag == nullptr) return nullptr;
+	tag->setByte("Id", static_cast<byte_t>(potionID));
+	tag->setByte("Amplifier", static_cast<byte_t>(amplifier));
+	tag->setInteger("Duration", duration);
+	tag->setBoolean("Ambient", ambient);
+	return tag;
+}
+
+PotionEffect *PotionEffect::readCustomPotionEffectFromNBT(NBTTagCompound *tag)
+{
+	if (tag == nullptr) return nullptr;
+	return new PotionEffect(static_cast<int>(tag->getByte("Id")), tag->getInteger("Duration"),
+	                        static_cast<int>(tag->getByte("Amplifier")), tag->getBoolean("Ambient"));
 }
 
 bool PotionEffect::onUpdate(EntityLiving *entity)
@@ -80,5 +113,6 @@ jstring PotionEffect::getEffectName() const
 
 bool PotionEffect::equals(const PotionEffect &other) const
 {
-	return potionID == other.potionID && amplifier == other.amplifier && duration == other.duration;
+	return potionID == other.potionID && amplifier == other.amplifier && duration == other.duration &&
+	       splashPotion == other.splashPotion && ambient == other.ambient;
 }

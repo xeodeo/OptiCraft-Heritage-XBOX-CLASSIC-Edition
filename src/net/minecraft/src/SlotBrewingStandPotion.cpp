@@ -14,6 +14,11 @@ SlotBrewingStandPotion::SlotBrewingStandPotion(ContainerBrewingStand *containerI
 
 bool SlotBrewingStandPotion::isItemValid(ItemStack *itemstack)
 {
+    return canHoldPotion(itemstack);
+}
+
+bool SlotBrewingStandPotion::canHoldPotion(ItemStack *itemstack)
+{
     return itemstack != nullptr && Item::potion != nullptr && Item::glassBottle != nullptr &&
            (itemstack->itemID == Item::potion->shiftedIndex || itemstack->itemID == Item::glassBottle->shiftedIndex);
 }

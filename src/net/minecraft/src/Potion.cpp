@@ -58,9 +58,9 @@ void Potion::initPotions()
 	resistance = (new Potion(11, false, 10044730))->setPotionName("potion.resistance")->setIconIndex(6, 1);
 	fireResistance = (new Potion(12, false, 14981690))->setPotionName("potion.fireResistance")->setIconIndex(7, 1);
 	waterBreathing = (new Potion(13, false, 3035801))->setPotionName("potion.waterBreathing")->setIconIndex(0, 2);
-	invisibility = (new Potion(14, false, 8356754))->setPotionName("potion.invisibility")->setIconIndex(0, 1)->setPotionUnusable();
+	invisibility = (new Potion(14, false, 8356754))->setPotionName("potion.invisibility")->setIconIndex(0, 1);
 	blindness = (new Potion(15, true, 2039587))->setPotionName("potion.blindness")->setIconIndex(5, 1)->setEffectiveness(0.25);
-	nightVision = (new Potion(16, false, 2039713))->setPotionName("potion.nightVision")->setIconIndex(4, 1)->setPotionUnusable();
+	nightVision = (new Potion(16, false, 2039713))->setPotionName("potion.nightVision")->setIconIndex(4, 1);
 	hunger = (new Potion(17, true, 5797459))->setPotionName("potion.hunger")->setIconIndex(1, 1);
 	weakness = (new Potion(18, true, 4738376))->setPotionName("potion.weakness")->setIconIndex(5, 0);
 	poison = (new Potion(19, true, 5149489))->setPotionName("potion.poison")->setIconIndex(6, 0)->setEffectiveness(0.25);
@@ -192,6 +192,8 @@ bool Potion::getIsBadEffect() const
 
 jstring Potion::getDurationString(const PotionEffect &effect)
 {
+	if (effect.getIsPotionDurationMax())
+		return "**:**";
 	int seconds = effect.getDuration() / 20;
 	int minutes = seconds / 60;
 	seconds %= 60;

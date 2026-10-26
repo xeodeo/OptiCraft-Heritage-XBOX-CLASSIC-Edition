@@ -70,7 +70,12 @@ ItemStack *ContainerBrewingStand::getStackInSlot(int_t slotIndex)
 
     if ((slotIndex < 0 || slotIndex > 2) && slotIndex != 3)
     {
-        if (slotIndex >= 4 && slotIndex < 31)
+        Slot *ingredientSlot = slots.size() > 3 ? slots[3] : nullptr;
+        if (ingredientSlot != nullptr && !ingredientSlot->getHasStack() && ingredientSlot->isItemValid(source))
+            moved = mergeItemStack(source, 3, 4, false);
+        else if (SlotBrewingStandPotion::canHoldPotion(original))
+            moved = mergeItemStack(source, 0, 3, false);
+        else if (slotIndex >= 4 && slotIndex < 31)
             moved = mergeItemStack(source, 31, 40, false);
         else if (slotIndex >= 31 && slotIndex < 40)
             moved = mergeItemStack(source, 4, 31, false);
