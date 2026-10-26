@@ -99,6 +99,8 @@ public:
 	virtual void addTileEntity(TileEntity *tileentity);
 	virtual void setChunkBlockTileEntity(int_t i, int_t j, int_t k, TileEntity *tileentity);
 	virtual void removeChunkBlockTileEntity(int_t i, int_t j, int_t k);
+	// Removes the entry only while it still holds tileentity (not in Java, see World::updateEntities).
+	void removeChunkBlockTileEntityIfSame(int_t i, int_t j, int_t k, TileEntity *tileentity);
 
 	virtual void onChunkLoad();
 	virtual void onChunkUnload();
