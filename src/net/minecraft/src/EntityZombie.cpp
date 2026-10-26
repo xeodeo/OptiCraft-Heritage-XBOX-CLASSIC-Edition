@@ -30,6 +30,7 @@
 EntityZombie::EntityZombie(World *world)
 	: EntityMob(world)
 {
+	ensureEntityInit();
 	texture = "/mob/zombie.png";
 	moveSpeed = 0.23f;
 	attackStrength = 4;

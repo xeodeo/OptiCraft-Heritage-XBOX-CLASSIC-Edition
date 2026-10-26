@@ -37,6 +37,7 @@ EntitySkeleton::EntitySkeleton(World *world)
 	  aiAttackOnCollide(new EntityAIAttackOnCollide(this, typeid(EntityPlayer), 0.31f, false)),
 	  heldItemInstance(nullptr)
 {
+	ensureEntityInit();
 	texture = "/mob/skeleton.png";
 	moveSpeed = 0.25f;
 	attackStrength = 2;

@@ -27,6 +27,7 @@ static bool isHalloween()
 EntityBat::EntityBat(World *world)
 	: EntityAmbientCreature(world)
 {
+	ensureEntityInit();
 	texture = "/mob/bat.png";
 	setSize(0.5f, 0.9f);
 	setIsBatHanging(true);

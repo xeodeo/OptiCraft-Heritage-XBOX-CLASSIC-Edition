@@ -29,6 +29,7 @@ EntityWitch::~EntityWitch()
 EntityWitch::EntityWitch(World *world)
 	: EntityMob(world)
 {
+	ensureEntityInit();
 	texture = "/mob/villager/witch.png";
 	moveSpeed = 0.25f;
 
