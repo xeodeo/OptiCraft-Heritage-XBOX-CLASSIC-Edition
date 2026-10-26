@@ -37,4 +37,6 @@ public:
 private:
 	int_t xpOrbHealth = 5;
 	int_t xpValue = 0;
+	EntityPlayer *closestPlayer = nullptr;
+	int_t xpTargetColor = -20;
 };

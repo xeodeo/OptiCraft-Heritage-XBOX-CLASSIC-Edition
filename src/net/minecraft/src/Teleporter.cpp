@@ -2,6 +2,7 @@
 
 #include "Block.h"
 #include "BlockPortal.h"
+#include "ChunkCoordIntPair.h"
 #include "Entity.h"
 #include "Material.h"
 #include "MathHelper.h"
@@ -51,6 +52,12 @@ void Teleporter::placeInPortal(World *world, Entity *entity)
 
 bool Teleporter::placeInExistingPortal(World *world, Entity *entity)
 {
+	if (cacheSaveHandler != world->getSaveHandler())
+	{
+		clearDestinationCoordinateCache();
+		cacheSaveHandler = world->getSaveHandler();
+	}
+	const long_t worldTime = currentWorldTime;
 	int_t c = 128;
 	double d = -1.0;
 	int_t i = 0;
@@ -58,7 +65,19 @@ bool Teleporter::placeInExistingPortal(World *world, Entity *entity)
 	int_t k = 0;
 	int_t l = MathHelper::floor_double(entity->posX);
 	int_t i1 = MathHelper::floor_double(entity->posZ);
-	for (int_t j1 = l - c; j1 <= l + c; j1++)
+	const std::pair<int_t, long_t> cacheKey(world->worldProvider->worldType,
+	                                      ChunkCoordIntPair::chunkXZ2Int(l, i1));
+	auto cachedPortal = destinationCoordinateCache.find(cacheKey);
+	if (cachedPortal != destinationCoordinateCache.end())
+	{
+		const PortalPosition &portal = cachedPortal->second;
+		d = 0.0;
+		i = portal.posX;
+		j = portal.posY;
+		k = portal.posZ;
+		cachedPortal->second.lastUpdateTime = worldTime;
+	}
+	else for (int_t j1 = l - c; j1 <= l + c; j1++)
 	{
 		double d1 = ((double)j1 + 0.5) - entity->posX;
 		for (int_t j2 = i1 - c; j2 <= i1 + c; j2++)
@@ -84,6 +103,8 @@ bool Teleporter::placeInExistingPortal(World *world, Entity *entity)
 
 	if (d < 0.0)
 		return false;
+	if (cachedPortal == destinationCoordinateCache.end())
+		destinationCoordinateCache[cacheKey] = {i, j, k, worldTime};
 
 	int_t k1 = i;
 	int_t l1 = j;
@@ -102,6 +123,32 @@ bool Teleporter::placeInExistingPortal(World *world, Entity *entity)
 	entity->setLocationAndAngles(d2, d4, d6, entity->rotationYaw, 0.0f);
 	entity->motionX = entity->motionY = entity->motionZ = 0.0;
 	return true;
+}
+
+void Teleporter::removeStalePortalLocations(long_t worldTime)
+{
+	if (worldTime % 100LL != 0)
+		return;
+	const long_t staleBefore = worldTime - 6000LL;
+	for (auto it = destinationCoordinateCache.begin(); it != destinationCoordinateCache.end();)
+	{
+		if (it->second.lastUpdateTime < staleBefore)
+			it = destinationCoordinateCache.erase(it);
+		else
+			++it;
+	}
+}
+
+void Teleporter::clearDestinationCoordinateCache()
+{
+	destinationCoordinateCache.clear();
+	cacheSaveHandler = nullptr;
+}
+
+void Teleporter::tick(long_t totalWorldTime)
+{
+	currentWorldTime = totalWorldTime;
+	removeStalePortalLocations(totalWorldTime);
 }
 
 bool Teleporter::createPortal(World *world, Entity *entity)

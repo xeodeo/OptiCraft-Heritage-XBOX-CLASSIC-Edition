@@ -2,6 +2,7 @@
 
 #include <string>
 #include <atomic>
+#include <memory>
 #include <vector>
 
 #include "java/Type.h"
@@ -46,6 +47,7 @@ class NetClientHandler;
 class Session;
 class Timer;
 class UnexpectedThrowable;
+class Teleporter;
 
 class Minecraft;
 namespace LegacyStartup
@@ -289,4 +291,5 @@ private:
     int_t mouseTicksRan;
     long_t systemTime;
     int_t joinPlayerCounter;
+    std::unique_ptr<Teleporter> portalTeleporter;
 };

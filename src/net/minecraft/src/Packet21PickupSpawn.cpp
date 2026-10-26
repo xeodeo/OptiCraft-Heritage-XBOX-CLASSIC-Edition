@@ -9,9 +9,10 @@
 Packet21PickupSpawn::Packet21PickupSpawn(EntityItem *entityitem)
 {
 	entityId = entityitem->entityId;
-	itemID = entityitem->item->itemID;
-	count = entityitem->item->stackSize;
-	itemDamage = entityitem->item->getItemDamage();
+	ItemStack *stack = entityitem->getEntityItem();
+	itemID = stack->itemID;
+	count = stack->stackSize;
+	itemDamage = stack->getItemDamage();
 	xPosition = MathHelper::floor_double(entityitem->posX * 32.0);
 	yPosition = MathHelper::floor_double(entityitem->posY * 32.0);
 	zPosition = MathHelper::floor_double(entityitem->posZ * 32.0);

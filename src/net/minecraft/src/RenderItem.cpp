@@ -105,7 +105,7 @@ RenderItem::RenderItem() {
 
 void RenderItem::doRenderItem(EntityItem* entityitem, double d, double d1, double d2, float f, float f1) {
     random.setSeed(187LL);
-    ItemStack* itemstack = entityitem != nullptr ? entityitem->item : nullptr;
+    ItemStack* itemstack = entityitem != nullptr ? entityitem->getEntityItem() : nullptr;
     if (itemstack == nullptr || !itemstack->isValid()) {
         return;
     }
@@ -117,13 +117,13 @@ void RenderItem::doRenderItem(EntityItem* entityitem, double d, double d1, doubl
     float f2 = MathHelper::sin(((float)entityitem->age + f1) / 10.0f + entityitem->hoverStart) * 0.1f + 0.1f;
     float f3 = (((float)entityitem->age + f1) / 20.0f + entityitem->hoverStart) * 57.295776f;
     int byte0 = 1;
-    if (entityitem->item->stackSize > 1) {
+    if (itemstack->stackSize > 1) {
         byte0 = 2;
     }
-    if (entityitem->item->stackSize > 5) {
+    if (itemstack->stackSize > 5) {
         byte0 = 3;
     }
-    if (entityitem->item->stackSize > 20) {
+    if (itemstack->stackSize > 20) {
         byte0 = 4;
     }
     renderTranslate((float)d, (float)d1 + f2, (float)d2);

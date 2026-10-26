@@ -125,7 +125,8 @@ void BlockHopper::onBlockRemoval(World *world, int_t i, int_t j, int_t k)
 					);
 					if (stack->hasTagCompound())
 					{
-						entityItem->item->setTagCompound(dynamic_cast<NBTTagCompound *>(stack->getTagCompound()->copy()));
+						entityItem->getEntityItem()->setTagCompound(dynamic_cast<NBTTagCompound *>(stack->getTagCompound()->copy()));
+						entityItem->setEntityItemStack(entityItem->getEntityItem());
 					}
 					const float speed = 0.05f;
 					entityItem->motionX = (double)((float)world->rand.nextGaussian() * speed);

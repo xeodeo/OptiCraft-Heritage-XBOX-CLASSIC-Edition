@@ -1793,6 +1793,9 @@ void Minecraft::startCheckHasPaidThread()
 
 void Minecraft::runTick()
 {
+    if (portalTeleporter != nullptr)
+        portalTeleporter->tick(ticksRan);
+
     if (rightClickDelayTimer > 0)
         --rightClickDelayTimer;
 
@@ -2610,7 +2613,9 @@ void Minecraft::usePortal(int_t targetDimension)
         thePlayer->setLocationAndAngles(targetX, thePlayer->posY, targetZ,
                                         thePlayer->rotationYaw, thePlayer->rotationPitch);
         theWorld->updateEntityWithOptionalForce(thePlayer, false);
-        Teleporter().placeInPortal(theWorld, thePlayer);
+        if (portalTeleporter == nullptr)
+            portalTeleporter = std::make_unique<Teleporter>();
+        portalTeleporter->placeInPortal(theWorld, thePlayer);
     }
 }
 
@@ -2627,6 +2632,9 @@ void Minecraft::changeWorld2(World *world, const std::string &s)
 void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *entityplayer)
 {
     World *oldWorld = theWorld;
+    if (oldWorld != world && portalTeleporter != nullptr &&
+        (oldWorld == nullptr || world == nullptr || oldWorld->getSaveHandler() != world->getSaveHandler()))
+        portalTeleporter->clearDestinationCoordinateCache();
 #ifdef PS2_PLATFORM
     // A remote world has no local chunks or level data to save. More importantly,
     // forcing synchronous storage / threaded-I/O drains while the PS2 network stack

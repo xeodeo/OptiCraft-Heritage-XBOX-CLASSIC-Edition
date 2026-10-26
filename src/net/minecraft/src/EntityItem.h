@@ -27,6 +27,10 @@ protected:
 public:
 	void onUpdate() override;
 	bool handleWaterMovement() override;
+	ItemStack *getEntityItem();
+	void setEntityItemStack(ItemStack *stack);
+	void setAgeToCreativeDespawnTime();
+	bool combineItems(EntityItem *other);
 
 protected:
 	void dealFireDamage(int_t i) override;
@@ -40,11 +44,11 @@ public:
 	bool canAttackWithItem() override;
 
 public:
-	ItemStack *item;
 	int age;
 	int delayBeforeCanPickup = 0;
 	float hoverStart;
 
 private:
+	void searchForOtherItemsNearby();
 	int health;
 };

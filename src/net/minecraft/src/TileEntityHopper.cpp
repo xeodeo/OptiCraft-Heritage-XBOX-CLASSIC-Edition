@@ -301,14 +301,15 @@ bool TileEntityHopper::func_102012_a(Hopper *hopper, IInventory *inv, int_t slot
 
 bool TileEntityHopper::func_96114_a(IInventory *inv, EntityItem *entityItem)
 {
-	if (entityItem == nullptr || entityItem->item == nullptr)
+	if (entityItem == nullptr || entityItem->getEntityItem() == nullptr)
 		return false;
 
-	ItemStack *copy = entityItem->item->copy();
+	ItemStack *copy = entityItem->getEntityItem()->copy();
 	ItemStack *remaining = insertStack(inv, copy, -1);
 	if (remaining != nullptr && remaining->stackSize > 0)
 	{
-		entityItem->item->stackSize = remaining->stackSize;
+		entityItem->getEntityItem()->stackSize = remaining->stackSize;
+		entityItem->setEntityItemStack(entityItem->getEntityItem());
 		delete remaining;
 		return false;
 	}

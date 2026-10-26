@@ -33,9 +33,9 @@ int_t BlockPressurePlateWeighted::getPlateState(World *world, int_t x, int_t y, 
 	for (Entity *e : list)
 	{
 		EntityItem *item = dynamic_cast<EntityItem*>(e);
-		if (item != nullptr && item->item != nullptr)
+		if (item != nullptr && item->getEntityItem() != nullptr)
 		{
-			total += item->item->stackSize;
+			total += item->getEntityItem()->stackSize;
 			if (total >= maxItemsWeighted) break;
 		}
 	}

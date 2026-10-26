@@ -38,6 +38,7 @@ public:
     ItemStack *getWatchableObjectItemStack(int_t id);
 
     void updateObject(int_t id, std::any obj);
+    void setObjectWatched(int_t id);
 
     static void writeObjectsInListToStream(const std::vector<WatchableObject*> &list, std::ostream &os);
     void writeWatchableObjects(std::ostream &os);

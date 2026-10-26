@@ -1,9 +1,12 @@
 #include "EntityItem.h"
+#include "DataWatcher.h"
 #include "DamageSource.h"
 #include "java/Math.h"
 #include "java/Arithmetic.h"
 
 #include <cmath>
+#include <algorithm>
+#include <typeinfo>
 
 #include "AchievementList.h"
 #include "Block.h"
@@ -30,7 +33,7 @@ EntityItem::EntityItem(World *world, double d, double d1, double d2, ItemStack *
 	setSize(0.25f, 0.25f);
 	yOffset = height / 2.0f;
 	setPosition(d, d1, d2);
-	item = itemstack;
+	setEntityItemStack(itemstack);
 	rotationYaw = (float)(Math::random() * 360.0);
 	motionX = (float)(Math::random() * 0.20000000298023224 - 0.10000000149011612);
 	motionY = 0.20000000298023224;
@@ -41,7 +44,6 @@ EntityItem::EntityItem(World *world)
 	: Entity(world)
 {
 	ensureEntityInit();
-	item = nullptr;
 	age = 0;
 	health = 5;
 	hoverStart = (float)(Math::random() * 3.1415926535897931 * 2.0);
@@ -51,7 +53,6 @@ EntityItem::EntityItem(World *world)
 
 EntityItem::~EntityItem()
 {
-	delete item;
 }
 
 bool EntityItem::canTriggerWalking()
@@ -61,6 +62,8 @@ bool EntityItem::canTriggerWalking()
 
 void EntityItem::entityInit()
 {
+	if (!getDataWatcher()->hasObject(10))
+		getDataWatcher()->addObject(10, static_cast<ItemStack *>(nullptr));
 }
 
 void EntityItem::onUpdate()
@@ -73,6 +76,9 @@ void EntityItem::onUpdate()
 	prevPosX = posX;
 	prevPosY = posY;
 	prevPosZ = posZ;
+	const int oldX = MathHelper::floor_double(prevPosX);
+	const int oldY = MathHelper::floor_double(prevPosY);
+	const int oldZ = MathHelper::floor_double(prevPosZ);
 
 #if PLATFORM_PS2
 	// Multiplayer item positions are server-authoritative. Once an item has
@@ -103,17 +109,25 @@ void EntityItem::onUpdate()
 #if defined(PS2_OPTIMIZATION_VALIDATION)
 	if (worldObj->multiplayerWorld)
 		Ps2OptimizationValidation::multiplayerItemPhysics(false);
-#endif
+	#endif
 	motionY -= 0.039999999105930328;
-	if (worldObj->getBlockMaterial(MathHelper::floor_double(posX), MathHelper::floor_double(posY), MathHelper::floor_double(posZ)) == Material::lava)
-	{
-		motionY = 0.20000000298023224;
-		motionX = rand.nextFloatDifference() * 0.2f;
-		motionZ = rand.nextFloatDifference() * 0.2f;
-		worldObj->playSoundAtEntity(this, "random.fizz", 0.4f, 2.0f + rand.nextFloat() * 0.4f);
-	}
 	pushOutOfBlocks(posX, (boundingBox->minY + boundingBox->maxY) / 2.0, posZ);
 	moveEntity(motionX, motionY, motionZ);
+	const bool movedBlock = oldX != MathHelper::floor_double(posX) ||
+	                         oldY != MathHelper::floor_double(posY) ||
+	                         oldZ != MathHelper::floor_double(posZ);
+	if (movedBlock || ticksExisted % 25 == 0)
+	{
+		if (worldObj->getBlockMaterial(MathHelper::floor_double(posX), MathHelper::floor_double(posY), MathHelper::floor_double(posZ)) == Material::lava)
+		{
+			motionY = 0.20000000298023224;
+			motionX = rand.nextFloatDifference() * 0.2f;
+			motionZ = rand.nextFloatDifference() * 0.2f;
+			worldObj->playSoundAtEntity(this, "random.fizz", 0.4f, 2.0f + rand.nextFloat() * 0.4f);
+		}
+		if (!worldObj->multiplayerWorld)
+			searchForOtherItemsNearby();
+	}
 	float f = 0.98f;
 	if (onGround)
 	{
@@ -161,6 +175,9 @@ bool EntityItem::attackEntityFrom(Entity *entity, int_t i)
 
 bool EntityItem::attackEntityFrom(const DamageSource &source, int_t damage)
 {
+	if (getEntityItem() != nullptr && Item::netherStar != nullptr &&
+	    getEntityItem()->itemID == Item::netherStar->shiftedIndex && source.isExplosion())
+		return false;
 	return attackEntityFrom(source.getEntity(), damage);
 }
 
@@ -168,7 +185,9 @@ void EntityItem::writeEntityToNBT(NBTTagCompound *nbttagcompound)
 {
 	nbttagcompound->setShort("Health", static_cast<short_t>(JavaArithmetic::byteFromBits(static_cast<ubyte_t>(health))));
 	nbttagcompound->setShort("Age", (short)age);
-	nbttagcompound->setCompoundTag("Item", item->writeToNBT(new NBTTagCompound()));
+	ItemStack *stack = getEntityItem();
+	if (stack != nullptr)
+		nbttagcompound->setCompoundTag("Item", stack->writeToNBT(new NBTTagCompound()));
 }
 
 void EntityItem::readEntityFromNBT(NBTTagCompound *nbttagcompound)
@@ -176,9 +195,8 @@ void EntityItem::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 	health = nbttagcompound->getShort("Health") & 0xFF;
 	age = nbttagcompound->getShort("Age");
 	NBTTagCompound *nbttagcompound1 = nbttagcompound->getCompoundTag("Item");
-	delete item;
-	item = ItemStack::loadItemStackFromNBT(nbttagcompound1);
-	if (item == nullptr)
+	setEntityItemStack(ItemStack::loadItemStackFromNBT(nbttagcompound1));
+	if (getEntityItem() == nullptr)
 		setDead();
 }
 
@@ -188,32 +206,91 @@ void EntityItem::onCollideWithPlayer(EntityPlayer *entityplayer)
 	{
 		return;
 	}
-	int i = item->stackSize;
-	if (delayBeforeCanPickup == 0 && entityplayer->inventory->addItemStackToInventory(item))
+	ItemStack *stack = getEntityItem();
+	if (stack == nullptr)
+		return;
+	int i = stack->stackSize;
+	if (delayBeforeCanPickup == 0 && entityplayer->inventory->addItemStackToInventory(stack))
 	{
-		if (item->itemID == Block::wood->blockID)
+		if (stack->itemID == Block::wood->blockID)
 		{
 			entityplayer->triggerAchievement(AchievementList::mineWood);
 		}
-		if (item->itemID == Item::leather->shiftedIndex)
+		if (stack->itemID == Item::leather->shiftedIndex)
 		{
 			entityplayer->triggerAchievement(AchievementList::killCow);
 		}
-		if (item->itemID == Item::diamond->shiftedIndex)
+		if (stack->itemID == Item::diamond->shiftedIndex)
 		{
 			entityplayer->triggerAchievement(AchievementList::diamonds);
 		}
-		if (item->itemID == Item::blazeRod->shiftedIndex)
+		if (stack->itemID == Item::blazeRod->shiftedIndex)
 		{
 			entityplayer->triggerAchievement(AchievementList::blazeRod);
 		}
 		worldObj->playSoundAtEntity(this, "random.pop", 0.2f, (rand.nextFloatDifference() * 0.7f + 1.0f) * 2.0f);
 		entityplayer->onItemPickup(this, i);
-		if (item->stackSize <= 0)
+		if (stack->stackSize <= 0)
 		{
 			setEntityDead();
 		}
 	}
+}
+
+ItemStack *EntityItem::getEntityItem()
+{
+	return getDataWatcher()->getWatchableObjectItemStack(10);
+}
+
+void EntityItem::setEntityItemStack(ItemStack *stack)
+{
+	getDataWatcher()->updateObject(10, stack);
+	getDataWatcher()->setObjectWatched(10);
+}
+
+void EntityItem::setAgeToCreativeDespawnTime()
+{
+	age = 4800;
+}
+
+void EntityItem::searchForOtherItemsNearby()
+{
+	AxisAlignedBB *searchBox = boundingBox->expand(0.5, 0.0, 0.5);
+	const std::vector<Entity *> nearby = worldObj->getEntitiesWithinAABB(typeid(EntityItem), searchBox);
+	delete searchBox;
+	for (Entity *entity : nearby)
+	{
+		EntityItem *other = dynamic_cast<EntityItem *>(entity);
+		if (other != nullptr && combineItems(other) && !isEntityAlive())
+			break;
+	}
+}
+
+bool EntityItem::combineItems(EntityItem *other)
+{
+	if (other == nullptr || other == this || !other->isEntityAlive() || !isEntityAlive())
+		return false;
+	ItemStack *thisStack = getEntityItem();
+	ItemStack *otherStack = other->getEntityItem();
+	if (thisStack == nullptr || otherStack == nullptr || otherStack->getItem() != thisStack->getItem())
+		return false;
+	const bool thisHasTag = thisStack->hasTagCompound();
+	const bool otherHasTag = otherStack->hasTagCompound();
+	if (thisHasTag != otherHasTag || (thisHasTag && !thisStack->getTagCompound()->equals(otherStack->getTagCompound())))
+		return false;
+	Item *itemType = thisStack->getItem();
+	if (itemType != nullptr && itemType->getHasSubtypes() && otherStack->getItemDamage() != thisStack->getItemDamage())
+		return false;
+	if (otherStack->stackSize < thisStack->stackSize)
+		return other->combineItems(this);
+	if (otherStack->stackSize + thisStack->stackSize > otherStack->getMaxStackSize())
+		return false;
+	otherStack->stackSize += thisStack->stackSize;
+	other->delayBeforeCanPickup = std::max(other->delayBeforeCanPickup, delayBeforeCanPickup);
+	other->age = std::min(other->age, age);
+	other->setEntityItemStack(otherStack);
+	setDead();
+	return true;
 }
 
 bool EntityItem::canAttackWithItem()

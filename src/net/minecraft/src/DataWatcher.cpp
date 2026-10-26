@@ -119,6 +119,13 @@ void DataWatcher::updateObject(int_t id, std::any obj)
     }
 }
 
+void DataWatcher::setObjectWatched(int_t id)
+{
+    WatchableObject *object = watchedObjects.at(id);
+    object->setWatching(true);
+    objectChanged = true;
+}
+
 void DataWatcher::writeWatchableObject(std::ostream &os, WatchableObject *wo)
 {
     int_t header = ((wo->getObjectType() << 5) | (wo->getDataValueId() & 0x1f)) & 0xff;

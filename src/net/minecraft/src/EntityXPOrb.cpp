@@ -75,12 +75,17 @@ void EntityXPOrb::onUpdate()
 
 	pushOutOfBlocks(posX, (boundingBox->minY + boundingBox->maxY) / 2.0, posZ);
 	const double attractionRange = 8.0;
-	EntityPlayer *player = worldObj->getClosestPlayerToEntity(this, attractionRange);
-	if (player != nullptr)
+	if (xpColor - xpTargetColor >= 20)
 	{
-		const double dx = (player->posX - posX) / attractionRange;
-		const double dy = (player->posY + static_cast<double>(player->getEyeHeight()) - posY) / attractionRange;
-		const double dz = (player->posZ - posZ) / attractionRange;
+		if (closestPlayer == nullptr || closestPlayer->getDistanceSqToEntity(this) > attractionRange * attractionRange)
+			closestPlayer = worldObj->getClosestPlayerToEntity(this, attractionRange);
+		xpTargetColor = xpColor;
+	}
+	if (closestPlayer != nullptr)
+	{
+		const double dx = (closestPlayer->posX - posX) / attractionRange;
+		const double dy = (closestPlayer->posY + static_cast<double>(closestPlayer->getEyeHeight()) - posY) / attractionRange;
+		const double dz = (closestPlayer->posZ - posZ) / attractionRange;
 		const double distance = JavaMath::sqrt(dx * dx + dy * dy + dz * dz);
 		double strength = 1.0 - distance;
 		if (strength > 0.0 && distance > 0.0)

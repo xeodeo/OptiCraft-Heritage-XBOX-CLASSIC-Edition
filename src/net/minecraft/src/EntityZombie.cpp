@@ -99,9 +99,9 @@ void EntityZombie::onLivingUpdate()
 		for (Entity *ent : entities)
 		{
 			EntityItem *itemEnt = dynamic_cast<EntityItem *>(ent);
-			if (itemEnt != nullptr && !itemEnt->isDead && itemEnt->item != nullptr)
+			if (itemEnt != nullptr && !itemEnt->isDead && itemEnt->getEntityItem() != nullptr)
 			{
-				heldItemInstance = new ItemStack(*itemEnt->item);
+				heldItemInstance = new ItemStack(*itemEnt->getEntityItem());
 				itemEnt->setDead();
 				break;
 			}

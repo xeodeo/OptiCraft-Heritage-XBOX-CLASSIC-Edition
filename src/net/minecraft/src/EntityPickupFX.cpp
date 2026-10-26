@@ -39,9 +39,9 @@ EntityPickupFX::EntityPickupFX(World *world, Entity *entity, Entity *entity1, fl
 	// pointer here dereferenced freed memory -> crash in RenderManager::getEntityRenderObject
 	// at typeid(*entity). Render a private copy we own instead, fully decoupled from the world.
 	EntityItem *srcItem = (entity->getEntityClassID() == EntityItem::CLASS_ID) ? static_cast<EntityItem*>(entity) : nullptr;
-	if (srcItem != nullptr && srcItem->item != nullptr)
+	if (srcItem != nullptr && srcItem->getEntityItem() != nullptr)
 	{
-		EntityItem *copy = new EntityItem(world, entity->posX, entity->posY, entity->posZ, srcItem->item->copy());
+		EntityItem *copy = new EntityItem(world, entity->posX, entity->posY, entity->posZ, srcItem->getEntityItem()->copy());
 		copy->rotationYaw = entity->rotationYaw;
 		field_675_a = copy;
 		ownsRenderEntity = true;
