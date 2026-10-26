@@ -1,15 +1,20 @@
 #pragma once
 
 #include <memory>
+#include <map>
+#include <string>
 #include <vector>
 
 #include "ChunkCoordinates.h"
+#include "java/String.h"
 #include "VillageAgressor.h"
 #include "java/Type.h"
 
 class Entity;
 class EntityLiving;
 class VillageDoorInfo;
+class NBTTagCompound;
+class EntityPlayer;
 class World;
 
 // net.minecraft.src.Village
@@ -35,6 +40,15 @@ public:
 	void addOrRenewAgressor(EntityLiving *aggressor);
 	EntityLiving *findNearestVillageAggressor(EntityLiving *target) const;
 	void onEntityRemoved(Entity *entity);
+	int_t getReputationForPlayer(const jstring &name) const;
+	int_t setReputationForPlayer(const jstring &name, int_t delta);
+	bool isPlayerReputationTooLow(const jstring &name) const;
+	void modifyPlayerReputation(int_t delta);
+	EntityPlayer *findNearestPlayerWithNegativeReputation(EntityLiving *near) const;
+	void endMatingSeason();
+	bool isMatingSeason() const;
+	void readVillageDataFromNBT(NBTTagCompound *tag);
+	void writeVillageDataToNBT(NBTTagCompound *tag) const;
 
 private:
 
@@ -57,4 +71,6 @@ private:
 	int_t numVillagers;
 	std::vector<VillageAgressor> villageAgressors;
 	int_t numIronGolems;
+	int_t noBreedTicks;
+	std::map<jstring, int_t> playerReputation;
 };

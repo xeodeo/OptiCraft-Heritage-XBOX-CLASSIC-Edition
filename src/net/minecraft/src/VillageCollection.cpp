@@ -1,5 +1,7 @@
 #include "VillageCollection.h"
 
+#include <string>
+
 #include <cmath>
 #include <limits>
 
@@ -8,12 +10,38 @@
 #include "Entity.h"
 #include "Village.h"
 #include "VillageDoorInfo.h"
+#include "NBTTagCompound.h"
+#include "NBTTagList.h"
+#include "MapDataBase.h"
+#include "MapStorage.h"
 #include "World.h"
 #include "java/Arithmetic.h"
 
-VillageCollection::VillageCollection(World *world) : worldObj(world), tickCounter(0)
+namespace
 {
+MapDataBase *createVillageData(const std::string &name)
+{
+	return new VillageCollection(name);
 }
+}
+
+VillageCollection::VillageCollection(World *world) : MapDataBase("villages"), worldObj(world), tickCounter(0)
+{
+	if (worldObj != nullptr)
+	{
+		MapDataBase *saved = worldObj->loadItemData("villages", &createVillageData);
+		if (auto *loaded = dynamic_cast<VillageCollection *>(saved))
+		{
+			NBTTagCompound data;
+			loaded->writeToNBT(&data);
+			readFromNBT(&data);
+		}
+		worldObj->setItemData("villages", this);
+		markDirty();
+	}
+}
+
+VillageCollection::VillageCollection(const std::string &name) : MapDataBase(name), worldObj(nullptr), tickCounter(0) {}
 
 VillageCollection::~VillageCollection() = default;
 
@@ -31,6 +59,39 @@ void VillageCollection::tick()
 	removeAnnihilatedVillages();
 	dropOldestVillagerPosition();
 	addNewDoorsToVillageOrCreateVillage();
+	if (tickCounter % 400 == 0)
+		markDirty();
+}
+
+void VillageCollection::readFromNBT(NBTTagCompound *tag)
+{
+	if (tag == nullptr) return;
+	tickCounter = tag->getInteger("Tick");
+	villageList.clear();
+	NBTTagList *villages = tag->getTagList("Villages");
+	for (int_t i = 0; i < villages->tagCount(); ++i)
+	{
+		auto *entry = dynamic_cast<NBTTagCompound *>(villages->tagAt(i));
+		if (entry == nullptr) continue;
+		std::unique_ptr<Village> village(new Village(worldObj));
+		village->readVillageDataFromNBT(entry);
+		villageList.push_back(std::move(village));
+	}
+	delete villages;
+}
+
+void VillageCollection::writeToNBT(NBTTagCompound *tag)
+{
+	if (tag == nullptr) return;
+	tag->setInteger("Tick", tickCounter);
+	NBTTagList *villages = new NBTTagList();
+	for (const auto &village : villageList)
+	{
+		NBTTagCompound *entry = new NBTTagCompound();
+		village->writeVillageDataToNBT(entry);
+		villages->appendTag(entry);
+	}
+	tag->setTag("Villages", villages);
 }
 
 const std::vector<std::unique_ptr<Village>> &VillageCollection::getVillageList() const

@@ -15,6 +15,9 @@
 #include "java/Arithmetic.h"
 #include "java/Math.h"
 #include "VillageDoorInfo.h"
+#include "NBTTagCompound.h"
+#include "NBTTagList.h"
+#include "EntityPlayer.h"
 #include "World.h"
 
 namespace
@@ -27,7 +30,7 @@ int_t javaAbsInt(int_t value)
 
 Village::Village(World *world)
 	: worldObj(world), centerHelper(0, 0, 0), center(0, 0, 0), villageRadius(0),
-	  lastAddDoorTimestamp(0), tickCounter(0), numVillagers(0), numIronGolems(0)
+	  lastAddDoorTimestamp(0), tickCounter(0), numVillagers(0), numIronGolems(0), noBreedTicks(0)
 {
 }
 
@@ -203,6 +206,88 @@ void Village::updateNumVillagers()
 		static_cast<double>(JavaArithmetic::intAdd(center.z, villageRadius)));
 	const std::vector<Entity *> &villagers = worldObj->getEntitiesWithinAABB(typeid(EntityVillager), bounds);
 	numVillagers = static_cast<int_t>(villagers.size());
+	if (numVillagers == 0) playerReputation.clear();
+}
+
+int_t Village::getReputationForPlayer(const jstring &name) const
+{
+	auto it = playerReputation.find(name);
+	return it == playerReputation.end() ? 0 : it->second;
+}
+
+int_t Village::setReputationForPlayer(const jstring &name, int_t delta)
+{
+	int_t value = std::max(-30, std::min(10, JavaArithmetic::intAdd(getReputationForPlayer(name), delta)));
+	playerReputation[name] = value;
+	return value;
+}
+
+bool Village::isPlayerReputationTooLow(const jstring &name) const { return getReputationForPlayer(name) <= -15; }
+
+void Village::modifyPlayerReputation(int_t delta)
+{
+	for (auto &entry : playerReputation)
+		entry.second = std::max(-30, std::min(10, JavaArithmetic::intAdd(entry.second, delta)));
+}
+
+EntityPlayer *Village::findNearestPlayerWithNegativeReputation(EntityLiving *near) const
+{
+	if (worldObj == nullptr || near == nullptr) return nullptr;
+	EntityPlayer *best = nullptr;
+	double bestDistance = std::numeric_limits<double>::max();
+	for (const auto &entry : playerReputation)
+	{
+		if (!isPlayerReputationTooLow(entry.first)) continue;
+		EntityPlayer *player = worldObj->getPlayerEntityByName(entry.first);
+		if (player == nullptr) continue;
+		double distance = player->getDistanceSqToEntity(near);
+		if (distance <= bestDistance) { bestDistance = distance; best = player; }
+	}
+	return best;
+}
+
+void Village::endMatingSeason() { noBreedTicks = tickCounter; }
+bool Village::isMatingSeason() const { return noBreedTicks == 0 || JavaArithmetic::intSub(tickCounter, noBreedTicks) >= 3600; }
+
+void Village::readVillageDataFromNBT(NBTTagCompound *tag)
+{
+	if (tag == nullptr) return;
+	numVillagers = tag->getInteger("PopSize"); villageRadius = tag->getInteger("Radius");
+	numIronGolems = tag->getInteger("Golems"); lastAddDoorTimestamp = tag->getInteger("Stable");
+	tickCounter = tag->getInteger("Tick"); noBreedTicks = tag->getInteger("MTick");
+	center.set(tag->getInteger("CX"), tag->getInteger("CY"), tag->getInteger("CZ"));
+	centerHelper.set(tag->getInteger("ACX"), tag->getInteger("ACY"), tag->getInteger("ACZ"));
+	villageDoorInfoList.clear(); playerReputation.clear();
+	NBTTagList *doors = tag->getTagList("Doors");
+	for (int_t i = 0; i < doors->tagCount(); ++i)
+	{
+		auto *door = dynamic_cast<NBTTagCompound *>(doors->tagAt(i)); if (!door) continue;
+		villageDoorInfoList.emplace_back(new VillageDoorInfo(door->getInteger("X"), door->getInteger("Y"), door->getInteger("Z"), door->getInteger("IDX"), door->getInteger("IDZ"), door->getInteger("TS")));
+	}
+	delete doors;
+	NBTTagList *players = tag->getTagList("Players");
+	for (int_t i = 0; i < players->tagCount(); ++i)
+	{
+		auto *player = dynamic_cast<NBTTagCompound *>(players->tagAt(i));
+		if (player) playerReputation[player->getString("Name")] = player->getInteger("S");
+	}
+	delete players;
+}
+
+void Village::writeVillageDataToNBT(NBTTagCompound *tag) const
+{
+	if (tag == nullptr) return;
+	tag->setInteger("PopSize", numVillagers); tag->setInteger("Radius", villageRadius);
+	tag->setInteger("Golems", numIronGolems); tag->setInteger("Stable", lastAddDoorTimestamp);
+	tag->setInteger("Tick", tickCounter); tag->setInteger("MTick", noBreedTicks);
+	tag->setInteger("CX", center.x); tag->setInteger("CY", center.y); tag->setInteger("CZ", center.z);
+	tag->setInteger("ACX", centerHelper.x); tag->setInteger("ACY", centerHelper.y); tag->setInteger("ACZ", centerHelper.z);
+	auto *doors = new NBTTagList();
+	for (const auto &owned : villageDoorInfoList) { auto *d = new NBTTagCompound(); d->setInteger("X", owned->posX); d->setInteger("Y", owned->posY); d->setInteger("Z", owned->posZ); d->setInteger("IDX", owned->insideDirectionX); d->setInteger("IDZ", owned->insideDirectionZ); d->setInteger("TS", owned->lastActivityTimestamp); doors->appendTag(d); }
+	tag->setTag("Doors", doors);
+	auto *players = new NBTTagList();
+	for (const auto &entry : playerReputation) { auto *p = new NBTTagCompound(); p->setString("Name", entry.first); p->setInteger("S", entry.second); players->appendTag(p); }
+	tag->setTag("Players", players);
 }
 
 void Village::removeDeadAndOldAgressors()

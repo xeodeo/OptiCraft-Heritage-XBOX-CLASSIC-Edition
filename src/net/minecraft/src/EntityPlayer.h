@@ -25,6 +25,8 @@ class TileEntityDispenser;
 class TileEntitySign;
 class TileEntityHopper;
 class TileEntityBeacon;
+class IMerchant;
+class MerchantRecipeList;
 class EntityMinecartHopper;
 class StatBase;
 enum class EnumStatus;
@@ -126,6 +128,7 @@ public:
 	virtual void displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper);
 	virtual void displayGUIRepair(int_t x, int_t y, int_t z);
 	virtual void displayGUIBeacon(TileEntityBeacon *beacon);
+	virtual void displayGUIMerchant(IMerchant *merchant, MerchantRecipeList *recipes);
 	void useCurrentItemOnEntity(Entity *entity);
 	ItemStack *getCurrentEquippedItem();
 	void destroyCurrentEquippedItem();

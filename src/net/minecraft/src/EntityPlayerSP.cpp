@@ -33,6 +33,7 @@
 #include "GuiEditSign.h"
 #include "GuiFurnace.h"
 #include "GuiBrewingStand.h"
+#include "GuiMerchant.h"
 #include "TileEntityBeacon.h"
 #include "GuiWinGame.h"
 #include "InventoryPlayer.h"
@@ -380,6 +381,13 @@ void EntityPlayerSP::displayGUIChest(IInventory *iinventory)
 		return;
 	}
 	mc->displayGuiScreen(new GuiChest(inventory, iinventory, this));
+}
+
+void EntityPlayerSP::displayGUIMerchant(IMerchant *merchant, MerchantRecipeList *recipes)
+{
+	if (!mc) return;
+	if (mc->isSplitScreenActive()) mc->displayPlayerScreen(this == mc->thePlayer2 ? 1 : 0, new GuiMerchant(inventory, merchant, recipes, this));
+	else mc->displayGuiScreen(new GuiMerchant(inventory, merchant, recipes, this));
 }
 
 void EntityPlayerSP::displayWorkbenchGUI(int_t i, int_t j, int_t k)
