@@ -186,7 +186,7 @@ int_t BlockHopper::getComparatorInputOverride(World *world, int_t i, int_t j, in
 
 const char *BlockHopper::getItemIconName() const
 {
-	return "hopper";
+	return "hopper.png";
 }
 
 int_t BlockHopper::getHopperIcon(const std::string &name)

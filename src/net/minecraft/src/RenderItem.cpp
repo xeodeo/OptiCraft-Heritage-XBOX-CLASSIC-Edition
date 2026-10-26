@@ -156,7 +156,8 @@ void RenderItem::doRenderItem(EntityItem* entityitem, double d, double d1, doubl
             const int icon = item->func_46058_c()
                 ? item->func_46057_a(itemstack->getItemDamage(), renderPass)
                 : itemstack->getIconIndex();
-            if (!item->func_46058_c() && itemstack->itemID < 256) {
+            if (!item->func_46058_c() && itemstack->itemID < 256 &&
+                (Block::blocksList[itemstack->itemID] == nullptr || Block::blocksList[itemstack->itemID]->getItemIconName() == nullptr)) {
                 loadTexture("/terrain.png");
             }
 

@@ -93,7 +93,9 @@ void ItemRenderer::renderItem(EntityLiving* entityliving, ItemStack* itemstack, 
         renderBindTexture(mc->renderEngine->getTexture("/terrain.png"));
         renderBlocksInstance->renderBlockAsItem(Block::blocksList[itemstack->itemID], itemstack->getItemDamage(), 1.0f);
     } else {
-        renderBindTexture(mc->renderEngine->getTexture(itemstack->itemID < 256 ? "/terrain.png" : "/gui/items.png"));
+        const bool blockAtlas = itemstack->itemID < 256 &&
+            (Block::blocksList[itemstack->itemID] == nullptr || Block::blocksList[itemstack->itemID]->getItemIconName() == nullptr);
+        renderBindTexture(mc->renderEngine->getTexture(blockAtlas ? "/terrain.png" : "/gui/items.png"));
         Tessellator* tessellator = &Tessellator::instance;
         int icon = entityliving->getItemIcon(itemstack, renderPass);
         float minU = (static_cast<float>((icon % 16) * 16) + 0.0f) / 256.0f;

@@ -19,6 +19,8 @@
 #include "EntityCrit2FX.h"
 #include "GuiChest.h"
 #include "GuiHopper.h"
+#include "TileEntityHopper.h"
+#include "EntityMinecartHopper.h"
 #include "legacy/LegacyCraftingScreen.h"
 #include "platform/PlatformConfig.h"
 #include "GuiCrafting.h"
@@ -335,10 +337,10 @@ void EntityPlayerSP::displayGUIHopper(TileEntityHopper *tileentityhopper)
 	if (mc != nullptr && mc->isSplitScreenActive())
 	{
 		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
-		mc->displayPlayerScreen(pIdx, new GuiHopper(inventory, (IInventory*)tileentityhopper, this));
+		mc->displayPlayerScreen(pIdx, new GuiHopper(inventory, static_cast<IInventory *>(tileentityhopper), this));
 		return;
 	}
-	mc->displayGuiScreen(new GuiHopper(inventory, (IInventory*)tileentityhopper, this));
+	mc->displayGuiScreen(new GuiHopper(inventory, static_cast<IInventory *>(tileentityhopper), this));
 }
 
 void EntityPlayerSP::displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper)
@@ -346,10 +348,10 @@ void EntityPlayerSP::displayGUIHopperMinecart(EntityMinecartHopper *entitymineca
 	if (mc != nullptr && mc->isSplitScreenActive())
 	{
 		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
-		mc->displayPlayerScreen(pIdx, new GuiHopper(inventory, (IInventory*)entityminecarthopper, this));
+		mc->displayPlayerScreen(pIdx, new GuiHopper(inventory, static_cast<IInventory *>(entityminecarthopper), this));
 		return;
 	}
-	mc->displayGuiScreen(new GuiHopper(inventory, (IInventory*)entityminecarthopper, this));
+	mc->displayGuiScreen(new GuiHopper(inventory, static_cast<IInventory *>(entityminecarthopper), this));
 }
 
 void EntityPlayerSP::displayGUIRepair(int_t x, int_t y, int_t z)
