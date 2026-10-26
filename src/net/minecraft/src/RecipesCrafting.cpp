@@ -13,6 +13,8 @@ void RecipesCrafting::addRecipes(CraftingManager *craftingmanager)
 {
 	craftingmanager->addRecipe(new ItemStack(Block::chest),
 	                           { "###", "# #", "###", '#', Block::planks });
+	craftingmanager->addRecipe(new ItemStack(Block::chestTrapped),
+	                           { "#-", '#', Block::chest, '-', Block::tripWireSource });
 	craftingmanager->addRecipe(new ItemStack(Block::stoneOvenIdle),
 	                           { "###", "# #", "###", '#', Block::cobblestone });
 	craftingmanager->addRecipe(new ItemStack(Block::workbench),

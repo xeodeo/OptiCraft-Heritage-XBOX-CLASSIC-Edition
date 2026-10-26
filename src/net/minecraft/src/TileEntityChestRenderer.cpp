@@ -49,12 +49,18 @@ bool TileEntityChestRenderer::renderTileEntityChestParts(TileEntityChest *chest,
     if (chest->adjacentChestXPos == nullptr && chest->adjacentChestZPos == nullptr)
     {
         model = chestModel;
-        bindTextureByName("/item/chest.png");
+        if (chest->func_98041_l() == 1)
+            bindTextureByName("/item/chests/trap_small.png");
+        else
+            bindTextureByName("/item/chest.png");
     }
     else
     {
         model = largeChestModel;
-        bindTextureByName("/item/largechest.png");
+        if (chest->func_98041_l() == 1)
+            bindTextureByName("/item/chests/trap_large.png");
+        else
+            bindTextureByName("/item/largechest.png");
     }
 
     renderPushMatrix();

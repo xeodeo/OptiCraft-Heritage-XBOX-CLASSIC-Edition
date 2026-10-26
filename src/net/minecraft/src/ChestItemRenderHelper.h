@@ -17,5 +17,6 @@ public:
 
 private:
 	TileEntityChest *chest;
+	TileEntityChest *trappedChest;
 	TileEntityEnderChest *theEnderChest;
 };

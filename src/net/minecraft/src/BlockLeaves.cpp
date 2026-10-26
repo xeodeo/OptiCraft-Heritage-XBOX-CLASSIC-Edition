@@ -1,4 +1,5 @@
 #include "BlockLeaves.h"
+#include "ItemStack.h"
 #include "Config.h"
 #include "Material.h"
 #include "ColorizerFoliage.h"
@@ -215,6 +216,13 @@ void BlockLeaves::setGraphicsLevel(bool flag)
 {
 	graphicsLevel = flag;
 	blockIndexInTexture = baseIndexInPNG + (flag ? 0 : 1);
+}
+
+void BlockLeaves::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	for (int_t i = 0; i < 4; ++i)
+		list.push_back(new ItemStack(id, 1, i));
 }
 
 void BlockLeaves::onEntityWalking(World *world, int_t i, int_t j, int_t k, Entity *entity)

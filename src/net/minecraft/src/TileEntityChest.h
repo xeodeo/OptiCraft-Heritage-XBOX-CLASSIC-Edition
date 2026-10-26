@@ -14,7 +14,7 @@ class NBTTagCompound;
 class TileEntityChest : public TileEntity, public IInventory
 {
 public:
-	TileEntityChest();
+	explicit TileEntityChest(int_t type = -1);
 	~TileEntityChest() override;
 
 	int_t getSizeInventory() override;
@@ -37,6 +37,8 @@ public:
 	void invalidate() override;
 
 	void checkForAdjacentChests();
+	int_t func_98041_l();
+	bool func_94044_a(int_t x, int_t y, int_t z);
 
 	bool adjacentChestChecked;
 	TileEntityChest *adjacentChestZNeg;
@@ -49,5 +51,6 @@ public:
 
 private:
 	int_t ticksSinceSync;
+	int_t field_94046_i;
 	ItemStack *chestContents[36];
 };

@@ -16,5 +16,6 @@ public:
 	bool usesDefaultColorMultiplier() const override { return false; }
 	int_t idDropped(int_t i, Random &random) override;
 	int_t quantityDroppedWithBonus(int_t fortune, Random &random) override;
+	void getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 	void harvestBlock(World *world, EntityPlayer *entityplayer, int_t i, int_t j, int_t k, int_t metadata) override;
 };

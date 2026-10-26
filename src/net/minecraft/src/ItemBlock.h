@@ -11,6 +11,8 @@ public:
     std::string getItemNameIS(ItemStack* itemstack) override;
     std::string getItemName() override;
     int getIconFromDamage(int damage) override;
+    CreativeTabs *getCreativeTab() const override;
+    void getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 
 protected:
     int blockID;

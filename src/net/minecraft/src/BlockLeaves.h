@@ -25,6 +25,7 @@ public:
 	bool isOpaqueCube() override;
 	bool usesStaticOpaqueCubeLookup() const override { return false; }
 	int_t getBlockTextureFromSideAndMetadata(int_t i, int_t j) override;
+	void getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 	void setGraphicsLevel(bool flag);
 	void onEntityWalking(World *world, int_t i, int_t j, int_t k, Entity *entity) override;
 

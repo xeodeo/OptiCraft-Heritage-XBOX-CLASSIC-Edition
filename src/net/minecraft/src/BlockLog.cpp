@@ -1,4 +1,5 @@
 #include "BlockLog.h"
+#include "ItemStack.h"
 #include "Material.h"
 #include "World.h"
 #include "Block.h"
@@ -58,3 +59,10 @@ int_t BlockLog::getBlockTextureFromSideAndMetadata(int_t i, int_t j)
 }
 
 int_t BlockLog::damageDropped(int_t i) { return i; }
+
+void BlockLog::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	for (int_t i = 0; i < 4; ++i)
+		list.push_back(new ItemStack(id, 1, i));
+}

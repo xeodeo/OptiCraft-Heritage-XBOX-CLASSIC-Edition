@@ -822,3 +822,22 @@ void Item::cleanup()
     record13 = nullptr;
     recordCat = nullptr;
 }
+
+Item *Item::setCreativeTab(CreativeTabs *tab)
+{
+    tabToDisplayOn = tab;
+    return this;
+}
+
+CreativeTabs *Item::getCreativeTab() const
+{
+    return tabToDisplayOn;
+}
+
+void Item::getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+    (void)tab;
+    list.push_back(new ItemStack(id, 1, 0));
+}
+
+
