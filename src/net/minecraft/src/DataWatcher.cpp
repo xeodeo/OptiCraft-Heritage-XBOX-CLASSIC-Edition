@@ -82,6 +82,11 @@ std::string DataWatcher::getWatchableObjectString(int_t id)
     return std::any_cast<std::string>(watchedObjects.at(id)->getObject());
 }
 
+ItemStack *DataWatcher::getWatchableObjectItemStack(int_t id)
+{
+    return std::any_cast<ItemStack *>(watchedObjects.at(id)->getObject());
+}
+
 static bool anyEquals(const std::any &a, const std::any &b)
 {
     if (a.type() != b.type()) return false;

@@ -35,6 +35,7 @@ public:
     short_t getWatchableObjectShort(int_t id);
     int_t getWatchableObjectInt(int_t id);
     std::string getWatchableObjectString(int_t id);
+    ItemStack *getWatchableObjectItemStack(int_t id);
 
     void updateObject(int_t id, std::any obj);
 
