@@ -4,19 +4,24 @@
 #include <vector>
 
 #include "ChunkCoordinates.h"
+#include "MapDataBase.h"
 #include "java/Type.h"
 
 class Entity;
+class NBTTagCompound;
 class Village;
 class VillageDoorInfo;
 class World;
 
 // net.minecraft.src.VillageCollection
-class VillageCollection
+class VillageCollection : public MapDataBase
 {
 public:
 	explicit VillageCollection(World *world);
+	explicit VillageCollection(const std::string &name);
 	~VillageCollection();
+	void readFromNBT(NBTTagCompound *tag) override;
+	void writeToNBT(NBTTagCompound *tag) override;
 
 	void addVillagerPosition(int_t x, int_t y, int_t z);
 	void tick();

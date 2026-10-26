@@ -12,6 +12,8 @@ class TileEntitySign;
 class TileEntityFurnace;
 class TileEntityDispenser;
 class TileEntityBrewingStand;
+class IMerchant;
+class MerchantRecipeList;
 
 // net.minecraft.src.EntityPlayerSP
 class EntityPlayerSP : public EntityPlayer
@@ -42,6 +44,7 @@ public:
 	void displayGUIDispenser(TileEntityDispenser *tileentitydispenser) override;
 	void displayGUIEnchantment(int_t i, int_t j, int_t k) override;
 	void displayGUIBrewingStand(TileEntityBrewingStand *tileentitybrewingstand) override;
+	void displayGUIMerchant(IMerchant *merchant, MerchantRecipeList *recipes) override;
 	void onCriticalHit(Entity *entity) override;
 	void onEnchantmentCritical(Entity *entity) override;
 	void onItemPickup(Entity *entity, int_t i) override;

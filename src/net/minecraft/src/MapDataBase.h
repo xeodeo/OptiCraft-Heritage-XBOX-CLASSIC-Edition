@@ -1,30 +1,17 @@
 #pragma once
 
 #include <string>
+#include "WorldSavedData.h"
 
-class NBTTagCompound;
 class MapDataBase;
 
-// Constructs the concrete MapDataBase that MapStorage should fill from a saved
-// file. Storage stays generic; each saved data type supplies its own factory.
 using MapDataFactory = MapDataBase *(*)(const std::string &name);
 
-// net.minecraft.src.MapDataBase
-class MapDataBase
+// net.minecraft.src.MapDataBase; all map and village saved data use the
+// same persistence and dirty tracking contract.
+class MapDataBase : public WorldSavedData
 {
 public:
-	MapDataBase(const std::string &s);
-	virtual ~MapDataBase() = default;
-
-	virtual void readFromNBT(NBTTagCompound *nbttagcompound) = 0;
-	virtual void writeToNBT(NBTTagCompound *nbttagcompound) = 0;
-
-	void markDirty();
-	void setDirty(bool flag);
-	bool isDirty();
-
-	std::string mapName; // mapName
-
-private:
-	bool dirty;
+	explicit MapDataBase(const std::string &name);
+	~MapDataBase() override = default;
 };
