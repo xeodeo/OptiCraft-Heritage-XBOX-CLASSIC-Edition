@@ -172,6 +172,12 @@ public:
     static Item* reed;
     static Item* paper;
     static Item* book;
+    static Item* writableBook;
+    static Item* writtenBook;
+    static Item* enchantedBook;
+    static Item* emptyMap;
+    static Item* carrotOnAStick;
+    static Item* itemFrame;
     static Item* slimeBall;
     static Item* minecartCrate;
     static Item* minecartPowered;

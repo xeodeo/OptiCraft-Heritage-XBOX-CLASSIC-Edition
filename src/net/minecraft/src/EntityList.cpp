@@ -41,6 +41,7 @@
 #include "EntityOcelot.h"
 #include "EntityMob.h"
 #include "EntityPainting.h"
+#include "EntityItemFrame.h"
 #include "EntityPig.h"
 #include "EntityPigZombie.h"
 #include "EntitySheep.h"
@@ -194,6 +195,7 @@ static struct EntityListInit
         EntityList::addMapping<EntityItem>("Item", 1);
         EntityList::addMapping<EntityXPOrb>("XPOrb", 2);
         EntityList::addMapping<EntityPainting>("Painting", 9);
+        EntityList::addMapping<EntityItemFrame>("ItemFrame", 18);
         EntityList::addMapping<EntityLiving>("Mob", 48);
         EntityList::addMapping<EntityMob>("Monster", 49);
         EntityList::addMapping<EntityCreeper>("Creeper", 50, 894731, 0);

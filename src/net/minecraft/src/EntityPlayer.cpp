@@ -862,6 +862,8 @@ void EntityPlayer::displayGUIDispenser(TileEntityDispenser *tileentitydispenser)
 void EntityPlayer::displayGUIEditSign(TileEntitySign *tileentitysign) {}
 void EntityPlayer::displayGUIHopper(TileEntityHopper *tileentityhopper) { (void)tileentityhopper; }
 void EntityPlayer::displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper) { (void)entityminecarthopper; }
+void EntityPlayer::displayGUIRepair(int_t, int_t, int_t) {}
+void EntityPlayer::displayGUIBeacon(TileEntityBeacon *) {}
 
 void EntityPlayer::useCurrentItemOnEntity(Entity *entity)
 {

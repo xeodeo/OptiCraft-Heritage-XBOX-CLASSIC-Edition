@@ -5,6 +5,7 @@
 #include "Material.h"
 #include "TileEntityBeacon.h"
 #include "World.h"
+#include "EntityPlayerSP.h"
 #include "Texture152Atlas.h"
 
 BlockBeacon::BlockBeacon(int_t id)
@@ -28,11 +29,11 @@ TileEntity *BlockBeacon::getBlockEntity()
 
 bool BlockBeacon::blockActivated(World *world, int_t i, int_t j, int_t k, EntityPlayer *entityplayer)
 {
-	(void)world;
-	(void)i;
-	(void)j;
-	(void)k;
-	(void)entityplayer;
+	EntityPlayerSP *player = dynamic_cast<EntityPlayerSP *>(entityplayer);
+	if (player != nullptr) {
+		TileEntity *tile = world->getBlockTileEntity(i, j, k);
+		if (TileEntityBeacon *beacon = dynamic_cast<TileEntityBeacon *>(tile)) player->displayGUIBeacon(beacon);
+	}
 	return true;
 }
 

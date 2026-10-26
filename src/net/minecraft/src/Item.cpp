@@ -37,6 +37,12 @@
 #include "ItemBed.h"
 #include "ItemCookie.h"
 #include "ItemMap.h"
+#include "ItemEmptyMap.h"
+#include "ItemWritableBook.h"
+#include "ItemEditableBook.h"
+#include "ItemEnchantedBook.h"
+#include "ItemCarrotOnAStick.h"
+#include "ItemHangingEntity.h"
 #include "ItemShears.h"
 #include "ItemRecord.h"
 #include "ItemPotion.h"
@@ -147,6 +153,12 @@ Item* Item::clay = nullptr;
 Item* Item::reed = nullptr;
 Item* Item::paper = nullptr;
 Item* Item::book = nullptr;
+Item* Item::writableBook = nullptr;
+Item* Item::writtenBook = nullptr;
+Item* Item::enchantedBook = nullptr;
+Item* Item::emptyMap = nullptr;
+Item* Item::carrotOnAStick = nullptr;
+Item* Item::itemFrame = nullptr;
 Item* Item::slimeBall = nullptr;
 Item* Item::minecartCrate = nullptr;
 Item* Item::minecartPowered = nullptr;
@@ -628,7 +640,13 @@ void Item::initItems() {
     monsterPlacer = (new ItemMonsterPlacer(127))->setIconCoord(9, 9)->setItemName("monsterPlacer");
     expBottle = (new ItemExpBottle(128))->setIconCoord(11, 10)->setItemName("expBottle");
     fireballCharge = (new ItemFireball(129))->setIconCoord(14, 2)->setItemName("fireball");
+    writableBook = (new ItemWritableBook(130))->setIconIndex(TEX152_ITEM_ICON("writingBook.png"))->setItemName("writingBook");
+    writtenBook = (new ItemEditableBook(131))->setIconIndex(TEX152_ITEM_ICON("writtenBook.png"))->setItemName("writtenBook");
     emerald = (new Item(132))->setIconIndex(TEX152_ITEM_ICON("emerald.png"))->setItemName("emerald"); // 1.5.2 icon: emerald.png
+    itemFrame = (new ItemHangingEntity(133))->setIconIndex(TEX152_ITEM_ICON("frame.png"))->setItemName("frame");
+    emptyMap = (new ItemEmptyMap(139))->setIconIndex(TEX152_ITEM_ICON("emptyMap.png"))->setItemName("emptyMap");
+    carrotOnAStick = (new ItemCarrotOnAStick(142))->setIconIndex(TEX152_ITEM_ICON("carrotOnAStick.png"))->setItemName("carrotOnAStick");
+    enchantedBook = (new ItemEnchantedBook(147))->setIconIndex(TEX152_ITEM_ICON("enchantedBook.png"))->setItemName("enchantedBook");
     carrot = (new ItemSeedFood(135, 4, 0.6f, Block::carrot->blockID, Block::tilledField->blockID))->setIconIndex(TEX152_ITEM_ICON("carrots.png"))->setItemName("carrots"); // 1.5.2 icon: carrots.png
     potato = (new ItemSeedFood(136, 1, 0.3f, Block::potato->blockID, Block::tilledField->blockID))->setIconIndex(TEX152_ITEM_ICON("potato.png"))->setItemName("potato"); // 1.5.2 icon: potato.png
     bakedPotato = (new ItemFood(137, 6, 0.6f, false))->setIconIndex(TEX152_ITEM_ICON("potatoBaked.png"))->setItemName("potatoBaked"); // 1.5.2 icon: potatoBaked.png
@@ -753,6 +771,12 @@ void Item::cleanup()
     reed = nullptr;
     paper = nullptr;
     book = nullptr;
+    writableBook = nullptr;
+    writtenBook = nullptr;
+    enchantedBook = nullptr;
+    emptyMap = nullptr;
+    carrotOnAStick = nullptr;
+    itemFrame = nullptr;
     slimeBall = nullptr;
     minecartCrate = nullptr;
     minecartPowered = nullptr;

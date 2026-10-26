@@ -26,9 +26,12 @@
 #include "net/minecraft/src/legacy/XboxCraftingScreen.h"
 #include "GuiDispenser.h"
 #include "GuiEnchantment.h"
+#include "GuiRepair.h"
+#include "GuiBeacon.h"
 #include "GuiEditSign.h"
 #include "GuiFurnace.h"
 #include "GuiBrewingStand.h"
+#include "TileEntityBeacon.h"
 #include "GuiWinGame.h"
 #include "InventoryPlayer.h"
 #include "Item.h"
@@ -347,6 +350,18 @@ void EntityPlayerSP::displayGUIHopperMinecart(EntityMinecartHopper *entitymineca
 		return;
 	}
 	mc->displayGuiScreen(new GuiHopper(inventory, (IInventory*)entityminecarthopper, this));
+}
+
+void EntityPlayerSP::displayGUIRepair(int_t x, int_t y, int_t z)
+{
+    if (mc != nullptr && mc->isSplitScreenActive()) { mc->displayPlayerScreen(this == mc->thePlayer2 ? 1 : 0, new GuiRepair(inventory, worldObj, x,y,z,this)); return; }
+    mc->displayGuiScreen(new GuiRepair(inventory, worldObj, x,y,z,this));
+}
+
+void EntityPlayerSP::displayGUIBeacon(TileEntityBeacon *beacon)
+{
+    if (mc != nullptr && mc->isSplitScreenActive()) { mc->displayPlayerScreen(this == mc->thePlayer2 ? 1 : 0, new GuiBeacon(inventory, beacon, this)); return; }
+    mc->displayGuiScreen(new GuiBeacon(inventory, beacon, this));
 }
 
 void EntityPlayerSP::displayGUIEditSign(TileEntitySign *tileentitysign)

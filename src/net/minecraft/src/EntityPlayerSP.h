@@ -33,6 +33,8 @@ public:
 	void displayGUIEditSign(TileEntitySign *tileentitysign) override;
 	void displayGUIHopper(TileEntityHopper *tileentityhopper) override;
 	void displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper) override;
+	void displayGUIRepair(int_t x, int_t y, int_t z) override;
+	void displayGUIBeacon(TileEntityBeacon *beacon) override;
 	void displayGUIChest(IInventory *iinventory) override;
 	void displayWorkbenchGUI(int_t i, int_t j, int_t k) override;
 	void displayGUIFurnace(TileEntityFurnace *tileentityfurnace) override;

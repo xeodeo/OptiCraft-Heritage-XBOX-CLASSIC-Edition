@@ -7,6 +7,7 @@
 #include "Material.h"
 #include "MathHelper.h"
 #include "World.h"
+#include "EntityPlayerSP.h"
 
 const char *const BlockAnvil::statuses[3] = {"intact", "slightlyDamaged", "veryDamaged"};
 
@@ -14,6 +15,12 @@ BlockAnvil::BlockAnvil(int_t id)
 	: BlockSand(id, Material::anvil)
 {
 	setLightOpacity(0);
+}
+
+bool BlockAnvil::blockActivated(World *world, int_t x, int_t y, int_t z, EntityPlayer *entityplayer)
+{
+	if (EntityPlayerSP *player = dynamic_cast<EntityPlayerSP *>(entityplayer)) { player->displayGUIRepair(x, y, z); return true; }
+	return true;
 }
 
 int_t BlockAnvil::getBlockTextureFromSideAndMetadata(int_t side, int_t metadata)

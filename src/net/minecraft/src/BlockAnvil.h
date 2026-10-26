@@ -11,6 +11,7 @@ public:
 	int_t field_82521_b = 0;
 
 	explicit BlockAnvil(int_t id);
+	bool blockActivated(World *world, int_t x, int_t y, int_t z, EntityPlayer *player) override;
 
 	bool renderAsNormalBlock() override { return false; }
 	bool isOpaqueCube() override { return false; }
