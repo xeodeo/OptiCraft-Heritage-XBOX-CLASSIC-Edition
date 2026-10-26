@@ -17,6 +17,7 @@ public:
 	int_t getEntityClassID() const override { return CLASS_ID; }
 
 	void onUpdate() override;
+	const char *getEntityTexture() override;
 	bool isAIEnabled() override;
 	bool getCanSpawnHere() override;
 	void writeEntityToNBT(NBTTagCompound *nbttagcompound) override;

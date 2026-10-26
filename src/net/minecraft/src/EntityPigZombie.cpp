@@ -107,6 +107,9 @@ void EntityPigZombie::becomeAngryAt(Entity *entity)
 	randomSoundDelay = rand.nextInt(40);
 }
 
+// EntityZombie overrides the texture in 1.5.2 (zombie villager); the pig zombie overrides it back.
+const char *EntityPigZombie::getEntityTexture() { return "/mob/pigzombie.png"; }
+
 jstring EntityPigZombie::getLivingSound() { return "mob.zombiepig.zpig"; }
 jstring EntityPigZombie::getHurtSound()   { return "mob.zombiepig.zpighurt"; }
 jstring EntityPigZombie::getDeathSound()  { return "mob.zombiepig.zpigdeath"; }
