@@ -96,10 +96,12 @@ void RenderItemFrame::func_82402_b(EntityItemFrame *var1)
     ItemStack *var2 = var1->getDisplayedItem();
     if (var2 != nullptr)
     {
-        EntityItem var3(var1->worldObj, 0.0, 0.0, 0.0, var2);
-        if (var3.item != nullptr)
+        // The entity owns its stack (DataWatcher) and frees it when it goes out of
+        // scope; Java shares the frame's stack, so give it a copy instead.
+        EntityItem var3(var1->worldObj, 0.0, 0.0, 0.0, var2->copy());
+        if (var3.getEntityItem() != nullptr)
         {
-            var3.item->stackSize = 1;
+            var3.getEntityItem()->stackSize = 1;
         }
         var3.hoverStart = 0.0f;
         renderPushMatrix();
@@ -119,7 +121,7 @@ void RenderItemFrame::func_82402_b(EntityItemFrame *var1)
             break;
         }
 
-        if (var3.item != nullptr && Item::map != nullptr && var3.item->itemID == Item::map->shiftedIndex)
+        if (var3.getEntityItem() != nullptr && Item::map != nullptr && var3.getEntityItem()->itemID == Item::map->shiftedIndex)
         {
             renderManager->renderEngine->bindTexture(renderManager->renderEngine->getTexture("/misc/mapbg.png"));
             Tessellator *var4 = &Tessellator::instance;
@@ -135,7 +137,7 @@ void RenderItemFrame::func_82402_b(EntityItemFrame *var1)
             var4->addVertexWithUV((double)(128 + var5), (double)(0 - var5), 0.0, 1.0, 0.0);
             var4->addVertexWithUV((double)(0 - var5), (double)(0 - var5), 0.0, 0.0, 0.0);
             var4->draw();
-            MapData *var6 = ((ItemMap*)Item::map)->getMapData(var3.item, var1->worldObj);
+            MapData *var6 = ((ItemMap*)Item::map)->getMapData(var3.getEntityItem(), var1->worldObj);
             renderTranslate(0.0f, 0.0f, -1.0f);
             if (var6 != nullptr && renderManager->itemRenderer != nullptr && renderManager->itemRenderer->field_28131_f != nullptr)
             {
