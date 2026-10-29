@@ -3,16 +3,22 @@
 #include "ps3/render/Ps3Rsx.h"
 
 #include "platform/Log.h"
+#include "ps3/system/Ps3Stage.h"
 #include "ps3/system/Ps3Video.h"
 
 #include <malloc.h>
 #include <ppu-asm.h>
+#include <sys/thread.h>
 #include <sysutil/video.h>
 #include <unistd.h>
 
 #include <cstdio>
 #include <cstring>
 #include <deque>
+
+extern "C" void ps3PlatformLogWrite(const char* line);
+extern "C" const char* volatile g_ps3Stage = "start";
+extern "C" volatile double g_ps3StageValues[6] = {};
 
 namespace
 {
@@ -69,11 +75,60 @@ void writeJump(std::uint32_t offset)
     ++s_context->current;
 }
 
+// Every CPU wait on the GPU goes through here. A wait that lasts seconds means
+// the RSX stopped (bad command or address) -- the console just freezes -- so log
+// where and the FIFO state once, for the netlog.
+struct StallWatch
+{
+    const char* site;
+    Ps3StageScope stage;
+    std::uint64_t spins = 0;
+    bool logged = false;
+    explicit StallWatch(const char* name) : site(name), stage(name) {}
+    void tick(std::uint32_t sleepUs)
+    {
+        usleep(sleepUs);
+        if (logged || ++spins * sleepUs < 3 * 1000 * 1000)
+            return;
+        logged = true;
+        gcmControlRegister* control = gcmGetControlRegister();
+        MC_LOG_ERROR("ps3.rsx", "GPU stalled in %s: get=%08x put=%08x ref=%08x frame=%u done=%u idle=%u/%u half=%d\n",
+                     site, control->get, control->put, control->ref, s_frame,
+                     *reinterpret_cast<volatile std::uint32_t*>(gcmGetLabelAddress(kFrameLabel)),
+                     *reinterpret_cast<volatile std::uint32_t*>(gcmGetLabelAddress(kIdleLabel)), s_idleValue,
+                     s_cbHalf);
+    }
+};
+
+// A heartbeat every 5 s from its own high-priority thread: frame counter and FIFO
+// state. After a freeze the last beats say whether frames still advance and where
+// the GPU is. Written straight to the sink, not through McLog, whose lock the
+// stuck thread may hold.
+void frameWatchdog(void*)
+{
+    for (;;)
+    {
+        usleep(5 * 1000 * 1000);
+        gcmControlRegister* control = gcmGetControlRegister();
+        char line[320];
+        std::snprintf(line, sizeof(line),
+                      "[MC][I][ps3.wd] stage=%s frame=%u done=%u get=%08x put=%08x ref=%08x half=%d"
+                      " values=%g %g %g %g %g %g\n",
+                      g_ps3Stage, *const_cast<volatile std::uint32_t*>(&s_frame),
+                      *reinterpret_cast<volatile std::uint32_t*>(gcmGetLabelAddress(kFrameLabel)),
+                      control->get, control->put, control->ref, s_cbHalf,
+                      g_ps3StageValues[0], g_ps3StageValues[1], g_ps3StageValues[2],
+                      g_ps3StageValues[3], g_ps3StageValues[4], g_ps3StageValues[5]);
+        ps3PlatformLogWrite(line);
+    }
+}
+
 void waitGpuCaughtUp()
 {
     gcmControlRegister* control = gcmGetControlRegister();
+    StallWatch watch("waitGpuCaughtUp");
     while (control->get != control->put)
-        usleep(20);
+        watch.tick(20);
 }
 
 // Points the context at `half` (its begin) and makes the GPU jump there.
@@ -145,8 +200,9 @@ std::uint32_t finishedFrame()
 
 void waitForFrame(std::uint32_t frame)
 {
+    StallWatch watch("waitForFrame");
     while (static_cast<std::int32_t>(finishedFrame() - frame) < 0)
-        usleep(20);
+        watch.tick(20);
 }
 
 void releaseFinishedFrees()
@@ -261,6 +317,9 @@ bool initialize()
                 static_cast<unsigned>((s_cbEnd[0] - s_cbBegin[0]) * 4 / 1024));
 
     *frameLabel() = 0;
+    sys_ppu_thread_t watchdog;
+    if (sysThreadCreate(&watchdog, frameWatchdog, nullptr, 200, 16 * 1024, 0, const_cast<char*>("frame watchdog")) != 0)
+        MC_LOG_ERROR("ps3.rsx", "watchdog thread not started\n");
     s_ready = true;
     waitIdle();
     s_backBuffer = 0;
@@ -335,8 +394,9 @@ void endFrame()
     // At most one flip in flight: wait for the previous one before queueing.
     if (!s_firstFlip)
     {
+        StallWatch watch("flip");
         while (gcmGetFlipStatus() != 0)
-            usleep(200);
+            watch.tick(200);
     }
     gcmResetFlipStatus();
     s_firstFlip = false;
@@ -410,8 +470,9 @@ void waitIdle()
     ++s_idleValue;
     rsxSetWriteBackendLabel(s_context, kIdleLabel, s_idleValue);
     rsxFlushBuffer(s_context);
+    StallWatch watch("waitIdle");
     while (*reinterpret_cast<volatile std::uint32_t*>(gcmGetLabelAddress(kIdleLabel)) != s_idleValue)
-        usleep(30);
+        watch.tick(30);
     ++s_idleValue;
     // Everything submitted is done, including all frames so far.
     *frameLabel() = s_frame - 1;

@@ -255,9 +255,10 @@ void EntityItem::setAgeToCreativeDespawnTime()
 
 void EntityItem::searchForOtherItemsNearby()
 {
+	// expand() hands out a box from the AABB pool: not ours to delete. Deleting it
+	// corrupted the heap, and the next allocation froze the real PS3.
 	AxisAlignedBB *searchBox = boundingBox->expand(0.5, 0.0, 0.5);
 	const std::vector<Entity *> nearby = worldObj->getEntitiesWithinAABB(typeid(EntityItem), searchBox);
-	delete searchBox;
 	for (Entity *entity : nearby)
 	{
 		EntityItem *other = dynamic_cast<EntityItem *>(entity);
