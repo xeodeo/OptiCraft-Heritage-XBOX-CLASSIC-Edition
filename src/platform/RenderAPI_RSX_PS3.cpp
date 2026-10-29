@@ -131,6 +131,7 @@ rsxProgramConst* s_uLightConst = nullptr;
 rsxProgramConst* s_uFogColor = nullptr;
 rsxProgramConst* s_uFogParams = nullptr;
 rsxProgramConst* s_uFogWeights = nullptr;
+rsxProgramConst* s_uAlphaTest = nullptr;
 bool s_programsReady = false;
 // Texture units the fragment program reads the texture and the lightmap from.
 // cgcomp assigns them; TEXUNITn in the source is not guaranteed to survive.
@@ -162,13 +163,18 @@ bool s_fogRadial = false;
 float s_fogColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 bool s_fogDirty = true;
 
+// GL_ALPHA_TEST, done in the fragment program (see opticraft.fcg).
+bool s_alphaTestEnabled = false;
+float s_alphaRef = 0.0f;
+bool s_alphaTestDirty = true;
+
 bool s_cullEnabled = false;
 RenderFace s_cullFace = RenderFace::Back;
 
-// The viewport flips y (GL's origin is bottom-left, the surface's top-left), which
-// flips the on-screen winding too: GL's counter-clockwise front faces arrive
-// clockwise. If culling shows the inside of blocks on hardware, swap these.
-constexpr std::uint32_t kGlFrontFace = GCM_FRONTFACE_CW;
+// GL's counter-clockwise front faces stay CCW for the RSX even with the viewport's
+// y flip (the RSX resolves winding with the same orientation the viewport uses).
+// Measured in RPCS3: CW culled the tops of every full block (holes in the ground).
+constexpr std::uint32_t kGlFrontFace = GCM_FRONTFACE_CCW;
 
 std::uint32_t uploadTarget()
 {
@@ -235,15 +241,20 @@ std::uint32_t toGcmPrimitive(RenderPrimitive p)
     }
 }
 
+// Live renderer experiments from the test builds' remote control ("DEBUG <flag>").
+bool s_debugNoCull = false;
+bool s_debugFlipFront = false;
+
 void applyCull()
 {
     if (!Ps3Rsx::ready()) return;
-    if (!s_cullEnabled || s_cullFace == RenderFace::FrontAndBack)
+    if (!s_cullEnabled || s_cullFace == RenderFace::FrontAndBack || s_debugNoCull)
     {
         rsxSetCullFaceEnable(ctx(), GCM_FALSE);
         return;
     }
-    rsxSetFrontFace(ctx(), kGlFrontFace);
+    rsxSetFrontFace(ctx(), s_debugFlipFront ? (kGlFrontFace == GCM_FRONTFACE_CW ? GCM_FRONTFACE_CCW : GCM_FRONTFACE_CW)
+                                            : kGlFrontFace);
     rsxSetCullFace(ctx(), s_cullFace == RenderFace::Back ? GCM_CULL_BACK : GCM_CULL_FRONT);
     rsxSetCullFaceEnable(ctx(), GCM_TRUE);
 }
@@ -532,6 +543,7 @@ bool loadPrograms()
     s_uFogColor = rsxVertexProgramGetConst(s_vertexProgram, "fogColor");
     s_uFogParams = rsxVertexProgramGetConst(s_vertexProgram, "fogParams");
     s_uFogWeights = rsxVertexProgramGetConst(s_vertexProgram, "fogWeights");
+    s_uAlphaTest = rsxVertexProgramGetConst(s_vertexProgram, "alphaTest");
     if (rsxProgramAttrib* texture = rsxFragmentProgramGetAttrib(s_fragmentProgram, "texture0"))
         s_textureUnit = static_cast<std::uint8_t>(texture->index);
     if (rsxProgramAttrib* lightmap = rsxFragmentProgramGetAttrib(s_fragmentProgram, "lightmap"))
@@ -609,7 +621,14 @@ bool applyDrawState(bool constantLight)
         s_programFrame = Ps3Rsx::frameNumber();
         s_matricesDirty = true;
         s_fogDirty = true;
+        s_alphaTestDirty = true;
         std::memset(s_sentLightConst, 0xFF, sizeof(s_sentLightConst));
+    }
+    if (s_alphaTestDirty)
+    {
+        const float values[4] = {s_alphaTestEnabled ? 1.0f : 0.0f, s_alphaRef, 0.0f, 0.0f};
+        setVertexUniform(s_uAlphaTest, values);
+        s_alphaTestDirty = false;
     }
     if (s_matricesDirty)
     {
@@ -792,7 +811,7 @@ void renderEnable(RenderCapability capability)
             if (s_activeTextureUnit == 0) s_texture2D = true;
             else s_lightmapOn = true;
             break;
-        case RenderCapability::AlphaTest: rsxSetAlphaTestEnable(ctx(), GCM_TRUE); break;
+        case RenderCapability::AlphaTest: s_alphaTestEnabled = true; s_alphaTestDirty = true; break;
         case RenderCapability::Blend: rsxSetBlendEnable(ctx(), GCM_TRUE); break;
         case RenderCapability::CullFace: s_cullEnabled = true; applyCull(); break;
         case RenderCapability::DepthTest: rsxSetDepthTestEnable(ctx(), GCM_TRUE); break;
@@ -812,7 +831,7 @@ void renderDisable(RenderCapability capability)
             if (s_activeTextureUnit == 0) s_texture2D = false;
             else s_lightmapOn = false;
             break;
-        case RenderCapability::AlphaTest: rsxSetAlphaTestEnable(ctx(), GCM_FALSE); break;
+        case RenderCapability::AlphaTest: s_alphaTestEnabled = false; s_alphaTestDirty = true; break;
         case RenderCapability::Blend: rsxSetBlendEnable(ctx(), GCM_FALSE); break;
         case RenderCapability::CullFace: s_cullEnabled = false; applyCull(); break;
         case RenderCapability::DepthTest: rsxSetDepthTestEnable(ctx(), GCM_FALSE); break;
@@ -845,9 +864,10 @@ void renderDepthFunc(RenderCompare function)
 
 void renderAlphaFunc(RenderCompare function, float reference)
 {
-    if (!Ps3Rsx::ready()) return;
-    const float clamped = reference < 0.0f ? 0.0f : (reference > 1.0f ? 1.0f : reference);
-    rsxSetAlphaFunc(ctx(), toGcmCompare(function), static_cast<u32>(clamped * 255.0f + 0.5f));
+    // Minecraft only uses GL_GREATER; the fragment program implements that one.
+    (void)function;
+    s_alphaRef = reference < 0.0f ? 0.0f : (reference > 1.0f ? 1.0f : reference);
+    s_alphaTestDirty = true;
 }
 
 void renderCullFace(RenderFace face)
@@ -1429,6 +1449,20 @@ void ps3RenderBeginFrame()
         renderViewport(vp[0], vp[1], vp[2], vp[3]);
         applyCull();
     }
+}
+
+// Test builds' remote control: "DEBUG nocull" / "DEBUG cull" / "DEBUG flipfront".
+void ps3RenderDebugCommand(const char* flag)
+{
+    if (std::strcmp(flag, "nocull") == 0)
+        s_debugNoCull = true;
+    else if (std::strcmp(flag, "cull") == 0)
+        s_debugNoCull = false;
+    else if (std::strcmp(flag, "flipfront") == 0)
+        s_debugFlipFront = !s_debugFlipFront;
+    MC_LOG_INFO("ps3.render", "debug %s (nocull=%d flipfront=%d)\n", flag, s_debugNoCull ? 1 : 0,
+                s_debugFlipFront ? 1 : 0);
+    applyCull();
 }
 
 long ps3RenderRecordedBytes()

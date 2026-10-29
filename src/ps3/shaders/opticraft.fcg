@@ -7,10 +7,15 @@
 float4 main(float4 color : COLOR,
             float4 uv : TEXCOORD0,
             float4 fog : TEXCOORD1,
+            float4 alphaTest : TEXCOORD2,
             uniform sampler2D texture0 : TEXUNIT0,
             uniform sampler2D lightmap : TEXUNIT1) : COLOR
 {
     float4 result = color * tex2D(texture0, uv.xy) * tex2D(lightmap, uv.zw);
+    // GL_ALPHA_TEST (GL_GREATER): the RSX's own alpha test did not discard (white
+    // squares around flowers), so it is done here with the vertex program's values.
+    if (alphaTest.x > 0.5f && result.a <= alphaTest.y)
+        discard;
     result.rgb = lerp(fog.rgb, result.rgb, fog.a);
     return result;
 }

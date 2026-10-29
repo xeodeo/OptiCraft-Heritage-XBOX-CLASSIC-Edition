@@ -11,6 +11,8 @@
 #include "ps3/system/Ps3Clock.h"
 #include "ps3/system/Ps3Paths.h"
 #include "ps3/render/Ps3Rsx.h"
+
+void ps3RenderDebugCommand(const char* flag);  // RenderAPI_RSX_PS3.cpp (remote control DEBUG lines)
 #include "platform/Log.h"
 
 #include <cstdint>
@@ -215,6 +217,14 @@ void readRemoteFile()
 		{
 			cmd.screenshot = true;
 			++count;
+			continue;
+		}
+		if (std::strncmp(line, "DEBUG ", 6) == 0)
+		{
+			// Renderer experiments, toggled live: "DEBUG nocull", "DEBUG cull".
+			char flag[32] = {};
+			std::sscanf(line + 6, "%31s", flag);
+			ps3RenderDebugCommand(flag);
 			continue;
 		}
 		const int fields = std::sscanf(line, "%63s %lu %f %f %f %f", buttons, &ms, &cmd.lx, &cmd.ly, &cmd.rx, &cmd.ry);

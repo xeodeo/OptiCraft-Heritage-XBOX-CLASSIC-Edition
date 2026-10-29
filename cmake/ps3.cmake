@@ -218,6 +218,10 @@ add_custom_command(TARGET OptiCraft POST_BUILD
             "${PS3_PKG_ROOT}/PARAM.SFO" "${PS3_TITLE_ID}" "${PS3_TITLE}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/ps3/ICON0.PNG"
             "${PS3_PKG_ROOT}/ICON0.PNG"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/ps3/PIC1.PNG"
+            "${PS3_PKG_ROOT}/PIC1.PNG"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/ps3/SND0.AT3"
+            "${PS3_PKG_ROOT}/SND0.AT3"
     WORKING_DIRECTORY "${PS3_SCETOOL_DIR}"
     COMMENT "Packaging ${PS3_PKG_ROOT} (sprxlinker + scetool NPDRM)"
     VERBATIM
