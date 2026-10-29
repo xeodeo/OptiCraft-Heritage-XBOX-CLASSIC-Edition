@@ -40,6 +40,8 @@
 #  elif PLATFORM_PS3
 // The Cell PPU runs two hardware threads and the game used one: terrain and
 // cave buffers are built on the second, with the Xbox async-IO settings.
+// OFF for now (PlatformConfig.h): on hardware the game froze inside
+// drainAsyncGeneratedChunks after a few minutes of walking (29-10-2026).
 #    define PLATFORM_ASYNC_GENERATION_QUEUE_LIMIT        16
 #    define PLATFORM_ASYNC_GENERATION_REQUESTS_PER_TICK  4
 #    define PLATFORM_ASYNC_GENERATION_PUBLISH_PER_TICK   4
@@ -50,7 +52,10 @@
 #    define PLATFORM_ASYNC_ISOLATED_BIOME_SOURCE         1
 #    define PLATFORM_ASYNC_GENERATION_REQUESTS_PER_FRAME 4
 #    define PLATFORM_ASYNC_GENERATION_PUBLISH_PER_FRAME  4
-#    define PLATFORM_ASYNC_CHUNK_DECODE                  1
+// Saved chunks are decoded on the game thread, as on the desktop: decoding on
+// the worker was only ever exercised on the single-core Wii, and the PS3 runs
+// both threads truly in parallel (the game froze after a while walking).
+#    define PLATFORM_ASYNC_CHUNK_DECODE                  0
 #    define PLATFORM_ASYNC_NEAREST_FIRST                 1
 #  else
 #    if XBOX_ASYNC_CHUNK_IO

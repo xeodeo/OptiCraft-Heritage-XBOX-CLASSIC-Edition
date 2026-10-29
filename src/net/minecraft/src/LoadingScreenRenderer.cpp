@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "LoadingScreenRenderer.h"
 #include "UiStrings.h"
 
@@ -187,6 +188,7 @@ void LoadingScreenRenderer::setLoadingMessage(const std::string &s)
 
 void LoadingScreenRenderer::setLoadingProgress(int_t i)
 {
+    PS3_STAGE_SCOPE("quit:progress");
 	if (!mc->running)
 	{
 		if (field_1005_e)
@@ -253,6 +255,7 @@ void LoadingScreenRenderer::setLoadingProgress(int_t i)
 
 void LoadingScreenRenderer::printText(const jstring &s)
 {
+    PS3_STAGE_SCOPE("quit:printText");
 	setProgressMessage(s);
 }
 
@@ -268,5 +271,6 @@ void LoadingScreenRenderer::resetProgressAndMessage(const jstring &s)
 
 void LoadingScreenRenderer::displayLoadingString(const jstring &s)
 {
+    PS3_STAGE_SCOPE("quit:loadingString");
 	setLoadingMessage(s);
 }

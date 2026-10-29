@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "platform/PlatformConfig.h"
 
 #if PLATFORM_INCREMENTAL_TERRAIN_BUILD
@@ -80,6 +81,7 @@ namespace
 
 void WorldRenderer::updateRenderer()
 {
+    PS3_STAGE_SCOPE("chunkRebuild");
     pcLegacyStepDidWork = false;
     if (!needsUpdate)
     {

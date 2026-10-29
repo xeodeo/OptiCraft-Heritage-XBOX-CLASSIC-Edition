@@ -53,6 +53,9 @@ void waitIdle();
 // /dev_hdd0/tmp/opticraft_shot.raw. A no-op otherwise.
 void requestScreenshot();
 
+// Waits for the RSX to finish everything before the process exits (atexit).
+void shutdown();
+
 // Red screen forever, for fatal errors (ClientPlatformPolicy::reportCrash).
 [[noreturn]] void holdOnCrashScreen();
 }

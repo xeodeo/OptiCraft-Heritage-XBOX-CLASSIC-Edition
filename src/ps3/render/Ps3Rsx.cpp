@@ -3,6 +3,7 @@
 #include "ps3/render/Ps3Rsx.h"
 
 #include "platform/Log.h"
+#include "ps3/system/Ps3Clock.h"
 #include "ps3/system/Ps3Stage.h"
 #include "ps3/system/Ps3Video.h"
 
@@ -12,7 +13,9 @@
 #include <sysutil/video.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <deque>
 
@@ -78,13 +81,18 @@ void writeJump(std::uint32_t offset)
 // Every CPU wait on the GPU goes through here. A wait that lasts seconds means
 // the RSX stopped (bad command or address) -- the console just freezes -- so log
 // where and the FIFO state once, for the netlog.
+// Time the main thread spent in the waits below, for the heartbeat.
+volatile std::uint64_t s_waitMicros = 0;
+
 struct StallWatch
 {
     const char* site;
     Ps3StageScope stage;
     std::uint64_t spins = 0;
     bool logged = false;
-    explicit StallWatch(const char* name) : site(name), stage(name) {}
+    std::uint64_t startMicros;
+    explicit StallWatch(const char* name) : site(name), stage(name), startMicros(ps3GetMonotonicMicros()) {}
+    ~StallWatch() { s_waitMicros += ps3GetMonotonicMicros() - startMicros; }
     void tick(std::uint32_t sleepUs)
     {
         usleep(sleepUs);
@@ -104,22 +112,73 @@ struct StallWatch
 // state. After a freeze the last beats say whether frames still advance and where
 // the GPU is. Written straight to the sink, not through McLog, whose lock the
 // stuck thread may hold.
+//
+// Between beats it samples g_ps3Stage about every millisecond: a poor man's
+// profiler. Each beat is followed by a "ps3.prof" line with the share of
+// samples per stage (the innermost PS3_STAGE_SCOPE the main thread was in).
+struct StageSample
+{
+    const char* name;
+    unsigned count;
+};
+
+void writeProfile(StageSample* samples, int used, unsigned total)
+{
+    if (total == 0)
+        return;
+    std::sort(samples, samples + used, [](const StageSample& a, const StageSample& b) { return a.count > b.count; });
+    char line[512];
+    int length = std::snprintf(line, sizeof(line), "[MC][I][ps3.prof]");
+    for (int i = 0; i < used && i < 12 && length < static_cast<int>(sizeof(line)) - 40; ++i)
+        length += std::snprintf(line + length, sizeof(line) - length, " %s=%u%%", samples[i].name,
+                                samples[i].count * 100 / total);
+    std::snprintf(line + length, sizeof(line) - length, "\n");
+    ps3PlatformLogWrite(line);
+}
+
 void frameWatchdog(void*)
 {
+    std::uint32_t lastFrame = 0;
+    constexpr int kMaxStages = 48;
+    StageSample samples[kMaxStages];
     for (;;)
     {
-        usleep(5 * 1000 * 1000);
+        int used = 0;
+        unsigned total = 0;
+        const std::uint64_t beatEnd = ps3GetMonotonicMicros() + 5 * 1000 * 1000;
+        while (ps3GetMonotonicMicros() < beatEnd)
+        {
+            usleep(1000);
+            const char* stage = g_ps3Stage;
+            int i = 0;
+            while (i < used && samples[i].name != stage)
+                ++i;
+            if (i == used)
+            {
+                if (used == kMaxStages)
+                    continue;
+                samples[used++] = {stage, 0};
+            }
+            ++samples[i].count;
+            ++total;
+        }
         gcmControlRegister* control = gcmGetControlRegister();
+        const std::uint32_t frame = *const_cast<volatile std::uint32_t*>(&s_frame);
+        const unsigned frames = frame - lastFrame;
+        const unsigned fps = frames / 5;
+        lastFrame = frame;
+        const std::uint64_t waited = s_waitMicros;
+        s_waitMicros = 0;
+        const unsigned frameMs = frames != 0 ? 5000 / frames : 0;
+        const unsigned waitMs = frames != 0 ? static_cast<unsigned>(waited / 1000 / frames) : 0;
         char line[320];
         std::snprintf(line, sizeof(line),
-                      "[MC][I][ps3.wd] stage=%s frame=%u done=%u get=%08x put=%08x ref=%08x half=%d"
-                      " values=%g %g %g %g %g %g\n",
-                      g_ps3Stage, *const_cast<volatile std::uint32_t*>(&s_frame),
+                      "[MC][I][ps3.wd] fps=%u frameMs=%u waitMs=%u stage=%s frame=%u done=%u get=%08x put=%08x ref=%08x half=%d\n",
+                      fps, frameMs, waitMs, g_ps3Stage, frame,
                       *reinterpret_cast<volatile std::uint32_t*>(gcmGetLabelAddress(kFrameLabel)),
-                      control->get, control->put, control->ref, s_cbHalf,
-                      g_ps3StageValues[0], g_ps3StageValues[1], g_ps3StageValues[2],
-                      g_ps3StageValues[3], g_ps3StageValues[4], g_ps3StageValues[5]);
+                      control->get, control->put, control->ref, s_cbHalf);
         ps3PlatformLogWrite(line);
+        writeProfile(samples, used, total);
     }
 }
 
@@ -249,7 +308,7 @@ bool configureVideo()
     s_height = Ps3Video::height();
     videoConfiguration config;
     std::memset(&config, 0, sizeof(config));
-    config.resolution = state.displayMode.resolution;
+    config.resolution = static_cast<u8>(Ps3Video::resolutionId());
     config.format = VIDEO_BUFFER_FORMAT_XRGB;
     config.aspect = VIDEO_ASPECT_AUTO;
     config.pitch = static_cast<u32>(s_width) * 4;
@@ -317,6 +376,8 @@ bool initialize()
                 static_cast<unsigned>((s_cbEnd[0] - s_cbBegin[0]) * 4 / 1024));
 
     *frameLabel() = 0;
+    // The game leaves through exit(0) (PLATFORM_EXIT_PROCESS_ON_SHUTDOWN).
+    std::atexit([] { Ps3Rsx::shutdown(); });
     sys_ppu_thread_t watchdog;
     if (sysThreadCreate(&watchdog, frameWatchdog, nullptr, 200, 16 * 1024, 0, const_cast<char*>("frame watchdog")) != 0)
         MC_LOG_ERROR("ps3.rsx", "watchdog thread not started\n");
@@ -391,14 +452,11 @@ void endFrame()
 #if PS3_SCREENSHOTS
     dumpBackBuffer();
 #endif
-    // At most one flip in flight: wait for the previous one before queueing.
-    if (!s_firstFlip)
-    {
-        StallWatch watch("flip");
-        while (gcmGetFlipStatus() != 0)
-            watch.tick(200);
-    }
-    gcmResetFlipStatus();
+    // The CPU does not wait for the previous flip: gcmSetWaitFlip below already
+    // stops the GPU until this flip has happened, so the next frame's drawing
+    // (into the other buffer, the one that just left the screen) cannot start
+    // early, and beginFrame() keeps the CPU at most one frame ahead. Waiting here
+    // as well locked any frame slower than 16.7 ms to 30 FPS.
     s_firstFlip = false;
 
     gcmSetFlip(s_context, static_cast<u8>(s_backBuffer));
@@ -476,6 +534,19 @@ void waitIdle()
     ++s_idleValue;
     // Everything submitted is done, including all frames so far.
     *frameLabel() = s_frame - 1;
+}
+
+// Leaving the process with the RSX still running (a flip queued, the GPU
+// parked on gcmSetWaitFlip) froze the whole console on quit. Drain it first.
+void shutdown()
+{
+    if (!s_ready)
+        return;
+    MC_LOG_INFO("ps3.rsx", "shutdown: draining the RSX\n");
+    waitIdle();
+    rsxFinish(s_context, 1);
+    s_ready = false;
+    MC_LOG_INFO("ps3.rsx", "shutdown: RSX idle\n");
 }
 
 void holdOnCrashScreen()

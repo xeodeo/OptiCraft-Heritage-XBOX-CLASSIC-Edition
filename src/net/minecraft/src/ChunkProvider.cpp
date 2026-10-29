@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "platform/Log.h"
 #include "ChunkProvider.h"
 #include "Config.h"
@@ -148,6 +149,7 @@ ChunkProvider::ChunkProvider(World *world, IChunkLoader *ichunkloader, IChunkPro
 
 ChunkProvider::~ChunkProvider()
 {
+    PS3_STAGE_SCOPE("quit:deleteChunkProvider");
 #if PLATFORM_ASYNC_CHUNK_GENERATION
 	delete asyncGenerationScheduler;
 	asyncGenerationScheduler = nullptr;
@@ -447,12 +449,14 @@ bool ChunkProvider::acceptAsyncGenerationCoordinate(void* context, int_t i, int_
 
 bool ChunkProvider::drainAsyncGenerationRequests(int_t budget)
 {
+    PS3_STAGE_SCOPE("asyncRequests");
 	return asyncGenerationScheduler != nullptr &&
 		asyncGenerationScheduler->dispatch(budget, &ChunkProvider::acceptAsyncGenerationCoordinate, this);
 }
 
 bool ChunkProvider::drainAsyncGeneratedChunks(int_t budget)
 {
+    PS3_STAGE_SCOPE("asyncPublish");
 	if (asyncGenerationScheduler == nullptr || budget <= 0)
 		return false;
 
@@ -903,6 +907,7 @@ bool ChunkProvider::isChunkGenerationPending(int_t i, int_t j) const
 
 Chunk *ChunkProvider::provideChunk(int_t i, int_t j)
 {
+    PS3_STAGE_SCOPE("provideChunk");
 	if (worldObj != nullptr && worldObj->isLimitedWorld())
 	{
 		const int_t minChunk = worldObj->getWorldInfo() != nullptr ? worldObj->getWorldInfo()->getLimitedWorldMinChunk() : -8;
@@ -1047,6 +1052,7 @@ Chunk *ChunkProvider::provideChunk(int_t i, int_t j)
 
 Chunk *ChunkProvider::loadChunkFromFile(int_t i, int_t j, bool &readFailed)
 {
+    PS3_STAGE_SCOPE("loadChunk");
 	readFailed = false;
 	if (chunkLoader == nullptr) return nullptr;
 	try
@@ -1371,6 +1377,7 @@ void ChunkProvider::drainPendingPopulate(int_t budget)
 
 bool ChunkProvider::saveChunks(bool flag, IProgressUpdate *iprogressupdate)
 {
+    PS3_STAGE_SCOPE("quit:saveChunks");
 	// Chunk persistence is region-file backed. Runtime autosaves call this with
 	// flag=false from inside World::tick(), so keep that path deliberately small:
 	// compressing and writing a large dirty batch synchronously produces a visible
@@ -1426,6 +1433,7 @@ bool ChunkProvider::saveChunks(bool flag, IProgressUpdate *iprogressupdate)
 
 bool ChunkProvider::unload100OldestChunks()
 {
+    PS3_STAGE_SCOPE("unloadChunks");
 #if MC_LOG_LEVEL > 0
 	long_t currentTimeMs = System::currentTimeMillis();
 	if (JavaArithmetic::longSub(currentTimeMs, stat_lastLog) >= 5000LL)

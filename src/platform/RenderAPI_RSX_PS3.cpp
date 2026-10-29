@@ -734,6 +734,11 @@ struct RecordedMesh
     }
     void* memory = nullptr;
     std::uint32_t offset = 0;
+    // Meshes that take the current color are re-sent through the transient ring
+    // each draw. They are read from this main-memory copy: CPU reads from RSX
+    // local memory crawl, and re-reading the sky and every entity model from
+    // there each frame cost over half of the frame.
+    std::vector<Ps3Vertex> cpuCopy;
     int vertexCount = 0;
     long bytes = 0;
     RenderPrimitive primitive = RenderPrimitive::Triangles;
@@ -754,7 +759,7 @@ void drawRecorded(const RecordedMesh& mesh)
         Ps3Vertex* out = static_cast<Ps3Vertex*>(
             Ps3Rsx::allocTransient(static_cast<std::uint32_t>(mesh.vertexCount) * sizeof(Ps3Vertex), 128, &offset));
         if (out == nullptr) return;
-        const Ps3Vertex* in = static_cast<const Ps3Vertex*>(mesh.memory);
+        const Ps3Vertex* in = mesh.cpuCopy.data();
         for (int i = 0; i < mesh.vertexCount; ++i)
         {
             out[i] = in[i];
@@ -1277,6 +1282,8 @@ bool renderDrawInterleaved(const RenderInterleavedMesh& mesh)
             convertVertices(mesh, s_scratch.data(), true);
             // Written once, straight into RSX local memory.
             std::memcpy(recorded->memory, s_scratch.data(), bytes);
+            if (recorded->usesCurrentColor)
+                recorded->cpuCopy.assign(s_scratch.begin(), s_scratch.begin() + mesh.count);
             recorded->bytes = static_cast<long>(bytes);
             s_recordedBytes += recorded->bytes;
         }

@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "platform/chunks/ChunkGenerationScheduler.h"
 
 #include "platform/PlatformCompat.h"
@@ -81,6 +82,7 @@ bool ChunkGenerationScheduler::start()
 
 void ChunkGenerationScheduler::stop()
 {
+    PS3_STAGE_SCOPE("quit:stopWorker");
 #if PLATFORM_ASYNC_CHUNK_GENERATION
     // Under the mutex so the flag cannot be set between the worker evaluating
     // its wait predicate and actually sleeping, which would lose this wakeup

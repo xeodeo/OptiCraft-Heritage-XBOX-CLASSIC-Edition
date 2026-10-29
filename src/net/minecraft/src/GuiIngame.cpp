@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "net/minecraft/src/UiStrings.h"
 #include "GuiIngame.h"
 #include "mods/ModManager.h"
@@ -797,6 +798,7 @@ void GuiIngame::ps2RenderPlayerStatusHud(int_t sw, int_t sh)
 
 void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mouseX, int_t mouseY)
 {
+    PS3_STAGE_SCOPE("hud");
 	ScaledResolution sr(mc->gameSettings, mc->displayWidth, mc->displayHeight);
 	int_t sw = sr.getScaledWidth();
 	int_t sh = sr.getScaledHeight();

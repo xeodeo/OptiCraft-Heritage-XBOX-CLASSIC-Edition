@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "platform/WorkProfiler.h"
 #include "platform/ExtendedProfiler.h"
 #include "RenderGlobal.h"
@@ -618,6 +619,7 @@ void RenderGlobal::setAllRenderersVisible()
 
 void RenderGlobal::renderEntities(Vec3D *vec3d, ICamera *icamera, float f)
 {
+    PS3_STAGE_SCOPE("entities");
 	if (renderEntitiesStartupCounter > 0)
 	{
 		renderEntitiesStartupCounter--;
@@ -1191,6 +1193,7 @@ struct XboxSlotTimer
 
 int_t RenderGlobal::sortAndRender(EntityLiving *entityliving, int_t i, double d)
 {
+    PS3_STAGE_SCOPE("terrain");
 	for (int_t j = 0; j < 10; j++)
 	{
 		worldRenderersCheckIndex = (worldRenderersCheckIndex + 1) % (renderChunksWide * renderChunksTall * renderChunksDeep);
@@ -1754,6 +1757,7 @@ void RenderGlobal::updateClouds()
 
 void RenderGlobal::renderSky(float f)
 {
+    PS3_STAGE_SCOPE("sky");
 	if (worldObj->worldProvider->worldType == 1)
 	{
 		renderDisable(RenderCapability::Fog);
@@ -2029,6 +2033,7 @@ void RenderGlobal::renderSky(float f)
 
 void RenderGlobal::renderClouds(float f)
 {
+    PS3_STAGE_SCOPE("clouds");
 	if (!mc->theWorld->worldProvider->func_48217_e())
 		return;
 
@@ -2382,6 +2387,7 @@ long ps2UpdateNoSlotBreaks = 0;
 
 bool RenderGlobal::updateRenderers(EntityLiving *entityliving, bool flag)
 {
+    PS3_STAGE_SCOPE("updateRenderers");
 #if PLATFORM_PS2
 	const bool ps2MeshPressure = trimPs2MeshCache(entityliving);
 #if PLATFORM_CULL_FAR_SUBTERRANEAN
@@ -2944,6 +2950,7 @@ void RenderGlobal::drawBlockBreaking(EntityPlayer *entityplayer, MovingObjectPos
 
 void RenderGlobal::drawSelectionBox(EntityPlayer *entityplayer, MovingObjectPosition *movingobjectposition, int_t i, ItemStack *itemstack, float f)
 {
+    PS3_STAGE_SCOPE("selection");
 	if (i == 0 && movingobjectposition->typeOfHit == EnumMovingObjectType::TILE)
 	{
 		renderEnable(RenderCapability::Blend);
@@ -3621,6 +3628,7 @@ void RenderGlobal::playAuxSFX(EntityPlayer *entityplayer, int_t i, int_t j, int_
 
 void RenderGlobal::clipRenderersByFrustrum(ICamera *icamera, float f)
 {
+    PS3_STAGE_SCOPE("frustum");
 	int_t total = renderChunksWide * renderChunksTall * renderChunksDeep;
 	for (int_t i = 0; i < total; i++)
 	{
@@ -3726,6 +3734,7 @@ void RenderGlobal::clearWorldRenderers() // func_28137_f
 #if !PLATFORM_PS2
 void RenderGlobal::renderAllRenderLists(int_t pass, double partialTick)
 {
+    PS3_STAGE_SCOPE("renderLists");
 	(void)pass;
 	if (mc != nullptr && mc->entityRenderer != nullptr)
 		mc->entityRenderer->enableLightmap(partialTick);

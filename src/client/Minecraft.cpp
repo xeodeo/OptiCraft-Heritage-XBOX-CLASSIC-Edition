@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "net/minecraft/src/WorldSettings.h"
 #include "net/minecraft/src/WorldType.h"
 #include "net/minecraft/src/WorldInfo.h"
@@ -864,7 +865,17 @@ void Minecraft::shutdownMinecraftApplet()
 
         MC_LOG_INFO("client", "Stopping!\n");
 
+#if PLATFORM_PS3
+        // With running == false the save screen throws MinecraftError (the Java
+        // way to abort a load), and on the PS3 that first throw never came back:
+        // the XMB then rebooted the console. Keep it true while the world saves.
+        running = true;
+#endif
         try { changeWorld1(nullptr); } catch (...) {}
+#if PLATFORM_PS3
+        running = false;
+#endif
+        MC_LOG_INFO("client", "shutdown: world closed\n");
         // No habra mas runTick que vacie la cola diferida: borrar el mundo ahora
         // (en shutdown no hay ningun World::tick() en la pila).
         try
@@ -876,9 +887,11 @@ void Minecraft::shutdownMinecraftApplet()
             Vec3D::trimVectorPool();
         }
         catch (...) {}
+        MC_LOG_INFO("client", "shutdown: worlds deleted\n");
         try { GLAllocation::deleteTexturesAndDisplayLists(); } catch (...) {}
 
         sndManager->closeMinecraft();
+        MC_LOG_INFO("client", "shutdown: done, exiting\n");
     }
     catch (...)
     {
@@ -1798,6 +1811,7 @@ void Minecraft::startCheckHasPaidThread()
 
 void Minecraft::runTick()
 {
+    PS3_STAGE_SCOPE("runTick");
     if (portalTeleporter != nullptr)
         portalTeleporter->tick(ticksRan);
 

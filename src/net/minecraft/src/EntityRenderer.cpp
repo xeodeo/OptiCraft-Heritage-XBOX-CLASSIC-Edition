@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "EntityRenderer.h"
 #if PLATFORM_PS2
 #include "ps2/minecraft/Ps2WeatherMath.h"
@@ -438,6 +439,7 @@ void EntityRenderer::updateTorchFlicker()
 
 void EntityRenderer::updateLightmap()
 {
+    PS3_STAGE_SCOPE("lightmap");
     World *world = mc != nullptr ? mc->theWorld : nullptr;
     if (world == nullptr || world->worldProvider == nullptr)
         return;
@@ -659,6 +661,7 @@ void EntityRenderer::updateRenderer()
 
 void EntityRenderer::getMouseOver(float partialTicks)
 {
+    PS3_STAGE_SCOPE("mouseOver");
     if (mc->renderViewEntity == nullptr || mc->theWorld == nullptr)
         return;
 
@@ -1132,6 +1135,7 @@ void EntityRenderer::setupCameraTransform(float partialTicks, int anaglyphPass)
 
 void EntityRenderer::renderHand(float partialTicks, int anaglyphPass)
 {
+    PS3_STAGE_SCOPE("hand");
     if (debugViewDirection > 0)
         return;
 
@@ -1199,6 +1203,7 @@ void EntityRenderer::renderHand(float partialTicks, int anaglyphPass)
 
 void EntityRenderer::updateCameraAndRender(float partialTicks)
 {
+    PS3_STAGE_SCOPE("render");
     Profiler::profilingEnabled = Config::isProfilerEnabled();
     PlatformCompat::setSmoothInputThreadPriority(Config::isSmoothInput());
 
@@ -1687,6 +1692,7 @@ void EntityRenderer::renderSplitScreen(float partialTicks, int64_t renderTimeLim
 
 void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano)
 {
+    PS3_STAGE_SCOPE("renderWorld");
     renderEnable(RenderCapability::CullFace);
     renderEnable(RenderCapability::DepthTest);
     
@@ -2693,6 +2699,7 @@ void EntityRenderer::setupOverlayRendering()
 
 void EntityRenderer::updateFogColor(float partialTicks)
 {
+    PS3_STAGE_SCOPE("fog");
     World *world = mc->theWorld;
     EntityLiving *entityliving = mc->renderViewEntity;
 

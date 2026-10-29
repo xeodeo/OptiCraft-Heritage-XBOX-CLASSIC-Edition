@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "EffectRenderer.h"
 #include "ActiveRenderInfo.h"
 
@@ -84,6 +85,7 @@ void EffectRenderer::updateEffects()
 
 void EffectRenderer::renderParticles(Entity *entity, float_t f)
 {
+    PS3_STAGE_SCOPE("particles");
     const float_t f1 = ActiveRenderInfo::rotationX;
     const float_t f2 = ActiveRenderInfo::rotationZ;
     const float_t f3 = ActiveRenderInfo::rotationYZ;

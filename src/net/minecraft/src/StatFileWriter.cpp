@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "platform/Log.h"
 #include "StatFileWriter.h"
 #include "LocalStatsFormat.h"
@@ -88,6 +89,7 @@ void StatFileWriter::loadLocalStats()
 
 void StatFileWriter::saveLocalStats()
 {
+    PS3_STAGE_SCOPE("quit:saveStats");
 	std::vector<LocalStatsFormat::Entry> entries;
 	entries.reserve(writtenStats.size());
 	for (auto &pair : writtenStats)

@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "World.h"
 #include <algorithm>
 #include <cstdio>
@@ -245,6 +246,7 @@ WorldChunkManager* World::getWorldChunkManager()
 
 World::~World()
 {
+    PS3_STAGE_SCOPE("quit:deleteWorld");
     // The same object can appear in the world list, a chunk list and an unload
     // queue.  Destroy each allocation once, after providers no longer use it.
     std::unordered_set<Entity *> entities;
@@ -838,6 +840,7 @@ void World::spawnPlayerWithLoadedChunks(EntityPlayer* entityPlayer)
 
 void World::saveWorld(bool flag, IProgressUpdate* progressUpdate)
 {
+    PS3_STAGE_SCOPE("quit:saveWorld");
     if (!chunkProvider->canSave())
     {
         return;
@@ -3502,6 +3505,7 @@ void World::destroyEntity(Entity *entity)
 
 void World::updateEntities()
 {
+    PS3_STAGE_SCOPE("updateEntities");
 #if PLATFORM_BOUNDED_PATHFIND
     s_pathfindBudgetThisTick = PLATFORM_PATHFIND_BUDGET_PER_TICK;
 #endif
@@ -4540,6 +4544,7 @@ bool World::isBlockNormalCubeDefault(int_t x, int_t y, int_t z, bool defaultValu
 
 void World::saveWorldIndirectly(IProgressUpdate* progressUpdate)
 {
+    PS3_STAGE_SCOPE("quit:saveIndirect");
     saveWorld(true, progressUpdate);
     ThreadedFileIOBase::threadedIOInstance.waitForFinish();
 }
@@ -5010,6 +5015,7 @@ void World::setAllowedSpawnTypes(bool hostile, bool peaceful)
 
 void World::tick()
 {
+    PS3_STAGE_SCOPE("worldTick");
     if (worldInfo != nullptr && worldInfo->isHardcoreModeEnabled() && difficultySetting < 3)
         difficultySetting = 3;
 

@@ -1,3 +1,4 @@
+#include "ps3/system/Ps3Stage.h"
 #include "FontRenderer.h"
 
 #include <algorithm>
@@ -303,6 +304,7 @@ void FontRenderer::flushTextDecorations()
 
 int_t FontRenderer::renderString(const std::string &s, int_t i, int_t j, int_t k, bool flag)
 {
+    PS3_STAGE_SCOPE("text");
 	return JavaArithmetic::floatToInt(renderStringScaled(s, (float_t)i, (float_t)j, k, flag, 1.0f));
 }
 
