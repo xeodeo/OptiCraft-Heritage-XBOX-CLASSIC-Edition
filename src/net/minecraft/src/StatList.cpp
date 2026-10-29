@@ -131,10 +131,19 @@ void StatList::initCraftingStats()
 	};
 
 	JavaHashSet<int_t, JavaIntHash, JavaIntEqual> hashset;
+	// Special recipes (fireworks, armor dyes, map cloning...) have no fixed output and
+	// return null, which Java's StatList skips. Reading ->itemID through it only went
+	// unnoticed where address 8 is readable (it is on the Xbox; the PS3 faults).
 	for (IRecipe *irecipe : CraftingManager::getInstance()->getRecipeList())
-		hashset.add(irecipe->getRecipeOutput()->itemID);
+	{
+		if (ItemStack *output = irecipe->getRecipeOutput())
+			hashset.add(output->itemID);
+	}
 	for (ItemStack *itemstack : FurnaceRecipes::smelting()->getSmeltingValuesInJavaOrder())
-		hashset.add(itemstack->itemID);
+	{
+		if (itemstack != nullptr)
+			hashset.add(itemstack->itemID);
+	}
 
 	for (int_t itemId : hashset.valuesInIterationOrder())
 	{

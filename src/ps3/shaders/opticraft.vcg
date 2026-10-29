@@ -1,5 +1,5 @@
 // OptiCraft vertex program: the GL 1.x fixed-function transform the game
-// expects (see RenderAPI_RSX_PS3.cpp).
+// expects (see RenderAPI_RSX_PS3.cpp), plus the fog factor.
 //
 // Matrices arrive in GL column-major layout. Cg reads a float4x4 uniform row by
 // row, so it holds the transpose, and mul(v, M) is GL's M * v.
@@ -7,6 +7,13 @@
 // lightConst: xy = constant lightmap coordinate, z = 1 to use it instead of the
 // per-vertex one (entity/tile-entity/held-item light), w = 1 for radial fog
 // distance (GL_EYE_RADIAL_NV) instead of eye-plane |z|.
+//
+// Fog is evaluated here, per vertex, and handed to the fragment program with
+// its colour: fragment-program constants live inside the microcode and did not
+// reach the shader (everything came out fog-coloured), vertex constants do.
+// Mode is selected by weights instead of branches:
+//   factor = saturate(linear*fogWeights.x + exp*fogWeights.y + exp2*fogWeights.z + fogWeights.w)
+//   fogParams: x = -1/(end-start), y = end/(end-start), z = density. Fog off = weights (0, 0, 0, 1).
 void main(float4 position : POSITION,
           float4 color : COLOR,
           float2 uv : TEXCOORD0,
@@ -15,6 +22,9 @@ void main(float4 position : POSITION,
           uniform float4x4 modelView,
           uniform float4x4 textureMatrix,
           uniform float4 lightConst,
+          uniform float4 fogColor,
+          uniform float4 fogParams,
+          uniform float4 fogWeights,
           out float4 oPosition : POSITION,
           out float4 oColor : COLOR,
           out float4 oUv : TEXCOORD0,
@@ -22,9 +32,12 @@ void main(float4 position : POSITION,
 {
     oPosition = mul(position, modelViewProjection);
     float4 eye = mul(position, modelView);
-    float planeDistance = abs(eye.z);
-    float radialDistance = length(eye.xyz);
-    oFog = float4(lerp(planeDistance, radialDistance, lightConst.w), 0.0f, 0.0f, 1.0f);
+    float distance = lerp(abs(eye.z), length(eye.xyz), lightConst.w);
+    float linearFactor = distance * fogParams.x + fogParams.y;
+    float d = fogParams.z * distance;
+    float factor = saturate(linearFactor * fogWeights.x + exp(-d) * fogWeights.y +
+                            exp(-d * d) * fogWeights.z + fogWeights.w);
+    oFog = float4(fogColor.rgb, factor);
     float2 transformedUv = mul(float4(uv, 0.0f, 1.0f), textureMatrix).xy;
     oUv = float4(transformedUv, lerp(lightUv, lightConst.xy, lightConst.z));
     oColor = color;

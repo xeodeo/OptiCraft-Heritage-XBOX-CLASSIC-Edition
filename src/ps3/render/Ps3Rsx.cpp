@@ -6,6 +6,7 @@
 #include "ps3/system/Ps3Video.h"
 
 #include <malloc.h>
+#include <ppu-asm.h>
 #include <sysutil/video.h>
 #include <unistd.h>
 
@@ -16,8 +17,9 @@ namespace
 {
 // Command buffer at the start of the host buffer; the rest is the transient
 // ring. The host buffer must be 1 MB aligned and a multiple of 1 MB.
-constexpr std::uint32_t kCommandBufferSize = 2 * 1024 * 1024;
+constexpr std::uint32_t kCommandBufferSize = 8 * 1024 * 1024;
 constexpr std::uint32_t kHostSize = 64 * 1024 * 1024;
+constexpr std::uint32_t kRingGuard = 1024 * 1024;
 constexpr std::uint32_t kIdleLabel = 255;
 constexpr std::uint32_t kFrameLabel = 254;
 
@@ -41,6 +43,79 @@ std::uint32_t s_ringUsed = 0;
 bool s_ringFullLogged = false;
 
 std::uint32_t s_whiteOffset = 0;
+
+// The command buffer is managed here, in two halves that alternate per frame
+// (like the vertex ring). The firmware's own wrap -- the default context callback
+// jumping back to the start when the buffer fills -- computed a bad target
+// (RPCS3: "jump 0x1f800000", then "Dead FIFO"), which is also why PSL1GHT's
+// rsxtest sample hung the real console once its buffer wrapped. Frames switch
+// halves with an explicit jump; a frame that fills its half wraps inside it
+// after the GPU has caught up (overflowCallback).
+constexpr std::uint32_t kJumpFlag = 0x20000000u;
+constexpr std::uint32_t kHalfMarginWords = 16;  // room for the jump past `end`
+u32* s_cbBegin[2] = {};
+u32* s_cbEnd[2] = {};
+std::uint32_t s_cbOffset[2] = {};
+int s_cbHalf = 0;
+bool s_cbOverflowLogged = false;
+
+void writeJump(std::uint32_t offset)
+{
+    // Written by hand: the rsx command helpers would re-enter the callback.
+    *s_context->current = offset | kJumpFlag;
+    ++s_context->current;
+}
+
+void waitGpuCaughtUp()
+{
+    gcmControlRegister* control = gcmGetControlRegister();
+    while (control->get != control->put)
+        usleep(20);
+}
+
+// Points the context at `half` (its begin) and makes the GPU jump there.
+void switchToHalf(int half)
+{
+    writeJump(s_cbOffset[half]);
+    s_context->current = s_cbBegin[half];
+    s_context->end = s_cbEnd[half];
+    s_cbHalf = half;
+    rsxFlushBuffer(s_context);
+}
+
+s32 overflowCallback(gcmContextData* context, u32 count)
+{
+    (void)context;
+    (void)count;
+    if (!s_cbOverflowLogged)
+    {
+        MC_LOG_WARN("ps3.rsx", "frame filled its command buffer half; wrapping inside it\n");
+        s_cbOverflowLogged = true;
+    }
+    // Jump back to the start of this half, then wait until the GPU has executed
+    // everything up to there before the CPU writes over it.
+    switchToHalf(s_cbHalf);
+    waitGpuCaughtUp();
+    return 0;
+}
+
+void setupCommandBufferHalves()
+{
+    u32* begin = s_context->begin;
+    u32* end = s_context->end;
+    const std::size_t words = static_cast<std::size_t>(end - begin);
+    const std::size_t halfWords = words / 2;
+    s_cbBegin[0] = begin;
+    s_cbBegin[1] = begin + halfWords;
+    s_cbEnd[0] = s_cbBegin[1] - kHalfMarginWords;
+    s_cbEnd[1] = end - kHalfMarginWords;
+    rsxAddressToOffset(s_cbBegin[0], &s_cbOffset[0]);
+    rsxAddressToOffset(s_cbBegin[1], &s_cbOffset[1]);
+    s_context->callback = reinterpret_cast<gcmContextCallback>(__get_opd32(overflowCallback));
+    // Start in half 1 so half 0 (where rsxInit already wrote) is never mixed.
+    switchToHalf(1);
+    waitGpuCaughtUp();
+}
 
 struct PendingFree
 {
@@ -158,8 +233,12 @@ bool initialize()
         return false;
     rsxAddressToOffset(depth, &s_depthOffset);
 
-    s_ringBase = static_cast<unsigned char*>(host) + kCommandBufferSize;
-    s_ringHalfSize = (kHostSize - kCommandBufferSize) / 2;
+    // librsx keeps more than kCommandBufferSize at the start of the host buffer (gcm's
+    // reserved area sits in front of the command buffer), so starting the ring right at
+    // kCommandBufferSize let vertex data overwrite the last commands (RPCS3: "Invalid RSX
+    // method" with garbage arguments). Leave a 1 MB guard.
+    s_ringBase = static_cast<unsigned char*>(host) + kCommandBufferSize + kRingGuard;
+    s_ringHalfSize = (kHostSize - kCommandBufferSize - kRingGuard) / 2;
     s_ringUsed = 0;
 
     // A8R8G8B8 big-endian: bytes A, R, G, B.
@@ -167,6 +246,8 @@ bool initialize()
     for (int i = 0; i < 32; ++i)
         white[i] = 0xFFFFFFFFu;
     rsxAddressToOffset(white, &s_whiteOffset);
+
+    setupCommandBufferHalves();
 
     *frameLabel() = 0;
     s_ready = true;
@@ -216,10 +297,12 @@ void endFrame()
     gcmResetFlipStatus();
     s_firstFlip = false;
 
-    rsxSetWriteBackendLabel(s_context, kFrameLabel, s_frame);
     gcmSetFlip(s_context, static_cast<u8>(s_backBuffer));
-    rsxFlushBuffer(s_context);
     gcmSetWaitFlip(s_context);
+    rsxSetWriteBackendLabel(s_context, kFrameLabel, s_frame);
+    // Next frame builds in the other half; beginFrame() waits for the frame that
+    // last used it (s_frame - 1 after the increment below) before writing there.
+    switchToHalf(s_cbHalf ^ 1);
 
     ++s_frame;
     s_backBuffer ^= 1;

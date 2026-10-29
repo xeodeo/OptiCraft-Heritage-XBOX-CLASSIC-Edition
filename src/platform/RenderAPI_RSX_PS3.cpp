@@ -121,6 +121,10 @@ rsxProgramConst* s_uFogColor = nullptr;
 rsxProgramConst* s_uFogParams = nullptr;
 rsxProgramConst* s_uFogWeights = nullptr;
 bool s_programsReady = false;
+// Texture units the fragment program reads the texture and the lightmap from.
+// cgcomp assigns them; TEXUNITn in the source is not guaranteed to survive.
+std::uint8_t s_textureUnit = 0;
+std::uint8_t s_lightmapUnit = 1;
 std::uint32_t s_programFrame = 0;  // frame the programs were last loaded in
 
 // ---------------------------------------------------------------------------
@@ -365,15 +369,16 @@ void applyUnit(std::uint8_t unit, bool enabled, int textureId, bool lightmap)
         wanted.width = wanted.height = 1;
         wanted.clamp = true;
     }
+    const std::uint8_t hardwareUnit = lightmap ? s_lightmapUnit : s_textureUnit;
     UnitSignature& sent = s_unitSent[unit];
     if (s_unitFrame == Ps3Rsx::frameNumber() && sent.offset == wanted.offset && sent.width == wanted.width &&
         sent.height == wanted.height && sent.blur == wanted.blur && sent.clamp == wanted.clamp)
         return;
     sent = wanted;
     if (tex != nullptr)
-        bindUnit(unit, tex->offset, tex->width, tex->height, tex->pitch, wanted.blur, wanted.clamp);
+        bindUnit(hardwareUnit, tex->offset, tex->width, tex->height, tex->pitch, wanted.blur, wanted.clamp);
     else
-        bindWhite(unit);
+        bindWhite(hardwareUnit);
 }
 
 // ---------------------------------------------------------------------------
@@ -469,6 +474,28 @@ void convertVertices(const RenderInterleavedMesh& mesh, Ps3Vertex* out, bool col
 
 std::vector<Ps3Vertex> s_scratch;
 
+// Diagnostics for the first frames: how many draws, and where the first vertex of
+// the frame lands in clip space with the current matrices.
+int s_diagFrame = 0;
+int s_diagDraws = 0;
+bool s_diagLoggedVertex = false;
+
+void diagnoseDraw(const Ps3Vertex* v, int count, RenderPrimitive primitive)
+{
+    ++s_diagDraws;
+    if (s_diagFrame > 3 || s_diagLoggedVertex || count <= 0)
+        return;
+    s_diagLoggedVertex = true;
+    const Mat4 mvp = multiply(s_projection, s_modelView);
+    float clip[4];
+    for (int r = 0; r < 4; ++r)
+        clip[r] = mvp.m[0 * 4 + r] * v->x + mvp.m[1 * 4 + r] * v->y + mvp.m[2 * 4 + r] * v->z + mvp.m[3 * 4 + r];
+    MC_LOG_INFO("ps3.render", "frame %d first draw: prim=%d n=%d pos=(%.1f %.1f %.1f) rgba=%02x%02x%02x%02x uv=(%.3f %.3f) "
+                "clip=(%.2f %.2f %.2f w=%.2f) tex2D=%d tex=%d lightmap=%d\n",
+                s_diagFrame, static_cast<int>(primitive), count, v->x, v->y, v->z, v->r, v->g, v->b, v->a, v->u, v->v,
+                clip[0], clip[1], clip[2], clip[3], s_texture2D ? 1 : 0, s_boundTexture, s_lightmapOn ? 1 : 0);
+}
+
 // ---------------------------------------------------------------------------
 // Program state
 // ---------------------------------------------------------------------------
@@ -494,9 +521,14 @@ bool loadPrograms()
     s_uModelView = rsxVertexProgramGetConst(s_vertexProgram, "modelView");
     s_uTextureMatrix = rsxVertexProgramGetConst(s_vertexProgram, "textureMatrix");
     s_uLightConst = rsxVertexProgramGetConst(s_vertexProgram, "lightConst");
-    s_uFogColor = rsxFragmentProgramGetConst(s_fragmentProgram, "fogColor");
-    s_uFogParams = rsxFragmentProgramGetConst(s_fragmentProgram, "fogParams");
-    s_uFogWeights = rsxFragmentProgramGetConst(s_fragmentProgram, "fogWeights");
+    s_uFogColor = rsxVertexProgramGetConst(s_vertexProgram, "fogColor");
+    s_uFogParams = rsxVertexProgramGetConst(s_vertexProgram, "fogParams");
+    s_uFogWeights = rsxVertexProgramGetConst(s_vertexProgram, "fogWeights");
+    if (rsxProgramAttrib* texture = rsxFragmentProgramGetAttrib(s_fragmentProgram, "texture0"))
+        s_textureUnit = static_cast<std::uint8_t>(texture->index);
+    if (rsxProgramAttrib* lightmap = rsxFragmentProgramGetAttrib(s_fragmentProgram, "lightmap"))
+        s_lightmapUnit = static_cast<std::uint8_t>(lightmap->index);
+    MC_LOG_INFO("ps3.render", "samplers: texture0=unit %u lightmap=unit %u\n", s_textureUnit, s_lightmapUnit);
     MC_LOG_INFO("ps3.render", "programs: vp=%u fp=%u bytes, uniforms mvp=%d mv=%d tm=%d lc=%d fc=%d fp=%d fw=%d\n",
                 vertexSize, fragmentSize, s_uMvp != nullptr, s_uModelView != nullptr,
                 s_uTextureMatrix != nullptr, s_uLightConst != nullptr, s_uFogColor != nullptr,
@@ -509,13 +541,6 @@ void setVertexUniform(rsxProgramConst* uniform, const float* values)
 {
     if (uniform != nullptr)
         rsxSetVertexProgramParameter(ctx(), s_vertexProgram, uniform, values);
-}
-
-void setFragmentUniform(rsxProgramConst* uniform, const float* values)
-{
-    if (uniform != nullptr)
-        rsxSetFragmentProgramParameter(ctx(), s_fragmentProgram, uniform, values, s_fragmentOffset,
-                                       GCM_LOCATION_RSX);
 }
 
 void applyFog()
@@ -545,11 +570,10 @@ void applyFog()
         }
         params[2] = s_fogDensity;
     }
-    setFragmentUniform(s_uFogColor, s_fogColor);
-    setFragmentUniform(s_uFogParams, params);
-    setFragmentUniform(s_uFogWeights, weights);
-    // Constants live in the program's microcode: point the RSX at it again.
-    rsxLoadFragmentProgramLocation(ctx(), s_fragmentProgram, s_fragmentOffset, GCM_LOCATION_RSX);
+    // Vertex constants: see opticraft.vcg for why fog is not a fragment uniform.
+    setVertexUniform(s_uFogColor, s_fogColor);
+    setVertexUniform(s_uFogParams, params);
+    setVertexUniform(s_uFogWeights, weights);
 }
 
 float s_sentLightConst[4] = {-1.0f, -1.0f, -1.0f, -1.0f};
@@ -573,6 +597,7 @@ bool applyDrawState(bool constantLight)
     {
         // New frame: re-establish the program and the uniforms once.
         rsxLoadVertexProgram(ctx(), s_vertexProgram, s_vertexUcode);
+        rsxLoadFragmentProgramLocation(ctx(), s_fragmentProgram, s_fragmentOffset, GCM_LOCATION_RSX);
         s_programFrame = Ps3Rsx::frameNumber();
         s_matricesDirty = true;
         s_fogDirty = true;
@@ -644,6 +669,7 @@ bool drawNow(const RenderInterleavedMesh& mesh)
         Ps3Rsx::allocTransient(static_cast<std::uint32_t>(mesh.count) * sizeof(Ps3Vertex), 128, &offset));
     if (out == nullptr) return true;  // ring full this frame: drop the draw (logged once)
     convertVertices(mesh, out, false);
+    diagnoseDraw(out, count, mesh.primitive);
     if (!applyDrawState(false)) return true;
     bindVertexArrays(offset, Ps3Rsx::kTransientLocation);
     rsxInvalidateVertexCache(ctx());
@@ -1330,6 +1356,12 @@ void renderSetLegacyPresentationGamma(bool) {}
 // must re-send (vertex program, uniforms, texture units).
 void ps3RenderBeginFrame()
 {
+    if (s_diagFrame <= 3)
+        MC_LOG_INFO("ps3.render", "frame %d done: %d draws, clear=%08x viewport=%d,%d %dx%d\n", s_diagFrame,
+                    s_diagDraws, s_clearColor, s_viewport[0], s_viewport[1], s_viewport[2], s_viewport[3]);
+    ++s_diagFrame;
+    s_diagDraws = 0;
+    s_diagLoggedVertex = false;
     s_unitFrame = 0;
     if (Ps3Rsx::ready())
     {

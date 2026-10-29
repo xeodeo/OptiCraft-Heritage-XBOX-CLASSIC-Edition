@@ -1,28 +1,16 @@
 // OptiCraft fragment program: GL_MODULATE of texture unit 0 (the bound
-// texture), unit 1 (the lightmap) and the vertex color, then GL fog.
+// texture), unit 1 (the lightmap) and the vertex color, then the fog the vertex
+// program computed (fog.rgb = colour, fog.a = factor, 1 = no fog).
 //
 // Units that the game leaves disabled get a 1x1 white texture, so one program
-// covers every combination. Fog mode is selected by weights instead of
-// branches: factor = saturate(linear*fogWeights.x + exp*fogWeights.y +
-// exp2*fogWeights.z + fogWeights.w); fog off is weights (0, 0, 0, 1).
-//   fogParams: x = -1/(end-start), y = end/(end-start), z = density.
+// covers every combination. No uniforms on purpose: see opticraft.vcg.
 float4 main(float4 color : COLOR,
             float4 uv : TEXCOORD0,
             float4 fog : TEXCOORD1,
             uniform sampler2D texture0 : TEXUNIT0,
-            uniform sampler2D lightmap : TEXUNIT1,
-            uniform float4 fogColor,
-            uniform float4 fogParams,
-            uniform float4 fogWeights) : COLOR
+            uniform sampler2D lightmap : TEXUNIT1) : COLOR
 {
     float4 result = color * tex2D(texture0, uv.xy) * tex2D(lightmap, uv.zw);
-    float distance = fog.x;
-    float linearFactor = distance * fogParams.x + fogParams.y;
-    float d = fogParams.z * distance;
-    float expFactor = exp(-d);
-    float exp2Factor = exp(-d * d);
-    float factor = saturate(linearFactor * fogWeights.x + expFactor * fogWeights.y +
-                            exp2Factor * fogWeights.z + fogWeights.w);
-    result.rgb = lerp(fogColor.rgb, result.rgb, factor);
+    result.rgb = lerp(fog.rgb, result.rgb, fog.a);
     return result;
 }
