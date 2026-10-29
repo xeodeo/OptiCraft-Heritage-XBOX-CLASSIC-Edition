@@ -24,10 +24,22 @@ set(PS3_TITLE_ID "OPTC00001" CACHE STRING "9-character title id (folder under /d
 set(PS3_TITLE "OptiCraft" CACHE STRING "Title shown in the XMB")
 set(PS3_SCETOOL_DIR "$ENV{HOME}/ps3tools/scetool" CACHE PATH
     "Folder holding scetool and its data/ keys (see ps3\\tools\\firmar_npdrm.sh)")
+set(PS3_NETLOG_HOST "" CACHE STRING
+    "PC address that receives every log line over UDP :9999 (xbox-spike/escuchar_log.py); empty = TTY only")
 set(MC_LOG_LEVEL "0" CACHE STRING "Unified diagnostic verbosity: 0=off, 1=info, 2=debug, 3=trace")
 set_property(CACHE MC_LOG_LEVEL PROPERTY STRINGS 0 1 2 3)
 
 set(PS3_CONTENT_ID "UP0001-${PS3_TITLE_ID}_00-0000000000000000")
+
+# --- C++ runtime compatibility --------------------------------------------------
+# The toolchain is ps3toolchain's gcc 13 rebuilt with --enable-threads=posix over
+# pthread-embedded (ps3\tools\construir_gcc_hilos.sh), so std::thread/mutex work
+# and every target links -lpthread. libstdc++ was configured against newlib 1.20
+# without its C99 stdlib/math imports: _GLIBCXX11_USE_C99_STDLIB brings
+# std::stoi/strtof/llabs back (header-only), and Ps3StdCompat.h, forced into
+# every C++ file, adds std::round/lround/trunc... for the functions newlib has.
+add_compile_definitions(_GLIBCXX11_USE_C99_STDLIB=1)
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-include${CMAKE_SOURCE_DIR}/src/ps3/compat/Ps3StdCompat.h>")
 set(PS3_PKG_ROOT "${CMAKE_SOURCE_DIR}/bin/ps3/${PS3_TITLE_ID}")
 
 # --- Shaders ----------------------------------------------------------------------
@@ -69,7 +81,7 @@ if(PS3_BRINGUP)
     set(PS3_SOURCES "${CMAKE_SOURCE_DIR}/src/ps3/tools/Ps3Bringup.cpp")
     ps3_add_shader(PS3_SOURCES "${CMAKE_SOURCE_DIR}/src/ps3/shaders/bringup_color.vcg")
     ps3_add_shader(PS3_SOURCES "${CMAKE_SOURCE_DIR}/src/ps3/shaders/bringup_color.fcg")
-    set(PS3_LIBS rsx gcm_sys sysutil rt lv2 m)
+    set(PS3_LIBS rsx gcm_sys sysutil pthread rt lv2 m)
     message(STATUS "PS3 build: BRINGUP (RSX smoke test only)")
 elseif(PS3_COMMON_PROBE)
     # Porting aid: compile only the platform-independent sources (no PS3 backends,
@@ -90,7 +102,30 @@ elseif(PS3_COMMON_PROBE)
     message(STATUS "PS3 build: COMMON PROBE (${CMAKE_CURRENT_LIST_LINE}: shared sources only, no link)")
     return()
 else()
-    message(FATAL_ERROR "PS3 build: only -DPS3_BRINGUP=ON exists so far (ps3\\buzon\\01-PLAN-port-ps3.md, step 4)")
+    mcbeta_collect_platform_sources(PS3_SOURCES ps3)
+    set(PS3_MINIZIP_SOURCES
+        "${CMAKE_SOURCE_DIR}/external/zlib/contrib/minizip/ioapi.c"
+        "${CMAKE_SOURCE_DIR}/external/zlib/contrib/minizip/unzip.c"
+    )
+    list(APPEND PS3_SOURCES ${PS3_MINIZIP_SOURCES})
+    # newlib has no fopen64/ftello64/fseeko64 (same as the Wii build).
+    set_source_files_properties(${PS3_MINIZIP_SOURCES} PROPERTIES COMPILE_DEFINITIONS USE_FILE32API)
+
+    # The PS3 stores stats locally: the desktop synchronizer is unreachable.
+    mcbeta_exclude_remote_stats_sources(PS3_SOURCES)
+    # The RSX smoke test is its own target shape.
+    mcbeta_exclude_sources(PS3_SOURCES "[/\\]ps3[/\\]tools[/\\]Ps3Bringup\\.cpp$")
+    mcbeta_select_platform_backends(PS3_SOURCES PS3 RSX_PS3 PS3)
+
+    ps3_add_shader(PS3_SOURCES "${CMAKE_SOURCE_DIR}/src/ps3/shaders/opticraft.vcg")
+    ps3_add_shader(PS3_SOURCES "${CMAKE_SOURCE_DIR}/src/ps3/shaders/opticraft.fcg")
+
+    set(PS3_LIBS z rsx gcm_sys sysutil io)
+    if(PS3_NETLOG_HOST)
+        list(APPEND PS3_LIBS net sysmodule)
+    endif()
+    list(APPEND PS3_LIBS pthread rt lv2 m)
+    message(STATUS "PS3 build: FULL game sources")
 endif()
 
 # --- Target -------------------------------------------------------------------
@@ -114,12 +149,22 @@ target_compile_options(OptiCraft PRIVATE
 
 target_compile_definitions(OptiCraft PRIVATE
     "PS3_PLATFORM"
+    # Multiplayer is not ported yet: java/JavaNetwork.cpp compiles its stubs.
+    "NO_NETWORK"
+    "PS3_TITLE_ID=\"${PS3_TITLE_ID}\""
     MC_LOG_LEVEL=${MC_LOG_LEVEL}
 )
+if(PS3_NETLOG_HOST)
+    target_compile_definitions(OptiCraft PRIVATE "PS3_NETLOG_HOST=\"${PS3_NETLOG_HOST}\"")
+endif()
 
 target_include_directories(OptiCraft PRIVATE
     "${CMAKE_SOURCE_DIR}/src"
+    "${CMAKE_SOURCE_DIR}/src/pc"
     "${CMAKE_SOURCE_DIR}/src/ps3"
+    "${CMAKE_SOURCE_DIR}/external/stb"
+    "${CMAKE_SOURCE_DIR}/external/zlib/contrib/minizip"
+    "${PS3DEV}/portlibs/ppu/include"
     "${PS3_SHADER_OUT}"
     "${PSL1GHT}/ppu/include"
     "${PSL1GHT}/ppu/include/simdmath"
@@ -154,5 +199,18 @@ add_custom_command(TARGET OptiCraft POST_BUILD
             "${PS3_PKG_ROOT}/ICON0.PNG"
     WORKING_DIRECTORY "${PS3_SCETOOL_DIR}"
     COMMENT "Packaging ${PS3_PKG_ROOT} (sprxlinker + scetool NPDRM)"
+    VERBATIM
+)
+
+# --- Game data ------------------------------------------------------------------
+# The game reads <USRDIR>/assets.pak first (Resources_PS3.cpp), one file instead of
+# ~800 loose ones: run once, and again whenever data/ changes:
+#     cmake --build <build dir> --target ps3-data
+set(PS3_DATA_DIR "${CMAKE_SOURCE_DIR}/data" CACHE PATH "Game data tree (data/assets, data/resources)")
+add_custom_target(ps3-data
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${PS3_PKG_ROOT}/USRDIR"
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/scripts/make_pak.py" "${PS3_DATA_DIR}"
+            "${PS3_PKG_ROOT}/USRDIR/assets.pak"
+    COMMENT "Packing ${PS3_DATA_DIR} into ${PS3_PKG_ROOT}/USRDIR/assets.pak"
     VERBATIM
 )

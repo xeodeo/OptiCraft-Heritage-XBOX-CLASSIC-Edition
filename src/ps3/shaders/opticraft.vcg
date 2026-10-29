@@ -1,0 +1,31 @@
+// OptiCraft vertex program: the GL 1.x fixed-function transform the game
+// expects (see RenderAPI_RSX_PS3.cpp).
+//
+// Matrices arrive in GL column-major layout. Cg reads a float4x4 uniform row by
+// row, so it holds the transpose, and mul(v, M) is GL's M * v.
+//
+// lightConst: xy = constant lightmap coordinate, z = 1 to use it instead of the
+// per-vertex one (entity/tile-entity/held-item light), w = 1 for radial fog
+// distance (GL_EYE_RADIAL_NV) instead of eye-plane |z|.
+void main(float4 position : POSITION,
+          float4 color : COLOR,
+          float2 uv : TEXCOORD0,
+          float2 lightUv : TEXCOORD1,
+          uniform float4x4 modelViewProjection,
+          uniform float4x4 modelView,
+          uniform float4x4 textureMatrix,
+          uniform float4 lightConst,
+          out float4 oPosition : POSITION,
+          out float4 oColor : COLOR,
+          out float4 oUv : TEXCOORD0,
+          out float4 oFog : TEXCOORD1)
+{
+    oPosition = mul(position, modelViewProjection);
+    float4 eye = mul(position, modelView);
+    float planeDistance = abs(eye.z);
+    float radialDistance = length(eye.xyz);
+    oFog = float4(lerp(planeDistance, radialDistance, lightConst.w), 0.0f, 0.0f, 1.0f);
+    float2 transformedUv = mul(float4(uv, 0.0f, 1.0f), textureMatrix).xy;
+    oUv = float4(transformedUv, lerp(lightUv, lightConst.xy, lightConst.z));
+    oColor = color;
+}
