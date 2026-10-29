@@ -1,0 +1,6 @@
+void main(float3 pos : POSITION, float4 col : COLOR,
+          out float4 oPos : POSITION, out float4 oCol : COLOR)
+{
+    oPos = float4(pos, 1.0f);
+    oCol = col;
+}

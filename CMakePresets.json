@@ -213,6 +213,29 @@
         "XBOX_ASYNC_CHUNK_IO": "ON",
         "XBOX_BIN_SUBDIR": "xbox-public-exp"
       }
+    },
+    {
+      "name": "ps3-release",
+      "displayName": "PS3 Release (powerpc64 / Cell PPU, PSL1GHT)",
+      "description": "PlayStation 3 full-game Release build with ps3toolchain gcc 13 + PSL1GHT. Run from WSL/Linux; PS3DEV defaults to ~/ps3dev.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/ps3-release",
+      "toolchainFile": "${sourceDir}/cmake/ps3_toolchain.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "PLATFORM": "PS3",
+        "PS3_BRINGUP": "OFF"
+      }
+    },
+    {
+      "name": "ps3-bringup",
+      "displayName": "PS3 Bring-up (RSX smoke test)",
+      "description": "Shader triangle for five seconds; steps logged to /dev_hdd0/tmp.",
+      "inherits": "ps3-release",
+      "binaryDir": "${sourceDir}/build/ps3-bringup",
+      "cacheVariables": {
+        "PS3_BRINGUP": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -299,6 +322,14 @@
     {
       "name": "xbox-public-exp",
       "configurePreset": "xbox-public-exp"
+    },
+    {
+      "name": "ps3-release",
+      "configurePreset": "ps3-release"
+    },
+    {
+      "name": "ps3-bringup",
+      "configurePreset": "ps3-bringup"
     }
   ]
 }

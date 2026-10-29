@@ -47,6 +47,19 @@
 #  endif
 #endif
 
+//   PLATFORM_PS3        -> PlayStation 3 only (Cell PPU + RSX through PSL1GHT).
+//                          Use for cellPad/io pad, RSX/gcm, sysutil, /dev_hdd0
+//                          storage, etc. A big-endian console with a gamepad
+//                          and no SDL: game-side it follows the Xbox/console
+//                          paths, byte order follows the Wii.
+#ifndef PLATFORM_PS3
+#  if defined(PS3_PLATFORM)
+#    define PLATFORM_PS3 1
+#  else
+#    define PLATFORM_PS3 0
+#  endif
+#endif
+
 // User-facing hardware calibration features.
 #ifndef PLATFORM_HAS_CONTROLLER_CALIBRATION
 #  define PLATFORM_HAS_CONTROLLER_CALIBRATION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)

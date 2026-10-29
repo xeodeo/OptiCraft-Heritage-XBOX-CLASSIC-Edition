@@ -47,6 +47,13 @@ if(NINTENDO_WII OR (DEFINED PLATFORM AND PLATFORM STREQUAL "WII"))
     return()
 endif()
 
+# PlayStation 3 build. cmake/ps3_toolchain.cmake (wired in by the ps3-* presets,
+# run from WSL/Linux) defines PLAYSTATION3; same shape as the console branches.
+if(PLAYSTATION3 OR (DEFINED PLATFORM AND PLATFORM STREQUAL "PS3"))
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ps3.cmake)
+    return()
+endif()
+
 # Original Xbox build. cmake/xbox_toolchain.cmake (wired in by the xbox-*
 # presets) defines XBOX; same shape as the console branches above.
 if(XBOX OR (DEFINED PLATFORM AND PLATFORM STREQUAL "XBOX"))
