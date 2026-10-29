@@ -1,6 +1,7 @@
 #pragma once
 #ifdef PS3_PLATFORM
 
+struct SDL_Event;
 #include "lwjgl/Keyboard.h"
 
 // Synthetic key codes for raw DualShock 3 buttons.
