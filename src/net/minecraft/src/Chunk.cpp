@@ -908,7 +908,7 @@ bool Chunk::setBlockIDWithMetadata(int_t i, int_t j, int_t k, int_t l, int_t i1)
 
 	++blockSectionRevision[j >> 4];
 	isModified = true;
-#if !PLATFORM_XBOX
+#if !(PLATFORM_XBOX || PLATFORM_PS3)
 	// Xbox keeps the emptied section, as Minecraft 1.2.5 does: callers such as
 	// the random block tick hold section pointers across setBlock, and freeing
 	// it here left them reading deleted memory (crash in

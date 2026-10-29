@@ -1,6 +1,6 @@
 #include "mods/strongholdlocator/StrongholdLocatorMod.h"
 
-#include "Minecraft.h"
+#include "client/Minecraft.h"
 #include "net/minecraft/src/World.h"
 #include "net/minecraft/src/EntityPlayerSP.h"
 #include "net/minecraft/src/GuiIngame.h"
@@ -17,7 +17,7 @@
 #include "xbox/input/XboxPad.h"
 #endif
 
-#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
+#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX && !PLATFORM_PS3
 #include "lwjgl/Keyboard.h"
 #endif
 
@@ -70,7 +70,7 @@ void StrongholdLocatorMod::onTick()
         combo1 = (pad1.held & XBOX_PAD_LEFT_THUMB) != 0 && (pad1.held & XBOX_PAD_RIGHT_THUMB) != 0;
     }
     comboPressedNow = (combo0 || combo1);
-#elif !PLATFORM_WII
+#elif !PLATFORM_WII && !PLATFORM_PS3
     comboPressedNow = lwjgl::Keyboard::isKeyDown(lwjgl::Keyboard::KEY_F7);
 #endif
 

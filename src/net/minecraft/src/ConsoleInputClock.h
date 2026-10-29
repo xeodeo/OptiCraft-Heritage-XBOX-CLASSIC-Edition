@@ -1,9 +1,15 @@
 #pragma once
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 
 #if defined(PS2_PLATFORM)
 #include "platform/time.h"
+#elif defined(WII_PLATFORM)
+#include <ogc/lwp_watchdog.h>
+#elif defined(XBOX_PLATFORM)
+extern "C" unsigned long __stdcall GetTickCount(void);
+#elif defined(PS3_PLATFORM)
+#include "ps3/system/Ps3Clock.h"
 #else
 #include <ogc/lwp_watchdog.h>
 #endif
@@ -21,6 +27,12 @@ inline int consoleInputNowMs()
 {
 #if defined(PS2_PLATFORM)
 	return (int)(getTimeS() * 1000.0f);
+#elif defined(WII_PLATFORM)
+	return (int)ticks_to_millisecs(gettime());
+#elif defined(XBOX_PLATFORM)
+	return (int)GetTickCount();
+#elif defined(PS3_PLATFORM)
+	return (int)ps3GetTicksMs();
 #else
 	return (int)ticks_to_millisecs(gettime());
 #endif

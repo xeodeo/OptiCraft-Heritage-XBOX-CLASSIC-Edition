@@ -30,7 +30,7 @@
 #include "java/File.h"
 #include "java/JavaNetwork.h"
 #include "java/String.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/Input.h"
 #include "platform/Log.h"
 #include "platform/Storage.h"
@@ -77,7 +77,7 @@ void GuiMultiplayer::initGui()
     delete serverSlotContainer;
     serverSlotContainer = new GuiSlotServer(this);
     initGuiControls();
-#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
     if (serverList.empty())
         setSelectedServer(-1);
     else if (selectedServer < 0 || selectedServer >= static_cast<int_t>(serverList.size()))
@@ -389,7 +389,7 @@ void GuiMultiplayer::joinServer(const std::shared_ptr<ServerNBTStorage> &server)
 
 bool GuiMultiplayer::usesSpecializedMenuNavigation() const
 {
-#if (defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)) && !defined(NO_NETWORK)
+#if (defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)) && !defined(NO_NETWORK)
     return true;
 #else
     return false;
@@ -398,7 +398,7 @@ bool GuiMultiplayer::usesSpecializedMenuNavigation() const
 
 bool GuiMultiplayer::suppressesPlatformPointerInput() const
 {
-#if (defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)) && !defined(NO_NETWORK)
+#if (defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)) && !defined(NO_NETWORK)
     return true;
 #else
     return false;
@@ -425,7 +425,7 @@ void GuiMultiplayer::updateSelectionButtons()
 
 void GuiMultiplayer::syncControllerFocus()
 {
-#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
     for (GuiButton *button : controlList)
     {
         if (button != nullptr)
@@ -441,7 +441,7 @@ void GuiMultiplayer::syncControllerFocus()
 
 void GuiMultiplayer::focusButton(int_t buttonId)
 {
-#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
     GuiButton *button = findButton(buttonId);
     if (button == nullptr || !button->enabled || !button->enabled2)
         return;
@@ -456,7 +456,7 @@ void GuiMultiplayer::focusButton(int_t buttonId)
 
 void GuiMultiplayer::moveControllerFocusHorizontal(int_t direction)
 {
-#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
     if (direction == 0)
         return;
     if (controllerFocus == SERVER_LIST_FOCUS)
@@ -504,7 +504,7 @@ void GuiMultiplayer::moveControllerFocusHorizontal(int_t direction)
 
 void GuiMultiplayer::moveControllerFocusVertical(int_t direction)
 {
-#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
     if (direction == 0)
         return;
     if (controllerFocus == SERVER_LIST_FOCUS)
@@ -572,7 +572,7 @@ void GuiMultiplayer::moveControllerFocusVertical(int_t direction)
 
 void GuiMultiplayer::activateControllerFocus()
 {
-#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
     if (mc != nullptr && mc->sndManager != nullptr)
         mc->sndManager->playSoundFX("random.action", 1.0f, 1.0f);
     if (controllerFocus == SERVER_LIST_FOCUS)
@@ -588,7 +588,7 @@ void GuiMultiplayer::activateControllerFocus()
 
 void GuiMultiplayer::handleSpecializedMenuInput()
 {
-#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     if ((pad.pressed & (PLATFORM_TEXT_CLOSE | PLATFORM_TEXT_SHIFT)) != 0)
     {

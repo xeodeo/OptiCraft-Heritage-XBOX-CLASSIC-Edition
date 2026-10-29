@@ -17,7 +17,7 @@
 #include "net/minecraft/src/Minecraft.h"
 #include "net/minecraft/src/ScaledResolution.h"
 #include "net/minecraft/src/Session.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/PlatformConfig.h"
 #include "platform/PlatformUserSettings.h"
 
@@ -123,7 +123,7 @@ void LegacyHeritageOptions::initGui()
         uiText("Legacy Look"), settings->legacyLook);
     controlList.push_back(legacyLookCheckbox);
 
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
     xboxStyleCraftingCheckbox = new LegacyOptionCheckbox(BUTTON_XBOX_STYLE_CRAFTING, x, legacyLayout.rowY(row++), w, h,
         uiText("Console Crafting"), settings->xboxStyleCrafting);
     controlList.push_back(xboxStyleCraftingCheckbox);

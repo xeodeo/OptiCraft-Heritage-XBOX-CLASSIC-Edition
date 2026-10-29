@@ -42,6 +42,8 @@ static constexpr bool isLittleEndian()
 {
 #if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__)
 	return __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__;
+#elif defined(WII_PLATFORM) || defined(PS3_PLATFORM)
+	return false;
 #elif defined(_WIN32) || defined(__i386__) || defined(__x86_64__) || defined(_EE)
 	return true;
 #else

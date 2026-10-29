@@ -505,7 +505,7 @@ public:
 	int_t countedWaterCreatures = 0;
 
 private:
-#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3
 	mutable std::unordered_set<const Entity *> loadedEntityPointerSet;
 #elif PLATFORM_PS2
 	mutable Ps2EntityPointerIndex loadedEntityPointerIndex;
@@ -643,7 +643,7 @@ public:
 private:
 	Chunk *getPopulationFastChunk(int_t x, int_t y, int_t z) const;
 	std::array<int_t, 32768> lightUpdateBlockList{};
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 	// Light updates skipped because chunks within 17 blocks were not loaded
 	// yet (still on the background thread). Vanilla drops them, which left a
 	// rare dark hole once the neighbour arrived; they are retried instead.

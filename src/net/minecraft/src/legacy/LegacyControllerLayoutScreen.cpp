@@ -16,7 +16,7 @@
 #include "net/minecraft/src/Tessellator.h"
 #include "platform/RenderAPI.h"
 #include "net/minecraft/src/UiStrings.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/Input.h"
 #include "platform/PlatformConfig.h"
 

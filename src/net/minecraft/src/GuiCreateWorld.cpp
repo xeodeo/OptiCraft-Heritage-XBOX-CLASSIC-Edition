@@ -14,7 +14,7 @@
 #include "Minecraft.h"
 #include "java/Random.h"
 #include "java/String.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/PlatformConfig.h"
 #include <algorithm>
 
@@ -93,7 +93,7 @@ void GuiCreateWorld::initGui()
     updateButtonText();
 }
 
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
 namespace
 {
 // Console save drives take only plain ASCII file names (FATX: letters, digits,
@@ -134,7 +134,7 @@ void GuiCreateWorld::updateFolderName()
     folderName = String::trimJava(textboxWorldName->getText());
     for (char c : ChatAllowedCharacters::allowedCharactersArray)
         std::replace(folderName.begin(), folderName.end(), c, '_');
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
     folderName = consoleSafeFolderName(folderName);
 #endif
     if (MathHelper::stringNullOrLengthZero(folderName))

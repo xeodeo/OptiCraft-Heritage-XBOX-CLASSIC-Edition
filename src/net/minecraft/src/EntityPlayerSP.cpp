@@ -401,7 +401,7 @@ void EntityPlayerSP::displayWorkbenchGUI(int_t i, int_t j, int_t k)
 		if (mc->isSplitScreenActive())
 		{
 			const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
 			mc->displayPlayerScreen(pIdx, new XboxCraftingScreen(this, worldObj, i, j, k));
 			return;
 		}

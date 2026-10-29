@@ -29,7 +29,7 @@
 #include "LegacyMenuHints.h"
 #include "LegacySelectionCursor.h"
 #include "LegacyUiTheme.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 
 #if PLATFORM_PS2
 #include "ps2/input/Ps2PadKeyCodes.h"
@@ -1888,7 +1888,7 @@ void LegacyCraftingScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partia
     }
 
     // Shoulder button tab hints
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_PS3
     fontRenderer->drawStringWithShadow("L1", guiLeft + 4, guiTop + 9, 0xffe0e0e0);
     fontRenderer->drawStringWithShadow("R1", guiLeft + 148, guiTop + 9, 0xffe0e0e0);
 #elif PLATFORM_XBOX
@@ -2099,7 +2099,7 @@ void LegacyCraftingScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partia
         const int_t statusY = matrixY + (is2x2Mode ? 40 : 58);
         if (canCraft)
         {
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_PS3
             fontRenderer->drawString("Ready [Cross]", guiLeft + 14, statusY, 0x207820);
 #elif PLATFORM_WII
             fontRenderer->drawString("Ready [A]", guiLeft + 14, statusY, 0x207820);
@@ -2164,7 +2164,7 @@ void LegacyCraftingScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partia
         drawTooltip(hoveredStack, mouseX, mouseY);
 
     // Bottom Action Hints (static strings to avoid runtime heap allocation)
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_PS3
     if (is2x2Mode)
     {
         static const std::string buttons[] = {"L1/R1", "D-Pad", "Cross", "Triangle", "Circle"};

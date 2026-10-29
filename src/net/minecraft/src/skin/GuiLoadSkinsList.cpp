@@ -1,21 +1,21 @@
 #include "GuiLoadSkinsList.h"
 #include "GuiConfirmSkinInstall.h"
-#include "GuiSlot.h"
-#include "GuiButton.h"
-#include "Minecraft.h"
-#include "FontRenderer.h"
-#include "SoundManager.h"
-#include "RenderEngine.h"
+#include "net/minecraft/src/GuiSlot.h"
+#include "net/minecraft/src/GuiButton.h"
+#include "client/Minecraft.h"
+#include "net/minecraft/src/FontRenderer.h"
+#include "net/minecraft/src/SoundManager.h"
+#include "net/minecraft/src/RenderEngine.h"
 #include "platform/Storage.h"
 #include "platform/RenderAPI.h"
-#include "Tessellator.h"
+#include "net/minecraft/src/Tessellator.h"
 #include "stb_image.h"
 
 #ifdef PS2_PLATFORM
 #include "ps2/storage/assets/Ps2Assets.h"
 #endif
 
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PS3
 #include "platform/Input.h"
 #endif
 
@@ -305,7 +305,7 @@ void GuiLoadSkinsList::keyTyped(char_t c, int_t key)
 
 void GuiLoadSkinsList::handleSpecializedMenuInput()
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PS3
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     if (!pad.connected)
         return;

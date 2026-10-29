@@ -464,7 +464,7 @@ void SpawnerAnimals::performWorldGenSpawning(World *world, BiomeGenBase *biome,
 
 bool SpawnerAnimals::canCreatureTypeSpawnAtLocation(const EnumCreatureType &type, World *world, int_t i, int_t j, int_t k)
 {
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
     // A chunk still coming in from the background thread reads as air: a mob
     // placed against it passed the collision checks and ended up inside the
     // ground once the chunk arrived (suffocating mobs after a respawn). Only

@@ -47,7 +47,7 @@ void LegacyVideoOptions::initGui()
     const int_t rowCount = 7;
 #elif PLATFORM_PS2
     const int_t rowCount = 6;
-#elif PLATFORM_XBOX
+#elif PLATFORM_XBOX || PLATFORM_PS3
     const int_t rowCount = 11;
 #else
     const int_t rowCount = 8;
@@ -95,7 +95,7 @@ void LegacyVideoOptions::initGui()
     deflickerCheckbox = nullptr;
 #endif
 
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
     // Steady 30 FPS (every other vblank); the spare frame time goes to chunk
     // rebuilding instead of a stutter when new terrain appears.
     frameCapCheckbox = new LegacyOptionCheckbox(BUTTON_FRAME_CAP, x, legacyLayout.rowY(row++), w, h,

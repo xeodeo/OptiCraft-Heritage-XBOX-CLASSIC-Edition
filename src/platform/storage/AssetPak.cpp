@@ -9,7 +9,7 @@
 #include <cstring>
 #include <streambuf>
 
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 #include <malloc.h>
 #endif
 

@@ -5,7 +5,7 @@
 #include "ISaveFormat.h"
 #include "WorldInfo.h"
 #include "Minecraft.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "java/String.h"
 #include <memory>
 

@@ -8,9 +8,9 @@
 #include "GuiScreen.h"
 #include "java/Arithmetic.h"
 #include "java/String.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/RenderAPI.h"
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 #include "VirtualKeyboard.h"
 #endif
 
@@ -390,7 +390,7 @@ void GuiTextField::setFocused(bool focused)
     isFocused = focused;
     if (parentGuiScreen != nullptr)
         parentGuiScreen->notifyTextFieldFocus(this, focused);
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
     VirtualKeyboard::instance().notifyFocus(this, focused);
 #endif
 }

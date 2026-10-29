@@ -26,7 +26,7 @@ private:
     double viewerX;
     double viewerY;
     double viewerZ;
-#if PLATFORM_PC || PLATFORM_XBOX
+#if PLATFORM_PC || PLATFORM_XBOX || PLATFORM_PS3
     std::vector<int_t> displayListIds;
 #elif PLATFORM_WII
     struct TerrainRenderEntry

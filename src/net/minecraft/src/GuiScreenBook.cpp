@@ -17,7 +17,7 @@
 #include "NetClientHandler.h"
 #include "Packet250CustomPayload.h"
 #include "java/String.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/RenderAPI.h"
 
 GuiScreenBook::GuiScreenBook(EntityPlayer *player, ItemStack *book, bool isUnsigned)

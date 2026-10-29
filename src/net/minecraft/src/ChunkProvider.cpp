@@ -119,7 +119,7 @@ ChunkProvider::ChunkProvider(World *world, IChunkLoader *ichunkloader, IChunkPro
 	    (asyncRegionLoader != nullptr || asyncAnvilLoader != nullptr))
 	{
 		asyncSavedChunkProbe = asyncRegionLoader == nullptr ? asyncAnvilLoader : nullptr;
-#if PLATFORM_PC_LEGACY || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PC_LEGACY || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 		// The worker only builds terrain/cave buffers. Structure discovery,
 		// decoration, Chunk construction, lighting and publication stay on the
 		// game thread: the per-biome BiomeDecorator and the chunk-local
@@ -283,7 +283,7 @@ void ChunkProvider::setChunkLoadRadius(int_t radius)
 		ChunkMemoryPolicy::retentionPolicy(saveHandler != nullptr && saveHandler->isReadOnly());
 	chunkLoadRadius = policy.loadRadius;
 	chunkUnloadRadius = policy.unloadRadius;
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 	// Keep resident only what the renderer can reach plus one column of
 	// neighbours for meshing, capped by the tuning radius. At a short render
 	// distance this holds 7x7 columns instead of 11x11 (several MB of the

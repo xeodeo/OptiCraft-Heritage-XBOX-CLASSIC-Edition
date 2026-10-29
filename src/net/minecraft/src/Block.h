@@ -214,7 +214,7 @@ public:
 	static StepSound *soundSandFootstep;
 	static StepSound *soundAnvilFootstep;
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	static constexpr int_t BLOCK_REGISTRY_SIZE = 256;
 #else
 	static constexpr int_t BLOCK_REGISTRY_SIZE = 4096;

@@ -62,24 +62,24 @@
 
 // User-facing hardware calibration features.
 #ifndef PLATFORM_HAS_CONTROLLER_CALIBRATION
-#  define PLATFORM_HAS_CONTROLLER_CALIBRATION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+#  define PLATFORM_HAS_CONTROLLER_CALIBRATION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 #ifndef PLATFORM_HAS_ASPECT_RATIO_OPTION
-#  define PLATFORM_HAS_ASPECT_RATIO_OPTION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+#  define PLATFORM_HAS_ASPECT_RATIO_OPTION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 // Game-side optimization policies. These describe the reason a code path exists
 // instead of naming the console that first needed it.
 #ifndef PLATFORM_CACHE_NEAREST_PLAYER
-#  define PLATFORM_CACHE_NEAREST_PLAYER (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PC_LEGACY)
+#  define PLATFORM_CACHE_NEAREST_PLAYER (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3 || PLATFORM_PC_LEGACY)
 #endif
 
 // The Wii takes the throttle too: it is a tick-rate policy over distance, not
 // an arithmetic shortcut, so it does not belong to PLATFORM_CONSOLE_LOW. The
 // radii and divisors it reads come from WiiWorldTuning.h.
 #ifndef PLATFORM_THROTTLE_ENTITY_AI
-#  define PLATFORM_THROTTLE_ENTITY_AI (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PC_LEGACY)
+#  define PLATFORM_THROTTLE_ENTITY_AI (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3 || PLATFORM_PC_LEGACY)
 #endif
 
 // Entities with a chunk retention radius (the Ender Dragon) keep their
@@ -87,14 +87,14 @@
 // A bounded-world concern, not a CPU one: without it the Wii unloads the
 // dragon with its chunk the moment it flies past the cache radius.
 #ifndef PLATFORM_ENTITY_CHUNK_RETENTION
-#  define PLATFORM_ENTITY_CHUNK_RETENTION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+#  define PLATFORM_ENTITY_CHUNK_RETENTION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 // java.util.Random's 48-bit LCG step as 32-bit multiplies (see Random::next).
 // Bit-identical to the 64-bit product, so seeds stay compatible; it only
 // matters on cores where a 64-bit multiply is a library call.
 #ifndef PLATFORM_RANDOM_SPLIT_MULTIPLY
-#  define PLATFORM_RANDOM_SPLIT_MULTIPLY (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+#  define PLATFORM_RANDOM_SPLIT_MULTIPLY (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 #ifndef PLATFORM_DIRECT_ANALOG_MOVEMENT
@@ -122,19 +122,19 @@
 // probe alone is ~520 optional files x several spellings of failed opens on
 // every RenderEngine (re)load -- a FAT directory walk each over USB/SD.
 #ifndef PLATFORM_OPTIFINE_CUSTOM_ANIMATIONS
-#  define PLATFORM_OPTIFINE_CUSTOM_ANIMATIONS (!(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX))
+#  define PLATFORM_OPTIFINE_CUSTOM_ANIMATIONS (!(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3))
 #endif
 
 #ifndef PLATFORM_OPTIFINE_RANDOM_MOBS
-#  define PLATFORM_OPTIFINE_RANDOM_MOBS (!(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX))
+#  define PLATFORM_OPTIFINE_RANDOM_MOBS (!(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3))
 #endif
 
 #ifndef PLATFORM_OPTIFINE_CUSTOM_FONTS
-#  define PLATFORM_OPTIFINE_CUSTOM_FONTS (!(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX))
+#  define PLATFORM_OPTIFINE_CUSTOM_FONTS (!(PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3))
 #endif
 
 #ifndef PLATFORM_LOCAL_STATS
-#  define PLATFORM_LOCAL_STATS (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+#  define PLATFORM_LOCAL_STATS (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 #ifndef PLATFORM_ENUMERATE_SAVE_DIRECTORIES
@@ -142,7 +142,7 @@
 #endif
 
 #ifndef PLATFORM_LOCAL_RESOURCES_ONLY
-#  if defined(NO_NETWORK) || PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#  if defined(NO_NETWORK) || PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 #    define PLATFORM_LOCAL_RESOURCES_ONLY 1
 #  else
 #    define PLATFORM_LOCAL_RESOURCES_ONLY 0
@@ -163,11 +163,11 @@
 #endif
 
 #ifndef PLATFORM_FAST_REGION_COMPRESSION
-#  define PLATFORM_FAST_REGION_COMPRESSION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+#  define PLATFORM_FAST_REGION_COMPRESSION (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 #ifndef PLATFORM_PROFILE_STREAMING
-#  define PLATFORM_PROFILE_STREAMING (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+#  define PLATFORM_PROFILE_STREAMING (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 // PS2 region files keep a whole-region write buffer, so a modified chunk can be
@@ -179,7 +179,7 @@
 #endif
 
 #ifndef PLATFORM_PROFILE_RENDER_PHASES
-#  define PLATFORM_PROFILE_RENDER_PHASES (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+#  define PLATFORM_PROFILE_RENDER_PHASES (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 #ifndef PLATFORM_NATIVE_TERRAIN_PIPELINE
@@ -194,11 +194,11 @@
 // Path::sortForward fault; the real cause was fdlibm reading doubles with the
 // wrong word order under MSVC x86 (NaN distances), fixed in fdlibm.h.
 #ifndef PLATFORM_BOUNDED_PATHFIND
-#  define PLATFORM_BOUNDED_PATHFIND (PLATFORM_CONSOLE_LOW || PLATFORM_WII || PLATFORM_PC_LEGACY || PLATFORM_XBOX)
+#  define PLATFORM_BOUNDED_PATHFIND (PLATFORM_CONSOLE_LOW || PLATFORM_WII || PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 #ifndef PLATFORM_HAS_VIRTUAL_KEYBOARD
-#  define PLATFORM_HAS_VIRTUAL_KEYBOARD (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+#  define PLATFORM_HAS_VIRTUAL_KEYBOARD (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 #ifndef PLATFORM_SIMPLE_TRANSPARENT_TERRAIN
@@ -213,7 +213,7 @@
 // re-points both contexts at the new draw buffer while PrimContext stays put,
 // so the every-other-frame old/black screen once blamed on per-context depth
 // state was really FRAME.FBP (see ps2_apply_color_mask).
-#  define PLATFORM_GUI_FORCE_DEPTH_DISABLED (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX)
+#  define PLATFORM_GUI_FORCE_DEPTH_DISABLED (PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 #ifndef PLATFORM_CHUNK_EDGE_FOG
@@ -221,7 +221,7 @@
 #endif
 
 #ifndef PLATFORM_PC
-#  if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#  if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 #    define PLATFORM_PC 0
 #  else
 #    define PLATFORM_PC 1
@@ -362,7 +362,7 @@ declares."
 // This is deliberately NOT tied to PLATFORM_CONSOLE_LOW: it is a backend
 // capability question, not a performance budget.
 #ifndef PLATFORM_FONT_IMMEDIATE
-#  if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#  if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 #    define PLATFORM_FONT_IMMEDIATE 1
 #  else
 #    define PLATFORM_FONT_IMMEDIATE 0
@@ -403,7 +403,7 @@ declares."
 // where they are aiming. Both console backends feed lwjgl::Mouse from a stick
 // (PS2) or the Wiimote IR pointer (Wii), so the coordinates are already there.
 #ifndef PLATFORM_SOFTWARE_CURSOR
-#  if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#  if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 #    define PLATFORM_SOFTWARE_CURSOR 1
 #  else
 #    define PLATFORM_SOFTWARE_CURSOR 0

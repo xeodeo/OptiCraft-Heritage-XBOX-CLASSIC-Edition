@@ -28,16 +28,16 @@
 #include <memory>
 #include <unordered_set>
 #include <typeinfo>
-#if defined(_WIN32) && !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+#if defined(_WIN32) && !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM) && !defined(PS3_PLATFORM)
 #include <windows.h>
 #endif
 #include "platform/RenderAPI.h"
 #if PLATFORM_CLIENT_PAID_CHECK
 #include <thread>
 #endif
-#include "pc/lwjgl/Display.h"
-#include "pc/lwjgl/Keyboard.h"
-#include "pc/lwjgl/Mouse.h"
+#include "lwjgl/Display.h"
+#include "lwjgl/Keyboard.h"
+#include "lwjgl/Mouse.h"
 
 #include "java/File.h"
 #include "java/String.h"
@@ -131,17 +131,20 @@
 #include "net/minecraft/src/Tessellator.h"
 #include "net/minecraft/src/legacy/startup/StartupPresentation.h"
 #include "net/minecraft/src/legacy/LegacyDebugOptions.h"
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
 #include "net/minecraft/src/legacy/XboxCraftingScreen.h"
 #endif
 #if PLATFORM_XBOX
 #include "net/minecraft/src/legacy/LegacyCraftingScreen.h"
 #include "xbox/input/XboxPadKeyCodes.h"
+#elif PLATFORM_PS3
+// TODO PS3: ps3PadSquareKeyCode() — devolver el keyCode sintetico del boton Cuadrado (PS3_KEY_SQUARE)
+int ps3PadSquareKeyCode();
 #endif
 
 namespace
 {
-#if defined(_WIN32) && !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+#if defined(_WIN32) && !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM) && !defined(PS3_PLATFORM)
     bool validateProcessHeap(const char *stage)
     {
         const char *label = stage != nullptr ? stage : "<unknown>";
@@ -1329,6 +1332,8 @@ void Minecraft::displayGuiScreen(GuiScreen *guiscreen)
     // A text field of the old screen must not keep the on-screen keyboard:
     // the next screen (a second Create World) would open without it.
     VirtualKeyboard::instance().releaseFocus();
+#elif PLATFORM_PS3
+    VirtualKeyboard::instance().releaseFocus();
 #endif
 #if PLATFORM_SYNC_STATS_ON_GUI_CHANGE
     if (dynamic_cast<GuiMainMenu *>(guiscreen) != nullptr)
@@ -1534,7 +1539,7 @@ void Minecraft::closePlayerScreen(int playerIndex)
     if (playerIndex == 0)
     {
         ignorePauseMenuTicks = 3;
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PS3
         lwjgl::Keyboard::clearEvents();
 #endif
     }
@@ -2134,12 +2139,15 @@ void Minecraft::runTick()
             }
             if (eventKey == lwjgl::Keyboard::KEY_F8)
                 gameSettings->smoothCamera = !gameSettings->smoothCamera;
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
             // X (Xbox) / Square (PS2) opens the console crafting menu (2x2),
             // unless the player bound an action to it.
             int actionKey = 0;
 #if PLATFORM_XBOX
             actionKey = XBOX_KEY_X;
+#elif PLATFORM_PS3
+            // TODO PS3: ps3PadSquareKeyCode()
+            actionKey = ps3PadSquareKeyCode();
 #else
             actionKey = PS2_KEY_SQUARE;
 #endif
@@ -2205,12 +2213,12 @@ void Minecraft::runTick()
                     closePlayerScreen(0);
                 else
                 {
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
                     if (gameSettings->xboxStyleCrafting)
                         displayPlayerScreen(0, new XboxCraftingScreen(thePlayer));
                     else
 #endif
-                    #if !(PLATFORM_XBOX || PLATFORM_PS2)
+                    #if !(PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3)
             if (gameSettings->legacyCrafting && gameSettings->legacyUI)
 #else
             if (false)
@@ -2220,12 +2228,12 @@ void Minecraft::runTick()
                 continue;
             }
 #endif
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
             if (gameSettings->xboxStyleCrafting)
                 displayGuiScreen(new XboxCraftingScreen(thePlayer));
             else
 #endif
-            #if !(PLATFORM_XBOX || PLATFORM_PS2)
+            #if !(PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3)
             if (gameSettings->legacyCrafting && gameSettings->legacyUI)
 #else
             if (false)
@@ -2358,7 +2366,7 @@ void Minecraft::runTick()
             ClientProfiler::tickPhase("effects", System::nanoTime() - clientPhaseStartNs);
         }
     }
-#if !(PLATFORM_XBOX || PLATFORM_PS2)
+#if !(PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3)
     else
     {
         // Outside a world 1.2.5 does not advance the music timer; Xbox and PS2
@@ -2905,7 +2913,7 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
         renderEngine->setBackgroundTextureLoadingEnabled(true);
     }
 
-#if !(PLATFORM_XBOX || PLATFORM_PS2)
+#if !(PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3)
     // Original behaviour on Xbox and PS2: entering a world does not force a
     // track, the first one arrives after the usual random wait.
     if (world != nullptr && sndManager != nullptr)
@@ -3087,7 +3095,7 @@ void Minecraft::preloadWorld(const std::string &s, int_t radiusBlocks)
 
     configureChunkProviderCache(ichunkprovider, chunkcoordinates.x >> 4, chunkcoordinates.z >> 4, gameSettings->renderDistance);
 
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PC_LEGACY
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PS3 || PLATFORM_XBOX || PLATFORM_PC_LEGACY
     // Gameplay generation can be deferred on low-end profiles, but this loading
     // screen is intentionally synchronous. Reuse the spawn-generation bypass so
     // console requests cannot return temporary blank chunks and Legacy PC keeps
@@ -3140,7 +3148,7 @@ void Minecraft::preloadWorld(const std::string &s, int_t radiusBlocks)
         platformMemoryCheckpoint("preloadWorld resident region end");
     }
 
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PC_LEGACY
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PS3 || PLATFORM_XBOX || PLATFORM_PC_LEGACY
     theWorld->findingSpawnPoint = previousFindingSpawnPoint;
 #endif
 

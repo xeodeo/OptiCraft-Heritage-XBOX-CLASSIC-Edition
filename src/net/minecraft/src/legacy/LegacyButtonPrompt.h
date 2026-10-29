@@ -8,7 +8,7 @@
 // enum keeps its PS2 names; on Xbox each slot holds the button in the same
 // position (Cross = A, Circle = B, Square = X, Triangle = Y, L1/R1 = White/Black,
 // L2/R2 = LT/RT, Select = Back).
-#define LEGACY_BUTTON_ICONS (PLATFORM_PS2 || PLATFORM_XBOX)
+#define LEGACY_BUTTON_ICONS (PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3)
 
 class RenderEngine;
 class FontRenderer;

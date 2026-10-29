@@ -6,7 +6,7 @@
 #include "platform/PlatformConfig.h"
 #include "platform/RenderAPI.h"
 #include <algorithm>
-#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
+#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX && !PLATFORM_PS3
 #include <map>
 #endif
 #if PLATFORM_XBOX
@@ -24,9 +24,9 @@ ControlIcon controlIconTexture(Minecraft *mc, const std::string &label)
     const int_t texture = LegacyButtonPrompt::getAtlasTexture(mc->renderEngine);
     if (texture < 0) return {};
     return {texture, static_cast<int_t>(icon)};
-#elif PLATFORM_PS2 || PLATFORM_WII
+#elif PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PS3
     struct Entry { const char *label; int_t cell; };
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_PS3
     constexpr const char *path = "/gui/buttons_ps2.png";
     static constexpr Entry entries[] = {
         {"Cross", 0}, {"X", 0}, {"Circle", 1}, {"O", 1},
@@ -72,7 +72,7 @@ ControlIcon controlIconTexture(Minecraft *mc, const std::string &label)
     {
         available.clear(); owner = mc->renderEngine; revision = current;
     }
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_PS3
     const char *prefix = "/gui/controls/ps2/";
 #elif PLATFORM_WII
     const char *prefix = "/gui/controls/wii/";
@@ -109,7 +109,7 @@ void drawControlIcon(Minecraft *mc, ControlIcon icon, int_t x, int_t y)
 #if PLATFORM_XBOX
     const Ps2ButtonPromptInfo &info = LegacyButtonPrompt::getIconInfo(static_cast<Ps2ButtonIcon>(icon.cell));
     u0 = info.u0; v0 = info.v0; u1 = info.u1; v1 = info.v1;
-#elif PLATFORM_PS2 || PLATFORM_WII
+#elif PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PS3
     int_t w = 0, h = 0;
     if (!mc->renderEngine->getTextureDimensions(icon.texture, &w, &h) || w <= 0 || h <= 0) return;
     // Sample inside the cell edges so filtering cannot bleed into its neighbors.

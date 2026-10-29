@@ -1,5 +1,5 @@
 #include "ModManager.h"
-#include "Minecraft.h"
+#include "client/Minecraft.h"
 #include "java/File.h"
 #include "platform/Storage.h"
 #include "platform/Log.h"

@@ -3,7 +3,7 @@
 
 // Console builds that select this fallback have no socket backend. Wii builds
 // with networking enabled exclude this translation unit and use JavaNetwork_wii.cpp.
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 
 #include <istream>
 #include <ostream>

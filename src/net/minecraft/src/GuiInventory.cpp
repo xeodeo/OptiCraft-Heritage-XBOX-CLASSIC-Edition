@@ -18,7 +18,7 @@
 #include "GameSettings.h"
 #include "KeyBinding.h"
 #include "net/minecraft/src/legacy/LegacyCraftingScreen.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/RenderAPI.h"
 #include <cmath>
 
@@ -205,7 +205,7 @@ void GuiInventory::actionPerformed(GuiButton *button)
 
 void GuiInventory::keyTyped(char_t c, int_t key)
 {
-	if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI && mc->gameSettings->legacyCrafting && !(PLATFORM_XBOX || PLATFORM_PS2))
+	if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI && mc->gameSettings->legacyCrafting && !(PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3))
 	{
 		const bool isCraftingKey = (mc->gameSettings->keyBindCrafting != nullptr && key == mc->gameSettings->keyBindCrafting->keyCode) ||
 			key == lwjgl::Keyboard::KEY_C;

@@ -1,6 +1,6 @@
 #include "ModelRenderer.h"
 
-#if PLATFORM_PC || defined(XBOX_PLATFORM)
+#if PLATFORM_PC || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 #include "GLAllocation.h"
 #endif
 #include "ModelBase.h"
@@ -93,7 +93,7 @@ void ModelRenderer::invalidateCompiledGeometry()
     {
 #if PLATFORM_MODEL_PERSISTENT_MESH
         renderDestroyPersistentMesh(displayList);
-#elif PLATFORM_PC || defined(XBOX_PLATFORM)
+#elif PLATFORM_PC || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
         GLAllocation::deleteDisplayLists(displayList);
 #endif
         displayList = 0;

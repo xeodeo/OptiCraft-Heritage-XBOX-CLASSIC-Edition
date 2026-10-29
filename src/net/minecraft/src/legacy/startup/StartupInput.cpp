@@ -1,7 +1,7 @@
 #include "net/minecraft/src/legacy/startup/StartupInput.h"
 
 #include "net/minecraft/src/legacy/startup/StartupInputPolicy.h"
-#include "pc/lwjgl/Display.h"
+#include "lwjgl/Display.h"
 #include "platform/PlatformConfig.h"
 
 #if PLATFORM_PC

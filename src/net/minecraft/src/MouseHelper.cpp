@@ -1,7 +1,7 @@
 #include "MouseHelper.h"
 
-#include "pc/lwjgl/Display.h"
-#include "pc/lwjgl/Mouse.h"
+#include "lwjgl/Display.h"
+#include "lwjgl/Mouse.h"
 
 #include <cstdlib>
 #include <cstdio>

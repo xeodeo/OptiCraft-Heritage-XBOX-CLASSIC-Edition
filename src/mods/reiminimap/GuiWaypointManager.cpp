@@ -2,7 +2,7 @@
 #include "ReiMinimap.h"
 #include "Waypoint.h"
 
-#include "net/minecraft/src/Minecraft.h"
+#include "client/Minecraft.h"
 #include "net/minecraft/src/FontRenderer.h"
 #include "net/minecraft/src/SoundManager.h"
 #include "net/minecraft/src/StringTranslate.h"
@@ -17,7 +17,7 @@
 #include "ps2/input/Ps2PadState.h"
 #endif
 
-#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
+#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX && !PLATFORM_PS3
 #include "pc/lwjgl/Keyboard.h"
 #endif
 
@@ -149,7 +149,7 @@ void GuiWaypointManager::handleSpecializedMenuInput()
                 mc->sndManager->playSoundFX("random.pop", 1.0f, 1.0f);
         }
     }
-#elif PLATFORM_XBOX
+#elif PLATFORM_XBOX || PLATFORM_PS3
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     if (!pad.connected)
         return;
@@ -218,7 +218,7 @@ void GuiWaypointManager::handleSpecializedMenuInput()
 
 void GuiWaypointManager::keyTyped(char_t c, int_t key)
 {
-#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
+#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX && !PLATFORM_PS3
     const size_t totalWaypoints = ReiMinimap::getInstance().getWaypointCount();
     if (key == lwjgl::Keyboard::KEY_UP)
     {
@@ -460,7 +460,7 @@ void GuiWaypointManager::drawScreen(int_t mouseX, int_t mouseY, float_t partialT
         isEs ? "Volver" : "Back"
     };
     drawControlHintRow(mc, width, legacyHintRowY(height, isSplit), buttons, actions, 4);
-#elif PLATFORM_XBOX
+#elif PLATFORM_XBOX || PLATFORM_PS3
     const std::string buttons[] = {"D-Pad", "A", "X", "B"};
     const std::string actions[] = {
         isEs ? "Navegar" : "Navigate",

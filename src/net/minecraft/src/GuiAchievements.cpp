@@ -17,9 +17,9 @@
 #include "Minecraft.h"
 #include "platform/RenderAPI.h"
 #include "KeyBinding.h"
-#include "pc/lwjgl/Mouse.h"
+#include "lwjgl/Mouse.h"
 #include "platform/PlatformConfig.h"
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 #include "platform/Input.h"
 #endif
 #include "java/System.h"
@@ -100,7 +100,7 @@ void GuiAchievements::updateScreen()
 
 void GuiAchievements::drawScreen(int_t i, int_t j, float_t f)
 {
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 	// The right stick drags the map, as holding the mouse button and moving
 	// does on PC (the left stick keeps the pointer for the tooltips).
 	const PlatformGamepadSnapshot pad = platformGamepadSnapshot(platformMenuPad());

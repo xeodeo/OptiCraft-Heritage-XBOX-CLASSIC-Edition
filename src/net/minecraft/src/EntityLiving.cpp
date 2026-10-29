@@ -635,7 +635,7 @@ void EntityLiving::onEntityUpdate()
 #endif
 	{
 		attackEntityFrom(DamageSource::inWall, 1);
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 		// A mob (never the player) stuck in solid ground for two seconds was
 		// buried, e.g. placed while its chunk was still coming in. Lift it to
 		// the top of its column; stuck, each one also cost ~12 ms a tick.

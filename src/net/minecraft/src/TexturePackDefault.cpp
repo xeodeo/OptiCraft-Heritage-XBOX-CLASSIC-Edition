@@ -20,6 +20,9 @@
 #include "legacy/XboxButtonAtlasPng.h"
 #include "legacy/LegacyCraftingIconsPng.h"
 #include <sstream>
+#elif defined(PS3_PLATFORM)
+#include "legacy/LegacyCraftingIconsPng.h"
+#include <sstream>
 #endif
 
 TexturePackDefault::TexturePackDefault() :
@@ -95,6 +98,13 @@ std::istream* TexturePackDefault::getResourceAsStream(const std::string &s)
 	// A console data/ folder older than the atlas still gets the icons.
 	if (s.find("buttons_xbox.png") != std::string::npos)
 		return new std::istringstream(std::string(reinterpret_cast<const char*>(s_xboxButtonAtlasPngData), XBOX_BUTTON_ATLAS_PNG_SIZE));
+	if (s.find("crafting_icons.png") != std::string::npos)
+		return new std::istringstream(std::string(reinterpret_cast<const char*>(s_legacyCraftingIconsPngData), LEGACY_CRAFTING_ICONS_PNG_SIZE));
+	return nullptr;
+#elif defined(PS3_PLATFORM)
+	auto st = GameResources::open(s);
+	if (st)
+		return st.release();
 	if (s.find("crafting_icons.png") != std::string::npos)
 		return new std::istringstream(std::string(reinterpret_cast<const char*>(s_legacyCraftingIconsPngData), LEGACY_CRAFTING_ICONS_PNG_SIZE));
 	return nullptr;

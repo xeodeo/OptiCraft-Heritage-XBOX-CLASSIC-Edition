@@ -14,7 +14,9 @@
 extern "C" {
 #endif
 
-#ifndef __LITTLE_ENDIAN
+#if defined(WII_PLATFORM) || defined(PS3_PLATFORM) || (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
+#undef __LITTLE_ENDIAN
+#elif !defined(__LITTLE_ENDIAN)
 /* Sometimes it's necessary to define __LITTLE_ENDIAN explicitly
    but these catch some common cases. */
 #if defined(i386) || defined(i486) || defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64) || defined(_M_AMD64) || \

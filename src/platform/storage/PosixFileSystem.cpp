@@ -1,4 +1,4 @@
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(PS3_PLATFORM)
 // The Xbox implements PosixFileSystem.h with XAPI in src/xbox/storage/XboxFileSystem.cpp.
 
 #include "platform/storage/PosixFileSystem.h"

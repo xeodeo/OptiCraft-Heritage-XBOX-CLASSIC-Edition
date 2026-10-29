@@ -21,7 +21,7 @@
 #include "net/minecraft/src/SoundManager.h"
 #include "net/minecraft/src/StringTranslate.h"
 #include "net/minecraft/src/WorldType.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/Input.h"
 #include "platform/PlatformConfig.h"
 
@@ -112,7 +112,7 @@ void LegacyCreateWorldScreen::initGui()
     updateDifficultyControl();
     updateControlVisibility();
     selectControl(0);
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     // Preserve the console's existing initial text-entry behavior. Once the user
     // closes the keyboard, focus stays off until row 0 is activated again.
     textboxWorldName->setFocused(true);
@@ -210,7 +210,7 @@ void LegacyCreateWorldScreen::syncSelectedControl()
 void LegacyCreateWorldScreen::updatePointerHover(int_t mouseX, int_t mouseY)
 {
     int_t hover = -1;
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
     // Legacy PS2 menus deliberately suppress the software mouse pointer. Treating
     // its stale coordinates as a live hover leaves D-pad navigation blocked after
     // the virtual keyboard closes.
@@ -220,7 +220,7 @@ void LegacyCreateWorldScreen::updatePointerHover(int_t mouseX, int_t mouseY)
     if (platformMenuPointerActive())
 #endif
     {
-#if !PLATFORM_PS2 && !PLATFORM_XBOX
+#if !PLATFORM_PS2 && !PLATFORM_XBOX && !PLATFORM_PS3
         GuiTextField *field = moreOptions ? textboxSeed : textboxWorldName;
         if (field != nullptr && pointInside(mouseX, mouseY, layout.contentX, layout.rowY(0), layout.contentWidth, textFieldHeight))
         {
@@ -326,13 +326,13 @@ void LegacyCreateWorldScreen::moveSelection(int_t direction)
 void LegacyCreateWorldScreen::updateScreen()
 {
     GuiCreateWorld::updateScreen();
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     // The virtual keyboard owns the console text-input snapshot while a field is
     // focused. Do not let menu navigation consume the same presses underneath it.
     if (platformTextInputExclusive())
         return;
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
     if ((pad.pressed & (PLATFORM_TEXT_CLOSE | PLATFORM_TEXT_SHIFT)) != 0)
     {
         if (mc->sndManager != nullptr)
@@ -349,7 +349,7 @@ void LegacyCreateWorldScreen::updateScreen()
         adjustSelection(-1);
     else if ((pad.pressed & PLATFORM_TEXT_RIGHT) != 0)
         adjustSelection(1);
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
     if ((pad.pressed & PLATFORM_TEXT_TYPE) != 0)
         activateSelection();
 #elif PLATFORM_WII
@@ -359,7 +359,7 @@ void LegacyCreateWorldScreen::updateScreen()
     if ((pad.pressed & PLATFORM_TEXT_TYPE) != 0)
         activateSelection();
 #endif
-#if PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     if ((pad.pressed & PLATFORM_TEXT_BACK) != 0)
     {
         mc->sndManager->playSoundFX("random.back", 1.0f, 1.0f);

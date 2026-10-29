@@ -3,21 +3,21 @@
 #include "GuiSkinSelector.h"
 #include "GuiLoadSkinsMenu.h"
 #include "SkinManager.h"
-#include "GuiButton.h"
-#include "Minecraft.h"
-#include "FontRenderer.h"
-#include "GameSettings.h"
-#include "StringTranslate.h"
-#include "EntityPlayerSP.h"
-#include "RenderEngine.h"
-#include "SoundManager.h"
-#include "Tessellator.h"
+#include "net/minecraft/src/GuiButton.h"
+#include "client/Minecraft.h"
+#include "net/minecraft/src/FontRenderer.h"
+#include "net/minecraft/src/GameSettings.h"
+#include "net/minecraft/src/StringTranslate.h"
+#include "net/minecraft/src/EntityPlayerSP.h"
+#include "net/minecraft/src/RenderEngine.h"
+#include "net/minecraft/src/SoundManager.h"
+#include "net/minecraft/src/Tessellator.h"
 #include "platform/RenderAPI.h"
 #include "platform/PlatformCompat.h"
 
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 #include "platform/Input.h"
 #endif
 
@@ -25,8 +25,8 @@
 #include "ps2/input/Ps2PadState.h"
 #include "ps2/input/Ps2PadKeyCodes.h"
 #endif
-#ifdef XBOX_PLATFORM
-#include "legacy/LegacyButtonPrompt.h"
+#if defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
+#include "net/minecraft/src/legacy/LegacyButtonPrompt.h"
 #endif
 
 #include <algorithm>
@@ -270,7 +270,7 @@ void GuiSkinSelector::deleteCurrentCustomSkin()
 
 void GuiSkinSelector::handleSpecializedMenuInput()
 {
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     if (!pad.connected)
         return;
@@ -379,7 +379,7 @@ void GuiSkinSelector::handleSpecializedMenuInput()
         }
     }
 
-#elif PLATFORM_WII || PLATFORM_XBOX
+#elif PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     // Wii Classic Controller / GameCube / Wiimote D-Pad; the Xbox pad maps the
     // same way (A select, B back, D-pad left/right skin, up/down tab).
     if ((pad.pressed & (PLATFORM_TEXT_BACK | PLATFORM_TEXT_CLOSE)) != 0)
@@ -915,7 +915,7 @@ void GuiSkinSelector::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick
     const std::string navigation[] = {"L1/R1", "L2/R2"};
     const std::string navigationActions[] = {uiText("Skin"), uiText("Tab")};
     drawControlHintRow(mc, width, footerY, navigation, navigationActions, 2);
-#elif PLATFORM_XBOX
+#elif PLATFORM_XBOX || PLATFORM_PS3
     RenderEngine *renderEngine = mc ? mc->renderEngine : nullptr;
     if (renderEngine != nullptr)
     {

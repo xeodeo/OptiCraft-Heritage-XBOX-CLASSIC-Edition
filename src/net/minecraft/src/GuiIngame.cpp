@@ -10,7 +10,7 @@
 #include "EntityPlayerSP.h"
 #include "GuiPlayerInfo.h"
 #include "NetClientHandler.h"
-#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 #include "NetworkManager.h"
 #endif
 #include "EntityClientPlayerMP.h"
@@ -258,7 +258,7 @@ namespace
 {
 // Corner HUD text position. A CRT TV crops the picture edges (overscan), so
 // the Xbox keeps it inside the title-safe area instead of at the very corner.
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 constexpr int_t kHudCornerX = 10;
 constexpr int_t kHudCornerY = 10;
 #elif defined(WII_PLATFORM) || defined(PS2_PLATFORM)
@@ -346,7 +346,7 @@ void GuiIngame::renderDebugOverlay(FontRenderer *fontRenderer, int_t screenWidth
 #else
 	// [FIX WII / ISSUE #9] Margen de seguridad contra Overscan en el menú F3 para Nintendo Wii.
 	// Se desplaza la columna izquierda a 12px y el margen derecho a 12px para evitar recortes en la TV.
-#if defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	constexpr int_t safeLeft = 12;
 	constexpr int_t safeTop = 10;
 	constexpr int_t safeRightMargin = 12;
@@ -380,7 +380,7 @@ void GuiIngame::renderDebugOverlay(FontRenderer *fontRenderer, int_t screenWidth
 	drawString(fontRenderer, "y: " + std::to_string(mc->thePlayer->posY), safeLeft, safeTop + 70, 0xe0e0e0);
 	drawString(fontRenderer, "z: " + std::to_string(mc->thePlayer->posZ), safeLeft, safeTop + 78, 0xe0e0e0);
 	drawString(fontRenderer, "f: " + std::to_string(MathHelper::floor_float((mc->thePlayer->rotationYaw * 4.0f) / 360.0f + 0.5f) & 3), safeLeft, safeTop + 86, 0xe0e0e0);
-#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	drawString(fontRenderer, platformInputDebugLine(), safeLeft, safeTop + 94, 0xe0e0e0);
 	WorldClient *multiplayerWorld = dynamic_cast<WorldClient *>(mc->theWorld);
 	if (multiplayerWorld != nullptr)
@@ -569,7 +569,7 @@ void GuiIngame::renderPlayerStatusHudGeometry(int_t sw, int_t sh, Tessellator *c
 
 void GuiIngame::renderPlayerStatusHudUncached(int_t sw, int_t sh)
 {
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 	// Hearts, armour, food, air and the XP bar share the icons texture and
 	// state: one batch instead of one draw per 9x9 icon (40-50 a frame).
 	Tessellator &tessellator = Tessellator::instance;
@@ -808,7 +808,7 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 	// Legacy Look has no vignette, as on the console editions (and it saves a
 	// blended full-screen quad every frame).
 	if (Minecraft::isFancyGraphicsEnabled()
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 		&& !mc->gameSettings->legacyLook
 #endif
 		)
@@ -827,7 +827,7 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 	// en un estado no apto para 2D. Reiniciar aca evita hotbar verde/transparente.
 	resetOverlayGLState();
 
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 	// Menus (pause, death, inventory, crafting...) sit over the hotbar,
 	// hearts and food, and only their dimmed edges showed around them. Like
 	// the console editions, the HUD is hidden while a menu is open; chat is

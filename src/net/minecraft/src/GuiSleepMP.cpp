@@ -6,7 +6,7 @@
 #include "NetClientHandler.h"
 #include "Packet19EntityAction.h"
 #include "Minecraft.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 
 GuiSleepMP::GuiSleepMP()
 {
@@ -16,7 +16,7 @@ void GuiSleepMP::initGui()
 {
 	GuiChat::initGui();
 	StringTranslate *tr = StringTranslate::getInstance();
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	controlList.push_back(new GuiButton(1, width / 2 - 100, height - 154, tr->translateKey("multiplayer.stopSleeping")));
 #else
 	controlList.push_back(new GuiButton(1, width / 2 - 100, height - 40, tr->translateKey("multiplayer.stopSleeping")));

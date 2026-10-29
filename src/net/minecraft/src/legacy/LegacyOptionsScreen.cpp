@@ -11,7 +11,7 @@
 #include "net/minecraft/src/Minecraft.h"
 #include "net/minecraft/src/RenderEngine.h"
 #include "net/minecraft/src/SoundManager.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/Input.h"
 #include "platform/PlatformConfig.h"
 #include "LegacySceneState.h"
@@ -134,14 +134,14 @@ void LegacyOptionsScreen::updateScreen()
 {
     GuiScreen::updateScreen();
     syncLegacySelection();
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     // A focused GuiTextField gives the virtual keyboard exclusive ownership of
     // these buttons. Do not move or activate the menu underneath the overlay.
     if (platformTextInputExclusive())
         return;
 
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
     std::uint32_t pressed = pad.pressed;
     if (ps2ActionReleaseLatch)
     {
@@ -189,7 +189,7 @@ void LegacyOptionsScreen::updateScreen()
     if ((pad.pressed & PLATFORM_TEXT_TYPE) != 0)
         activateLegacySelection();
 #endif
-#if PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     if ((pad.pressed & PLATFORM_TEXT_BACK) != 0)
     {
         if (mc != nullptr && mc->sndManager != nullptr)
