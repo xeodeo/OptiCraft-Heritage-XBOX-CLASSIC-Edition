@@ -49,6 +49,10 @@ std::uint32_t whiteTextureOffset();
 // Blocks until the RSX has executed everything submitted so far.
 void waitIdle();
 
+// Test builds (PS3_SCREENSHOTS): save the next finished frame to
+// /dev_hdd0/tmp/opticraft_shot.raw. A no-op otherwise.
+void requestScreenshot();
+
 // Red screen forever, for fatal errors (ClientPlatformPolicy::reportCrash).
 [[noreturn]] void holdOnCrashScreen();
 }

@@ -28,6 +28,11 @@ set(PS3_NETLOG_HOST "" CACHE STRING
     "PC address that receives every log line over UDP :9999 (xbox-spike/escuchar_log.py); empty = TTY only")
 set(MC_LOG_LEVEL "0" CACHE STRING "Unified diagnostic verbosity: 0=off, 1=info, 2=debug, 3=trace")
 set_property(CACHE MC_LOG_LEVEL PROPERTY STRINGS 0 1 2 3)
+# Test builds only (give them their own PS3_TITLE_ID so they never overwrite the
+# real package): replay a scripted controller from <USRDIR>/autopilot.txt, and
+# dump the screen every 10 s to /dev_hdd0/tmp/opticraft_shot_NN.raw.
+option(PS3_AUTOPILOT "Test build: replay a scripted controller from USRDIR/autopilot.txt" OFF)
+option(PS3_SCREENSHOTS "Test build: dump the back buffer every 10 s to /dev_hdd0/tmp" OFF)
 
 set(PS3_CONTENT_ID "UP0001-${PS3_TITLE_ID}_00-0000000000000000")
 
@@ -166,6 +171,8 @@ target_compile_definitions(OptiCraft PRIVATE
     # Multiplayer is not ported yet: java/JavaNetwork.cpp compiles its stubs.
     "NO_NETWORK"
     "PS3_TITLE_ID=\"${PS3_TITLE_ID}\""
+    PS3_AUTOPILOT=$<BOOL:${PS3_AUTOPILOT}>
+    PS3_SCREENSHOTS=$<BOOL:${PS3_SCREENSHOTS}>
     MC_LOG_LEVEL=${MC_LOG_LEVEL}
 )
 if(PS3_NETLOG_HOST)

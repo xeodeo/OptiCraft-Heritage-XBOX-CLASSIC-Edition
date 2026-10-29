@@ -10,6 +10,7 @@
 #include "ps3/input/Ps3Pad.h"
 #include "ps3/system/Ps3Clock.h"
 #include "ps3/system/Ps3Paths.h"
+#include "ps3/render/Ps3Rsx.h"
 #include "platform/Log.h"
 
 #include <cstdint>
@@ -175,8 +176,113 @@ void loadAutopilot()
 	std::fclose(f);
 }
 
+// Remote control (test builds): a PC drops commands into
+// /dev_hdd0/tmp/opticraft_mando.txt (RPCS3: tools\rpcs3\dev_hdd0\tmp; console:
+// FTP) and the game plays them as if from the pad -- driven live, step by step,
+// instead of a timed script. One command per line:
+//   <BUTTONS> <ms> [lx ly rx ry]   hold, e.g. "DOWN 200", "A 200", "- 2000 0 -1 0 0"
+//   SHOT                           save the next frame (see Ps3Rsx::requestScreenshot)
+// The file is deleted once read; each button command is followed by a short
+// release so repeated presses register. ps3\tools\mando.py writes it.
+struct RemoteCommand
+{
+	unsigned short buttons;
+	float lx, ly, rx, ry;
+	std::uint32_t durationMs;
+	bool screenshot;
+};
+RemoteCommand s_remote[64];
+int s_remoteCount = 0;
+int s_remoteIndex = 0;
+std::uint32_t s_remoteEnds = 0;
+bool s_remoteActive = false;
+int s_remotePolls = 0;
+
+void readRemoteFile()
+{
+	const char* path = "/dev_hdd0/tmp/opticraft_mando.txt";
+	FILE* f = std::fopen(path, "r");
+	if (!f) return;
+	char line[128];
+	int count = 0;
+	while (count < 62 && std::fgets(line, sizeof(line), f))
+	{
+		RemoteCommand& cmd = s_remote[count];
+		cmd = RemoteCommand();
+		char buttons[64];
+		unsigned long ms = 0;
+		if (std::strncmp(line, "SHOT", 4) == 0)
+		{
+			cmd.screenshot = true;
+			++count;
+			continue;
+		}
+		const int fields = std::sscanf(line, "%63s %lu %f %f %f %f", buttons, &ms, &cmd.lx, &cmd.ly, &cmd.rx, &cmd.ry);
+		if (fields < 2) continue;
+		cmd.buttons = parseButtons(buttons);
+		cmd.durationMs = static_cast<std::uint32_t>(ms);
+		++count;
+		if (cmd.buttons != 0 && count < 62)
+		{
+			RemoteCommand& gap = s_remote[count++];
+			gap = RemoteCommand();
+			gap.durationMs = 150;
+		}
+	}
+	std::fclose(f);
+	std::remove(path);
+	s_remoteCount = count;
+	s_remoteIndex = 0;
+	s_remoteEnds = 0;
+	s_remoteActive = true;
+	MC_LOG_INFO("ps3.input", "remote: %d commands\n", count);
+}
+
+bool remoteState(Ps3PadSnapshot& out)
+{
+	if (++s_remotePolls % 10 == 0 && (s_remoteIndex >= s_remoteCount))
+		readRemoteFile();
+	if (!s_remoteActive) return false;
+	if (s_remoteIndex >= s_remoteCount)
+	{
+		// Queue played out: hand the pad back to the real controller.
+		s_remoteActive = false;
+		return false;
+	}
+	const std::uint32_t now = ps3GetTicksMs();
+	out.connected = true;
+	out.leftX = out.leftY = out.rightX = out.rightY = 0.0f;
+	out.held = 0;
+	while (s_remoteIndex < s_remoteCount)
+	{
+		RemoteCommand& cmd = s_remote[s_remoteIndex];
+		if (cmd.screenshot)
+		{
+			Ps3Rsx::requestScreenshot();
+			++s_remoteIndex;
+			continue;
+		}
+		if (s_remoteEnds == 0)
+			s_remoteEnds = now + cmd.durationMs;
+		if (now >= s_remoteEnds)
+		{
+			++s_remoteIndex;
+			s_remoteEnds = 0;
+			continue;
+		}
+		out.held = cmd.buttons;
+		out.leftX = cmd.lx;
+		out.leftY = cmd.ly;
+		out.rightX = cmd.rx;
+		out.rightY = cmd.ry;
+		break;
+	}
+	return true;
+}
+
 bool autopilotState(Ps3PadSnapshot& out)
 {
+	if (remoteState(out)) return true;
 	if (s_stepCount < 0) loadAutopilot();
 	if (s_stepCount == 0) return false;
 	const std::uint32_t now = ps3GetTicksMs();

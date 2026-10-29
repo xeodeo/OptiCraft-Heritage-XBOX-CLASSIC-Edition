@@ -10,6 +10,7 @@
 #include <sysutil/video.h>
 #include <unistd.h>
 
+#include <cstdio>
 #include <cstring>
 #include <deque>
 
@@ -29,6 +30,7 @@ int s_width = 1280;
 int s_height = 720;
 std::uint32_t s_colorPitch = 0;
 std::uint32_t s_colorOffset[2] = {};
+void* s_colorBuffer[2] = {};
 std::uint32_t s_depthOffset = 0;
 std::uint32_t s_depthPitch = 0;
 int s_backBuffer = 0;
@@ -43,6 +45,7 @@ std::uint32_t s_ringUsed = 0;
 bool s_ringFullLogged = false;
 
 std::uint32_t s_whiteOffset = 0;
+bool s_screenshotRequested = false;  // test builds: see dumpBackBuffer()
 
 // The command buffer is managed here, in two halves that alternate per frame
 // (like the vertex ring). The firmware's own wrap -- the default context callback
@@ -99,10 +102,15 @@ s32 overflowCallback(gcmContextData* context, u32 count)
     return 0;
 }
 
-void setupCommandBufferHalves()
+// The context gcm hands back does NOT span the command buffer: in its default
+// FIFO mode begin..end is one small segment (~16 KB) that the firmware callback
+// rotates. The halves are cut from the whole buffer instead: from the context's
+// begin (gcm keeps the first 4 KB of the host buffer) to the end of the
+// kCommandBufferSize bytes reserved at the start of the host buffer.
+void setupCommandBufferHalves(void* host)
 {
     u32* begin = s_context->begin;
-    u32* end = s_context->end;
+    u32* end = reinterpret_cast<u32*>(static_cast<unsigned char*>(host) + kCommandBufferSize) - 1;
     const std::size_t words = static_cast<std::size_t>(end - begin);
     const std::size_t halfWords = words / 2;
     s_cbBegin[0] = begin;
@@ -225,6 +233,7 @@ bool initialize()
         if (buffer == nullptr)
             return false;
         rsxAddressToOffset(buffer, &s_colorOffset[i]);
+        s_colorBuffer[i] = buffer;
         gcmSetDisplayBuffer(i, s_colorOffset[i], s_colorPitch, s_width, s_height);
     }
     s_depthPitch = static_cast<std::uint32_t>(s_width) * 4;
@@ -247,7 +256,9 @@ bool initialize()
         white[i] = 0xFFFFFFFFu;
     rsxAddressToOffset(white, &s_whiteOffset);
 
-    setupCommandBufferHalves();
+    setupCommandBufferHalves(host);
+    MC_LOG_INFO("ps3.rsx", "command buffer halves: %u KB each\n",
+                static_cast<unsigned>((s_cbEnd[0] - s_cbBegin[0]) * 4 / 1024));
 
     *frameLabel() = 0;
     s_ready = true;
@@ -257,6 +268,13 @@ bool initialize()
     MC_LOG_INFO("ps3.rsx", "ready %dx%d, host %u MB, ring 2x%u KB\n", s_width, s_height,
                 kHostSize >> 20, s_ringHalfSize >> 10);
     return true;
+}
+
+void requestScreenshot()
+{
+#if PS3_SCREENSHOTS
+    s_screenshotRequested = true;
+#endif
 }
 
 bool ready() { return s_ready; }
@@ -284,10 +302,36 @@ void beginFrame()
     setSurface();
 }
 
+#if PS3_SCREENSHOTS
+// Test builds: the finished back buffer on request (Ps3Rsx::requestScreenshot,
+// the remote control's SHOT command), raw X8R8G8B8 rows (big-endian bytes X, R,
+// G, B) to /dev_hdd0/tmp/opticraft_shot.raw, then an empty .done marker.
+// ps3\tools\mando.py waits for the marker and turns the shot into a PNG.
+void dumpBackBuffer()
+{
+    if (!s_screenshotRequested)
+        return;
+    s_screenshotRequested = false;
+    waitIdle();
+    std::remove("/dev_hdd0/tmp/opticraft_shot.done");
+    if (FILE* f = std::fopen("/dev_hdd0/tmp/opticraft_shot.raw", "wb"))
+    {
+        std::fwrite(s_colorBuffer[s_backBuffer], 1, s_colorPitch * static_cast<std::uint32_t>(s_height), f);
+        std::fclose(f);
+    }
+    if (FILE* done = std::fopen("/dev_hdd0/tmp/opticraft_shot.done", "wb"))
+        std::fclose(done);
+    MC_LOG_INFO("ps3.rsx", "screenshot taken (%dx%d)\n", s_width, s_height);
+}
+#endif
+
 void endFrame()
 {
     if (!s_ready)
         return;
+#if PS3_SCREENSHOTS
+    dumpBackBuffer();
+#endif
     // At most one flip in flight: wait for the previous one before queueing.
     if (!s_firstFlip)
     {

@@ -32,6 +32,7 @@
 #include <rsx/rsx.h>
 
 #include <cmath>
+#include <cstdio>
 #include <cstring>
 #include <functional>
 #include <memory>
@@ -76,15 +77,25 @@ Mat4 s_textureMatrix = identity();
 std::vector<Mat4> s_modelViewStack;
 std::vector<Mat4> s_projectionStack;
 std::vector<Mat4> s_textureStack;
+// GL keeps one texture matrix per texture unit. Minecraft loads the lightmap's
+// (scale 1/256, +8 texel centre) while unit 1 is active; that one must not touch
+// unit 0's, or every terrain UV is divided by 256 and all of it samples the
+// atlas' top-left texel (flat-coloured blocks). The lightmap coordinate is
+// computed in convertVertices, so unit 1's matrix is only kept, never applied.
+Mat4 s_unit1TextureMatrix = identity();
+std::vector<Mat4> s_unit1TextureStack;
 RenderMatrixMode s_matrixMode = RenderMatrixMode::ModelView;
 bool s_matricesDirty = true;
+// GL texture unit selected by renderSetActiveTextureUnit (0x84C0 = unit 0).
+// Unit 1 is the lightmap: its enable/disable/bind calls must not touch unit 0.
+int s_activeTextureUnit = 0;
 
 Mat4& currentMatrix()
 {
     switch (s_matrixMode)
     {
         case RenderMatrixMode::Projection: return s_projection;
-        case RenderMatrixMode::Texture: return s_textureMatrix;
+        case RenderMatrixMode::Texture: return s_activeTextureUnit == 0 ? s_textureMatrix : s_unit1TextureMatrix;
         default: return s_modelView;
     }
 }
@@ -94,7 +105,7 @@ std::vector<Mat4>& currentStack()
     switch (s_matrixMode)
     {
         case RenderMatrixMode::Projection: return s_projectionStack;
-        case RenderMatrixMode::Texture: return s_textureStack;
+        case RenderMatrixMode::Texture: return s_activeTextureUnit == 0 ? s_textureStack : s_unit1TextureStack;
         default: return s_modelViewStack;
     }
 }
@@ -132,9 +143,6 @@ std::uint32_t s_programFrame = 0;  // frame the programs were last loaded in
 // ---------------------------------------------------------------------------
 bool s_texture2D = false;
 int s_boundTexture = 0;
-// GL texture unit selected by renderSetActiveTextureUnit (0x84C0 = unit 0).
-// Unit 1 is the lightmap: its enable/disable/bind calls must not touch unit 0.
-int s_activeTextureUnit = 0;
 int s_boundOtherUnit = 0;   // texture bound while a unit other than 0 was active
 bool s_lightmapOn = false;  // GL_TEXTURE_2D enabled on unit 1
 // Unit 1 coordinate set by renderSetMultiTextureCoord (OpenGlHelper::
@@ -737,6 +745,31 @@ void drawRecorded(const RecordedMesh& mesh)
             out[i].a = s_currentColor[3];
         }
         location = Ps3Rsx::kTransientLocation;
+    }
+    static int s_recordedLogged = 0;
+    if (s_recordedLogged < 12 && mesh.vertexCount >= 64)
+    {
+        ++s_recordedLogged;
+        auto describe = [](int id, char* out, std::size_t size) {
+            auto it = s_textures.find(id);
+            if (it == s_textures.end())
+                std::snprintf(out, size, "%d:MISSING", id);
+            else
+                std::snprintf(out, size, "%d:%dx%d mem=%p off=%x", id, it->second.width, it->second.height,
+                              it->second.memory, it->second.offset);
+        };
+        char unit0[96], unit1[96];
+        describe(s_boundTexture, unit0, sizeof(unit0));
+        describe(s_boundOtherUnit, unit1, sizeof(unit1));
+        MC_LOG_INFO("ps3.render", "list draw textures: unit0 %s | unit1 %s | sent0 off=%x %dx%d | sent1 off=%x %dx%d\n",
+                    unit0, unit1, s_unitSent[0].offset, s_unitSent[0].width, s_unitSent[0].height,
+                    s_unitSent[1].offset, s_unitSent[1].width, s_unitSent[1].height);
+        const Ps3Vertex* v = static_cast<const Ps3Vertex*>(mesh.memory);
+        MC_LOG_INFO("ps3.render", "list draw: prim=%d n=%d uv0=(%.4f %.4f) uv1=(%.4f %.4f) light=(%.3f %.3f) "
+                    "tex2D=%d tex=%d unit=%d lightmapOn=%d other=%d colorless=%d\n",
+                    static_cast<int>(mesh.primitive), mesh.vertexCount, v[0].u, v[0].v, v[1].u, v[1].v, v[0].lu,
+                    v[0].lv, s_texture2D ? 1 : 0, s_boundTexture, s_activeTextureUnit, s_lightmapOn ? 1 : 0,
+                    s_boundOtherUnit, mesh.usesCurrentColor ? 1 : 0);
     }
     if (!applyDrawState(!mesh.hasLight)) return;
     bindVertexArrays(offset, location);
@@ -1354,8 +1387,34 @@ void renderSetLegacyPresentationGamma(bool) {}
 
 // Called by Display_ps3.cpp after each flip: per-frame GPU state the next frame
 // must re-send (vertex program, uniforms, texture units).
+#if PS3_SCREENSHOTS
+// Test builds: every texture of 128x128 or more as it sits in RSX memory
+// (A8R8G8B8 bytes), to /dev_hdd0/tmp/opticraft_tex_<id>_<w>x<h>.raw.
+static void dumpTextures()
+{
+    for (const auto& entry : s_textures)
+    {
+        const Texture& t = entry.second;
+        if (t.memory == nullptr || t.width < 128 || t.height < 128)
+            continue;
+        char path[96];
+        std::snprintf(path, sizeof(path), "/dev_hdd0/tmp/opticraft_tex_%d_%dx%d.raw", entry.first, t.width, t.height);
+        if (FILE* f = std::fopen(path, "wb"))
+        {
+            std::fwrite(t.memory, 1, t.pitch * static_cast<std::uint32_t>(t.height), f);
+            std::fclose(f);
+        }
+    }
+    MC_LOG_INFO("ps3.render", "textures dumped\n");
+}
+#endif
+
 void ps3RenderBeginFrame()
 {
+#if PS3_SCREENSHOTS
+    if (s_diagFrame == 3000)
+        dumpTextures();
+#endif
     if (s_diagFrame <= 3)
         MC_LOG_INFO("ps3.render", "frame %d done: %d draws, clear=%08x viewport=%d,%d %dx%d\n", s_diagFrame,
                     s_diagDraws, s_clearColor, s_viewport[0], s_viewport[1], s_viewport[2], s_viewport[3]);
