@@ -24,4 +24,14 @@ const char *ps3PadKeyName(int key)
 	}
 }
 
+int ps3PadSquareKeyCode()
+{
+	return PS3_KEY_SQUARE;
+}
+
+int ps3PadCircleKeyCode()
+{
+	return PS3_KEY_CIRCLE;
+}
+
 #endif // PS3_PLATFORM

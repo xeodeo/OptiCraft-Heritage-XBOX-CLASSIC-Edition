@@ -5,7 +5,7 @@
 #include "java/Type.h"
 #include "java/String.h"
 
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM) && !defined(PS3_PLATFORM)
 #include "SDL_events.h"
 #endif
 

@@ -14,7 +14,11 @@
 extern "C" {
 #endif
 
-#if defined(WII_PLATFORM) || defined(PS3_PLATFORM) || (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
+/* PS3: newlib's <machine/endian.h> defines __LITTLE_ENDIAN as the constant 1234 on every
+   target, which the #ifndef below would read as "little-endian" and swap the double word
+   order (wrong math, different terrain for a seed). Limited to the PS3 on purpose: whether
+   the Wii build has the same latent problem must be measured there first. */
+#if defined(PS3_PLATFORM)
 #undef __LITTLE_ENDIAN
 #elif !defined(__LITTLE_ENDIAN)
 /* Sometimes it's necessary to define __LITTLE_ENDIAN explicitly

@@ -36,4 +36,9 @@ static_assert(PS3_KEY_SENTINEL_END < 256, "Ps3PadKeyCode must fit the 256-slot k
 // Display name for the Controls screen, or nullptr if `key` isn't one of these.
 const char *ps3PadKeyName(int key);
 
+// Key codes the shared Legacy screens ask for by name (see Minecraft.cpp and
+// LegacyControlsScreen.cpp): Square is the secondary action, Circle is back.
+int ps3PadSquareKeyCode();
+int ps3PadCircleKeyCode();
+
 #endif // PS3_PLATFORM
