@@ -247,13 +247,13 @@
 // section cache, exposed-face masks, simple-cube fast path, one section built
 // across several frames). Render-only: none of the other PC legacy shortcuts.
 #ifndef PLATFORM_INCREMENTAL_TERRAIN_BUILD
-#  define PLATFORM_INCREMENTAL_TERRAIN_BUILD (PLATFORM_PC_LEGACY || PLATFORM_XBOX)
+#  define PLATFORM_INCREMENTAL_TERRAIN_BUILD (PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 // CPU section-connectivity culling (skips sections hidden behind solid
 // terrain, e.g. caves under the player). Needs the incremental builder.
 #ifndef PLATFORM_SECTION_VISIBILITY_CULL
-#  define PLATFORM_SECTION_VISIBILITY_CULL (PLATFORM_PC_LEGACY || PLATFORM_XBOX)
+#  define PLATFORM_SECTION_VISIBILITY_CULL (PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
 
 // The Wii is deliberately absent here. It has a hardware FPU, 24-bit Z and real

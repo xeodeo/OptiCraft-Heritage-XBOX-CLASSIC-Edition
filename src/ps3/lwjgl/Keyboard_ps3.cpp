@@ -52,6 +52,13 @@ void pushChar(int character)
 // Public API
 // ---------------------------------------------------------------------------
 
+void clearEvents()
+{
+	while (!detail::s_queue.empty())
+		detail::s_queue.pop();
+	detail::s_current = {};
+}
+
 jstring getKeyName(int_t key)
 {
 	if (const char *padName = ps3PadKeyName(key))

@@ -13,7 +13,7 @@ namespace Mouse
 namespace detail
 {
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 // Consoles have no SDL event pump; the platform's input poll feeds events here.
 //   PS2 — right stick drives a simulated cursor.
 //   Wii — the Wiimote IR pointer drives it directly, with the Classic/GC right

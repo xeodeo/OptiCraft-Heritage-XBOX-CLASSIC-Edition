@@ -108,6 +108,20 @@ else()
         "${CMAKE_SOURCE_DIR}/external/zlib/contrib/minizip/unzip.c"
     )
     list(APPEND PS3_SOURCES ${PS3_MINIZIP_SOURCES})
+    # The PS3 renders the world through the desktop display-list path, like the Xbox
+    # (cmake/xbox.cmake): the same render list and incremental terrain builder.
+    list(APPEND PS3_SOURCES
+        "${CMAKE_SOURCE_DIR}/src/pc/minecraft/RenderList.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/minecraft/WorldRendererPcLegacy.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/minecraft/RenderGlobalPcLegacyVisibility.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacySectionCache.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyTerrainStaging.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyBlockRenderInfo.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyCubeMaterialInfo.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyMeshScheduler.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacySectionVisibility.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyStaticTileEntityMesh.cpp"
+    )
     # newlib has no fopen64/ftello64/fseeko64 (same as the Wii build).
     set_source_files_properties(${PS3_MINIZIP_SOURCES} PROPERTIES COMPILE_DEFINITIONS USE_FILE32API)
 
