@@ -15,6 +15,11 @@ extern "C" void xboxNetLogSend(const char* line);
 extern "C" void wiiPlatformLogWrite(const char* line);
 #endif
 
+#if PLATFORM_PS3
+// src/ps3/system/Ps3NetLog.cpp: UDP copy to a PC (PS3_NETLOG_HOST) plus /dev_hdd0/tmp file.
+extern "C" void ps3PlatformLogWrite(const char* line);
+#endif
+
 namespace
 {
 const char* levelName(McLog::Level level)
@@ -285,6 +290,8 @@ void McLog::write(Level level, const char* category, const char* fmt, ...)
 #elif PLATFORM_XBOX
     xboxLogRingAppend(line);
     xboxNetLogSend(line);
+#elif PLATFORM_PS3
+    ps3PlatformLogWrite(line);
 #else
     if (shouldWriteConsole(level, safeCategory))
     {
