@@ -1,17 +1,17 @@
 #include "GuiConfirmSkinInstall.h"
 #include "GuiSkinSelector.h"
 #include "SkinManager.h"
-#include "GuiButton.h"
-#include "Minecraft.h"
-#include "FontRenderer.h"
-#include "SoundManager.h"
-#include "RenderEngine.h"
+#include "net/minecraft/src/GuiButton.h"
+#include "client/Minecraft.h"
+#include "net/minecraft/src/FontRenderer.h"
+#include "net/minecraft/src/SoundManager.h"
+#include "net/minecraft/src/RenderEngine.h"
 #include "platform/Storage.h"
 #include "platform/RenderAPI.h"
-#include "Tessellator.h"
+#include "net/minecraft/src/Tessellator.h"
 #include "stb_image.h"
 
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PS3
 #include "platform/Input.h"
 #endif
 
@@ -111,7 +111,7 @@ void GuiConfirmSkinInstall::keyTyped(char_t c, int_t key)
 
 void GuiConfirmSkinInstall::handleSpecializedMenuInput()
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PS3
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     if (!pad.connected)
         return;

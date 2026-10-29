@@ -4,7 +4,7 @@
 #include "RenderEngine.h"
 #include "Minecraft.h"
 #include "platform/RenderAPI.h"
-#include "pc/lwjgl/Mouse.h"
+#include "lwjgl/Mouse.h"
 #include "java/Arithmetic.h"
 #include "java/System.h"
 

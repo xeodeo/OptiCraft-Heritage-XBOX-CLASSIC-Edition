@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GuiScreen.h"
+#include "net/minecraft/src/GuiScreen.h"
 
 class GuiButton;
 

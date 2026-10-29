@@ -1,9 +1,9 @@
 #include "GuiLoadModsList.h"
-#include "GuiSlot.h"
-#include "GuiButton.h"
-#include "Minecraft.h"
-#include "FontRenderer.h"
-#include "SoundManager.h"
+#include "net/minecraft/src/GuiSlot.h"
+#include "net/minecraft/src/GuiButton.h"
+#include "client/Minecraft.h"
+#include "net/minecraft/src/FontRenderer.h"
+#include "net/minecraft/src/SoundManager.h"
 #include "ModManager.h"
 #include "GuiConfirmModInstall.h"
 #include "platform/Storage.h"
@@ -12,7 +12,7 @@
 #include "ps2/storage/assets/Ps2Assets.h"
 #endif
 
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 #include "platform/Input.h"
 #endif
 
@@ -298,7 +298,7 @@ void GuiLoadModsList::updateScreen()
 
 void GuiLoadModsList::handleSpecializedMenuInput()
 {
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     if ((pad.pressed & (PLATFORM_TEXT_BACK | PLATFORM_TEXT_CLOSE)) != 0)
     {

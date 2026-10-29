@@ -1,16 +1,16 @@
 #include "GuiMods.h"
-#include "GuiSlot.h"
-#include "GuiButton.h"
-#include "Minecraft.h"
-#include "FontRenderer.h"
-#include "SoundManager.h"
-#include "StringTranslate.h"
-#include "GuiTexturePacks.h"
-#include "GuiYesNo.h"
+#include "net/minecraft/src/GuiSlot.h"
+#include "net/minecraft/src/GuiButton.h"
+#include "client/Minecraft.h"
+#include "net/minecraft/src/FontRenderer.h"
+#include "net/minecraft/src/SoundManager.h"
+#include "net/minecraft/src/StringTranslate.h"
+#include "net/minecraft/src/GuiTexturePacks.h"
+#include "net/minecraft/src/GuiYesNo.h"
 #include "GuiLoadModsMenu.h"
 #include "mods/ModManager.h"
 
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 #include "platform/Input.h"
 #endif
 
@@ -239,7 +239,7 @@ void GuiMods::keyTyped(char_t c, int_t key)
 
 void GuiMods::handleSpecializedMenuInput()
 {
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     if ((pad.pressed & (PLATFORM_TEXT_BACK | PLATFORM_TEXT_CLOSE)) != 0)
     {

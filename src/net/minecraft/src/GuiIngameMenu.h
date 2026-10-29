@@ -31,10 +31,10 @@ private:
 	int_t updateCounter;
 	int_t selectedControlIndex;
 	int_t hoveredControlIndex;
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 	long_t legacyPauseOpenedAtMillis;
 #endif
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
 	bool ps2PauseStartReleaseLatch;
 	bool ps2PauseActionReleaseLatch;
 #endif

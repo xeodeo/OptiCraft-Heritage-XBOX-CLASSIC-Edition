@@ -22,7 +22,7 @@
 #include "World.h"
 #include "SoundManager.h"
 #include "java/System.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/Input.h"
 #include "platform/PlatformConfig.h"
 #include "client/XboxSplitScreen.h"
@@ -32,10 +32,10 @@ GuiIngameMenu::GuiIngameMenu()
 	, updateCounter(0)
 	, selectedControlIndex(-1)
 	, hoveredControlIndex(-1)
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 	, legacyPauseOpenedAtMillis(System::currentTimeMillis())
 #endif
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
 	, ps2PauseStartReleaseLatch(true)
 	, ps2PauseActionReleaseLatch(true)
 #endif
@@ -205,7 +205,7 @@ void GuiIngameMenu::closeLegacyPause()
 
 void GuiIngameMenu::handleSpecializedMenuInput()
 {
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
 	const bool legacyPause = mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI;
 	if (!legacyPause)
 		return;

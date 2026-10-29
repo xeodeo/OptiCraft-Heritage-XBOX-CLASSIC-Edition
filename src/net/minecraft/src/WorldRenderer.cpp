@@ -49,7 +49,7 @@ namespace
 {
 	static float rendererAabbMargin()
 	{
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 		// Consoles use a tuned conservative margin because their terrain clip paths
 		// and fixed renderer grids differ from desktop Advanced OpenGL.
 		return PLATFORM_RENDERER_AABB_MARGIN;
@@ -82,7 +82,7 @@ WorldRenderer::WorldRenderer(World *world, std::vector<TileEntity *> *tileEntiti
 	worldObj      = world;
 	tileEntities  = tileEntitiesIn;
 	sizeWidth = sizeHeight = sizeDepth = size;
-#if PLATFORM_PC || defined(XBOX_PLATFORM)
+#if PLATFORM_PC || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	glRenderList = glListId;
 #else
 	(void)glListId;
@@ -112,12 +112,12 @@ WorldRenderer::WorldRenderer(World *world, std::vector<TileEntity *> *tileEntiti
 #endif
 	needsUpdate    = false;
 	isChunkLit     = false;
-#if PLATFORM_PC || defined(XBOX_PLATFORM)
+#if PLATFORM_PC || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	isWaitingOnOcclusionQuery = false;
 #endif
 	isVisible      = true;
 	isInFrustum    = false;
-#if PLATFORM_PC || PLATFORM_PS2 || defined(XBOX_PLATFORM)
+#if PLATFORM_PC || PLATFORM_PS2 || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	isFullyInFrustum = false;
 #endif
 #if PLATFORM_INCREMENTAL_TERRAIN_BUILD
@@ -134,7 +134,7 @@ WorldRenderer::WorldRenderer(World *world, std::vector<TileEntity *> *tileEntiti
 		pcLegacyPublishedVisibility[face] = 0x3f;
 	pcLegacyCpuVisible = true;
 #endif
-#if PLATFORM_PC || defined(XBOX_PLATFORM)
+#if PLATFORM_PC || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	isVisibleFromPosition = false;
 	visibleFromX = 0.0;
 	visibleFromY = 0.0;
@@ -256,7 +256,7 @@ void WorldRenderer::cleanup()
 	renderTerrainChunkHandlesDestroy(terrainChunkHandles);
 #endif
 
-#if PLATFORM_PC || defined(XBOX_PLATFORM)
+#if PLATFORM_PC || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	glRenderList = 0;
 	glOcclusionQuery = 0;
 #endif
@@ -302,7 +302,7 @@ void WorldRenderer::setPosition(int_t x, int_t y, int_t z)
 	// actually rebuilds. Repositioning a renderer grid can touch hundreds of
 	// sections at once; compiling a list for every moved section here creates a
 	// large synchronous spike before any useful terrain work begins.
-#if PLATFORM_PC || defined(XBOX_PLATFORM)
+#if PLATFORM_PC || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	needsOcclusionBoxUpdate = true;
 	isVisibleFromPosition = false;
 #endif
@@ -310,7 +310,7 @@ void WorldRenderer::setPosition(int_t x, int_t y, int_t z)
 	markDirty();
 }
 
-#if PLATFORM_PC || defined(XBOX_PLATFORM)
+#if PLATFORM_PC || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 void WorldRenderer::updateOcclusionBox()
 {
 	if (!needsOcclusionBoxUpdate)
@@ -530,7 +530,7 @@ void WorldRenderer::markDirty()
 #if PC_LEGACY_COALESCE_MESH_REBUILDS
 	if (pcLegacyBuildActive)
 	{
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 		// A section takes several frames to mesh on the Xbox, and a redstone clock
 		// changes blocks every 2-4 ticks: restarting here meant the section never
 		// finished, so torches and dust never updated and moving pistons (drawn
@@ -724,10 +724,10 @@ void WorldRenderer::setDontDraw()
 	ps2ResetBuildState();
 #endif
 	isInFrustum = false;
-#if PLATFORM_PC || PLATFORM_PS2 || defined(XBOX_PLATFORM)
+#if PLATFORM_PC || PLATFORM_PS2 || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	isFullyInFrustum = false;
 #endif
-#if PLATFORM_PC || defined(XBOX_PLATFORM)
+#if PLATFORM_PC || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	isVisibleFromPosition = false;
 #endif
 	isInitialized = false;
@@ -748,7 +748,7 @@ void WorldRenderer::detachFromWorld()
 	worldObj = nullptr;
 }
 
-#if PLATFORM_PC || defined(XBOX_PLATFORM)
+#if PLATFORM_PC || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 void WorldRenderer::callOcclusionQueryList()
 {
 	renderCallDisplayList(glRenderList + 2);

@@ -29,7 +29,7 @@ void GuiTexturePackSlot::elementClicked(int_t i, bool flag)
 
 bool GuiTexturePackSlot::isSelected(int_t i)
 {
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 	// With the pad the box follows the highlighted row; the pack in use has a
 	// yellow name (drawSlot).
 	return i == parentTexturePackGui->controllerIndex;

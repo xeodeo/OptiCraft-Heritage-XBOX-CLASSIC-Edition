@@ -99,7 +99,7 @@ bool EntityMob::isValidLightLevel()
 	const int_t x = MathHelper::floor_double(posX);
 	const int_t y = MathHelper::floor_double(boundingBox->minY);
 	const int_t z = MathHelper::floor_double(posZ);
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 	// Under the open sky in daytime the light is always too high for a
 	// monster. A chunk that has just come in from the background thread may
 	// not have its sky light filled in yet, which let creepers spawn in the

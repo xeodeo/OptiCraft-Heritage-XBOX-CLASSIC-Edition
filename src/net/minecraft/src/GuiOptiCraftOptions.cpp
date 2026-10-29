@@ -12,7 +12,7 @@
 #include "Minecraft.h"
 #include "ScaledResolution.h"
 #include "Session.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/PlatformConfig.h"
 #include "platform/PlatformUserSettings.h"
 #include "net/minecraft/src/legacy/LegacyUiPolicy.h"
@@ -64,7 +64,7 @@ void GuiOptiCraftOptions::initGui()
 	by += 24;
 
 	// Row 2: Legacy Crafting & Legacy Creative
-	#if !(PLATFORM_XBOX || PLATFORM_PS2)
+	#if !(PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3)
 	controlList.push_back(new GuiSmallButton(BUTTON_LEGACY_CRAFTING, width / 2 - 155, by,
 		uiText("Legacy Crafting: ") + std::string(settings->legacyCrafting ? uiText("ON") : uiText("OFF"))));
 #else
@@ -213,7 +213,7 @@ void GuiOptiCraftOptions::actionPerformed(GuiButton *button)
 	}
 	if (button->id == BUTTON_LEGACY_CRAFTING)
 	{
-		#if !(PLATFORM_XBOX || PLATFORM_PS2)
+		#if !(PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3)
 		settings->legacyCrafting = !settings->legacyCrafting;
 		settings->applyLegacyCraftingBindings();
 		button->displayString = uiText("Legacy Crafting: ") + std::string(settings->legacyCrafting ? uiText("ON") : uiText("OFF"));

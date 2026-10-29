@@ -12,7 +12,7 @@
 #include "java/String.h"
 #include "SoundManager.h"
 #include "platform/PlatformConfig.h"
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 #include "platform/Input.h"
 #endif
 #include <memory>
@@ -53,7 +53,7 @@ void GuiTexturePacks::initGui()
 
 void GuiTexturePacks::handleSpecializedMenuInput()
 {
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 	// Like the server list: up/down walk the packs, A applies the highlighted
 	// one, B is Done.
 	const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());

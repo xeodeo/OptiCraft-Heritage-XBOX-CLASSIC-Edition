@@ -27,7 +27,7 @@
 #include "platform/RenderAPI.h"
 #include "platform/Input.h"
 #include "platform/PlatformConfig.h"
-#include "pc/lwjgl/Mouse.h"
+#include "lwjgl/Mouse.h"
 
 namespace
 {
@@ -318,9 +318,9 @@ void LegacyPlayGameScreen::updateScreen()
     GuiSelectWorld::updateScreen();
     if (tutorialMessageTicks > 0)
         --tutorialMessageTicks;
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
     if ((pad.pressed & (PLATFORM_TEXT_CLOSE | PLATFORM_TEXT_SHIFT)) != 0)
     {
         if (mc->sndManager != nullptr)
@@ -333,7 +333,7 @@ void LegacyPlayGameScreen::updateScreen()
         moveSelection(-1);
     else if ((pad.pressed & PLATFORM_TEXT_DOWN) != 0)
         moveSelection(1);
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
     if ((pad.pressed & PLATFORM_TEXT_TYPE) != 0)
         activateSelection();
 #elif PLATFORM_WII
@@ -343,7 +343,7 @@ void LegacyPlayGameScreen::updateScreen()
     if ((pad.pressed & PLATFORM_TEXT_TYPE) != 0)
         activateSelection();
 #endif
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
     // X deletes the highlighted world after a confirmation (B/Y go back).
     if ((pad.pressed & PLATFORM_TEXT_BACK) != 0)
         requestDeleteSelectedWorld();
@@ -492,7 +492,7 @@ void LegacyPlayGameScreen::drawScrollIndicators()
 void LegacyPlayGameScreen::drawMenuControlHints()
 {
     drawLegacyMenuHints(mc, width, height, true);
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
     if (selectedWorldIndex() >= 0)
     {
         const std::string label = uiText("Delete");

@@ -123,7 +123,7 @@ void ChunkProviderLoadOrGenerate::setChunkLoadRadius(int_t radius)
 		ChunkMemoryPolicy::retentionPolicy(saveHandler != nullptr && saveHandler->isReadOnly());
 	chunkLoadRadius = policy.loadRadius;
 	chunkUnloadRadius = policy.unloadRadius;
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 	// Keep resident only what the renderer can reach plus one column of
 	// neighbours for meshing, capped by the tuning radius. At a short render
 	// distance this holds 7x7 columns instead of 11x11 (several MB of the

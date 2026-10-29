@@ -27,8 +27,8 @@
 #include "RenderHelper.h"
 #include "RenderItem.h"
 #include "SoundManager.h"
-#include "pc/lwjgl/Keyboard.h"
-#include "pc/lwjgl/Mouse.h"
+#include "lwjgl/Keyboard.h"
+#include "lwjgl/Mouse.h"
 #include "platform/PlatformConfig.h"
 #include "platform/Input.h"
 #include "platform/RenderAPI.h"
@@ -424,7 +424,7 @@ void GuiContainerCreative::handleMouseInput()
 
 Slot *GuiContainerCreative::getControllerNavigationTarget(Slot *selected, int_t dirX, int_t dirY)
 {
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     if (selected == nullptr || inventorySlots == nullptr)
         return nullptr;
 
@@ -501,7 +501,7 @@ bool GuiContainerCreative::scrollRows(int_t direction)
 void GuiContainerCreative::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 {
     bool pointerScrollingAllowed = true;
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
     pointerScrollingAllowed = mc == nullptr || mc->gameSettings == nullptr || !mc->gameSettings->legacyUI;
 #endif
     bool clicking = pointerScrollingAllowed && lwjgl::Mouse::isButtonDown(0);
@@ -620,7 +620,7 @@ void GuiContainerCreative::drawCategoryTabs(int_t guiLeft, int_t guiTop)
     }
 
     // Tab shoulder hints
-#if PLATFORM_PS2
+#if PLATFORM_PS2 || PLATFORM_PS3
     fontRenderer->drawStringWithShadow("L1", tabStartX - 13, guiTop - 14, 0xffe0e0e0);
     fontRenderer->drawStringWithShadow("R1", tabStartX + 6 * 27 + 2, guiTop - 14, 0xffe0e0e0);
 #elif PLATFORM_XBOX

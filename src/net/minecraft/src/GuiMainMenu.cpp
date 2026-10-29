@@ -26,7 +26,7 @@
 #include "Minecraft.h"
 #include "GameSettings.h"
 #include "SoundManager.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/Input.h"
 #include "net/minecraft/src/legacy/LegacyMainMenu.h"
 #include "net/minecraft/src/legacy/LegacyPlayGameScreen.h"
@@ -170,13 +170,13 @@ void GuiMainMenu::updateScreen()
         return;
 
     syncLegacySelection();
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     if ((pad.pressed & PLATFORM_TEXT_UP) != 0)
         moveLegacySelection(-1);
     else if ((pad.pressed & PLATFORM_TEXT_DOWN) != 0)
         moveLegacySelection(1);
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
     if ((pad.pressed & PLATFORM_TEXT_TYPE) != 0)
         activateLegacySelection();
 #elif PLATFORM_WII
@@ -282,7 +282,7 @@ void GuiMainMenu::initGui()
         else if (month == 1  && day == 1)  splashText = "Happy new year!";
     }
 
-#if !(PLATFORM_XBOX || PLATFORM_PS2)
+#if !(PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3)
     // Minecraft 1.2.5 only runs the music timer while a world is loaded (see
     // PlayerController::onUpdate). Xbox and PS2 keep that original behaviour:
     // the menu plays the startup theme and then stays quiet.

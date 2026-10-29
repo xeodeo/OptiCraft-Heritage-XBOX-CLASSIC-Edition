@@ -190,7 +190,7 @@ bool Config::isCustomFonts()
 
 int_t Config::getMaxRenderDistanceFine()
 {
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || PLATFORM_PC_LEGACY
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM) || PLATFORM_PC_LEGACY
 	// PLATFORM_VISIBLE_CHUNK_RADIUS is authoritative on fixed-grid backends.
 	return limit(PLATFORM_VISIBLE_CHUNK_RADIUS * 16, 32, 256);
 #else
@@ -612,7 +612,7 @@ void Config::sleep(long ms)
 {
 #if defined(PS2_PLATFORM)
 	(void)ms;
-#elif defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#elif defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	// Real sleep on this console: PlatformCompat::delay yields to libogc's
 	// scheduler, so audio and USB keep running while we wait.
 	PlatformCompat::delay((uint32_t)ms);

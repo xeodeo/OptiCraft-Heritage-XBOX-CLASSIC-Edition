@@ -1,6 +1,6 @@
 // Console crafting menu of the Xbox port, also used on PS2 when "Console
 // Crafting" is on (upstream's LegacyCraftingScreen otherwise).
-#if defined(XBOX_PLATFORM) || defined(PS2_PLATFORM)
+#if defined(XBOX_PLATFORM) || defined(PS2_PLATFORM) || defined(PS3_PLATFORM)
 #include "XboxCraftingScreen.h"
 
 #include <algorithm>

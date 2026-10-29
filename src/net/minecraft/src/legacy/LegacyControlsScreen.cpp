@@ -11,7 +11,7 @@
 #include "net/minecraft/src/GameSettings.h"
 #include "net/minecraft/src/GuiButton.h"
 #include "net/minecraft/src/Minecraft.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 #include "platform/Input.h"
 #include "platform/PlatformConfig.h"
 
@@ -29,6 +29,10 @@
 
 #if PLATFORM_XBOX
 #include "xbox/input/XboxPadKeyCodes.h"
+#elif PLATFORM_PS3
+// TODO PS3: ps3PadCircleKeyCode() y ps3PadKeyName(int key)
+int ps3PadCircleKeyCode();
+const char *ps3PadKeyName(int key);
 #endif
 
 namespace
@@ -54,6 +58,9 @@ bool reservedCaptureKey(int_t key)
         key == lwjgl::Keyboard::KEY_ESCAPE;
 #elif PLATFORM_XBOX
     return key == XBOX_KEY_B || key == lwjgl::Keyboard::KEY_ESCAPE;
+#elif PLATFORM_PS3
+    // TODO PS3: ps3PadCircleKeyCode()
+    return key == ps3PadCircleKeyCode() || key == lwjgl::Keyboard::KEY_ESCAPE;
 #else
     return key == lwjgl::Keyboard::KEY_ESCAPE;
 #endif
@@ -61,7 +68,7 @@ bool reservedCaptureKey(int_t key)
 
 std::string capturePrompt()
 {
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
     return uiText("Press a button...");
 #else
     return uiText("Press a key...");
@@ -82,7 +89,7 @@ void LegacyControlsScreen::initGui()
     captureRow = -1;
     platformSetPadRebindExclusive(false);
     rows = legacyControlsRows(settings);
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
     // The Xbox keeps the single-column page its controller icons are laid
     // out for (drawScreen draws them over each row).
     rowsPerPage = std::max<int_t>(3, std::min<int_t>(8,
@@ -174,7 +181,7 @@ int_t LegacyControlsScreen::pageCount() const
 
 void LegacyControlsScreen::refreshRowLabels()
 {
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
     rowIcons.assign(static_cast<size_t>(rowsPerPage), -1);
     rowIconX.assign(static_cast<size_t>(rowsPerPage), 0);
 #endif
@@ -192,12 +199,15 @@ void LegacyControlsScreen::refreshRowLabels()
         }
 
         const LegacyControlsBindingRow &row = rows[rowIndex];
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
         if (captureRow != rowIndex && fontRenderer != nullptr && row.kind == LegacyControlsBindingKind::KeyBinding &&
             row.bindingIndex >= 0 && row.bindingIndex < static_cast<int_t>(settings->keyBindings.size()))
         {
             #if PLATFORM_XBOX
             const char *name = xboxPadKeyName(settings->keyBindings[row.bindingIndex]->keyCode);
+#elif PLATFORM_PS3
+            // TODO PS3: ps3PadKeyName(int key)
+            const char *name = ps3PadKeyName(settings->keyBindings[row.bindingIndex]->keyCode);
 #else
             const char *name = ps2PadKeyName(settings->keyBindings[row.bindingIndex]->keyCode);
 #endif
@@ -332,7 +342,7 @@ void LegacyControlsScreen::keyTyped(char_t c, int_t key)
         if (reservedCaptureKey(key))
         {
             cancelCapture();
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
             // The reserved Back button is also a menu-navigation edge. Consume
             // the same latched press so it cannot immediately close Controls.
             (void)platformTextInputSnapshot(platformMenuPad());
@@ -374,12 +384,12 @@ void LegacyControlsScreen::updateScreen()
 void LegacyControlsScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 {
     drawLegacyBackground(partialTick);
-#if !(PLATFORM_XBOX || PLATFORM_PS2)
+#if !(PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3)
     drawLayoutArtwork();
 #endif
     updateLegacyPointerHover(mouseX, mouseY);
     GuiScreen::drawScreen(mouseX, mouseY, partialTick);
-#if PLATFORM_XBOX || PLATFORM_PS2
+#if PLATFORM_XBOX || PLATFORM_PS2 || PLATFORM_PS3
     for (int_t i = 0; i < static_cast<int_t>(rowIcons.size()) && i < static_cast<int_t>(controlList.size()); ++i)
     {
         if (rowIcons[i] < 0 || controlList[i] == nullptr)

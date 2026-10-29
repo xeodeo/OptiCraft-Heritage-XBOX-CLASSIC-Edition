@@ -1,7 +1,7 @@
 #include "VirtualKeyboard.h"
 #include "java/String.h"
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 
 #include "platform/ConsoleInputClock.h"
 #include "GuiTextField.h"
@@ -96,7 +96,7 @@ void VirtualKeyboard::tick()
 	lastHeld = held;
 
 	const int now = nowMs();
-#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
 	// Text input owns the face buttons and D-pad, while the otherwise-unused
 	// right stick moves the keyboard panel. Work in scaled GUI coordinates so
 	// speed remains consistent across video modes and GUI scales.

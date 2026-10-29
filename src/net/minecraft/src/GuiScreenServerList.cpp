@@ -6,7 +6,7 @@
 #include "ServerNBTStorage.h"
 #include "StringTranslate.h"
 #include "java/String.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 
 jstring GuiScreenServerList::lastAddress;
 
@@ -27,7 +27,7 @@ void GuiScreenServerList::updateScreen()
 
 void GuiScreenServerList::initGui()
 {
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM) && !defined(PS3_PLATFORM)
     lwjgl::Keyboard::enableRepeatEvents(true);
 #endif
     StringTranslate *translate = StringTranslate::getInstance();
@@ -46,7 +46,7 @@ void GuiScreenServerList::initGui()
 
 void GuiScreenServerList::onGuiClosed()
 {
-#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
+#if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM) && !defined(PS3_PLATFORM)
     lwjgl::Keyboard::enableRepeatEvents(false);
 #endif
     if (serverTextField != nullptr) lastAddress = serverTextField->getText();

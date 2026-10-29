@@ -1,11 +1,11 @@
 #include "GuiLoadSkinsMenu.h"
 #include "GuiLoadSkinsList.h"
-#include "GuiButton.h"
-#include "Minecraft.h"
-#include "FontRenderer.h"
-#include "SoundManager.h"
+#include "net/minecraft/src/GuiButton.h"
+#include "client/Minecraft.h"
+#include "net/minecraft/src/FontRenderer.h"
+#include "net/minecraft/src/SoundManager.h"
 
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PS3
 #include "platform/Input.h"
 #endif
 
@@ -63,7 +63,7 @@ void GuiLoadSkinsMenu::keyTyped(char_t c, int_t key)
 
 void GuiLoadSkinsMenu::handleSpecializedMenuInput()
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_PS3
     const PlatformTextInputSnapshot pad = platformTextInputSnapshot(platformMenuPad());
     if (!pad.connected)
         return;

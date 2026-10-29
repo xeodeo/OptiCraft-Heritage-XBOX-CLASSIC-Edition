@@ -10,7 +10,7 @@
 #include "Minecraft.h"
 #include "Tessellator.h"
 #include "SoundManager.h"
-#include "pc/lwjgl/Mouse.h"
+#include "lwjgl/Mouse.h"
 #include <algorithm>
 
 GuiSlotStats::GuiSlotStats(GuiStats *guistats)

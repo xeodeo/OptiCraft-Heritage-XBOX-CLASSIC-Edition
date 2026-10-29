@@ -3409,7 +3409,7 @@ static int_t s_pathfindBudgetThisTick = 0;
 
 void World::trackLoadedEntityPointer(Entity *entity)
 {
-#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3
     if (entity != nullptr)
         loadedEntityPointerSet.insert(entity);
 #elif PLATFORM_PS2
@@ -3422,7 +3422,7 @@ void World::trackLoadedEntityPointer(Entity *entity)
 
 void World::untrackLoadedEntityPointer(Entity *entity)
 {
-#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3
     if (entity != nullptr)
         loadedEntityPointerSet.erase(entity);
 #elif PLATFORM_PS2
@@ -3435,7 +3435,7 @@ void World::untrackLoadedEntityPointer(Entity *entity)
 
 void World::rebuildLoadedEntityPointerSet() const
 {
-#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3
     loadedEntityPointerSet.clear();
     loadedEntityPointerSet.insert(loadedEntityList.begin(), loadedEntityList.end());
 #elif PLATFORM_PS2
@@ -3456,7 +3456,7 @@ bool World::isLoadedEntityPointer(const Entity *entity) const
 {
     if (entity == nullptr)
         return false;
-#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3
     if (loadedEntityPointerSet.size() != loadedEntityList.size())
         rebuildLoadedEntityPointerSet();
     return loadedEntityPointerSet.find(entity) != loadedEntityPointerSet.end();
@@ -3538,7 +3538,7 @@ void World::updateEntities()
     {
         for (Entity *entity : unloadedEntityList)
             untrackLoadedEntityPointer(entity);
-#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3
         loadedEntityList.erase(
             std::remove_if(loadedEntityList.begin(), loadedEntityList.end(),
                 [this](Entity* entity)
@@ -4717,7 +4717,7 @@ int_t World::computeBlockLightValue(int_t currentLight, int_t x, int_t y, int_t 
     return result;
 }
 
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 // A few deferred light updates a tick: the ones whose surroundings have
 // loaded since are run (and leave the list); the rest wait their turn.
 void World::retryDeferredLightUpdates()
@@ -4758,7 +4758,7 @@ void World::updateLightByType(EnumSkyBlock *type, int_t x, int_t y, int_t z)
 #else
     if (!doChunksNearChunkExist(x, y, z, 17))
     {
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
         if (deferredLightUpdates.size() < 2048)
             deferredLightUpdates.push_back({type, x, y, z});
 #endif
@@ -5059,7 +5059,7 @@ void World::tick()
     platformPhaseStartNs = System::nanoTime();
 #endif
     chunkProvider->unload100OldestChunks();
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
     retryDeferredLightUpdates();
 #endif
 #if PLATFORM_PROFILE_RENDER_PHASES
@@ -5071,7 +5071,7 @@ void World::tick()
     if (i != skylightSubtracted)
     {
         skylightSubtracted = i;
-#if !PLATFORM_XBOX
+#if !(PLATFORM_XBOX || PLATFORM_PS3)
         for (size_t j = 0; j < worldAccesses.size(); j++)
             worldAccesses[j]->updateAllRenderers();
 #endif
@@ -5762,7 +5762,7 @@ void World::randomDisplayUpdates(int x, int y, int z)
             const float_t particleX = rand.nextFloat();
             const float_t particleY = rand.nextFloat();
             const float_t particleZ = rand.nextFloat();
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
             // Void particles near bedrock: one in eight on the Xbox (each is a
             // live entity to tick and draw). A plain counter, so the world's
             // random sequence is the same as before.

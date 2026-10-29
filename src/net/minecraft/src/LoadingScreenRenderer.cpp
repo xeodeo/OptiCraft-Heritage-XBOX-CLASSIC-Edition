@@ -17,7 +17,7 @@
 #include "legacy/LegacyPanorama.h"
 #include "legacy/LegacySceneState.h"
 #include "legacy/LegacyUiAssets.h"
-#include "pc/lwjgl/Display.h"
+#include "lwjgl/Display.h"
 
 namespace
 {

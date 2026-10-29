@@ -10,7 +10,7 @@
 #include "net/minecraft/src/legacy/startup/StartupInput.h"
 #include "net/minecraft/src/legacy/startup/StartupMusicPolicy.h"
 #include "net/minecraft/src/legacy/startup/StartupPresentationPolicy.h"
-#include "pc/lwjgl/Display.h"
+#include "lwjgl/Display.h"
 #include "platform/Log.h"
 #include "platform/RenderAPI.h"
 #include "platform/Storage.h"

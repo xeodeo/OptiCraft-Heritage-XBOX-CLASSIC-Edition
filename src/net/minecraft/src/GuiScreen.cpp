@@ -9,14 +9,14 @@
 #include "FontRenderer.h"
 #include "RenderEngine.h"
 #include "platform/RenderAPI.h"
-#include "pc/lwjgl/Keyboard.h"
-#include "pc/lwjgl/Mouse.h"
+#include "lwjgl/Keyboard.h"
+#include "lwjgl/Mouse.h"
 #include "platform/PlatformTuning.h"
 #include "platform/Input.h"
-#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
+#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX && !PLATFORM_PS3
 #include "SDL_clipboard.h"
 #endif
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 #include "VirtualKeyboard.h"
 #include "ContainerSlotNavigator.h"
 #include "GuiContainer.h"
@@ -43,11 +43,11 @@ namespace
 bool menuPointerInputSuppressed(Minecraft *mc, const GuiScreen *screen = nullptr)
 {
 	const GuiScreen *target = (screen != nullptr) ? screen : (mc != nullptr ? mc->currentScreen : nullptr);
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 	if (target != nullptr && target->suppressesPlatformPointerInput())
 		return true;
 #endif
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
 	return mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI &&
 	       (target == nullptr || !target->allowsPlatformPointerInput());
 #elif PLATFORM_WII
@@ -64,11 +64,11 @@ bool menuPointerInputSuppressed(Minecraft *mc, const GuiScreen *screen = nullptr
 bool menuCursorSuppressed(Minecraft *mc, const GuiScreen *screen = nullptr)
 {
 	const GuiScreen *target = (screen != nullptr) ? screen : (mc != nullptr ? mc->currentScreen : nullptr);
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 	if (target != nullptr && target->suppressesPlatformPointerInput())
 		return true;
 #endif
-#if PLATFORM_PS2 || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_XBOX || PLATFORM_PS3
 	if (!platformMenuCursorVisible())
 		return true;
 	if (mc == nullptr || mc->gameSettings == nullptr || !mc->gameSettings->legacyUI)
@@ -173,7 +173,7 @@ void GuiScreen::keyTyped(char_t c, int_t key)
 jstring GuiScreen::getClipboardString()
 {
 	// SDL clipboard
-#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
+#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX && !PLATFORM_PS3
 	char *text = SDL_GetClipboardText();
 	if (text)
 	{
@@ -187,7 +187,7 @@ jstring GuiScreen::getClipboardString()
 
 void GuiScreen::setClipboardString(const std::string &text)
 {
-#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
+#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX && !PLATFORM_PS3
 	SDL_SetClipboardText(text.c_str());
 #else
 	(void)text;
@@ -296,7 +296,7 @@ void GuiScreen::handleInput()
 		return;
 	}
 #endif
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 	// Console GUI helpers consume the platform snapshot here, after the native
 	// backend has published this frame's controller state and before queued
 	// mouse/keyboard events are dispatched to the screen. Keeping this routing
@@ -305,7 +305,7 @@ void GuiScreen::handleInput()
 	VirtualKeyboard::instance().tick();
 	if (!platformTextInputExclusive())
 		ContainerSlotNavigator::instance(getOwnerPlayerIndex()).tick();
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 	handleConsoleJavaUiNavigation();
 #endif
 #endif
@@ -374,7 +374,7 @@ bool GuiScreen::isJavaUiKeyboardNavigationEnabled() const
 		return false;
 	if (platformPadRebindExclusive() || platformContainerNavigationActive())
 		return false;
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 	if (platformTextInputExclusive())
 		return false;
 #endif
@@ -515,7 +515,7 @@ bool GuiScreen::handleJavaUiNavigationKey(int_t key)
 
 void GuiScreen::moveMenuCursorToKeyboardSelection()
 {
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 	if (mc == nullptr || keyboardSelectedControlIndex < 0 ||
 		keyboardSelectedControlIndex >= static_cast<int_t>(controlList.size()) || width <= 0 || height <= 0)
 		return;
@@ -543,7 +543,7 @@ void GuiScreen::clearKeyboardSelectionFromPointer()
 	}
 }
 
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 void GuiScreen::handleConsoleJavaUiNavigation()
 {
 	if (!isJavaUiKeyboardNavigationEnabled())
@@ -580,7 +580,7 @@ void GuiScreen::handleConsoleJavaUiNavigation()
 		moveKeyboardSelection(-1);
 	else if ((pad.pressed & PLATFORM_TEXT_DOWN) != 0)
 		moveKeyboardSelection(1);
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
 	// Left/right adjust a slider; on anything else they step between buttons,
 	// so side-by-side choices (GuiYesNo's Yes/Cancel) are reachable.
 	else if ((pad.pressed & PLATFORM_TEXT_LEFT) != 0)
@@ -681,7 +681,7 @@ void GuiScreen::selectNextField()
 
 void GuiScreen::handleSplitscreenPlayerInput()
 {
-#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX || PLATFORM_PS3
 	const int pIdx = getOwnerPlayerIndex();
 	if (mc == nullptr || pIdx < 0 || pIdx >= 2)
 		return;

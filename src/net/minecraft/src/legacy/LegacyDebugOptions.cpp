@@ -15,7 +15,7 @@
 #include "net/minecraft/src/PlayerControllerSP.h"
 #include "net/minecraft/src/World.h"
 #include "net/minecraft/src/WorldInfo.h"
-#include "pc/lwjgl/Keyboard.h"
+#include "lwjgl/Keyboard.h"
 
 namespace
 {

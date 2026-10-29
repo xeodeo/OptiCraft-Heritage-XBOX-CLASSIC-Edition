@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <chrono>
 
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
-#include "pc/lwjgl/Mouse.h"
-#include "pc/lwjgl/Display.h"
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
+#include "lwjgl/Mouse.h"
+#include "lwjgl/Display.h"
 #else
 #include <SDL.h>
 #endif
@@ -25,6 +25,10 @@ extern "C" void __stdcall Sleep(unsigned long dwMilliseconds);
 uint64_t xboxGetMonotonicMicros();
 #endif
 
+#ifdef PS3_PLATFORM
+#include "ps3/system/Ps3Clock.h"
+#endif
+
 // Small platform layer for code that is shared by PC and the console ports.
 // Keep direct SDL calls inside this file or inside src/pc only.
 namespace PlatformCompat
@@ -42,6 +46,8 @@ inline uint32_t getTicks()
     return static_cast<uint32_t>(duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count());
 #elif defined(XBOX_PLATFORM)
     return static_cast<uint32_t>(GetTickCount());
+#elif defined(PS3_PLATFORM)
+    return ps3GetTicksMs();
 #else
     return SDL_GetTicks();
 #endif
@@ -73,6 +79,8 @@ inline uint64_t getMonotonicMicros()
     return static_cast<uint64_t>(ps2_ee_micros());
 #elif defined(XBOX_PLATFORM)
     return xboxGetMonotonicMicros();
+#elif defined(PS3_PLATFORM)
+    return ps3GetMonotonicMicros();
 #else
     using namespace std::chrono;
     return static_cast<uint64_t>(duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count());
@@ -90,6 +98,8 @@ inline void delay(uint32_t ms)
     (void)ms;
 #elif defined(XBOX_PLATFORM)
     if (ms) Sleep(ms);
+#elif defined(PS3_PLATFORM)
+    ps3SleepMs(ms);
 #else
     SDL_Delay(ms);
 #endif
@@ -97,7 +107,7 @@ inline void delay(uint32_t ms)
 
 inline void setSmoothInputThreadPriority(bool enabled)
 {
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
     // C6's Smooth Input is a JVM main-thread priority tweak. The console ports
     // have different scheduler/audio/input constraints, so changing their main
     // thread priority here would be a new platform policy rather than a faithful
@@ -119,7 +129,7 @@ inline void setSmoothInputThreadPriority(bool enabled)
 
 inline void getMouseState(int *x, int *y)
 {
-#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
+#if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(PS3_PLATFORM)
     // LWJGL Mouse::getY() is bottom-left origin. SDL_GetMouseState() is
     // top-left origin, and shared GUI code expects that here.
     if (x) *x = lwjgl::Mouse::getX();

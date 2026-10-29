@@ -47,9 +47,9 @@
 #include "ICamera.h"
 #include "RenderEngine.h"
 #include "RenderHelper.h"
-#include "pc/lwjgl/Display.h"
-#include "pc/lwjgl/Keyboard.h"
-#include "pc/lwjgl/Mouse.h"
+#include "lwjgl/Display.h"
+#include "lwjgl/Keyboard.h"
+#include "lwjgl/Mouse.h"
 #include "InventoryPlayer.h"
 #include "WorldChunkManager.h"
 #include "BiomeGenBase.h"
@@ -570,7 +570,7 @@ void EntityRenderer::enableLightmap(double)
 #else
     if (lightmapTexture < 0)
         return;
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
     // Fullbright option: leave the lightmap unit off, so everything is drawn
     // at full light.
     if (mc->gameSettings->fullbright)
@@ -1424,7 +1424,7 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
     }
     else if (mc->gameSettings->limitFramerate == 2)
     {
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
         fpsLimitChar = 30;   // 30 FPS: Present waits for every other vblank
 #else
         fpsLimitChar = '(';  // ~40 fps
@@ -1434,7 +1434,7 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
     // Si limitFramerate es 0 (ilimitado) o tiene un valor anómalo, establecemos 120L para evitar congelamiento fatal en PowerPC.
     const long limitFps = (fpsLimitChar > '\0') ? static_cast<long>(fpsLimitChar) : 120L;
     
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
     // Xbox: the gamma ramp covers the whole picture, menus and HUD included,
     // as on the console editions; it follows the option every frame.
     renderSetLegacyPresentationGamma(mc->gameSettings != nullptr && mc->gameSettings->legacyLook);
@@ -1495,7 +1495,7 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
         
         setupOverlayRendering();
         
-        if (mc->gameSettings->limitFramerate == 2 && !PLATFORM_XBOX)
+        if (mc->gameSettings->limitFramerate == 2 && !(PLATFORM_XBOX || PLATFORM_PS3))
         {
             int64_t sleepTime = (field_28133_I + (int64_t)(1000000000LL / limitFps) - 
                                 std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -1836,7 +1836,7 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
 #if PLATFORM_PROFILE_RENDER_PHASES
             const std::uint32_t cycBuild = platformProfileRenderPhaseBegin();
 #endif
-#if PLATFORM_XBOX
+#if PLATFORM_XBOX || PLATFORM_PS3
             // With a frame cap the vanilla loop rebuilds chunks until the frame
             // deadline, and everything drawn after it then misses the vblank
             // (30 FPS became 25). Give it a fixed slice of the frame instead.
