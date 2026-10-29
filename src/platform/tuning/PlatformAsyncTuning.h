@@ -37,6 +37,21 @@
 // the oldest request. The queue is at most QUEUE_LIMIT entries, so the scan
 // is a handful of compares per column.
 #    define PLATFORM_ASYNC_NEAREST_FIRST                 1
+#  elif PLATFORM_PS3
+// The Cell PPU runs two hardware threads and the game used one: terrain and
+// cave buffers are built on the second, with the Xbox async-IO settings.
+#    define PLATFORM_ASYNC_GENERATION_QUEUE_LIMIT        16
+#    define PLATFORM_ASYNC_GENERATION_REQUESTS_PER_TICK  4
+#    define PLATFORM_ASYNC_GENERATION_PUBLISH_PER_TICK   4
+#    ifndef PLATFORM_ASYNC_GENERATION_THREAD_PRIORITY
+#      define PLATFORM_ASYNC_GENERATION_THREAD_PRIORITY    64
+#    endif
+#    define PLATFORM_ASYNC_GENERATION_AFFINITY_MASK      0
+#    define PLATFORM_ASYNC_ISOLATED_BIOME_SOURCE         1
+#    define PLATFORM_ASYNC_GENERATION_REQUESTS_PER_FRAME 4
+#    define PLATFORM_ASYNC_GENERATION_PUBLISH_PER_FRAME  4
+#    define PLATFORM_ASYNC_CHUNK_DECODE                  1
+#    define PLATFORM_ASYNC_NEAREST_FIRST                 1
 #  else
 #    if XBOX_ASYNC_CHUNK_IO
 #      define PLATFORM_ASYNC_GENERATION_QUEUE_LIMIT        16
