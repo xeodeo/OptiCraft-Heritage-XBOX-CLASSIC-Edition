@@ -15,7 +15,8 @@
 // verify mode found a difference, the PPU renders the SPU's blocks right there.
 // The SPU's vertices are the Tessellator's own; the first
 // PS3_SPU_MESH_VERIFY_SECTIONS sections are also meshed on the PPU and compared
-// field by field, and any difference keeps meshing on the PPU for the session.
+// in full: position, UV and brightness exactly, colour bytes within +-1. Any
+// difference out of that tolerance keeps meshing on the PPU for the session.
 
 #include "platform/PlatformConfig.h"
 

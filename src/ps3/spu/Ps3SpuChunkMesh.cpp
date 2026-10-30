@@ -234,14 +234,43 @@ namespace
         return blocks;
     }
 
-    const char *fieldName(int field)
+    // Verify totals over all verified sections (worker thread only).
+    struct VerifyTotals
     {
-        static const char *const kNames[8] = {"x", "y", "z", "u", "v", "colour", "normal", "brightness"};
-        return field >= 0 && field < 8 ? kNames[field] : "?";
+        long sections = 0;
+        long vertices = 0;
+        long exactSections = 0;
+        long colourOffByOneVertices = 0;   // within tolerance
+        long colourBadVertices = 0;        // a colour byte off by more than 1
+        long otherBadVertices = 0;         // position, UV or brightness differ
+        long countMismatchSections = 0;    // different number of vertices
+        long badSections = 0;              // any difference out of tolerance
+        int maxColourDiff = 0;
+        bool loggedOffByOne = false;
+        bool loggedBad = false;
+    };
+    VerifyTotals s_verify;
+
+    void logVertexPair(const char *what, int_t x0, int_t y0, int_t z0, int v, const std::uint32_t *p,
+        const std::uint32_t *s)
+    {
+        float px, py, pz;
+        std::memcpy(&px, &p[0], 4);
+        std::memcpy(&py, &p[1], 4);
+        std::memcpy(&pz, &p[2], 4);
+        MC_LOG_WARN("ps3.spumesh",
+            "verify: %s at section %d,%d,%d vertex %d (quad %d corner %d, local %.0f,%.0f,%.0f): "
+            "PPU %08x %08x %08x %08x %08x %08x %08x, SPU %08x %08x %08x %08x %08x %08x %08x\n",
+            what, (int)x0, (int)y0, (int)z0, v, v / 4, v % 4, px, py, pz,
+            (unsigned)p[0], (unsigned)p[1], (unsigned)p[2], (unsigned)p[3], (unsigned)p[4], (unsigned)p[5],
+            (unsigned)p[7], (unsigned)s[0], (unsigned)s[1], (unsigned)s[2], (unsigned)s[3], (unsigned)s[4],
+            (unsigned)s[5], (unsigned)s[7]);
     }
 
-    // Compares the SPU's vertices with the PPU's (all fields but the unused
-    // normal). True when they are equal.
+    // Compares the SPU's vertices with the PPU's over the whole section.
+    // Position, UV and brightness must be equal; each colour byte may be off
+    // by one (shading, not terrain). Returns true when the section is within
+    // that tolerance.
     bool verify(Ticket &ticket, PcLegacySectionCache &cache, int_t x0, int_t y0, int_t z0)
     {
         if (s_verifyTessellator == nullptr)
@@ -255,59 +284,76 @@ namespace
         const int spuCount = static_cast<int>(ticket.input.resultVertices);
         const std::uint32_t *ppu = reinterpret_cast<const std::uint32_t *>(tess.pendingRawVertices());
         const std::uint32_t *spu = ticket.output;
-        bool equal = ppuCount == spuCount;
-        int badVertex = -1;
-        int badField = -1;
-        if (equal)
+
+        ++s_verify.sections;
+        bool withinTolerance = true;
+        bool exact = true;
+        if (ppuCount != spuCount)
         {
-            for (int v = 0; v < ppuCount && equal; ++v)
+            ++s_verify.countMismatchSections;
+            withinTolerance = false;
+            exact = false;
+            MC_LOG_WARN("ps3.spumesh", "verify: section %d,%d,%d has %d PPU vertices and %d SPU vertices\n",
+                (int)x0, (int)y0, (int)z0, ppuCount, spuCount);
+        }
+        else
+        {
+            s_verify.vertices += ppuCount;
+            for (int v = 0; v < ppuCount; ++v)
             {
-                for (int field = 0; field < 8; ++field)
+                const std::uint32_t *p = &ppu[v * 8];
+                const std::uint32_t *q = &spu[v * 8];
+                const bool otherBad = p[0] != q[0] || p[1] != q[1] || p[2] != q[2] || p[3] != q[3] ||
+                    p[4] != q[4] || p[7] != q[7];
+                int colourDiff = 0;
+                for (int shift = 8; shift < 32; shift += 8)
                 {
-                    if (field == 6)
-                        continue;
-                    if (ppu[v * 8 + field] != spu[v * 8 + field])
+                    const int a = static_cast<int>((p[5] >> shift) & 0xffu);
+                    const int b = static_cast<int>((q[5] >> shift) & 0xffu);
+                    const int d = a > b ? a - b : b - a;
+                    if (d > colourDiff)
+                        colourDiff = d;
+                }
+                if ((p[5] & 0xffu) != (q[5] & 0xffu))
+                    colourDiff = 255;   // alpha must match
+                if (colourDiff > s_verify.maxColourDiff)
+                    s_verify.maxColourDiff = colourDiff;
+                if (otherBad || colourDiff != 0)
+                    exact = false;
+                if (otherBad)
+                    ++s_verify.otherBadVertices;
+                if (colourDiff > 1)
+                    ++s_verify.colourBadVertices;
+                else if (colourDiff == 1)
+                    ++s_verify.colourOffByOneVertices;
+
+                if (otherBad || colourDiff > 1)
+                {
+                    withinTolerance = false;
+                    if (!s_verify.loggedBad)
                     {
-                        equal = false;
-                        badVertex = v;
-                        badField = field;
-                        break;
+                        s_verify.loggedBad = true;
+                        logVertexPair("difference out of tolerance", x0, y0, z0, v, p, q);
                     }
+                }
+                else if (colourDiff == 1 && !s_verify.loggedOffByOne)
+                {
+                    s_verify.loggedOffByOne = true;
+                    logVertexPair("first colour off by one (tolerated)", x0, y0, z0, v, p, q);
                 }
             }
         }
+        if (exact)
+            ++s_verify.exactSections;
+        if (!withinTolerance)
+            ++s_verify.badSections;
 
         s_statVerified.fetch_add(1, std::memory_order_relaxed);
-        if (!equal)
-        {
+        if (!withinTolerance)
             s_statVerifyMismatches.fetch_add(1, std::memory_order_relaxed);
-            if (badVertex < 0)
-            {
-                MC_LOG_WARN("ps3.spumesh", "verify: mismatch at section %d,%d,%d: PPU %d vertices, SPU %d\n",
-                    (int)x0, (int)y0, (int)z0, ppuCount, spuCount);
-            }
-            else
-            {
-                const std::uint32_t *p = &ppu[badVertex * 8];
-                const std::uint32_t *s = &spu[badVertex * 8];
-                float px, py, pz;
-                std::memcpy(&px, &p[0], 4);
-                std::memcpy(&py, &p[1], 4);
-                std::memcpy(&pz, &p[2], 4);
-                MC_LOG_WARN("ps3.spumesh",
-                    "verify: mismatch at section %d,%d,%d vertex %d (face %d corner %d, local %.0f,%.0f,%.0f) "
-                    "field %s: PPU 0x%08x SPU 0x%08x; PPU vtx %08x %08x %08x %08x %08x %08x %08x, "
-                    "SPU vtx %08x %08x %08x %08x %08x %08x %08x\n",
-                    (int)x0, (int)y0, (int)z0, badVertex, badVertex / 4, badVertex % 4, px, py, pz,
-                    fieldName(badField), (unsigned)p[badField], (unsigned)s[badField],
-                    (unsigned)p[0], (unsigned)p[1], (unsigned)p[2], (unsigned)p[3], (unsigned)p[4], (unsigned)p[5],
-                    (unsigned)p[7], (unsigned)s[0], (unsigned)s[1], (unsigned)s[2], (unsigned)s[3], (unsigned)s[4],
-                    (unsigned)s[5], (unsigned)s[7]);
-            }
-        }
         tess.cancelDrawing();
         tess.setTranslationD(0.0, 0.0, 0.0);
-        return equal;
+        return withinTolerance;
     }
 }
 
@@ -461,17 +507,30 @@ void ps3SpuMeshEnd(int slot, PcLegacySectionCache &cache, Tessellator &tessellat
 
     if (useSpu && s_verifyRemaining > 0)
     {
+        // Every verified section is compared in full; one out of tolerance
+        // uses the PPU's mesh, and at the end any such section turns the SPU
+        // off for the session.
         --s_verifyRemaining;
         if (!verify(ticket, cache, x0, y0, z0))
-        {
             useSpu = false;
-            s_disabled.store(true, std::memory_order_relaxed);
-            MC_LOG_WARN("ps3.spumesh", "SPU vertices differ from the PPU's; sections stay on the PPU worker\n");
-        }
-        else if (s_verifyRemaining == 0)
+        if (s_verifyRemaining == 0)
         {
-            MC_LOG_INFO("ps3.spumesh", "verify: %d sections bit-for-bit equal; SPU meshing only from now on\n",
-                PS3_SPU_MESH_VERIFY_SECTIONS);
+            const VerifyTotals &t = s_verify;
+            MC_LOG_INFO("ps3.spumesh",
+                "verify done: %ld sections (%ld exact), %ld vertices; colour off by 1: %ld vertices, "
+                "colour off by more: %ld, other fields: %ld, vertex-count mismatches: %ld sections; "
+                "max colour diff %d; %ld sections out of tolerance\n",
+                t.sections, t.exactSections, t.vertices, t.colourOffByOneVertices, t.colourBadVertices,
+                t.otherBadVertices, t.countMismatchSections, t.maxColourDiff, t.badSections);
+            if (t.badSections > 0)
+            {
+                s_disabled.store(true, std::memory_order_relaxed);
+                MC_LOG_WARN("ps3.spumesh", "SPU vertices out of tolerance; sections stay on the PPU worker\n");
+            }
+            else
+            {
+                MC_LOG_INFO("ps3.spumesh", "verify: within tolerance (colour +-1); SPU meshing only from now on\n");
+            }
         }
     }
 
@@ -524,7 +583,7 @@ void ps3SpuMeshLogCounters()
     // SPU decrementer = timebase, 79.8 MHz.
     const long spuUs = static_cast<long>(static_cast<long long>(spuTicks) * 10 / 798);
     const long totalBlocks = spuBlocks + ppuBlocks;
-    const char *state = s_disabled.load(std::memory_order_relaxed) ? "OFF (verify mismatch)"
+    const char *state = s_disabled.load(std::memory_order_relaxed) ? "OFF (verify out of tolerance)"
         : (s_verifyRemaining > 0 ? "verifying" : "verified");
     MC_LOG_INFO("ps3.spumesh",
         "sections=%ld spuUs=%ld (%ld us/section) waitUs=%ld (%ld us/section) roundTrip=%ld us/section "

@@ -108,8 +108,9 @@
 #define PS3_SPU_NOISE_VERIFY_CALLS               200
 // Section meshing on the SPUs (PLATFORM_SPU_CHUNK_MESH, src/ps3/spu/Ps3SpuChunkMesh.cpp):
 // the first sections are also meshed on the PPU and compared vertex for vertex
-// ("ps3.spumesh verify" in the log); any difference keeps meshing on the PPU
-// for the session. Output room per section in flight (32 bytes a vertex); a
+// ("ps3.spumesh verify" in the log): position, UV and brightness exactly, each
+// colour byte within +-1; anything out of that keeps meshing on the PPU for the
+// session. Output room per section in flight (32 bytes a vertex); a
 // section that needs more is rendered by the PPU worker.
 #define PS3_SPU_MESH_VERIFY_SECTIONS             64
 #define PS3_SPU_MESH_OUTPUT_VERTICES             12288

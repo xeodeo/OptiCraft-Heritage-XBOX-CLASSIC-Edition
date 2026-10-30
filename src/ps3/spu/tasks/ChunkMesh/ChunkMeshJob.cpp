@@ -9,7 +9,8 @@
 
    Floats: SPU single precision truncates and has no denormals, so every float
    operation of the AO path goes through sf, which does it in IEEE double and
-   rounds to float (innocuous double rounding for + - * /: 53 >= 2*24+2). */
+   rounds to nearest float by hand (innocuous double rounding for + - * /:
+   53 >= 2*24+2). */
 
 #include <stdint.h>
 #include <spu_intrinsics.h>
@@ -22,12 +23,21 @@
 namespace
 {
 	// ---- IEEE single precision via double ---------------------------------
+	// Double to float, round to nearest even, done on the bits: the SPU's frds
+	// does not round like the PPU (on the console it gave 0.79999995 where the
+	// PPU had 0.8, one colour step off). Our values are normal floats, so
+	// rounding the 52-bit mantissa to 23 bits in place leaves a double that is
+	// exactly a float, and frds then has nothing left to round. The asm also
+	// keeps gcc from narrowing (float)((double)a op (double)b) into the SPU's
+	// non-IEEE single precision instruction.
 	inline float roundToFloat(double d)
 	{
-		// Keeps gcc from narrowing (float)((double)a op (double)b) into the SPU's
-		// non-IEEE single precision instruction.
 		__asm__ volatile("" : "+r"(d));
-		return (float)d;
+		union { double d; unsigned long long u; } c;
+		c.d = d;
+		c.u += 0x0FFFFFFFull + ((c.u >> 29) & 1ull);
+		c.u &= ~0x1FFFFFFFull;
+		return (float)c.d;
 	}
 
 	struct sf
@@ -208,10 +218,10 @@ namespace
 		const int tu = (tile & 0xf) << 4;
 		const int tv = tile & 0xf0;
 		// ((j + min*16) / 256) and ((j + max*16) - 0.01) / 256, in double.
-		const unsigned int u0 = floatBits((float)((double)tu / 256.0));
-		const unsigned int u1 = floatBits((float)(((double)(tu + 16) - 0.01) / 256.0));
-		const unsigned int v0 = floatBits((float)((double)tv / 256.0));
-		const unsigned int v1 = floatBits((float)(((double)(tv + 16) - 0.01) / 256.0));
+		const unsigned int u0 = floatBits(roundToFloat((double)tu / 256.0));
+		const unsigned int u1 = floatBits(roundToFloat(((double)(tu + 16) - 0.01) / 256.0));
+		const unsigned int v0 = floatBits(roundToFloat((double)tv / 256.0));
+		const unsigned int v1 = floatBits(roundToFloat(((double)(tv + 16) - 0.01) / 256.0));
 		// Section-local position: the worker's translation is minus the origin.
 		const int x = ci - 1, y = cj - 1, z = ck - 1;
 
