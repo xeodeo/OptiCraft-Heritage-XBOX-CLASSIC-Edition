@@ -1722,6 +1722,7 @@ void World::notifyBlockChange(int x, int y, int z, int blockId)
     // neighbours to react; the chunk gets one light/mesh pass when published.
     if (chunkLocalDecoration.isActive())
         return;
+    PS3_DIRTY_SOURCE(PS3_DIRTY_BLOCK);
     markBlockNeedsUpdate(x, y, z);
     notifyBlocksOfNeighborChange(x, y, z, blockId);
 }

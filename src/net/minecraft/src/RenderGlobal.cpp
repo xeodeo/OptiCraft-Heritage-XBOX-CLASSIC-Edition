@@ -3058,6 +3058,7 @@ long s_ps3DirtyCalls = 0;
 long s_ps3DirtyNew = 0;
 long s_ps3DirtyLight = 0;
 long s_ps3DirtyEdit = 0;
+long s_ps3DirtyBySource[PS3_DIRTY_SOURCE_COUNT] = {};
 std::uint64_t s_ps3DirtyLogUs = 0;
 }
 #endif
@@ -3070,11 +3071,15 @@ void RenderGlobal::markRenderersInRange(int_t i, int_t j, int_t k, int_t l, int_
 	if (dirtyNowUs - s_ps3DirtyLogUs >= 5000000ULL)
 	{
 		if (s_ps3DirtyLogUs != 0)
-			MC_LOG_INFO("ps3.dirty", "marks=%ld newlyDirty=%ld light=%ld edit=%ld other=%ld\n", s_ps3DirtyCalls,
-			            s_ps3DirtyNew, s_ps3DirtyLight, s_ps3DirtyEdit,
-			            s_ps3DirtyNew - s_ps3DirtyLight - s_ps3DirtyEdit);
+			MC_LOG_INFO("ps3.dirty", "marks=%ld newlyDirty=%ld light=%ld edit=%ld | publish=%ld populate=%ld "
+			            "skylight=%ld block=%ld other=%ld\n", s_ps3DirtyCalls, s_ps3DirtyNew, s_ps3DirtyLight,
+			            s_ps3DirtyEdit, s_ps3DirtyBySource[PS3_DIRTY_PUBLISH], s_ps3DirtyBySource[PS3_DIRTY_POPULATE],
+			            s_ps3DirtyBySource[PS3_DIRTY_SKYLIGHT], s_ps3DirtyBySource[PS3_DIRTY_BLOCK],
+			            s_ps3DirtyBySource[PS3_DIRTY_OTHER]);
 		s_ps3DirtyLogUs = dirtyNowUs;
 		s_ps3DirtyCalls = s_ps3DirtyNew = s_ps3DirtyLight = s_ps3DirtyEdit = 0;
+		for (long &count : s_ps3DirtyBySource)
+			count = 0;
 	}
 #endif
 	int_t k1 = MathHelper::bucketInt(i, 16);
@@ -3158,6 +3163,8 @@ void RenderGlobal::markRenderersInRange(int_t i, int_t j, int_t k, int_t l, int_
 				if (!worldrenderer->needsUpdate)
 				{
 					++s_ps3DirtyNew;
+					if (g_ps3DirtySource >= 0 && g_ps3DirtySource < PS3_DIRTY_SOURCE_COUNT)
+						++s_ps3DirtyBySource[g_ps3DirtySource];
 					if (worldObj != nullptr && worldObj->isMarkingFromLighting())
 						++s_ps3DirtyLight;
 					else if (worldObj != nullptr && worldObj->isMarkingFromPlayerEdit())

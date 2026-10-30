@@ -21,6 +21,7 @@
 
 extern "C" void ps3PlatformLogWrite(const char* line);
 extern "C" const char* volatile g_ps3Stage = "start";
+int g_ps3DirtySource = PS3_DIRTY_OTHER;
 extern "C" volatile double g_ps3StageValues[6] = {};
 
 namespace

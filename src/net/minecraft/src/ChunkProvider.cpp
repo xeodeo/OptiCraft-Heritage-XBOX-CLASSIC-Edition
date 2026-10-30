@@ -265,6 +265,7 @@ void ChunkProvider::notifyChunkPublished(Chunk *chunk)
 	// builds detect source availability changes themselves in WorldRenderer.
 	const int_t minX = JavaArithmetic::intMul(chunk->xPosition, 16);
 	const int_t minZ = JavaArithmetic::intMul(chunk->zPosition, 16);
+	PS3_DIRTY_SOURCE(PS3_DIRTY_PUBLISH);
 	worldObj->markBlocksDirty(minX + 1, 1, minZ + 1,
 	                          minX + 14, 126, minZ + 14);
 #if PLATFORM_PS2
@@ -1257,6 +1258,7 @@ bool ChunkProvider::populateDeferredBatch(int_t i, int_t j, int_t maxSteps, long
 				const int_t minX = JavaArithmetic::intMul(footprintChunk->xPosition, 16);
 				const int_t minY = sectionY << 4;
 				const int_t minZ = JavaArithmetic::intMul(footprintChunk->zPosition, 16);
+				PS3_DIRTY_SOURCE(PS3_DIRTY_POPULATE);
 				worldObj->markBlocksDirty(minX, minY, minZ,
 				                          JavaArithmetic::intAdd(minX, 15), minY + 15,
 				                          JavaArithmetic::intAdd(minZ, 15));

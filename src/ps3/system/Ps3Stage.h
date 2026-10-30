@@ -17,6 +17,27 @@ struct Ps3StageScope
     ~Ps3StageScope() { g_ps3Stage = previous; }
 };
 #define PS3_STAGE_SCOPE(name) Ps3StageScope ps3StageScope_(name)
+
+// Who is marking render sections dirty, for the "ps3.dirty" counters in
+// RenderGlobal::markRenderersInRange. Main thread only, like the stage.
+enum Ps3DirtySource
+{
+    PS3_DIRTY_OTHER = 0,
+    PS3_DIRTY_PUBLISH,     // a chunk column became resident
+    PS3_DIRTY_POPULATE,    // decoration wrote into loaded sections
+    PS3_DIRTY_SKYLIGHT,    // Chunk::generateSkylightMap and neighbours
+    PS3_DIRTY_BLOCK,       // World::notifyBlockChange (setBlock path)
+    PS3_DIRTY_SOURCE_COUNT
+};
+extern int g_ps3DirtySource;
+struct Ps3DirtySourceScope
+{
+    int previous;
+    explicit Ps3DirtySourceScope(int source) : previous(g_ps3DirtySource) { g_ps3DirtySource = source; }
+    ~Ps3DirtySourceScope() { g_ps3DirtySource = previous; }
+};
+#define PS3_DIRTY_SOURCE(source) Ps3DirtySourceScope ps3DirtySourceScope_(source)
 #else
 #define PS3_STAGE_SCOPE(name) ((void)0)
+#define PS3_DIRTY_SOURCE(source) ((void)0)
 #endif

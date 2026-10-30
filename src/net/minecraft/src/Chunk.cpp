@@ -1,4 +1,5 @@
 #include "Chunk.h"
+#include "ps3/system/Ps3Stage.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -349,6 +350,7 @@ void Chunk::generateSkylightMap()
 
 void Chunk::generateSkylightMap(const std::uint32_t *columnMask)
 {
+	PS3_DIRTY_SOURCE(PS3_DIRTY_SKYLIGHT);
 	WORLD_LOAD_STAGE("generateSkylightMap");
 	WorldLoadTrace::step("columns");
 	const int_t top = getTopFilledSegment();
@@ -641,6 +643,7 @@ bool Chunk::skylightNeighboursLoaded(int_t worldX, int_t worldZ,
 
 void Chunk::updateSkylight_do()
 {
+	PS3_DIRTY_SOURCE(PS3_DIRTY_SKYLIGHT);
 	if (worldObj == nullptr || !worldObj->doChunksNearChunkExist(JavaArithmetic::intAdd(JavaArithmetic::intMul(xPosition, 16), 8), 0, JavaArithmetic::intAdd(JavaArithmetic::intMul(zPosition, 16), 8), 16))
 		return;
 
@@ -715,6 +718,7 @@ void Chunk::updateSkylightNeighborHeight(int_t i, int_t j, int_t minY, int_t max
 
 void Chunk::relightBlock(int_t i, int_t j, int_t k)
 {
+	PS3_DIRTY_SOURCE(PS3_DIRTY_SKYLIGHT);
 	const int_t columnIndex = k << 4 | i;
 	const int_t oldHeight = heightMap[columnIndex];
 	int_t newHeight = std::max(j, oldHeight);
