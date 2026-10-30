@@ -3051,8 +3051,33 @@ void RenderGlobal::onChunkPublished(int_t chunkX, int_t chunkZ)
 #endif
 }
 
+#if PLATFORM_PS3 && PLATFORM_INCREMENTAL_TERRAIN_BUILD
+namespace
+{
+long s_ps3DirtyCalls = 0;
+long s_ps3DirtyNew = 0;
+long s_ps3DirtyLight = 0;
+long s_ps3DirtyEdit = 0;
+std::uint64_t s_ps3DirtyLogUs = 0;
+}
+#endif
+
 void RenderGlobal::markRenderersInRange(int_t i, int_t j, int_t k, int_t l, int_t i1, int_t j1) // func_949_a
 {
+#if PLATFORM_PS3 && PLATFORM_INCREMENTAL_TERRAIN_BUILD
+	++s_ps3DirtyCalls;
+	const std::uint64_t dirtyNowUs = PlatformCompat::getMonotonicMicros();
+	if (dirtyNowUs - s_ps3DirtyLogUs >= 5000000ULL)
+	{
+		if (s_ps3DirtyLogUs != 0)
+			MC_LOG_INFO("ps3.dirty", "marks=%ld newlyDirty=%ld light=%ld edit=%ld other=%ld
+", s_ps3DirtyCalls,
+			            s_ps3DirtyNew, s_ps3DirtyLight, s_ps3DirtyEdit,
+			            s_ps3DirtyNew - s_ps3DirtyLight - s_ps3DirtyEdit);
+		s_ps3DirtyLogUs = dirtyNowUs;
+		s_ps3DirtyCalls = s_ps3DirtyNew = s_ps3DirtyLight = s_ps3DirtyEdit = 0;
+	}
+#endif
 	int_t k1 = MathHelper::bucketInt(i, 16);
 	int_t l1 = MathHelper::bucketInt(j, 16);
 	int_t i2 = MathHelper::bucketInt(k, 16);
@@ -3129,6 +3154,17 @@ void RenderGlobal::markRenderersInRange(int_t i, int_t j, int_t k, int_t l, int_
 					}
 				}
 #elif PLATFORM_INCREMENTAL_TERRAIN_BUILD
+#if PLATFORM_PS3
+				// Who keeps sections dirty: logged every 5 s as "ps3.dirty".
+				if (!worldrenderer->needsUpdate)
+				{
+					++s_ps3DirtyNew;
+					if (worldObj != nullptr && worldObj->isMarkingFromLighting())
+						++s_ps3DirtyLight;
+					else if (worldObj != nullptr && worldObj->isMarkingFromPlayerEdit())
+						++s_ps3DirtyEdit;
+				}
+#endif
 				// Legacy keeps only one queue entry, but active incremental builds still
 				// need to hear every mutation so population can be coalesced safely.
 				enqueueRendererUpdate(worldrenderer);
