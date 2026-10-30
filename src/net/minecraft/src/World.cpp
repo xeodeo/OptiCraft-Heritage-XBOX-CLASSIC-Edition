@@ -1196,7 +1196,10 @@ bool World::setBlockNotify152(int x, int y, int z, int blockId, int metadata, in
         return changed;
 
     if ((flags & 2) != 0 && (!multiplayerWorld || (flags & 4) == 0))
+    {
+        PS3_DIRTY_SOURCE(PS3_DIRTY_BLOCK152);
         markBlockForUpdate(x, y, z);
+    }
 
     if (!multiplayerWorld && (flags & 1) != 0)
     {
@@ -1591,7 +1594,10 @@ bool World::setBlockMetadataWithNotify152(int x, int y, int z, int metadata, int
 
     const int_t blockId = getBlockId(x, y, z);
     if ((flags & 2) != 0 && (!multiplayerWorld || (flags & 4) == 0))
+    {
+        PS3_DIRTY_SOURCE(PS3_DIRTY_BLOCK152);
         markBlockForUpdate(x, y, z);
+    }
     if (!multiplayerWorld && (flags & 1) != 0)
     {
         notifyBlocksOfNeighborChange(x, y, z, blockId);
@@ -2239,7 +2245,8 @@ void World::setLightValue(EnumSkyBlock* enumSkyBlock, int x, int y, int z, int l
     
     Chunk* chunk = getChunkFromChunkCoords(JavaArithmetic::intShr(x, 4), JavaArithmetic::intShr(z, 4));
     chunk->setLightValue(enumSkyBlock, x & 0xf, y, z & 0xf, lightValue);
-    
+
+    PS3_DIRTY_SOURCE(PS3_DIRTY_SETLIGHT);
     for (size_t i = 0; i < worldAccesses.size(); i++)
     {
         worldAccesses[i]->markBlockAndNeighborsNeedsUpdate(x, y, z);
@@ -3798,6 +3805,7 @@ void World::updateEntities()
                 if (chunk != nullptr)
                     chunk->setChunkBlockTileEntity(tileEntity->xCoord & 0xf, tileEntity->yCoord, tileEntity->zCoord & 0xf, tileEntity);
                 
+                PS3_DIRTY_SOURCE(PS3_DIRTY_TILE);
                 markBlockNeedsUpdate(tileEntity->xCoord, tileEntity->yCoord, tileEntity->zCoord);
             }
             
@@ -4728,6 +4736,7 @@ int_t World::computeBlockLightValue(int_t currentLight, int_t x, int_t y, int_t 
 // loaded since are run (and leave the list); the rest wait their turn.
 void World::retryDeferredLightUpdates()
 {
+    PS3_DIRTY_SOURCE(PS3_DIRTY_DEFERRED);
     int_t budget = 32;
     while (budget-- > 0 && !deferredLightUpdates.empty())
     {

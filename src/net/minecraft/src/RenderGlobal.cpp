@@ -3072,9 +3072,12 @@ void RenderGlobal::markRenderersInRange(int_t i, int_t j, int_t k, int_t l, int_
 	{
 		if (s_ps3DirtyLogUs != 0)
 			MC_LOG_INFO("ps3.dirty", "marks=%ld newlyDirty=%ld light=%ld edit=%ld | publish=%ld populate=%ld "
-			            "skylight=%ld block=%ld other=%ld\n", s_ps3DirtyCalls, s_ps3DirtyNew, s_ps3DirtyLight,
+			            "skylight=%ld block=%ld setLight=%ld deferred=%ld block152=%ld tile=%ld other=%ld\n",
+			            s_ps3DirtyCalls, s_ps3DirtyNew, s_ps3DirtyLight,
 			            s_ps3DirtyEdit, s_ps3DirtyBySource[PS3_DIRTY_PUBLISH], s_ps3DirtyBySource[PS3_DIRTY_POPULATE],
 			            s_ps3DirtyBySource[PS3_DIRTY_SKYLIGHT], s_ps3DirtyBySource[PS3_DIRTY_BLOCK],
+			            s_ps3DirtyBySource[PS3_DIRTY_SETLIGHT], s_ps3DirtyBySource[PS3_DIRTY_DEFERRED],
+			            s_ps3DirtyBySource[PS3_DIRTY_BLOCK152], s_ps3DirtyBySource[PS3_DIRTY_TILE],
 			            s_ps3DirtyBySource[PS3_DIRTY_OTHER]);
 		s_ps3DirtyLogUs = dirtyNowUs;
 		s_ps3DirtyCalls = s_ps3DirtyNew = s_ps3DirtyLight = s_ps3DirtyEdit = 0;

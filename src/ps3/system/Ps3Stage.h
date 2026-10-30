@@ -27,6 +27,10 @@ enum Ps3DirtySource
     PS3_DIRTY_POPULATE,    // decoration wrote into loaded sections
     PS3_DIRTY_SKYLIGHT,    // Chunk::generateSkylightMap and neighbours
     PS3_DIRTY_BLOCK,       // World::notifyBlockChange (setBlock path)
+    PS3_DIRTY_SETLIGHT,    // World::setLightValue
+    PS3_DIRTY_DEFERRED,    // World::retryDeferredLightUpdates
+    PS3_DIRTY_BLOCK152,    // setBlockNotify152 / setBlockMetadataWithNotify152
+    PS3_DIRTY_TILE,        // tile entity added to a loaded chunk
     PS3_DIRTY_SOURCE_COUNT
 };
 extern int g_ps3DirtySource;
