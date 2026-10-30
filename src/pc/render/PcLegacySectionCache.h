@@ -30,7 +30,14 @@ public:
     // worker runs precomputeDeferredSectionData() and meshes from the copies.
     PcLegacySectionCache(ChunkCache *source, World *world, int_t minX, int_t minY, int_t minZ,
         bool deferSectionData);
-    void captureSnapshot();
+    // Optional per-part timing of the copy (microseconds), for the PS3 log.
+    struct SnapshotTimings
+    {
+        std::uint64_t metaUs = 0;
+        std::uint64_t lightUs = 0;
+        std::uint64_t biomeUs = 0;
+    };
+    void captureSnapshot(SnapshotTimings *timings = nullptr);
     bool isDetached() const { return detached; }
     void precomputeDeferredSectionData() { precomputeSectionData(); }
     // Whether a scalar light read saw skylight (the snapshot's Chunk::isLit).

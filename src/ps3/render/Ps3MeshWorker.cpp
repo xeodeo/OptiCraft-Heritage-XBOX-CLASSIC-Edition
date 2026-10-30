@@ -99,6 +99,8 @@ namespace
     long s_statDropped = 0;
     long s_statSnapshots = 0;
     long s_statSnapshotMicros = 0;
+    // Snapshot parts: chunk cache, ids, tile entities, meta, light, biome.
+    long s_statSnapshotPartMicros[6] = {};
     long s_statPublishes = 0;
     long s_statPublishMicros = 0;
     std::uint64_t s_statLastLogUs = 0;
@@ -446,16 +448,25 @@ namespace
         const long jobs = meshed + failed;
         MC_LOG_INFO("ps3.mesh",
             "worker: queued=%ld meshed=%ld failed=%ld dropped=%ld workerMs=%ld (%ld us/section) "
-            "snapshot=%ld us/section publish=%ld us/section outOfSnapshot=%ld\n",
+            "snapshot=%ld us/section [cache=%ld ids=%ld te=%ld meta=%ld light=%ld biome=%ld] "
+            "publish=%ld us/section outOfSnapshot=%ld\n",
             s_statSubmitted, meshed, failed, s_statDropped, workerUs / 1000,
             jobs > 0 ? workerUs / jobs : 0L,
             s_statSnapshots > 0 ? s_statSnapshotMicros / s_statSnapshots : 0L,
+            s_statSnapshots > 0 ? s_statSnapshotPartMicros[0] / s_statSnapshots : 0L,
+            s_statSnapshots > 0 ? s_statSnapshotPartMicros[1] / s_statSnapshots : 0L,
+            s_statSnapshots > 0 ? s_statSnapshotPartMicros[2] / s_statSnapshots : 0L,
+            s_statSnapshots > 0 ? s_statSnapshotPartMicros[3] / s_statSnapshots : 0L,
+            s_statSnapshots > 0 ? s_statSnapshotPartMicros[4] / s_statSnapshots : 0L,
+            s_statSnapshots > 0 ? s_statSnapshotPartMicros[5] / s_statSnapshots : 0L,
             s_statPublishes > 0 ? s_statPublishMicros / s_statPublishes : 0L,
             outOfRange);
         s_statSubmitted = 0;
         s_statDropped = 0;
         s_statSnapshots = 0;
         s_statSnapshotMicros = 0;
+        for (long &part : s_statSnapshotPartMicros)
+            part = 0;
         s_statPublishes = 0;
         s_statPublishMicros = 0;
     }
@@ -574,6 +585,14 @@ void ps3MeshWorkerNoteSnapshot(std::uint64_t micros)
 {
     ++s_statSnapshots;
     s_statSnapshotMicros += static_cast<long>(micros);
+}
+
+void ps3MeshWorkerNoteSnapshotParts(std::uint64_t chunkCacheUs, std::uint64_t idsUs, std::uint64_t tileEntitiesUs,
+    std::uint64_t metaUs, std::uint64_t lightUs, std::uint64_t biomeUs)
+{
+    const std::uint64_t parts[6] = {chunkCacheUs, idsUs, tileEntitiesUs, metaUs, lightUs, biomeUs};
+    for (int i = 0; i < 6; ++i)
+        s_statSnapshotPartMicros[i] += static_cast<long>(parts[i]);
 }
 
 void ps3MeshWorkerNotePublish(std::uint64_t micros)

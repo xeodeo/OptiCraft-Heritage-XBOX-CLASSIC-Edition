@@ -18,6 +18,7 @@
 #include "net/minecraft/src/Chunk.h"
 #include "net/minecraft/src/EnumSkyBlock.h"
 #include "net/minecraft/src/WorldHeight.h"
+#include "platform/PlatformCompat.h"
 #endif
 
 PcLegacySectionCache::PcLegacySectionCache(ChunkCache *sourceIn, World *worldIn,
@@ -38,10 +39,19 @@ PcLegacySectionCache::PcLegacySectionCache(ChunkCache *sourceIn, World *worldIn,
         precomputeSectionData();
 }
 
-void PcLegacySectionCache::captureSnapshot()
+void PcLegacySectionCache::captureSnapshot(SnapshotTimings *timings)
 {
     if (source == nullptr || world == nullptr || world->worldProvider == nullptr)
         return;
+    std::uint64_t partStartUs = timings != nullptr ? PlatformCompat::getMonotonicMicros() : 0;
+    auto notePart = [&](std::uint64_t SnapshotTimings::*field)
+    {
+        if (timings == nullptr)
+            return;
+        const std::uint64_t nowUs = PlatformCompat::getMonotonicMicros();
+        timings->*field += nowUs > partStartUs ? nowUs - partStartUs : 0;
+        partStartUs = nowUs;
+    };
 
     // Both copies walk Y, then Z, then X: the section nibble arrays are laid out
     // x-fastest (y << 8 | z << 4 | x), and so are the snapshot arrays. Walking a
@@ -83,6 +93,8 @@ void PcLegacySectionCache::captureSnapshot()
             }
         }
     }
+
+    notePart(&SnapshotTimings::metaUs);
 
     // Saved light of the 20^3. Cells outside the world height are never read
     // as saved light (the readers clamp Y first) and scalar light answers them
@@ -142,17 +154,30 @@ void PcLegacySectionCache::captureSnapshot()
         }
     }
 
+    notePart(&SnapshotTimings::lightUs);
+
     // Biomes on the main thread: World::getBiomeGenForCoords may fill the
-    // chunk's biome array and the WorldChunkManager's caches.
+    // chunk's biome array and the WorldChunkManager's caches. For a column
+    // whose chunk the ChunkCache holds (loaded and not empty) that is exactly
+    // Chunk::func_48490_a with the world's manager; asking the chunk directly
+    // skips World's two chunk-provider lookups per column (blockExists, then
+    // getChunkFromBlockCoords).
+    WorldChunkManager *biomeManager = world->getWorldChunkManager();
     for (int_t z = 0; z < kSize; ++z)
     {
         for (int_t x = 0; x < kSize; ++x)
         {
             const std::size_t cell = static_cast<std::size_t>(z * kSize + x);
-            biomes[cell] = source->getBiomeGenForCoords(minX + x, minZ + z);
+            const int_t worldX = minX + x;
+            const int_t worldZ = minZ + z;
+            Chunk *chunk = source->getCachedChunkAtBlock(worldX, worldZ);
+            biomes[cell] = chunk != nullptr && !chunk->isEmptyChunk()
+                ? chunk->func_48490_a(worldX & 15, worldZ & 15, biomeManager)
+                : source->getBiomeGenForCoords(worldX, worldZ);
             biomeValid[cell] = 1;
         }
     }
+    notePart(&SnapshotTimings::biomeUs);
 
     snapshotSkylightSubtracted = world->skylightSubtracted;
     snapshotHasNoSky = world->worldProvider->hasNoSky;

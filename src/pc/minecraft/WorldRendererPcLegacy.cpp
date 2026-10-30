@@ -627,8 +627,10 @@ bool WorldRenderer::pcLegacyThreadedBuildStep()
     job->originY = y0;
     job->originZ = z0;
     job->sourceCache.emplace(worldObj, x0 - 1, y0 - 1, z0 - 1, x1 + 1, y1 + 1, z1 + 1);
+    const std::uint64_t chunkCacheEndUs = PlatformCompat::getMonotonicMicros();
     job->sectionCache.emplace(&*job->sourceCache, worldObj, x0 - 1, y0 - 1, z0 - 1, true);
     PcLegacySectionCache &sectionCache = *job->sectionCache;
+    const std::uint64_t idsEndUs = PlatformCompat::getMonotonicMicros();
 
     // Tile entities with a special renderer, on this thread: looking one up
     // can create it (Chunk::getChunkBlockTileEntity). Same order as the
@@ -656,8 +658,12 @@ bool WorldRenderer::pcLegacyThreadedBuildStep()
         }
     }
 
+    const std::uint64_t tileEntitiesEndUs = PlatformCompat::getMonotonicMicros();
     // Metadata, light and biomes; after this the cache never reads the world.
-    sectionCache.captureSnapshot();
+    PcLegacySectionCache::SnapshotTimings snapshotParts;
+    sectionCache.captureSnapshot(&snapshotParts);
+    ps3MeshWorkerNoteSnapshotParts(chunkCacheEndUs - snapshotStartUs, idsEndUs - chunkCacheEndUs,
+        tileEntitiesEndUs - idsEndUs, snapshotParts.metaUs, snapshotParts.lightUs, snapshotParts.biomeUs);
     if (!sectionCache.isDetached())
     {
         ps3MeshWorkerRelease(this);

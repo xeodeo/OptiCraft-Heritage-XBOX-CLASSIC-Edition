@@ -57,6 +57,10 @@ void ps3MeshWorkerForgetTileEntity(const void *tileEntity);
 
 // Main-thread cost accounting for the periodic log line.
 void ps3MeshWorkerNoteSnapshot(std::uint64_t micros);
+// Parts of a snapshot: ChunkCache, block ids (section cache), tile entity
+// scan, metadata, light and biomes.
+void ps3MeshWorkerNoteSnapshotParts(std::uint64_t chunkCacheUs, std::uint64_t idsUs, std::uint64_t tileEntitiesUs,
+    std::uint64_t metaUs, std::uint64_t lightUs, std::uint64_t biomeUs);
 void ps3MeshWorkerNotePublish(std::uint64_t micros);
 
 // Stops and joins the worker (game shutdown). Bounded: gives up on the join
