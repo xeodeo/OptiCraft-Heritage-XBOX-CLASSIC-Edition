@@ -132,6 +132,7 @@ rsxProgramConst* s_uFogColor = nullptr;
 rsxProgramConst* s_uFogParams = nullptr;
 rsxProgramConst* s_uFogWeights = nullptr;
 rsxProgramConst* s_uAlphaTest = nullptr;
+rsxProgramConst* s_uColorConst = nullptr;
 bool s_programsReady = false;
 // Texture units the fragment program reads the texture and the lightmap from.
 // cgcomp assigns them; TEXUNITn in the source is not guaranteed to survive.
@@ -551,6 +552,9 @@ bool loadPrograms()
     s_uFogParams = rsxVertexProgramGetConst(s_vertexProgram, "fogParams");
     s_uFogWeights = rsxVertexProgramGetConst(s_vertexProgram, "fogWeights");
     s_uAlphaTest = rsxVertexProgramGetConst(s_vertexProgram, "alphaTest");
+    s_uColorConst = rsxVertexProgramGetConst(s_vertexProgram, "colorConst");
+    if (s_uColorConst == nullptr)
+        MC_LOG_WARN("ps3.render", "vertex program has no colorConst: recorded colourless meshes draw white\n");
     if (rsxProgramAttrib* texture = rsxFragmentProgramGetAttrib(s_fragmentProgram, "texture0"))
         s_textureUnit = static_cast<std::uint8_t>(texture->index);
     if (rsxProgramAttrib* lightmap = rsxFragmentProgramGetAttrib(s_fragmentProgram, "lightmap"))
@@ -604,6 +608,20 @@ void applyFog()
 }
 
 float s_sentLightConst[4] = {-1.0f, -1.0f, -1.0f, -1.0f};
+float s_sentColorConst[4] = {-2.0f, -2.0f, -2.0f, -2.0f};
+
+// The current colour as a vertex constant, or "per-vertex colour" (x = -1).
+void setColorConst(bool useCurrentColor)
+{
+    float values[4] = {-1.0f, 0.0f, 0.0f, 0.0f};
+    if (useCurrentColor)
+        for (int i = 0; i < 4; ++i)
+            values[i] = static_cast<float>(s_currentColor[i]) / 255.0f;
+    if (std::memcmp(values, s_sentColorConst, sizeof(values)) == 0)
+        return;
+    std::memcpy(s_sentColorConst, values, sizeof(values));
+    setVertexUniform(s_uColorConst, values);
+}
 
 void setLightConst(bool useConstant)
 {
@@ -616,7 +634,7 @@ void setLightConst(bool useConstant)
 }
 
 // Everything a draw depends on, sent only when it changed.
-bool applyDrawState(bool constantLight)
+bool applyDrawState(bool constantLight, bool constantColor = false)
 {
     if (!loadPrograms())
         return false;
@@ -630,6 +648,7 @@ bool applyDrawState(bool constantLight)
         s_fogDirty = true;
         s_alphaTestDirty = true;
         std::memset(s_sentLightConst, 0xFF, sizeof(s_sentLightConst));
+        std::memset(s_sentColorConst, 0xFF, sizeof(s_sentColorConst));
     }
     if (s_alphaTestDirty)
     {
@@ -661,6 +680,7 @@ bool applyDrawState(bool constantLight)
         s_fogDirty = false;
     }
     setLightConst(constantLight);
+    setColorConst(constantColor);
     if (s_textureCacheDirty)
     {
         rsxInvalidateTextureCache(ctx(), GCM_INVALIDATE_TEXTURE);
@@ -754,11 +774,6 @@ struct RecordedMesh
     }
     void* memory = nullptr;
     std::uint32_t offset = 0;
-    // Meshes that take the current color are re-sent through the transient ring
-    // each draw. They are read from this main-memory copy: CPU reads from RSX
-    // local memory crawl, and re-reading the sky and every entity model from
-    // there each frame cost over half of the frame.
-    std::vector<Ps3Vertex> cpuCopy;
     int vertexCount = 0;
     long bytes = 0;
     RenderPrimitive primitive = RenderPrimitive::Triangles;
@@ -771,25 +786,10 @@ void drawRecorded(const RecordedMesh& mesh)
     if (!Ps3Rsx::ready() || mesh.memory == nullptr) return;
     const int count = usableCount(mesh.primitive, mesh.vertexCount);
     if (count <= 0) return;
-    std::uint32_t offset = mesh.offset;
-    std::uint32_t location = GCM_LOCATION_RSX;
-    if (mesh.usesCurrentColor)
-    {
-        // Copy with the current color patched in (models are small).
-        Ps3Vertex* out = static_cast<Ps3Vertex*>(
-            Ps3Rsx::allocTransient(static_cast<std::uint32_t>(mesh.vertexCount) * sizeof(Ps3Vertex), 128, &offset));
-        if (out == nullptr) return;
-        const Ps3Vertex* in = mesh.cpuCopy.data();
-        for (int i = 0; i < mesh.vertexCount; ++i)
-        {
-            out[i] = in[i];
-            out[i].r = s_currentColor[0];
-            out[i].g = s_currentColor[1];
-            out[i].b = s_currentColor[2];
-            out[i].a = s_currentColor[3];
-        }
-        location = Ps3Rsx::kTransientLocation;
-    }
+    // A mesh that takes the current colour is drawn from RSX memory like any
+    // other; the colour goes in as a vertex constant (colorConst).
+    const std::uint32_t offset = mesh.offset;
+    const std::uint32_t location = GCM_LOCATION_RSX;
     static int s_recordedLogged = 0;
     if (s_recordedLogged < 12 && mesh.vertexCount >= 64)
     {
@@ -815,7 +815,7 @@ void drawRecorded(const RecordedMesh& mesh)
                     v[0].lv, s_texture2D ? 1 : 0, s_boundTexture, s_activeTextureUnit, s_lightmapOn ? 1 : 0,
                     s_boundOtherUnit, mesh.usesCurrentColor ? 1 : 0);
     }
-    if (!applyDrawState(!mesh.hasLight)) return;
+    if (!applyDrawState(!mesh.hasLight, mesh.usesCurrentColor)) return;
     bindVertexArrays(offset, location);
     rsxInvalidateVertexCache(ctx());
     rsxDrawVertexArray(ctx(), toGcmPrimitive(mesh.primitive), 0, static_cast<u32>(count));
@@ -1309,8 +1309,6 @@ bool renderDrawInterleaved(const RenderInterleavedMesh& mesh)
             convertVertices(mesh, s_scratch.data(), true);
             // Written once, straight into RSX local memory.
             std::memcpy(recorded->memory, s_scratch.data(), bytes);
-            if (recorded->usesCurrentColor)
-                recorded->cpuCopy.assign(s_scratch.begin(), s_scratch.begin() + mesh.count);
             recorded->bytes = static_cast<long>(bytes);
             s_recordedBytes += recorded->bytes;
         }

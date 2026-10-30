@@ -17,6 +17,9 @@
 // alphaTest is passed through for the same reason: x = 1 when GL_ALPHA_TEST is on, y = the
 // reference; the fragment program discards alpha <= reference (GL_GREATER, all Minecraft uses).
 // z = 1 applies the Legacy Look gamma in the fragment program.
+// colorConst: the current GL colour (0..1) for a recorded mesh that takes it
+// (entity models, sky): drawn straight from RSX memory with this instead of
+// being copied with the colour patched in. x < 0 = use the per-vertex colour.
 void main(float4 position : POSITION,
           float4 color : COLOR,
           float2 uv : TEXCOORD0,
@@ -29,6 +32,7 @@ void main(float4 position : POSITION,
           uniform float4 fogParams,
           uniform float4 fogWeights,
           uniform float4 alphaTest,
+          uniform float4 colorConst,
           out float4 oPosition : POSITION,
           out float4 oColor : COLOR,
           out float4 oUv : TEXCOORD0,
@@ -45,6 +49,6 @@ void main(float4 position : POSITION,
     oFog = float4(fogColor.rgb, factor);
     float2 transformedUv = mul(float4(uv, 0.0f, 1.0f), textureMatrix).xy;
     oUv = float4(transformedUv, lerp(lightUv, lightConst.xy, lightConst.z));
-    oColor = color;
+    oColor = colorConst.x >= 0.0f ? colorConst : color;
     oAlphaTest = alphaTest;
 }
