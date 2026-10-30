@@ -486,6 +486,9 @@ void RenderGlobal::loadRenderers()
 #if PLATFORM_XBOX || PLATFORM_PS3
 		releaseRendererListGeometry(glRenderListBase);
 #endif
+#if PLATFORM_PS3 && PLATFORM_INCREMENTAL_TERRAIN_BUILD
+		ps3LightOnlyDirty.clear();
+#endif
 		for (int_t i = 0; i < renderChunksWide * renderChunksTall * renderChunksDeep; i++)
 		{
 			if (worldRenderers[i] != nullptr)
@@ -2391,9 +2394,40 @@ long ps2UpdateNoSlotBreaks = 0;
 }
 #endif
 
+#if PLATFORM_PS3 && PLATFORM_INCREMENTAL_TERRAIN_BUILD
+void RenderGlobal::ps3DrainLightOnlyDirty()
+{
+	// 400 ms without new light marks, at most two sections a frame.
+	const std::uint64_t nowUs = PlatformCompat::getMonotonicMicros();
+	int budget = 2;
+	for (auto it = ps3LightOnlyDirty.begin(); it != ps3LightOnlyDirty.end() && budget > 0;)
+	{
+		WorldRenderer *renderer = it->first;
+		if (renderer->needsUpdate)
+		{
+			// Something else already queued it with a full rebuild.
+			it = ps3LightOnlyDirty.erase(it);
+			continue;
+		}
+		if (nowUs - it->second < 400000ULL)
+		{
+			++it;
+			continue;
+		}
+		enqueueRendererUpdate(renderer);
+		renderer->markDirty();
+		it = ps3LightOnlyDirty.erase(it);
+		--budget;
+	}
+}
+#endif
+
 bool RenderGlobal::updateRenderers(EntityLiving *entityliving, bool flag)
 {
     PS3_STAGE_SCOPE("updateRenderers");
+#if PLATFORM_PS3 && PLATFORM_INCREMENTAL_TERRAIN_BUILD
+	ps3DrainLightOnlyDirty();
+#endif
 #if PLATFORM_PS2
 	const bool ps2MeshPressure = trimPs2MeshCache(entityliving);
 #if PLATFORM_CULL_FAR_SUBTERRANEAN
@@ -3173,6 +3207,21 @@ void RenderGlobal::markRenderersInRange(int_t i, int_t j, int_t k, int_t l, int_
 					else if (worldObj != nullptr && worldObj->isMarkingFromPlayerEdit())
 						++s_ps3DirtyEdit;
 				}
+				// A section that already has a mesh and only sees its light change
+				// waits in the light-only queue: while terrain streams in, sky light
+				// re-marks the same sections several times as each neighbour column
+				// arrives, and rebuilding on every mark cost a quarter of the frame.
+				if ((g_ps3DirtySource == PS3_DIRTY_SKYLIGHT || g_ps3DirtySource == PS3_DIRTY_SETLIGHT ||
+				     g_ps3DirtySource == PS3_DIRTY_DEFERRED ||
+				     (worldObj != nullptr && worldObj->isMarkingFromLighting())) &&
+				    !worldrenderer->needsUpdate && worldrenderer->hasPublishedTerrain() &&
+				    !(worldObj != nullptr && worldObj->isMarkingFromPlayerEdit()) &&
+				    !(mc != nullptr && mc->renderViewEntity != nullptr &&
+				      worldrenderer->distanceToEntitySquared(mc->renderViewEntity) <= 32.0f * 32.0f))
+				{
+					ps3LightOnlyDirty[worldrenderer] = PlatformCompat::getMonotonicMicros();
+					continue;
+				}
 #endif
 				// Legacy keeps only one queue entry, but active incremental builds still
 				// need to hear every mutation so population can be coalesced safely.
@@ -3765,6 +3814,9 @@ void RenderGlobal::clearWorldRenderers() // func_28137_f
 	if (worldRenderers != nullptr)
 	{
 		int_t total = renderChunksWide * renderChunksTall * renderChunksDeep;
+#if PLATFORM_PS3 && PLATFORM_INCREMENTAL_TERRAIN_BUILD
+		ps3LightOnlyDirty.clear();
+#endif
 		for (int_t i = 0; i < total; i++)
 		{
 			delete worldRenderers[i];

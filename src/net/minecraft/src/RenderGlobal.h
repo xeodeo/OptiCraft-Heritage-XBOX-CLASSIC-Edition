@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #if !defined(PS2_PLATFORM)
+#include <unordered_map>
 #include <unordered_set>
 #endif
 #include <vector>
@@ -213,6 +214,12 @@ private:
 	int_t pcLegacyVisibilityCamera[3] = {0, 0, 0};
 	std::uint32_t pcLegacyVisibilityGenerationSeen = 0;
 	int_t pcLegacyVisibilityFramesSkipped = 0;
+#endif
+#if PLATFORM_PS3 && PLATFORM_INCREMENTAL_TERRAIN_BUILD
+	// Meshed sections whose light alone changed, with the time of the last
+	// mark: rebuilt once the marks stop, a couple per frame.
+	std::unordered_map<WorldRenderer *, std::uint64_t> ps3LightOnlyDirty;
+	void ps3DrainLightOnlyDirty();
 #endif
 #if !PLATFORM_PS2
 	RenderList *allRenderLists[4];
