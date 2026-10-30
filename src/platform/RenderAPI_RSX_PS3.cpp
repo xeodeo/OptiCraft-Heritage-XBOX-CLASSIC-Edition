@@ -494,6 +494,12 @@ void convertVertices(const RenderInterleavedMesh& mesh, Ps3Vertex* out, bool col
 
 std::vector<Ps3Vertex> s_scratch;
 
+// Native meshes (renderConvertCapturedMeshToNative) are Ps3Vertex already.
+inline const Ps3Vertex* nativeVertices(const RenderInterleavedMesh& mesh)
+{
+    return static_cast<const Ps3Vertex*>(mesh.data) + mesh.first;
+}
+
 // Diagnostics for the first frames: how many draws, and where the first vertex of
 // the frame lands in clip space with the current matrices.
 int s_diagFrame = 0;
@@ -706,7 +712,10 @@ bool drawNow(const RenderInterleavedMesh& mesh)
     Ps3Vertex* out = static_cast<Ps3Vertex*>(
         Ps3Rsx::allocTransient(static_cast<std::uint32_t>(mesh.count) * sizeof(Ps3Vertex), 128, &offset));
     if (out == nullptr) return true;  // ring full this frame: drop the draw (logged once)
-    convertVertices(mesh, out, false);
+    if (mesh.backendNative)
+        std::memcpy(out, nativeVertices(mesh), static_cast<std::size_t>(mesh.count) * sizeof(Ps3Vertex));
+    else
+        convertVertices(mesh, out, false);
     diagnoseDraw(out, count, mesh.primitive);
     if (!applyDrawState(false)) return true;
     bindVertexArrays(offset, Ps3Rsx::kTransientLocation);
@@ -1286,7 +1295,14 @@ bool renderDrawInterleaved(const RenderInterleavedMesh& mesh)
         recorded->vertexCount = mesh.count;
         const std::uint32_t bytes = static_cast<std::uint32_t>(mesh.count) * sizeof(Ps3Vertex);
         recorded->memory = Ps3Rsx::allocLocal(bytes, 128, &recorded->offset);
-        if (recorded->memory != nullptr)
+        if (recorded->memory != nullptr && mesh.backendNative)
+        {
+            // Terrain converted by the mesh worker: one copy into RSX memory.
+            std::memcpy(recorded->memory, nativeVertices(mesh), bytes);
+            recorded->bytes = static_cast<long>(bytes);
+            s_recordedBytes += recorded->bytes;
+        }
+        else if (recorded->memory != nullptr)
         {
             if (static_cast<int>(s_scratch.size()) < mesh.count)
                 s_scratch.resize(static_cast<std::size_t>(mesh.count));
@@ -1308,6 +1324,7 @@ bool renderCaptureInterleaved(const RenderInterleavedMesh& mesh, RenderCapturedM
 {
     if (mesh.data == nullptr || mesh.stride <= 0 || mesh.count <= 0) return false;
     if (!append) out.clear();
+    if (out.backendNative) return false;  // converted already: nothing may be appended
     if (!out.empty() && (out.stride != mesh.stride || out.primitive != mesh.primitive ||
                          out.positionShort != mesh.positionShort || out.hasTexture != mesh.hasTexture ||
                          (mesh.hasTexture && out.texCoordOffset != mesh.texCoordOffset) ||
@@ -1352,7 +1369,48 @@ bool renderDrawCaptured(const RenderCapturedMesh& mesh)
     view.colorOffset = mesh.colorOffset;
     view.hasBrightness = mesh.hasBrightness;
     view.brightnessOffset = mesh.brightnessOffset;
+    view.backendNative = mesh.backendNative;
     return renderDrawInterleaved(view);
+}
+
+bool renderConvertCapturedMeshToNative(RenderCapturedMesh& mesh)
+{
+    static_assert(sizeof(Ps3Vertex) == 8 * sizeof(std::int32_t), "converted in place, vertex for vertex");
+    if (mesh.backendNative)
+        return true;
+    if (mesh.empty() || mesh.stride != static_cast<int>(sizeof(Ps3Vertex)) || mesh.positionShort ||
+        !mesh.hasColor || !mesh.hasTexture || !mesh.hasBrightness ||
+        mesh.raw.size() < static_cast<std::size_t>(mesh.vertexCount) * 8u)
+        return false;
+    unsigned char* base = reinterpret_cast<unsigned char*>(mesh.raw.data());
+    for (int i = 0; i < mesh.vertexCount; ++i)
+    {
+        unsigned char* src = base + static_cast<std::size_t>(i) * sizeof(Ps3Vertex);
+        float pos[3], uv[2];
+        unsigned char rgba[4];
+        std::uint32_t packed;
+        std::memcpy(pos, src, sizeof(pos));
+        std::memcpy(uv, src + mesh.texCoordOffset, sizeof(uv));
+        std::memcpy(rgba, src + mesh.colorOffset, sizeof(rgba));
+        std::memcpy(&packed, src + mesh.brightnessOffset, sizeof(packed));
+        // Same values convertVertices produces for a mesh with colour, texture
+        // and brightness.
+        Ps3Vertex v;
+        v.x = pos[0];
+        v.y = pos[1];
+        v.z = pos[2];
+        v.r = rgba[0];
+        v.g = rgba[1];
+        v.b = rgba[2];
+        v.a = rgba[3];
+        v.u = uv[0];
+        v.v = uv[1];
+        v.lu = lightmapCoord(static_cast<short>(packed & 0xFFFFu));
+        v.lv = lightmapCoord(static_cast<short>(packed >> 16));
+        std::memcpy(src, &v, sizeof(v));
+    }
+    mesh.backendNative = true;
+    return true;
 }
 
 // ===========================================================================

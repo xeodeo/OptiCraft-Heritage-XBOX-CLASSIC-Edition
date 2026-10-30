@@ -168,6 +168,9 @@ struct RenderInterleavedMesh
     bool hasBrightness = false;
     int brightnessOffset = 0;
 
+    // The vertices are already in the backend's own layout (PS3: Ps3Vertex,
+    // converted off the main thread); only the PS3 backend sets or reads it.
+    bool backendNative = false;
 };
 
 struct RenderCapturedMesh
@@ -185,6 +188,7 @@ struct RenderCapturedMesh
     int normalOffset = 0;
     bool hasBrightness = false;
     int brightnessOffset = 0;
+    bool backendNative = false;   // see RenderInterleavedMesh
 
     bool empty() const { return vertexCount <= 0 || raw.empty(); }
     std::size_t byteSize() const { return raw.size() * sizeof(std::int32_t); }
@@ -203,8 +207,17 @@ struct RenderCapturedMesh
         normalOffset = 0;
         hasBrightness = false;
         brightnessOffset = 0;
+        backendNative = false;
     }
 };
+
+#if PLATFORM_PS3
+// PS3: converts a captured terrain mesh (Tessellator layout, 32-byte stride,
+// colour + texture + brightness) in place into the RSX vertex layout, so that
+// recording it into a display list is one copy into RSX memory. Safe on any
+// thread: it reads no render state. False (mesh untouched) for other layouts.
+bool renderConvertCapturedMeshToNative(RenderCapturedMesh& mesh);
+#endif
 
 struct RenderStaticMesh
 {

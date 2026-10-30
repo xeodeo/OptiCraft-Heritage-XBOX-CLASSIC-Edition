@@ -280,6 +280,14 @@ namespace
             tessellator.setTranslationD(0.0, 0.0, 0.0);
             if (aborted || !groupsOk || (hadBaseVertices && !baseOk))
                 ok = false;
+            // Convert to the RSX vertex layout here, so the main thread's
+            // publish is a single copy into RSX memory.
+            if (ok)
+            {
+                renderConvertCapturedMeshToNative(staging.passMeshes[pass]);
+                for (TessellatorTextureMesh &group : staging.extraTextureMeshes[pass])
+                    renderConvertCapturedMeshToNative(group.mesh);
+            }
         }
 
         staging.skyLit = sectionCache.snapshotSkyLit();
