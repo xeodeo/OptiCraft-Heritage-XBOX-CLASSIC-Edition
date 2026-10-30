@@ -43,21 +43,35 @@ void PcLegacySectionCache::captureSnapshot()
     if (source == nullptr || world == nullptr || world->worldProvider == nullptr)
         return;
 
+    // Both copies walk Y, then Z, then X: the section nibble arrays are laid out
+    // x-fastest (y << 8 | z << 4 | x), and so are the snapshot arrays. Walking a
+    // column's Y innermost touched a new 128-byte line on every read, which made
+    // this copy cost about as much as meshing used to on the PPU.
+    //
     // Metadata of the whole 18^3, straight from the sections: the values
     // ChunkCache::getBlockMetadata's fast path returns (0 without a section).
+    Chunk *columnChunks[kLightSize * kLightSize];
     for (int_t z = 0; z < kSize; ++z)
     {
         for (int_t x = 0; x < kSize; ++x)
         {
-            const int_t worldX = minX + x;
+            Chunk *chunk = source->getCachedChunkAtBlock(minX + x, minZ + z);
+            columnChunks[z * kSize + x] = chunk != nullptr && !chunk->isEmptyChunk() ? chunk : nullptr;
+        }
+    }
+    for (int_t y = 0; y < kSize; ++y)
+    {
+        const int_t worldY = minY + y;
+        const bool inWorld = worldY >= 0 && worldY < WorldHeight::HEIGHT;
+        for (int_t z = 0; z < kSize; ++z)
+        {
             const int_t worldZ = minZ + z;
-            Chunk *chunk = source->getCachedChunkAtBlock(worldX, worldZ);
-            const bool real = chunk != nullptr && !chunk->isEmptyChunk();
-            for (int_t y = 0; y < kSize; ++y)
+            for (int_t x = 0; x < kSize; ++x)
             {
-                const int_t worldY = minY + y;
+                const int_t worldX = minX + x;
                 int_t value = 0;
-                if (real && worldY >= 0 && worldY < WorldHeight::HEIGHT)
+                Chunk *chunk = columnChunks[z * kSize + x];
+                if (chunk != nullptr && inWorld)
                 {
                     const ExtendedBlockStorage *storage = chunk->getBlockStorage(worldY >> 4);
                     if (storage != nullptr)
@@ -78,25 +92,37 @@ void PcLegacySectionCache::captureSnapshot()
     const int_t lightMinX = minX - 1;
     const int_t lightMinY = minY - 1;
     const int_t lightMinZ = minZ - 1;
+    // Here a column keeps an empty chunk apart from a missing one: empty
+    // chunks read as zero, missing ones as the default light.
+    bool columnEmpty[kLightSize * kLightSize];
     for (int_t z = 0; z < kLightSize; ++z)
     {
         for (int_t x = 0; x < kLightSize; ++x)
         {
-            const int_t worldX = lightMinX + x;
+            Chunk *chunk = source->getCachedChunkAtBlock(lightMinX + x, lightMinZ + z);
+            columnChunks[z * kLightSize + x] = chunk;
+            columnEmpty[z * kLightSize + x] = chunk != nullptr && chunk->isEmptyChunk();
+        }
+    }
+    for (int_t y = 0; y < kLightSize; ++y)
+    {
+        const int_t worldY = lightMinY + y;
+        const bool inWorld = worldY >= 0 && worldY < WorldHeight::HEIGHT;
+        for (int_t z = 0; z < kLightSize; ++z)
+        {
             const int_t worldZ = lightMinZ + z;
-            Chunk *chunk = source->getCachedChunkAtBlock(worldX, worldZ);
-            const bool empty = chunk != nullptr && chunk->isEmptyChunk();
-            for (int_t y = 0; y < kLightSize; ++y)
+            for (int_t x = 0; x < kLightSize; ++x)
             {
-                const int_t worldY = lightMinY + y;
+                const int_t worldX = lightMinX + x;
                 const std::size_t cell = static_cast<std::size_t>((y * kLightSize + z) * kLightSize + x);
+                Chunk *chunk = columnChunks[z * kLightSize + x];
                 std::uint8_t saved = 0;
                 std::uint8_t present = 0;
-                if (worldY >= 0 && worldY < WorldHeight::HEIGHT)
+                if (inWorld)
                 {
                     if (chunk == nullptr)
                         saved = defaultSaved;
-                    else if (!empty)
+                    else if (!columnEmpty[z * kLightSize + x])
                     {
                         const ExtendedBlockStorage *storage = chunk->getBlockStorage(worldY >> 4);
                         if (storage == nullptr)
