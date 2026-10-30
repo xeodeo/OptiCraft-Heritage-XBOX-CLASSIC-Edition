@@ -175,13 +175,21 @@ int_t BlockVine::getRenderColor(int_t metadata)
 
 int_t BlockVine::colorMultiplier(IBlockAccess *blockAccess, int_t x, int_t y, int_t z)
 {
+#if PLATFORM_THREADED_TERRAIN_MESH
+    // The mesh worker's snapshot has no WorldChunkManager (its biome cache is
+    // main-thread only); it carries the section's biomes instead, which are the
+    // ones the chunk stores, i.e. what the generator answered for it.
+    auto biomeAt = [blockAccess](int_t bx, int_t bz) { return blockAccess->getBiomeGenForCoords(bx, bz); };
+#else
     WorldChunkManager *manager = blockAccess->getWorldChunkManager();
     if (manager == nullptr)
         return ColorizerFoliage::getFoliageColorBasic();
+    auto biomeAt = [manager](int_t bx, int_t bz) { return manager->getBiomeGenAt(bx, bz); };
+#endif
 
     if (!Config::isSmoothBiomes())
     {
-        BiomeGenBase *biome = manager->getBiomeGenAt(x, z);
+        BiomeGenBase *biome = biomeAt(x, z);
         return biome != nullptr ? biome->getBiomeFoliageColor() : ColorizerFoliage::getFoliageColorBasic();
     }
 
@@ -193,7 +201,7 @@ int_t BlockVine::colorMultiplier(IBlockAccess *blockAccess, int_t x, int_t y, in
     {
         for (int_t dx = -1; dx <= 1; ++dx)
         {
-            BiomeGenBase *biome = manager->getBiomeGenAt(x + dx, z + dz);
+            BiomeGenBase *biome = biomeAt(x + dx, z + dz);
             if (biome == nullptr)
                 continue;
             const int_t color = biome->getBiomeFoliageColor();

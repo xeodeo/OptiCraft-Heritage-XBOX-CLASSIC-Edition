@@ -2,6 +2,7 @@
 
 #include "java/Type.h"
 #include "java/String.h"
+#include "platform/PlatformConfig.h"
 
 // net.minecraft.src.Vec3D
 class Vec3D
@@ -39,6 +40,10 @@ private:
 	static constexpr int_t POOL_SIZE = 1024;
 	static Vec3D pool[POOL_SIZE];
 	static int_t nextVector;
+#if PLATFORM_THREADED_TERRAIN_MESH
+	// The mesh worker's own ring (Vec3D.cpp).
+	static Vec3D meshWorkerPool[256];
+#endif
 
 public:
 	double xCoord;

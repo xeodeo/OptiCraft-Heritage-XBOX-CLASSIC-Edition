@@ -360,6 +360,11 @@ private:
 	bool pcLegacyBeginBuildState();
 	bool pcLegacyBuildRendererStep(int_t blockBudget);
 	void pcLegacyPublishBuild(PcLegacyTerrainStaging &staging);
+#if PLATFORM_THREADED_TERRAIN_MESH
+	// One step with the mesh worker running: publish the finished job, or
+	// snapshot the section and queue it (src/ps3/render/Ps3MeshWorker.h).
+	bool pcLegacyThreadedBuildStep();
+#endif
 #endif
 	std::vector<TileEntity *> *tileEntities;
 };

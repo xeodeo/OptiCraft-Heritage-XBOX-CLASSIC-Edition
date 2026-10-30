@@ -38,6 +38,13 @@ public:
 	bool renderSimpleOpaqueCubeWithColorMultiplierLegacy(Block *block, int_t i, int_t j, int_t k, unsigned char faceMask, int_t metadata, float red, float green, float blue, bool usePackedWhiteFaceState);
 	void setPcLegacyCompactTerrainMesh(RenderCapturedMesh *mesh, int_t originX, int_t originY, int_t originZ);
 #endif
+#if PLATFORM_THREADED_TERRAIN_MESH
+	// The mesh worker renders into its own Tessellator; everything else keeps
+	// Tessellator::instance. Every geometry emitter in RenderBlocks goes through
+	// this pointer (RENDER_BLOCKS_TESSELLATOR in the .cpp files).
+	void setMeshTessellator(Tessellator *tessellator) { meshTessellator = tessellator; }
+	Tessellator *meshTessellator = &Tessellator::instance;
+#endif
 #ifdef PS2_PLATFORM
 	bool renderSimpleOpaqueCubePs2(Block *block, int_t i, int_t j, int_t k, unsigned char faceMask);
 #endif
@@ -266,3 +273,11 @@ public:
 
 	static bool fancyGrass;
 };
+// The Tessellator RenderBlocks' emitters write to: the instance's own one under
+// PLATFORM_THREADED_TERRAIN_MESH (the mesh worker swaps it), the global one
+// otherwise. Only RenderBlocks.cpp and RenderBlocks125.cpp use it.
+#if PLATFORM_THREADED_TERRAIN_MESH
+#define RENDER_BLOCKS_TESSELLATOR (*meshTessellator)
+#else
+#define RENDER_BLOCKS_TESSELLATOR Tessellator::instance
+#endif

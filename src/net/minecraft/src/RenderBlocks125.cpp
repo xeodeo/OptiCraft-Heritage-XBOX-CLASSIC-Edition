@@ -60,7 +60,7 @@ void setBlockColor(Tessellator &tessellator, Block *block, IBlockAccess *access,
 bool RenderBlocks::renderBlockStem(Block *block, int_t x, int_t y, int_t z)
 {
     BlockStem *stem = static_cast<BlockStem *>(block);
-    Tessellator &tessellator = Tessellator::instance;
+    Tessellator &tessellator = RENDER_BLOCKS_TESSELLATOR;
     tessellator.setBrightness(stem->getMixedBrightnessForBlock(blockAccess, x, y, z));
     int_t stemColor = CustomColorizer::getStemColorMultiplier(stem, blockAccess, x, y, z);
     float stemRed = static_cast<float>((stemColor >> 16) & 255) / 255.0f;
@@ -85,7 +85,7 @@ bool RenderBlocks::renderBlockStem(Block *block, int_t x, int_t y, int_t z)
 void RenderBlocks::renderBlockStemSmall(Block *block, int_t metadata, double height,
                                         double x, double y, double z)
 {
-    Tessellator &tessellator = Tessellator::instance;
+    Tessellator &tessellator = RENDER_BLOCKS_TESSELLATOR;
     int_t texture = block->getBlockTextureFromSideAndMetadata(0, metadata);
     if (overrideBlockTexture >= 0)
         texture = overrideBlockTexture;
@@ -126,7 +126,7 @@ void RenderBlocks::renderBlockStemSmall(Block *block, int_t metadata, double hei
 void RenderBlocks::renderBlockStemBig(Block *block, int_t metadata, int_t direction,
                                       double height, double x, double y, double z)
 {
-    Tessellator &tessellator = Tessellator::instance;
+    Tessellator &tessellator = RENDER_BLOCKS_TESSELLATOR;
     int_t texture = block->getBlockTextureFromSideAndMetadata(0, metadata) + 16;
     if (overrideBlockTexture >= 0)
         texture = overrideBlockTexture;
@@ -177,7 +177,7 @@ void RenderBlocks::renderBlockStemBig(Block *block, int_t metadata, int_t direct
 
 bool RenderBlocks::renderBlockVine(Block *block, int_t x, int_t y, int_t z)
 {
-    Tessellator &tessellator = Tessellator::instance;
+    Tessellator &tessellator = RENDER_BLOCKS_TESSELLATOR;
     int_t texture = block->getBlockTextureFromSide(0);
     if (overrideBlockTexture >= 0)
         texture = overrideBlockTexture;
@@ -355,7 +355,7 @@ bool RenderBlocks::renderBlockFenceGate(Block *block, int_t x, int_t y, int_t z)
 
 bool RenderBlocks::renderBlockLilyPad(Block *block, int_t x, int_t y, int_t z)
 {
-    Tessellator &tessellator = Tessellator::instance;
+    Tessellator &tessellator = RENDER_BLOCKS_TESSELLATOR;
     int_t texture = block->blockIndexInTexture;
     if (overrideBlockTexture >= 0)
         texture = overrideBlockTexture;
@@ -401,7 +401,7 @@ bool RenderBlocks::renderBlockLilyPad(Block *block, int_t x, int_t y, int_t z)
 bool RenderBlocks::renderBlockCauldron(Block *block, int_t x, int_t y, int_t z)
 {
     renderStandardBlock(block, x, y, z);
-    Tessellator &tessellator = Tessellator::instance;
+    Tessellator &tessellator = RENDER_BLOCKS_TESSELLATOR;
     tessellator.setBrightness(block->getMixedBrightnessForBlock(blockAccess, x, y, z));
     setBlockColor(tessellator, block, blockAccess, x, y, z);
 
@@ -432,7 +432,7 @@ bool RenderBlocks::renderBlockBrewingStand(Block *block, int_t x, int_t y, int_t
     block->setBlockBounds(2.0f/16,0,9.0f/16,0.5f,2.0f/16,15.0f/16); renderStandardBlock(block,x,y,z);
     clearOverrideBlockTexture();
 
-    Tessellator &tessellator = Tessellator::instance;
+    Tessellator &tessellator = RENDER_BLOCKS_TESSELLATOR;
     tessellator.setBrightness(block->getMixedBrightnessForBlock(blockAccess, x, y, z));
     setBlockColor(tessellator, block, blockAccess, x, y, z);
     int_t texture = block->getBlockTextureFromSideAndMetadata(0, 0);
@@ -531,7 +531,7 @@ bool RenderBlocks::renderBlockPane(Block *block, int_t var2, int_t var3, int_t v
     BlockPane *var1 = static_cast<BlockPane *>(block);
 
     int_t var5 = blockAccess->getHeight();
-    Tessellator &var6 = Tessellator::instance;
+    Tessellator &var6 = RENDER_BLOCKS_TESSELLATOR;
     bool connected = block == Block::thinGlass && ConnectedTextures::isConnectedGlassPanes();
     Tessellator *paneFront = &var6;
     var6.setBrightness(var1->getMixedBrightnessForBlock(blockAccess, var2, var3, var4));
@@ -998,7 +998,7 @@ bool RenderBlocks::renderBlockPane(Block *block, int_t var2, int_t var3, int_t v
 
 void RenderBlocks::drawCrossedSquares(Block *block, int_t i, double d, double d1, double d2, float scale)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	int_t j = block->getBlockTextureFromSideAndMetadata(0, i);
 	if (overrideBlockTexture >= 0)
 	{
@@ -1098,7 +1098,7 @@ bool RenderBlocks::renderBlockWall(BlockWall *block, int_t x, int_t y, int_t z)
 bool RenderBlocks::renderBlockFlowerpot(BlockFlowerPot *block, int_t x, int_t y, int_t z)
 {
 	renderStandardBlock(block, x, y, z);
-	Tessellator &tessellator = Tessellator::instance;
+	Tessellator &tessellator = RENDER_BLOCKS_TESSELLATOR;
 	tessellator.setBrightness(block->getMixedBrightnessForBlock(blockAccess, x, y, z));
 	float f = 1.0f;
 	int_t color = block->colorMultiplier(blockAccess, x, y, z);
@@ -1183,7 +1183,7 @@ bool RenderBlocks::renderBlockFlowerpot(BlockFlowerPot *block, int_t x, int_t y,
 
 bool RenderBlocks::renderBlockCocoa(BlockCocoa *block, int_t x, int_t y, int_t z)
 {
-	Tessellator &tessellator = Tessellator::instance;
+	Tessellator &tessellator = RENDER_BLOCKS_TESSELLATOR;
 	tessellator.setBrightness(block->getMixedBrightnessForBlock(blockAccess, x, y, z));
 	tessellator.setColorOpaque_F(1.0f, 1.0f, 1.0f);
 	int_t meta = accessGetBlockMetadata(x, y, z);
@@ -1378,7 +1378,7 @@ bool RenderBlocks::renderBlockAnvil(BlockAnvil *block, int_t x, int_t y, int_t z
 
 bool RenderBlocks::renderBlockAnvilMetadata(BlockAnvil *block, int_t x, int_t y, int_t z, int_t metadata)
 {
-	Tessellator &tessellator = Tessellator::instance;
+	Tessellator &tessellator = RENDER_BLOCKS_TESSELLATOR;
 	tessellator.setBrightness(block->getMixedBrightnessForBlock(blockAccess, x, y, z));
 	tessellator.setColorOpaque_F(1.0f, 1.0f, 1.0f);
 	return renderBlockAnvilOrient(block, x, y, z, metadata, false);
@@ -1445,7 +1445,7 @@ float RenderBlocks::renderBlockAnvilRotate(BlockAnvil *block, int_t x, int_t y, 
 	block->setBlockBounds(0.5f - sizeX, yOffset, 0.5f - sizeZ, 0.5f + sizeX, yOffset + sizeY, 0.5f + sizeZ);
 	if (inventory)
 	{
-		Tessellator &tessellator = Tessellator::instance;
+		Tessellator &tessellator = RENDER_BLOCKS_TESSELLATOR;
 		tessellator.startDrawingQuads();
 		tessellator.setNormal(0.0f, -1.0f, 0.0f);
 		renderBottomFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSideAndMetadata(0, metadata));
@@ -1500,7 +1500,7 @@ struct TripWireVec3
 
 bool RenderBlocks::renderBlockTripWireSource(Block *block, int_t x, int_t y, int_t z)
 {
-	Tessellator &tess = Tessellator::instance;
+	Tessellator &tess = RENDER_BLOCKS_TESSELLATOR;
 	int_t meta = accessGetBlockMetadata(x, y, z);
 	int_t dir = meta & 3;
 	bool connected = (meta & 4) == 4;
@@ -1783,7 +1783,7 @@ bool RenderBlocks::renderBlockTripWireSource(Block *block, int_t x, int_t y, int
 
 bool RenderBlocks::renderBlockTripWire(Block *block, int_t x, int_t y, int_t z)
 {
-	Tessellator &tess = Tessellator::instance;
+	Tessellator &tess = RENDER_BLOCKS_TESSELLATOR;
 	int_t meta = accessGetBlockMetadata(x, y, z);
 	bool connected = (meta & 4) == 4;
 	bool suspended = (meta & 2) == 2;

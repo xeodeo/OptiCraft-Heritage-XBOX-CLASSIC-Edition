@@ -22,6 +22,22 @@ public:
     static constexpr int kSectionBlockCount = 16 * 16 * 16;
 
     PcLegacySectionCache(ChunkCache *source, World *world, int_t minX, int_t minY, int_t minZ);
+#if PLATFORM_THREADED_TERRAIN_MESH
+    // Threaded meshing (Ps3MeshWorker.cpp). The main thread constructs the cache
+    // with deferSectionData (block ids only), adds everything else meshing reads
+    // with captureSnapshot() and hands it to the worker; from then on the cache
+    // is "detached" and never touches the ChunkCache or the World again. The
+    // worker runs precomputeDeferredSectionData() and meshes from the copies.
+    PcLegacySectionCache(ChunkCache *source, World *world, int_t minX, int_t minY, int_t minZ,
+        bool deferSectionData);
+    void captureSnapshot();
+    bool isDetached() const { return detached; }
+    void precomputeDeferredSectionData() { precomputeSectionData(); }
+    // Whether a scalar light read saw skylight (the snapshot's Chunk::isLit).
+    bool snapshotSkyLit() const { return snapshotSawSky; }
+    // Reads that fell outside the snapshot and were answered from its edge.
+    int snapshotOutOfRangeReads() const { return outOfRangeReads; }
+#endif
 
     void beginStep();
 
@@ -82,6 +98,39 @@ private:
     std::array<std::uint8_t, kCellCount> lightValueValid{};
     std::array<BiomeGenBase *, kHorizontalCellCount> biomes{};
     std::array<std::uint8_t, kHorizontalCellCount> biomeValid{};
+
+#if PLATFORM_THREADED_TERRAIN_MESH
+    // Light is copied one block wider than the rest (20^3, like the Legacy
+    // Console Edition's ChunkRebuildData): a slab or stair on the 18^3 border
+    // takes its brightness from its neighbours, one block further out.
+    static constexpr int kLightSize = kSize + 2;
+    static constexpr int kLightCellCount = kLightSize * kLightSize * kLightSize;
+
+    int clampedCellIndex(int_t x, int_t y, int_t z);
+    int clampedHorizontalIndex(int_t x, int_t z);
+    int lightCellIndex(int_t x, int_t y, int_t z);
+    // ChunkCache::getSpecialBlockBrightness / getSkyBlockTypeBrightness /
+    // getLightValueExt over the copies, same rules and clamps.
+    int_t snapshotSavedLight(bool sky, int_t x, int_t y, int_t z);
+    int_t snapshotSkyBlockTypeBrightness(bool sky, int_t x, int_t y, int_t z);
+    int_t snapshotLightValue(int_t x, int_t y, int_t z, bool neighbourRule);
+    int_t snapshotPackedLight(int_t x, int_t y, int_t z, int index);
+
+    bool detached = false;
+    bool snapshotSawSky = false;
+    int outOfRangeReads = 0;
+    int_t snapshotSkylightSubtracted = 0;
+    bool snapshotHasNoSky = false;
+    bool snapshotLevelsEmpty = true;
+    int_t snapshotHeight = 0;
+    std::array<float, 16> snapshotBrightnessTable{};
+    // Saved sky light << 4 | saved block light, as getSavedLightValue answers
+    // (defaults for a missing chunk or section).
+    std::array<std::uint8_t, kLightCellCount> savedLight{};
+    // ChunkCache's fast path has a section for this cell (else scalar light is
+    // the open-sky value).
+    std::array<std::uint8_t, kLightCellCount> sectionPresent{};
+#endif
 };
 
 #endif

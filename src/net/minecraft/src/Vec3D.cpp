@@ -1,6 +1,7 @@
 #include "Vec3D.h"
 
 #include "MathHelper.h"
+#include "platform/PlatformMeshThread.h"
 
 #include <memory>
 #include <vector>
@@ -29,8 +30,20 @@ void Vec3D::trimVectorPool()
 	g_vec3DOverflowPool.shrink_to_fit();
 }
 
+#if PLATFORM_THREADED_TERRAIN_MESH
+// The mesh worker (levers, fluid flow vectors) must not touch the main thread's
+// pool, which the main thread rewinds every tick. It gets a ring of its own: a
+// block render keeps at most a few dozen temporaries alive, far below the ring.
+Vec3D Vec3D::meshWorkerPool[256];
+static unsigned int s_meshWorkerNext = 0;
+#endif
+
 Vec3D *Vec3D::createVector(double d, double d1, double d2)
 {
+#if PLATFORM_THREADED_TERRAIN_MESH
+	if (platformOnMeshWorker())
+		return meshWorkerPool[s_meshWorkerNext++ & 255u].setComponents(d, d1, d2);
+#endif
 	int_t index = nextVector++;
 	if (index < POOL_SIZE)
 		return pool[index].setComponents(d, d1, d2);

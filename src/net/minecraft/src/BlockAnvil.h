@@ -8,7 +8,13 @@ class BlockAnvil : public BlockSand
 public:
 	static const char *const statuses[3];
 
+#if PLATFORM_THREADED_TERRAIN_MESH
+	// Set by the anvil renderer for each piece it draws (mesh worker) and read
+	// by the texture lookup; per thread like Block's bounds.
+	PlatformMeshThreadValue<int_t> field_82521_b{0};
+#else
 	int_t field_82521_b = 0;
+#endif
 
 	explicit BlockAnvil(int_t id);
 	bool blockActivated(World *world, int_t x, int_t y, int_t z, EntityPlayer *player) override;

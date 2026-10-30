@@ -465,7 +465,7 @@ bool RenderBlocks::renderSimpleOpaqueCubeWithColorMultiplierLegacy(Block *block,
 		return false;
 
 	enableAO = false;
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	const unsigned char visibleMask = renderAllFaces ? 0x3f : faceMask;
 	if (visibleMask == 0)
 		return false;
@@ -880,7 +880,7 @@ bool RenderBlocks::renderBlockByRenderType(Block *block, int_t i, int_t j, int_t
 
 bool RenderBlocks::renderBlockBed(Block *block, int_t i, int_t j, int_t k)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	int_t l = accessGetBlockMetadata(i, j, k);
 	int_t i1 = BlockBed::getDirectionFromMetadata(l);
 	bool flag = BlockBed::isBlockFootOfBed(l);
@@ -1065,7 +1065,7 @@ void RenderBlocks::renderBetterSnow(int_t x, int_t y, int_t z, double maxY)
 bool RenderBlocks::renderBlockTorch(Block *block, int_t i, int_t j, int_t k)
 {
 	int_t l = accessGetBlockMetadata(i, j, k);
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	tessellator->setBrightness(block->getMixedBrightnessForBlock(blockAccess, i, j, k));
 	tessellator->setColorOpaque_F(1.0f, 1.0f, 1.0f);
 	tess_coord_t d = (tess_coord_t)0.40000000596046448;
@@ -1101,7 +1101,7 @@ bool RenderBlocks::renderBlockRepeater(Block *block, int_t i, int_t j, int_t k)
 	int_t i1 = l & 3;
 	int_t j1 = (l & 0xc) >> 2;
 	renderStandardBlock(block, i, j, k);
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	tessellator->setBrightness(block->getMixedBrightnessForBlock(blockAccess, i, j, k));
 	tessellator->setColorOpaque_F(1.0f, 1.0f, 1.0f);
 	tess_coord_t d = -0.1875f;
@@ -1290,7 +1290,7 @@ void RenderBlocks::renderPistonArmX(float d, float d1, float d2, float d3, float
 	}
 	int_t j = (i & 0xf) << 4;
 	int_t k = i & 0xf0;
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	tess_coord_t d7 = (float)(j + 0) / 256.0f;
 	tess_coord_t d8 = (float)(k + 0) / 256.0f;
 	tess_coord_t d9 = (((tess_coord_t)j + (tess_coord_t)d6) - kAtlasUvGuard) / 256.0f;
@@ -1311,7 +1311,7 @@ void RenderBlocks::renderPistonArmY(float d, float d1, float d2, float d3, float
 	}
 	int_t j = (i & 0xf) << 4;
 	int_t k = i & 0xf0;
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	tess_coord_t d7 = (float)(j + 0) / 256.0f;
 	tess_coord_t d8 = (float)(k + 0) / 256.0f;
 	tess_coord_t d9 = (((tess_coord_t)j + (tess_coord_t)d6) - kAtlasUvGuard) / 256.0f;
@@ -1332,7 +1332,7 @@ void RenderBlocks::renderPistonArmZ(float d, float d1, float d2, float d3, float
 	}
 	int_t j = (i & 0xf) << 4;
 	int_t k = i & 0xf0;
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	tess_coord_t d7 = (float)(j + 0) / 256.0f;
 	tess_coord_t d8 = (float)(k + 0) / 256.0f;
 	tess_coord_t d9 = (((tess_coord_t)j + (tess_coord_t)d6) - kAtlasUvGuard) / 256.0f;
@@ -1442,7 +1442,7 @@ bool RenderBlocks::renderBlockLever(Block *block, int_t i, int_t j, int_t k)
 	int_t l = accessGetBlockMetadata(i, j, k);
 	int_t i1 = l & 7;
 	bool flag = (l & 8) > 0;
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	bool flag1 = overrideBlockTexture >= 0;
 	if (!flag1)
 	{
@@ -1626,7 +1626,7 @@ bool RenderBlocks::renderBlockLever(Block *block, int_t i, int_t j, int_t k)
 
 bool RenderBlocks::renderBlockFire(Block *block, int_t i, int_t j, int_t k)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	int_t l = block->getBlockTextureFromSide(0);
 	if (overrideBlockTexture >= 0)
 	{
@@ -1816,7 +1816,7 @@ bool RenderBlocks::renderBlockFire(Block *block, int_t i, int_t j, int_t k)
 
 bool RenderBlocks::renderBlockRedstoneWire(Block *block, int_t i, int_t j, int_t k)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	int_t l = accessGetBlockMetadata(i, j, k);
 	int_t i1 = block->getBlockTextureFromSideAndMetadata(1, l);
 	if (overrideBlockTexture >= 0)
@@ -2037,7 +2037,7 @@ bool RenderBlocks::renderBlockRedstoneWire(Block *block, int_t i, int_t j, int_t
 
 bool RenderBlocks::renderBlockMinecartTrack(BlockRail *blockrail, int_t i, int_t j, int_t k)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	int_t l = accessGetBlockMetadata(i, j, k);
 	int_t i1 = blockrail->getBlockTextureFromSideAndMetadata(0, l);
 	if (overrideBlockTexture >= 0)
@@ -2114,7 +2114,7 @@ bool RenderBlocks::renderBlockMinecartTrack(BlockRail *blockrail, int_t i, int_t
 
 bool RenderBlocks::renderBlockLadder(Block *block, int_t i, int_t j, int_t k)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	int_t l = block->getBlockTextureFromSide(0);
 	if (overrideBlockTexture >= 0)
 	{
@@ -2165,7 +2165,7 @@ bool RenderBlocks::renderBlockLadder(Block *block, int_t i, int_t j, int_t k)
 
 bool RenderBlocks::renderCrossedSquares(Block *block, int_t i, int_t j, int_t k)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	tessellator->setBrightness(block->getMixedBrightnessForBlock(blockAccess, i, j, k));
 	int_t l = CustomColorizer::getColorMultiplier(block, blockAccess, i, j, k);
 	float f1 = (float)(l >> 16 & 0xff) / 255.0f;
@@ -2210,7 +2210,7 @@ bool RenderBlocks::renderBlockReed(Block *block, int_t i, int_t j, int_t k)
 
 bool RenderBlocks::renderBlockCrops(Block *block, int_t i, int_t j, int_t k)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	tessellator->setBrightness(block->getMixedBrightnessForBlock(blockAccess, i, j, k));
 	tessellator->setColorOpaque_F(1.0f, 1.0f, 1.0f);
 	renderCropsCrossed(block, accessGetBlockMetadata(i, j, k), i, (float)j - 0.0625f, k);
@@ -2219,7 +2219,7 @@ bool RenderBlocks::renderBlockCrops(Block *block, int_t i, int_t j, int_t k)
 
 void RenderBlocks::renderTorchAtAngle(Block *block, tess_coord_t d, tess_coord_t d1, tess_coord_t d2, tess_coord_t d3, tess_coord_t d4)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	int_t i = block->getBlockTextureFromSide(0);
 	if (overrideBlockTexture >= 0)
 	{
@@ -2273,7 +2273,7 @@ void RenderBlocks::renderTorchAtAngle(Block *block, tess_coord_t d, tess_coord_t
 
 void RenderBlocks::renderCrossedSquares(Block *block, int_t i, tess_coord_t d, tess_coord_t d1, tess_coord_t d2)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	int_t j = block->getBlockTextureFromSideAndMetadata(0, i);
 	if (overrideBlockTexture >= 0)
 	{
@@ -2324,7 +2324,7 @@ void RenderBlocks::renderCrossedSquares(Block *block, int_t i, tess_coord_t d, t
 
 void RenderBlocks::renderCropsCrossed(Block *block, int_t i, tess_coord_t d, tess_coord_t d1, tess_coord_t d2)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	int_t j = block->getBlockTextureFromSideAndMetadata(0, i);
 	if (overrideBlockTexture >= 0)
 	{
@@ -2386,7 +2386,7 @@ void RenderBlocks::renderCropsCrossed(Block *block, int_t i, tess_coord_t d, tes
 
 bool RenderBlocks::renderBlockFluids(Block *block, int_t i, int_t j, int_t k)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	bool flag = shouldRenderFace(block, i, j + 1, k, 1);
 	bool flag1 = shouldRenderFace(block, i, j - 1, k, 0);
 	bool aflag[4];
@@ -2606,7 +2606,7 @@ float RenderBlocks::getFluidHeight(int_t i, int_t j, int_t k, Material *material
 
 void RenderBlocks::renderBlockFallingSand(Block *block, World *world, int_t i, int_t j, int_t k)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	tessellator->startDrawingQuads();
 	tessellator->setBrightness(block->getMixedBrightnessForBlock(world, i, j, k));
 	tessellator->setColorOpaque_F(0.5f, 0.5f, 0.5f);
@@ -2824,7 +2824,7 @@ bool RenderBlocks::renderStandardBlockWithAmbientOcclusion(Block *block, int_t i
 	const int_t packedXPos = block->maxX >= 1.0 ? aoPackedBrightnessAt(i + 1, j, k) : packedOwn;
 	const int_t packedYPos = block->maxY >= 1.0 ? aoPackedBrightnessAt(i, j + 1, k) : packedOwn;
 	const int_t packedZPos = block->maxZ >= 1.0 ? aoPackedBrightnessAt(i, j, k + 1) : packedOwn;
-	Tessellator::instance.setBrightness(983055);
+	RENDER_BLOCKS_TESSELLATOR.setBrightness(983055);
 	if (block->blockIndexInTexture == 3)
 	{
 		flag1 = flag3 = flag4 = flag5 = flag6 = false;
@@ -3488,7 +3488,7 @@ int_t RenderBlocks::getAoBrightness(int_t a, int_t b, int_t c, int_t base) const
 bool RenderBlocks::renderStandardBlockWithColorMultiplier(Block *block, int_t i, int_t j, int_t k, float f, float f1, float f2)
 {
 	enableAO = false;
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	bool flag = false;
 	float f3 = 0.5f;
 	float f4 = 1.0f;
@@ -3668,7 +3668,7 @@ bool RenderBlocks::renderBlockCactus(Block *block, int_t i, int_t j, int_t k)
 
 bool RenderBlocks::renderCactusWithColorMultiplier(Block *block, int_t i, int_t j, int_t k, float f, float f1, float f2)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	bool flag = false;
 	float f3 = 0.5f;
 	float f4 = 1.0f;
@@ -3846,7 +3846,7 @@ bool RenderBlocks::renderBlockStairs(Block *block, int_t i, int_t j, int_t k)
 
 bool RenderBlocks::renderBlockDoor(Block *block, int_t i, int_t j, int_t k)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	BlockDoor *blockdoor = (BlockDoor *)block;
 	bool flag = false;
 	float f = 0.5f;
@@ -3963,7 +3963,7 @@ void RenderBlocks::applyNaturalTextureTransform(int_t side, int_t rotation, bool
 Tessellator *RenderBlocks::resolveFaceTexture(Block *block, int_t side, int_t x, int_t y, int_t z, int_t &tile)
 {
 	restoreNaturalTextureTransform();
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	if (overrideBlockTexture >= 0 || blockAccess == nullptr || block == nullptr)
 		return tessellator;
 
@@ -3975,7 +3975,7 @@ Tessellator *RenderBlocks::resolveFaceTexture(Block *block, int_t side, int_t x,
 		{
 			textureId = connected / 256;
 			tile = connected % 256;
-			tessellator = Tessellator::instance.getSubTessellator(textureId);
+			tessellator = RENDER_BLOCKS_TESSELLATOR.getSubTessellator(textureId);
 		}
 	}
 
@@ -3999,7 +3999,7 @@ Tessellator *RenderBlocks::resolveFaceTexture(Block *block, int_t side, int_t x,
 
 void RenderBlocks::renderBottomFace(Block *block, tess_coord_t d, tess_coord_t d1, tess_coord_t d2, int_t i)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	if (overrideBlockTexture >= 0)
 	{
 		i = overrideBlockTexture;
@@ -4105,7 +4105,7 @@ void RenderBlocks::renderBottomFace(Block *block, tess_coord_t d, tess_coord_t d
 
 void RenderBlocks::renderTopFace(Block *block, tess_coord_t d, tess_coord_t d1, tess_coord_t d2, int_t i)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	if (overrideBlockTexture >= 0)
 	{
 		i = overrideBlockTexture;
@@ -4211,7 +4211,7 @@ void RenderBlocks::renderTopFace(Block *block, tess_coord_t d, tess_coord_t d1, 
 
 void RenderBlocks::renderEastFace(Block *block, tess_coord_t d, tess_coord_t d1, tess_coord_t d2, int_t i)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	if (overrideBlockTexture >= 0)
 	{
 		i = overrideBlockTexture;
@@ -4319,7 +4319,7 @@ void RenderBlocks::renderEastFace(Block *block, tess_coord_t d, tess_coord_t d1,
 
 void RenderBlocks::renderWestFace(Block *block, tess_coord_t d, tess_coord_t d1, tess_coord_t d2, int_t i)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	if (overrideBlockTexture >= 0)
 	{
 		i = overrideBlockTexture;
@@ -4427,7 +4427,7 @@ void RenderBlocks::renderWestFace(Block *block, tess_coord_t d, tess_coord_t d1,
 
 void RenderBlocks::renderNorthFace(Block *block, tess_coord_t d, tess_coord_t d1, tess_coord_t d2, int_t i)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	if (overrideBlockTexture >= 0)
 	{
 		i = overrideBlockTexture;
@@ -4535,7 +4535,7 @@ void RenderBlocks::renderNorthFace(Block *block, tess_coord_t d, tess_coord_t d1
 
 void RenderBlocks::renderSouthFace(Block *block, tess_coord_t d, tess_coord_t d1, tess_coord_t d2, int_t i)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	if (overrideBlockTexture >= 0)
 	{
 		i = overrideBlockTexture;
@@ -4643,7 +4643,7 @@ void RenderBlocks::renderSouthFace(Block *block, tess_coord_t d, tess_coord_t d1
 
 void RenderBlocks::renderBlockOnInventory(Block *block, int_t i, float f)
 {
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	if (field_31088_b)
 	{
 		int_t j = block->getRenderColor(i);
@@ -5029,7 +5029,7 @@ bool RenderBlocks::renderBlockRedstoneLogic(BlockRedstoneLogic *block, int_t i, 
 	int_t dir = meta & 3;
 	int_t delay = (meta & 0xc) >> 2;
 	renderStandardBlock(block, i, j, k);
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	tessellator->setBrightness(block->getMixedBrightnessForBlock(blockAccess, i, j, k));
 	tessellator->setColorOpaque_F(1.0f, 1.0f, 1.0f);
 	tess_coord_t dy = -0.1875f;
@@ -5112,7 +5112,7 @@ bool RenderBlocks::renderBlockComparator(BlockComparator *block, int_t i, int_t 
 	}
 
 	renderStandardBlock(block, i, j, k);
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	tessellator->setBrightness(block->getMixedBrightnessForBlock(blockAccess, i, j, k));
 	tessellator->setColorOpaque_F(1.0f, 1.0f, 1.0f);
 
@@ -5190,7 +5190,7 @@ void RenderBlocks::renderBlockRedstoneLogicMetadata(BlockRedstoneLogic *block, i
 		f6 = f7 = k + 1;
 		f8 = f9 = k + 0;
 	}
-	Tessellator *tessellator = &Tessellator::instance;
+	Tessellator *tessellator = &RENDER_BLOCKS_TESSELLATOR;
 	tessellator->addVertexWithUV(f5, f10, f9, d5, d7);
 	tessellator->addVertexWithUV(f4, f10, f8, d5, d8);
 	tessellator->addVertexWithUV(f3, f10, f7, d6, d8);
@@ -5205,7 +5205,7 @@ bool RenderBlocks::renderBlockHopper(BlockHopper *block, int_t i, int_t j, int_t
 bool RenderBlocks::renderBlockHopperMetadata(BlockHopper *block, int_t i, int_t j, int_t k, int_t meta, bool inventory)
 {
 	if (block == nullptr) return false;
-	Tessellator *tess = &Tessellator::instance;
+	Tessellator *tess = &RENDER_BLOCKS_TESSELLATOR;
 	int_t dir = BlockHopper::getDirectionFromMetadata(meta);
 	double topMinY = 0.625;
 	block->setBlockBounds(0.0f, (float)topMinY, 0.0f, 1.0f, 1.0f, 1.0f);

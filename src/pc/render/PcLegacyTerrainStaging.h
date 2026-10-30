@@ -27,6 +27,15 @@ struct PcLegacyTerrainStaging
     std::vector<TessellatorTextureMesh> extraTextureMeshes[2];
     std::vector<TileEntity *> tileEntityRenderers;
     std::vector<PcLegacyStaticTileEntityCandidate> staticTileEntityCandidates;
+#if PLATFORM_THREADED_TERRAIN_MESH
+    // A mesh worker job (Ps3MeshWorker.cpp) is one of these: the section's
+    // origin, and what the worker reports back besides the meshes.
+    int_t originX = 0;
+    int_t originY = 0;
+    int_t originZ = 0;
+    bool skyLit = false;
+    bool buildFailed = false;
+#endif
 };
 
 bool pcLegacyTerrainStagingAcquire(WorldRenderer *owner, World *world,

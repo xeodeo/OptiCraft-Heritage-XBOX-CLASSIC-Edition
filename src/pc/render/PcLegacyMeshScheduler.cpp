@@ -15,6 +15,9 @@
 #include "platform/Log.h"
 #include "platform/PlatformCompat.h"
 #include "platform/PlatformTuning.h"
+#if PLATFORM_THREADED_TERRAIN_MESH
+#include "ps3/render/Ps3MeshWorker.h"
+#endif
 
 namespace
 {
@@ -142,6 +145,11 @@ void pcLegacyRunMeshScheduler(
     if (s_candidates.capacity() < fixedRendererCapacity)
         s_candidates.reserve(fixedRendererCapacity);
 
+#if PLATFORM_THREADED_TERRAIN_MESH
+    // Starts the worker the first time, frees the jobs of released renderers.
+    ps3MeshWorkerPump();
+#endif
+
     s_candidates.clear();
     ++s_statCalls;
     s_statPending += static_cast<long>(pending.size());
@@ -235,6 +243,17 @@ void pcLegacyRunMeshScheduler(
             current = nullptr;
             continue;
         }
+
+#if PLATFORM_THREADED_TERRAIN_MESH
+        // With the mesh worker a step is one bounded unit (publish a finished
+        // job, or snapshot and queue the section); a job still meshing must not
+        // be polled until the budget runs out. Next renderer.
+        if (ps3MeshWorkerRunning())
+        {
+            current = nullptr;
+            continue;
+        }
+#endif
 
         if (current->isTerrainBuildInProgress())
             continue;

@@ -27,6 +27,11 @@ public:
 #if PLATFORM_INCREMENTAL_TERRAIN_BUILD || defined(PS2_PLATFORM)
 	const ExtendedBlockStorage *getResidentBlockStorageAt(int_t i, int_t j, int_t k) const;
 #endif
+#if PLATFORM_THREADED_TERRAIN_MESH
+	// The cached Chunk (possibly an EmptyChunk) of a block column, or null. The
+	// mesh snapshot reads light straight from its sections.
+	Chunk *getCachedChunkAtBlock(int_t i, int_t k) const;
+#endif
 	TileEntity *getBlockTileEntity(int_t i, int_t j, int_t k) override;
 	int_t getLightBrightnessForSkyBlocks(int_t i, int_t j, int_t k, int_t minimumBlockLight) override;
 	int_t getSkyBlockTypeBrightness(EnumSkyBlock *type, int_t i, int_t j, int_t k);

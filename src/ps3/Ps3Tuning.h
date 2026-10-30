@@ -84,6 +84,17 @@
 #undef  PLATFORM_COMPACT_TERRAIN_VERTICES
 #define PLATFORM_COMPACT_TERRAIN_VERTICES        0
 
+// Chunk meshing on the PPU's second hardware thread (PLATFORM_THREADED_TERRAIN_MESH,
+// src/ps3/render/Ps3MeshWorker.cpp). Sections in flight at once: each holds a
+// ~110 KB snapshot plus its CPU meshes, and the nearest go first, so a short
+// queue keeps both memory and the latency of a nearby edit low. The worker
+// runs just below the main thread (1001; lower number = higher priority) so
+// the frame never waits on it, with a stack for RenderBlocks' recursion and
+// its on-stack AO scratch.
+#define PS3_MESH_WORKER_JOBS                     3
+#define PS3_MESH_WORKER_PRIORITY                 1100
+#define PS3_MESH_WORKER_STACK_BYTES              (512 * 1024)
+
 // Tessellator: quads straight to the RSX quad primitive (no conversion to triangles,
 // a third fewer vertices to build, store and draw) and the console-sized
 // staging buffer (it grows on demand; the desktop 8 MB one is never needed).

@@ -4,6 +4,7 @@
 
 #include "java/Type.h"
 #include "java/String.h"
+#include "platform/PlatformMeshThread.h"
 
 class Random;
 
@@ -414,12 +415,24 @@ protected:
 	bool enableStats;
 
 public:
+#if PLATFORM_THREADED_TERRAIN_MESH
+	// Rewritten while a block renders (stairs, fences, doors...) on the mesh
+	// worker and while the main thread collides or ray traces, so each thread
+	// has its own copy. See platform/PlatformMeshThread.h.
+	PlatformMeshThreadValue<double> minX{0.0};
+	PlatformMeshThreadValue<double> minY{0.0};
+	PlatformMeshThreadValue<double> minZ{0.0};
+	PlatformMeshThreadValue<double> maxX{0.0};
+	PlatformMeshThreadValue<double> maxY{0.0};
+	PlatformMeshThreadValue<double> maxZ{0.0};
+#else
 	double minX = 0.0;
 	double minY = 0.0;
 	double minZ = 0.0;
 	double maxX = 0.0;
 	double maxY = 0.0;
 	double maxZ = 0.0;
+#endif
 	StepSound *stepSound;
 	float blockParticleGravity;
 	Material *const blockMaterial;

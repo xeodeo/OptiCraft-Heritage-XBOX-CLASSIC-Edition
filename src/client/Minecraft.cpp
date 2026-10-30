@@ -242,6 +242,9 @@ namespace
 #include "net/minecraft/src/WorldProvider.h"
 #include "net/minecraft/src/WorldRenderer.h"
 #include "net/minecraft/src/WorldClient.h"
+#if PLATFORM_THREADED_TERRAIN_MESH
+#include "ps3/render/Ps3MeshWorker.h"
+#endif
 
 // ─── Static members ───────────────────────────────────────────────────────────
 
@@ -865,6 +868,11 @@ void Minecraft::shutdownMinecraftApplet()
 
         MC_LOG_INFO("client", "Stopping!\n");
 
+#if PLATFORM_THREADED_TERRAIN_MESH
+        // Before the world and its renderers go: the worker is out within a
+        // millisecond or two and the wait is bounded (see the function).
+        ps3MeshWorkerShutdown();
+#endif
 #if PLATFORM_PS3
         // With running == false the save screen throws MinecraftError (the Java
         // way to abort a load), and on the PS3 that first throw never came back:

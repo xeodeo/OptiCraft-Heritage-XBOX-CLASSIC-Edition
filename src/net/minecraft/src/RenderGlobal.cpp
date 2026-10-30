@@ -107,6 +107,9 @@
 #endif
 #include "platform/PlatformCompat.h"
 #include "platform/Profiler.h"
+#if PLATFORM_THREADED_TERRAIN_MESH
+#include "ps3/render/Ps3MeshWorker.h"
+#endif
 
 namespace
 {
@@ -3388,6 +3391,10 @@ void RenderGlobal::doNothingWithTileEntity(int_t i, int_t j, int_t k, TileEntity
 
 	// Scrub non-owning render references before World/Chunk deletes the object.
 	tileEntities.erase(std::remove(tileEntities.begin(), tileEntities.end(), tileentity), tileEntities.end());
+#if PLATFORM_THREADED_TERRAIN_MESH
+	// Including sections snapshotted but not yet published by the mesh worker.
+	ps3MeshWorkerForgetTileEntity(tileentity);
+#endif
 
 	if (worldRenderers != nullptr)
 	{

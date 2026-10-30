@@ -29,6 +29,9 @@
 #include "pc/tuning/PcLegacyTuning.h"
 #include "platform/RenderAPI.h"
 #include "xbox/system/XboxWatchdog.h"
+#if PLATFORM_THREADED_TERRAIN_MESH
+#include "ps3/render/Ps3MeshWorker.h"
+#endif
 
 namespace
 {
@@ -90,6 +93,13 @@ void WorldRenderer::updateRenderer()
         return;
     }
 
+#if PLATFORM_THREADED_TERRAIN_MESH
+    if (ps3MeshWorkerRunning())
+    {
+        pcLegacyThreadedBuildStep();
+        return;
+    }
+#endif
     pcLegacyBuildRendererStep(PLATFORM_CHUNK_BUILD_BLOCKS_PER_STEP);
 }
 
@@ -101,6 +111,11 @@ void WorldRenderer::abandonTerrainBuild()
 void WorldRenderer::pcLegacyResetBuildState()
 {
     pcLegacyTerrainStagingRelease(this);
+#if PLATFORM_THREADED_TERRAIN_MESH
+    // Moved, dropped, destroyed or published: a job of this renderer's still
+    // queued or meshing is stale now (the worker's result is discarded).
+    ps3MeshWorkerRelease(this);
+#endif
     pcLegacyBuildActive = false;
     pcLegacyBuildSourceAvailability = 0u;
     pcLegacyBuildSourceAvailabilityValid = false;
@@ -516,5 +531,151 @@ bool WorldRenderer::pcLegacyBuildRendererStep(int_t blockBudget)
     pcLegacyPublishBuild(*staging);
     return true;
 }
+
+#if PLATFORM_THREADED_TERRAIN_MESH
+bool WorldRenderer::pcLegacyThreadedBuildStep()
+{
+    pcLegacyStepDidWork = false;
+
+    if (worldObj == nullptr)
+    {
+        pcLegacyResetBuildState();
+        needsUpdate = false;
+        return true;
+    }
+
+    if (pcLegacyBuildActive)
+    {
+        // A synchronous build begun before the worker started has no job;
+        // start it over through the worker.
+        if (!ps3MeshWorkerOwnsJob(this))
+        {
+            pcLegacyResetBuildState();
+        }
+        else
+        {
+            PcLegacyTerrainStaging *job = ps3MeshWorkerFinished(this);
+            if (job == nullptr)
+                return false;
+            if (job->buildFailed)
+            {
+                // Same as a failed synchronous capture: still dirty, retried later.
+                pcLegacyResetBuildState();
+                return false;
+            }
+
+            PS3_STAGE_SCOPE("meshPublish");
+            const std::uint64_t publishStartUs = PlatformCompat::getMonotonicMicros();
+            pcLegacyBuildChunkLit = job->skyLit;
+            // Records the display lists and tile entity lists exactly as the
+            // synchronous builder does, then releases the job.
+            pcLegacyPublishBuild(*job);
+            const std::uint64_t publishEndUs = PlatformCompat::getMonotonicMicros();
+            ps3MeshWorkerNotePublish(publishEndUs > publishStartUs ? publishEndUs - publishStartUs : 0);
+            return true;
+        }
+    }
+
+    const int_t x0 = posX;
+    const int_t y0 = posY;
+    const int_t z0 = posZ;
+    const int_t x1 = posX + sizeWidth;
+    const int_t y1 = posY + sizeHeight;
+    const int_t z1 = posZ + sizeDepth;
+
+    // An all-air section has nothing to mesh and needs no neighbours: the
+    // synchronous builder publishes it in this one step, cheaper than a
+    // snapshot. Sky sections are most of a column.
+    if (pcLegacyCentralSectionIsEmpty(worldObj, x0, y0, z0))
+        return pcLegacyBuildRendererStep(PLATFORM_CHUNK_BUILD_BLOCKS_PER_STEP);
+
+    // Same generation gate as the synchronous builder: never snapshot against
+    // a missing column (it would bake air and wrong light into the border).
+    const unsigned int sourceAvailability = pcLegacySourceAvailability(worldObj, x0, z0, x1, z1);
+    const int_t ccx0 = JavaArithmetic::intShr(x0 - 1, 4);
+    const int_t ccx1 = JavaArithmetic::intShr(x1 + 1, 4);
+    const int_t ccz0 = JavaArithmetic::intShr(z0 - 1, 4);
+    const int_t ccz1 = JavaArithmetic::intShr(z1 + 1, 4);
+    int_t requestedDependencies = 0;
+    unsigned int sourceBit = 1u;
+    for (int_t ccx = ccx0; ccx <= ccx1; ++ccx)
+    {
+        for (int_t ccz = ccz0; ccz <= ccz1; ++ccz, sourceBit <<= 1)
+        {
+            if ((sourceAvailability & sourceBit) != 0u)
+                continue;
+            Chunk *neighbor = worldObj->getChunkFromChunkCoords(ccx, ccz);
+            ++requestedDependencies;
+            if (neighbor != nullptr && !neighbor->isEmptyChunk())
+                pcLegacyStepDidWork = true;
+            if (requestedDependencies >= PC_LEGACY_RENDERER_DEPENDENCY_REQUESTS_PER_STEP)
+                return false;
+        }
+    }
+    if (requestedDependencies > 0)
+        return false;
+
+    // Every job in flight: the scheduler moves on to the next renderer and
+    // this one asks again next frame.
+    PcLegacyTerrainStaging *job = ps3MeshWorkerAcquire(this);
+    if (job == nullptr)
+        return false;
+
+    PS3_STAGE_SCOPE("meshSnapshot");
+    const std::uint64_t snapshotStartUs = PlatformCompat::getMonotonicMicros();
+    job->originX = x0;
+    job->originY = y0;
+    job->originZ = z0;
+    job->sourceCache.emplace(worldObj, x0 - 1, y0 - 1, z0 - 1, x1 + 1, y1 + 1, z1 + 1);
+    job->sectionCache.emplace(&*job->sourceCache, worldObj, x0 - 1, y0 - 1, z0 - 1, true);
+    PcLegacySectionCache &sectionCache = *job->sectionCache;
+
+    // Tile entities with a special renderer, on this thread: looking one up
+    // can create it (Chunk::getChunkBlockTileEntity). Same order as the
+    // synchronous builder's pass-0 scan.
+    for (int_t ly = 0; ly < 16; ++ly)
+    {
+        for (int_t lz = 0; lz < 16; ++lz)
+        {
+            for (int_t lx = 0; lx < 16; ++lx)
+            {
+                const int_t id = sectionCache.getBlockIdLocal(lx, ly, lz);
+                if (id <= 0 || id >= Block::BLOCK_REGISTRY_SIZE || !Block::isBlockContainer[id] ||
+                    Block::blocksList[id] == nullptr)
+                {
+                    continue;
+                }
+                TileEntity *te = sectionCache.getBlockTileEntity(x0 + lx, y0 + ly, z0 + lz);
+                if (te != nullptr && TileEntityRenderer::instance.hasSpecialRenderer(te) &&
+                    std::find(job->tileEntityRenderers.begin(), job->tileEntityRenderers.end(), te) ==
+                        job->tileEntityRenderers.end())
+                {
+                    job->tileEntityRenderers.push_back(te);
+                }
+            }
+        }
+    }
+
+    // Metadata, light and biomes; after this the cache never reads the world.
+    sectionCache.captureSnapshot();
+    if (!sectionCache.isDetached())
+    {
+        ps3MeshWorkerRelease(this);
+        return false;
+    }
+    job->sourceCache.reset();
+    ps3MeshWorkerSubmit(job);
+
+    pcLegacyBuildActive = true;
+    pcLegacyBuildSourceAvailability = sourceAvailability;
+    pcLegacyBuildSourceAvailabilityValid = true;
+    isVisibleFromPosition = false;
+    pcLegacyStepDidWork = true;
+
+    const std::uint64_t snapshotEndUs = PlatformCompat::getMonotonicMicros();
+    ps3MeshWorkerNoteSnapshot(snapshotEndUs > snapshotStartUs ? snapshotEndUs - snapshotStartUs : 0);
+    return false;
+}
+#endif
 
 #endif

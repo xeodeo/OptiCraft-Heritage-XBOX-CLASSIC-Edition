@@ -140,6 +140,17 @@ bool ChunkCache::hasResidentChunkAtBlock(int_t i, int_t k) const
 	return chunk != nullptr && !chunk->isEmptyChunk();
 }
 
+#if PLATFORM_THREADED_TERRAIN_MESH
+Chunk *ChunkCache::getCachedChunkAtBlock(int_t i, int_t k) const
+{
+	const int_t localX = JavaArithmetic::intSub(JavaArithmetic::intShr(i, 4), chunkX);
+	const int_t localZ = JavaArithmetic::intSub(JavaArithmetic::intShr(k, 4), chunkZ);
+	if (localX < 0 || localX >= chunkArrayWidth || localZ < 0 || localZ >= chunkArrayDepth)
+		return nullptr;
+	return chunkArray[cellIndex(localX, localZ)];
+}
+#endif
+
 #if PLATFORM_INCREMENTAL_TERRAIN_BUILD || defined(PS2_PLATFORM)
 const ExtendedBlockStorage *ChunkCache::getResidentBlockStorageAt(int_t i, int_t j, int_t k) const
 {

@@ -252,6 +252,17 @@
 
 // CPU section-connectivity culling (skips sections hidden behind solid
 // terrain, e.g. caves under the player). Needs the incremental builder.
+// Chunk meshing on a worker thread (src/ps3/render/Ps3MeshWorker.cpp), the
+// PPU's second hardware thread, as the Legacy Console Edition did on the PS3.
+// The main thread snapshots a section's 18^3 neighbourhood, the worker meshes
+// it into CPU vertex arrays with its own Tessellator, and the main thread
+// records the display list. Defined here and not in a tuning header because it
+// changes Block's layout (per-thread bounds, see PlatformMeshThread.h), so every
+// translation unit must agree on it.
+#ifndef PLATFORM_THREADED_TERRAIN_MESH
+#  define PLATFORM_THREADED_TERRAIN_MESH (PLATFORM_PS3 && PLATFORM_INCREMENTAL_TERRAIN_BUILD)
+#endif
+
 #ifndef PLATFORM_SECTION_VISIBILITY_CULL
 #  define PLATFORM_SECTION_VISIBILITY_CULL (PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
