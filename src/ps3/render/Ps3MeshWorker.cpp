@@ -70,6 +70,10 @@ namespace
         // Written by the worker before it publishes Done.
         std::uint32_t workerMicros = 0;
         int outOfRangeReads = 0;
+        // Worker only: precomputed and (if it could) handed to an SPU ahead of
+        // meshing, so several sections' SPU jobs run at once.
+        bool prepared = false;
+        bool spuBegun = false;
     };
 
     MeshJob s_jobs[PS3_MESH_WORKER_JOBS];
@@ -164,14 +168,33 @@ namespace
     // The section loop of WorldRenderer::pcLegacyBuildRendererStep, whole
     // section at once and without the tile entity scan (the main thread did it
     // while taking the snapshot). Reads only the detached section cache.
+    // Face masks and work lists, then the opaque pass's SPU job. Done for a
+    // whole batch of taken jobs before any is meshed: each SPU job then runs
+    // while this thread renders the earlier sections' leftovers.
+    void prepareJob(MeshJob &job)
+    {
+        job.prepared = true;
+        job.spuBegun = false;
+        PcLegacyTerrainStaging &staging = job.staging;
+        if (!staging.sectionCache.has_value())
+            return;
+        PcLegacySectionCache &sectionCache = *staging.sectionCache;
+        sectionCache.precomputeDeferredSectionData();
+#if PLATFORM_SPU_CHUNK_MESH
+        if (!job.cancelled.load(std::memory_order_relaxed) && !s_stop.load(std::memory_order_relaxed))
+            job.spuBegun = ps3SpuMeshBegin(static_cast<int>(&job - s_jobs), sectionCache);
+#endif
+    }
+
     bool meshJob(MeshJob &job, Tessellator &tessellator)
     {
         PcLegacyTerrainStaging &staging = job.staging;
         if (!staging.sectionCache.has_value())
             return false;
 
+        if (!job.prepared)
+            prepareJob(job);
         PcLegacySectionCache &sectionCache = *staging.sectionCache;
-        sectionCache.precomputeDeferredSectionData();
 
         const int_t x0 = staging.originX;
         const int_t y0 = staging.originY;
@@ -188,7 +211,7 @@ namespace
             // Opaque pass: the SPU meshes the plain cubes and grass while this
             // thread renders everything else.
             const int spuSlot = static_cast<int>(&job - s_jobs);
-            const bool spu = pass == 0 && ps3SpuMeshBegin(spuSlot, sectionCache);
+            const bool spu = pass == 0 && job.spuBegun;
             int ppuBlocks = 0;
 #endif
             RenderBlocks renderblocks(&sectionCache);
@@ -280,40 +303,60 @@ namespace
         Tessellator *tessellator = new Tessellator(PLATFORM_TESSELLATOR_BUFFER_INTS);
         while (!s_stop.load(std::memory_order_acquire))
         {
-            MeshJob *job = takeNextJob();
-            if (job == nullptr)
+            // Take every queued job (oldest first) and prepare them all, so
+            // their SPU jobs start together; then mesh them in order.
+            MeshJob *batch[PS3_MESH_WORKER_JOBS];
+            int batchCount = 0;
+            while (batchCount < PS3_MESH_WORKER_JOBS)
+            {
+                MeshJob *taken = takeNextJob();
+                if (taken == nullptr)
+                    break;
+                taken->prepared = false;
+                taken->spuBegun = false;
+                batch[batchCount++] = taken;
+            }
+            if (batchCount == 0)
             {
                 sysSemWait(s_wake, 100 * 1000);
                 continue;
             }
+            if (batchCount > 1)
+                for (int b = 0; b < batchCount; ++b)
+                    prepareJob(*batch[b]);
 
-            const std::uint64_t startUs = PlatformCompat::getMonotonicMicros();
-            bool ok = false;
-            try
+            for (int b = 0; b < batchCount; ++b)
             {
-                ok = meshJob(*job, *tessellator);
-            }
-            catch (...)
-            {
+                MeshJob *job = batch[b];
+
+                const std::uint64_t startUs = PlatformCompat::getMonotonicMicros();
+                bool ok = false;
+                try
+                {
+                    ok = meshJob(*job, *tessellator);
+                }
+                catch (...)
+                {
 #if PLATFORM_SPU_CHUNK_MESH
-                ps3SpuMeshCancel(static_cast<int>(job - s_jobs));
+                    ps3SpuMeshCancel(static_cast<int>(job - s_jobs));
 #endif
-                // A throw inside a block renderer leaves the tessellator mid
-                // batch; start the next section from a fresh one.
-                delete tessellator;
-                tessellator = new Tessellator(PLATFORM_TESSELLATOR_BUFFER_INTS);
-                ok = false;
+                    // A throw inside a block renderer leaves the tessellator mid
+                    // batch; start the next section from a fresh one.
+                    delete tessellator;
+                    tessellator = new Tessellator(PLATFORM_TESSELLATOR_BUFFER_INTS);
+                    ok = false;
+                }
+                const std::uint64_t endUs = PlatformCompat::getMonotonicMicros();
+                job->workerMicros = endUs > startUs ? static_cast<std::uint32_t>(endUs - startUs) : 0u;
+                job->staging.buildFailed = !ok;
+                s_statWorkerMicros.fetch_add(static_cast<long>(job->workerMicros), std::memory_order_relaxed);
+                s_statOutOfRange.fetch_add(job->outOfRangeReads, std::memory_order_relaxed);
+                if (ok)
+                    s_statMeshed.fetch_add(1, std::memory_order_relaxed);
+                else
+                    s_statFailed.fetch_add(1, std::memory_order_relaxed);
+                job->state.store(kJobDone, std::memory_order_release);
             }
-            const std::uint64_t endUs = PlatformCompat::getMonotonicMicros();
-            job->workerMicros = endUs > startUs ? static_cast<std::uint32_t>(endUs - startUs) : 0u;
-            job->staging.buildFailed = !ok;
-            s_statWorkerMicros.fetch_add(static_cast<long>(job->workerMicros), std::memory_order_relaxed);
-            s_statOutOfRange.fetch_add(job->outOfRangeReads, std::memory_order_relaxed);
-            if (ok)
-                s_statMeshed.fetch_add(1, std::memory_order_relaxed);
-            else
-                s_statFailed.fetch_add(1, std::memory_order_relaxed);
-            job->state.store(kJobDone, std::memory_order_release);
         }
         delete tessellator;
 
