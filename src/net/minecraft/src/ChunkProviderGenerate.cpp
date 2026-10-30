@@ -31,6 +31,10 @@
 #include "platform/Log.h"
 #include "platform/PlatformTuning.h"
 #include "platform/WorldLoadTrace.h"
+#include "ps3/system/Ps3Stage.h"
+#if PLATFORM_SPU_NOISE
+#include "ps3/spu/Ps3SpuNoise.h"
+#endif
 #include "java/System.h"
 
 #if PLATFORM_XBOX && MC_LOG_LEVEL >= 1
@@ -174,6 +178,7 @@ WorldChunkManager *ChunkProviderGenerate::generationWorldChunkManager() const
 void ChunkProviderGenerate::generateTerrain(int_t chunkX, int_t chunkZ, byte_t *blocks,
 	BiomeGenBase **, const biome_noise_real_t *)
 {
+	PS3_STAGE_SCOPE("gen:terrain");
 	constexpr int_t horizontalCells = 4;
 	constexpr int_t verticalCells = 16;
 	constexpr int_t seaLevel = 63;
@@ -264,6 +269,7 @@ void ChunkProviderGenerate::generateTerrain(int_t chunkX, int_t chunkZ, byte_t *
 void ChunkProviderGenerate::replaceBlocksForBiome(int_t chunkX, int_t chunkZ, byte_t *blocks,
 	BiomeGenBase **biomes)
 {
+	PS3_STAGE_SCOPE("gen:surface");
 	constexpr int_t seaLevel = 63;
 #if PLATFORM_USE_HEIGHTMAP_TERRAIN
 	// stoneNoise was already filled per column by generateTerrainHeightmap()
@@ -399,6 +405,7 @@ void ChunkProviderGenerate::seedChunkGeneration(int_t chunkX, int_t chunkZ)
 void ChunkProviderGenerate::generateBaseTerrain(int_t chunkX, int_t chunkZ, byte_t *blocks,
 	byte_t biomeIds[256])
 {
+	PS3_STAGE_SCOPE("gen:base");
 	seedChunkGeneration(chunkX, chunkZ);
 	WorldLoadTrace::step("terrain");
 	std::fill(blocks, blocks + 32768, static_cast<byte_t>(0));
@@ -458,6 +465,7 @@ void ChunkProviderGenerate::generateRavines(int_t chunkX, int_t chunkZ, byte_t *
 #if PLATFORM_INCREMENTAL_CHUNK_GENERATION
 bool ChunkProviderGenerate::generateCavesStep(int_t chunkX, int_t chunkZ, byte_t *blocks, int_t &cursor)
 {
+	PS3_STAGE_SCOPE("gen:caves");
 #if !PLATFORM_SKIP_CAVE_GENERATION
 	WorldLoadTrace::step("caves");
 	GEN_TIME(caves);
@@ -474,6 +482,7 @@ bool ChunkProviderGenerate::generateCavesStep(int_t chunkX, int_t chunkZ, byte_t
 
 bool ChunkProviderGenerate::generateRavinesStep(int_t chunkX, int_t chunkZ, byte_t *blocks, int_t &cursor)
 {
+	PS3_STAGE_SCOPE("gen:ravines");
 #if !PLATFORM_SKIP_RAVINE_GENERATION
 	WorldLoadTrace::step("ravines");
 	GEN_TIME(ravines);
@@ -490,6 +499,7 @@ bool ChunkProviderGenerate::generateRavinesStep(int_t chunkX, int_t chunkZ, byte
 
 bool ChunkProviderGenerate::generateStructuresStep(int_t chunkX, int_t chunkZ, byte_t *blocks, int_t &cursor)
 {
+	PS3_STAGE_SCOPE("gen:structures");
 	MapGenStructure *structureMapGenerators[4];
 	const int_t count = structureGenerators(structureMapGenerators);
 	if (count == 0)
@@ -570,6 +580,7 @@ Chunk *ChunkProviderGenerate::buildGeneratedChunk(int_t chunkX, int_t chunkZ,
 	const byte_t biomeIds[256], const byte_t *blocks, std::size_t blockCount,
 	const byte_t *metadata)
 {
+	PS3_STAGE_SCOPE("gen:build");
 #if XBOX_AUTOPILOT
 	autotestLogTerrainHash(chunkX, chunkZ, blocks, blockCount, biomeIds);
 #endif
@@ -587,6 +598,7 @@ Chunk *ChunkProviderGenerate::buildGeneratedChunk(int_t chunkX, int_t chunkZ,
 
 void ChunkProviderGenerate::finishGeneratedChunkLighting(Chunk *chunk)
 {
+	PS3_STAGE_SCOPE("gen:skylight");
 	if (chunk == nullptr)
 		return;
 	WorldLoadTrace::step("generateSkylightMap");
@@ -843,6 +855,23 @@ TerrainNoiseBuffer &ChunkProviderGenerate::initializeNoiseField(TerrainNoiseBuff
 	field_4182_g = field_922_a.getBiomeGenForCoordsFloat(field_4182_g, x, z, width, depth, 1.121f, 1.121f, 0.5f);
 	field_4181_h = field_921_b.getBiomeGenForCoordsFloat(field_4181_h, x, z, width, depth, 200.0f, 200.0f, 0.5f);
 #else
+#if PLATFORM_SPU_NOISE
+	// PS3: the five noise fields at once, one per SPU thread, as 4J's
+	// RandomLevelSource did. Same values bit for bit (Ps3SpuNoise.h); when the
+	// SPUs cannot take them the PPU calls below run as always.
+	Ps3SpuNoiseRequest spuNoise[5] = {
+		{ &field_922_a, &field_4182_g, x, 10, z, width, 1, depth, 1.121, 1.0, 1.121 },
+		{ &field_921_b, &field_4181_h, x, 10, z, width, 1, depth, 200.0, 1.0, 200.0 },
+		{ &field_910_m, &field_4185_d, x, y, z, width, height, depth,
+		  horizontalScale / 80.0, verticalScale / 160.0, horizontalScale / 80.0 },
+		{ &field_912_k, &field_4184_e, x, y, z, width, height, depth, horizontalScale, verticalScale, horizontalScale },
+		{ &field_911_l, &field_4183_f, x, y, z, width, height, depth, horizontalScale, verticalScale, horizontalScale },
+	};
+	const bool noiseOnSpu = ps3SpuNoiseGenerate(spuNoise, 5);
+	if (!noiseOnSpu)
+	{
+	PS3_STAGE_SCOPE("noisePpu");
+#endif
 	field_4182_g = field_922_a.getBiomeGenForCoords(field_4182_g, x, z, width, depth, 1.121, 1.121, 0.5);
 	field_4181_h = field_921_b.getBiomeGenForCoords(field_4181_h, x, z, width, depth, 200.0, 200.0, 0.5);
 #endif
@@ -863,6 +892,9 @@ TerrainNoiseBuffer &ChunkProviderGenerate::initializeNoiseField(TerrainNoiseBuff
 		width, height, depth, horizontalScale, verticalScale, horizontalScale);
 	field_4183_f = field_911_l.generateNoiseOctaves(field_4183_f, static_cast<double>(x), static_cast<double>(y), static_cast<double>(z),
 		width, height, depth, horizontalScale, verticalScale, horizontalScale);
+#if PLATFORM_SPU_NOISE
+	}
+#endif
 #endif
 
 	int_t noiseIndex = 0;

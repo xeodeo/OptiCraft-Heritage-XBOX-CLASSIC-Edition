@@ -37,6 +37,11 @@ public:
 	perlin_real_t yCoord;
 	perlin_real_t zCoord;
 
+#if PLATFORM_SPU_NOISE
+	// Copied into the PS3 SPU noise task (src/ps3/spu/Ps3SpuNoise.cpp).
+	const int_t *permutationTable() const { return permutations.data(); }
+#endif
+
 private:
 	std::array<int_t, 512> permutations;
 };

@@ -6,6 +6,7 @@
 #include "NoiseBuffer.h"
 #include "NoiseGenerator.h"
 #include "java/Type.h"
+#include "platform/PlatformConfig.h"
 
 class NoiseGeneratorPerlin;
 class Random;
@@ -38,6 +39,13 @@ public:
                                                   int_t sizeX, int_t sizeZ,
                                                   terrain_coord_real_t scaleX, terrain_coord_real_t scaleZ,
                                                   terrain_coord_real_t amplitudeScale);
+#endif
+
+#if PLATFORM_SPU_NOISE
+    // Read by the PS3 SPU noise task (src/ps3/spu/Ps3SpuNoise.cpp).
+    int_t octaveCount() const { return octaves; }
+    int_t firstOctaveIndex() const { return firstOctave; }
+    const NoiseGeneratorPerlin *octave(int_t i) const { return generatorCollection[static_cast<std::size_t>(i)].get(); }
 #endif
 
 private:

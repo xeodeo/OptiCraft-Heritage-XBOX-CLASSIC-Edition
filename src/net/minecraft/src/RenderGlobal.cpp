@@ -3070,8 +3070,7 @@ void RenderGlobal::markRenderersInRange(int_t i, int_t j, int_t k, int_t l, int_
 	if (dirtyNowUs - s_ps3DirtyLogUs >= 5000000ULL)
 	{
 		if (s_ps3DirtyLogUs != 0)
-			MC_LOG_INFO("ps3.dirty", "marks=%ld newlyDirty=%ld light=%ld edit=%ld other=%ld
-", s_ps3DirtyCalls,
+			MC_LOG_INFO("ps3.dirty", "marks=%ld newlyDirty=%ld light=%ld edit=%ld other=%ld\n", s_ps3DirtyCalls,
 			            s_ps3DirtyNew, s_ps3DirtyLight, s_ps3DirtyEdit,
 			            s_ps3DirtyNew - s_ps3DirtyLight - s_ps3DirtyEdit);
 		s_ps3DirtyLogUs = dirtyNowUs;

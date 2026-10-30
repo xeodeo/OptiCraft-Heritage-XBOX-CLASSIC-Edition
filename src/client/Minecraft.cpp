@@ -245,6 +245,9 @@ namespace
 #if PLATFORM_THREADED_TERRAIN_MESH
 #include "ps3/render/Ps3MeshWorker.h"
 #endif
+#if PLATFORM_PS3
+#include "ps3/spu/Ps3Spu.h"
+#endif
 
 // ─── Static members ───────────────────────────────────────────────────────────
 
@@ -884,6 +887,11 @@ void Minecraft::shutdownMinecraftApplet()
         running = false;
 #endif
         MC_LOG_INFO("client", "shutdown: world closed\n");
+#if PLATFORM_PS3
+        // The world is saved and gone, so no more terrain noise: stop and join
+        // the SPU thread group (bounded; see ps3SpuShutdown()).
+        ps3SpuShutdown();
+#endif
         // No habra mas runTick que vacie la cola diferida: borrar el mundo ahora
         // (en shutdown no hay ningun World::tick() en la pila).
         try

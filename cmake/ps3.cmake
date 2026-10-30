@@ -81,6 +81,59 @@ function(ps3_add_shader out_sources shader_path)
     set(${out_sources} ${${out_sources}} "${_c}" PARENT_SCOPE)
 endfunction()
 
+# --- SPU tasks ----------------------------------------------------------------------
+# The SPU side runs 4J's SPU task code (C++03) built with the leaked Sony SDK's
+# spu-lv2-gcc 4.1.1 (a Windows .exe, run from WSL by cmake/ps3_spu_build.sh). An SPU
+# program is its own ELF in an SPU's local store, so the Sony/PSL1GHT PPU ABI
+# difference does not apply: our PSL1GHT PPU code imports the embedded ELF
+# (sysSpuImageImport) and runs it on a raw SPU thread group (src/ps3/spu/Ps3Spu.cpp).
+# Without the SDK the game builds with PS3_SPU_TASKS=0 and everything stays on the PPU.
+set(PS3_SONY_SDK "${CMAKE_SOURCE_DIR}/../ps3/sdk/cell" CACHE PATH
+    "Sony PS3 SDK 'cell' folder (host-win32/spu/bin/spu-lv2-gcc.exe, target/spu)")
+if(EXISTS "${PS3_SONY_SDK}/host-win32/spu/bin/spu-lv2-gcc.exe")
+    set(_ps3_spu_default ON)
+else()
+    set(_ps3_spu_default OFF)
+endif()
+option(PS3_SPU_TASKS "Build the SPU tasks with Sony's SPU toolchain and run them on the SPUs" ${_ps3_spu_default})
+
+function(ps3_add_spu_tasks out_sources)
+    if(NOT PS3_SPU_TASKS)
+        message(STATUS "PS3 SPU tasks: OFF (no Sony SPU toolchain at ${PS3_SONY_SDK})")
+        return()
+    endif()
+    set(_dir "${CMAKE_SOURCE_DIR}/src/ps3/spu/tasks")
+    set(_sources
+        "${_dir}/SpuMain.cpp"
+        "${_dir}/PerlinNoise/PerlinNoiseJob.cpp"
+        "${_dir}/PerlinNoise/PerlinNoise_SPU.cpp"
+        "${_dir}/PerlinNoise/ImprovedNoise_SPU.cpp"
+    )
+    file(GLOB_RECURSE _headers CONFIGURE_DEPENDS "${_dir}/*.h")
+    set(_elf "${CMAKE_BINARY_DIR}/ps3_spu/spu_tasks.elf")
+    set(_c "${PS3_SHADER_OUT}/ps3_spu_tasks_elf.c")
+    set(_h "${PS3_SHADER_OUT}/ps3_spu_tasks_elf.h")
+    add_custom_command(
+        OUTPUT "${_elf}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/ps3_spu"
+        COMMAND bash "${CMAKE_SOURCE_DIR}/cmake/ps3_spu_build.sh" "${_elf}" "${PS3_SONY_SDK}"
+                "${CMAKE_SOURCE_DIR}/bin/ps3/spu_obj" ${_sources}
+        DEPENDS ${_sources} ${_headers} "${CMAKE_SOURCE_DIR}/cmake/ps3_spu_build.sh"
+        COMMENT "spu-lv2-gcc (Sony) SPU tasks"
+        VERBATIM
+    )
+    add_custom_command(
+        OUTPUT "${_c}" "${_h}"
+        COMMAND ${CMAKE_COMMAND} -DINPUT=${_elf} -DSYMBOL=ps3_spu_tasks_elf -DOUT_C=${_c} -DOUT_H=${_h} -DALIGN=128
+                -P "${CMAKE_SOURCE_DIR}/cmake/ps3_embed_binary.cmake"
+        DEPENDS "${_elf}" "${CMAKE_SOURCE_DIR}/cmake/ps3_embed_binary.cmake"
+        COMMENT "embed spu_tasks.elf"
+        VERBATIM
+    )
+    set(${out_sources} ${${out_sources}} "${_c}" PARENT_SCOPE)
+    message(STATUS "PS3 SPU tasks: ON (Sony spu-lv2-gcc at ${PS3_SONY_SDK})")
+endfunction()
+
 # --- Source selection ---------------------------------------------------------
 if(PS3_BRINGUP)
     set(PS3_SOURCES "${CMAKE_SOURCE_DIR}/src/ps3/tools/Ps3Bringup.cpp")
@@ -138,6 +191,11 @@ else()
     mcbeta_exclude_sources(PS3_SOURCES "[/\\]ps3[/\\]tools[/\\]Ps3Bringup\\.cpp$")
     mcbeta_select_platform_backends(PS3_SOURCES PS3 RSX_PS3 PS3)
 
+    # SPU tasks (src/ps3/spu/tasks, 4J's SPU code): built into one SPU ELF by
+    # Sony's SPU toolchain and embedded in the EBOOT; never compiled for the PPU.
+    mcbeta_exclude_sources(PS3_SOURCES "[/\\]ps3[/\\]spu[/\\]tasks[/\\]")
+    ps3_add_spu_tasks(PS3_SOURCES)
+
     ps3_add_shader(PS3_SOURCES "${CMAKE_SOURCE_DIR}/src/ps3/shaders/opticraft.vcg")
     ps3_add_shader(PS3_SOURCES "${CMAKE_SOURCE_DIR}/src/ps3/shaders/opticraft.fcg")
 
@@ -176,6 +234,7 @@ target_compile_definitions(OptiCraft PRIVATE
     PS3_AUTOPILOT=$<BOOL:${PS3_AUTOPILOT}>
     PS3_SCREENSHOTS=$<BOOL:${PS3_SCREENSHOTS}>
     MC_LOG_LEVEL=${MC_LOG_LEVEL}
+    PS3_SPU_TASKS=$<BOOL:${PS3_SPU_TASKS}>
 )
 if(PS3_NETLOG_HOST)
     target_compile_definitions(OptiCraft PRIVATE "PS3_NETLOG_HOST=\"${PS3_NETLOG_HOST}\"")

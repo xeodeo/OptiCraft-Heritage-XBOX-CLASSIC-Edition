@@ -263,6 +263,18 @@
 #  define PLATFORM_THREADED_TERRAIN_MESH (PLATFORM_PS3 && PLATFORM_INCREMENTAL_TERRAIN_BUILD)
 #endif
 
+// Terrain noise on the PS3's SPUs (src/ps3/spu/Ps3SpuNoise.cpp, 4J's PerlinNoise
+// SPU task). PS3_SPU_TASKS comes from cmake/ps3.cmake: 1 when the SPU task ELF
+// was built (Sony's SPU toolchain found). Bit-for-bit the PPU's noise, checked
+// on the console by the verify mode; any doubt and the PPU code runs.
+#ifndef PLATFORM_SPU_NOISE
+#  if defined(PS3_SPU_TASKS) && PS3_SPU_TASKS
+#    define PLATFORM_SPU_NOISE PLATFORM_PS3
+#  else
+#    define PLATFORM_SPU_NOISE 0
+#  endif
+#endif
+
 #ifndef PLATFORM_SECTION_VISIBILITY_CULL
 #  define PLATFORM_SECTION_VISIBILITY_CULL (PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3)
 #endif
