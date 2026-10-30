@@ -37,6 +37,15 @@ public:
     bool snapshotSkyLit() const { return snapshotSawSky; }
     // Reads that fell outside the snapshot and were answered from its edge.
     int snapshotOutOfRangeReads() const { return outOfRangeReads; }
+    // Raw snapshot arrays for the SPU mesher (src/ps3/spu/Ps3SpuChunkMesh.cpp);
+    // each is 16-byte aligned for DMA.
+    const std::uint16_t *rawBlockIds() const { return blockIds.data(); }
+    const std::uint8_t *rawMetadata() const { return metadata.data(); }
+    const std::uint8_t *rawSavedLight() const { return savedLight.data(); }
+    const std::uint16_t *rawRenderWorkset(int_t pass) const { return renderWorksets[pass != 0 ? 1 : 0].data(); }
+    int_t originX() const { return minX; }
+    int_t originY() const { return minY; }
+    int_t originZ() const { return minZ; }
 #endif
 
     void beginStep();
@@ -85,12 +94,18 @@ private:
     int_t minY;
     int_t minZ;
 
-    std::array<std::uint16_t, kCellCount> blockIds{};
+#if PLATFORM_THREADED_TERRAIN_MESH
+    // 16-byte aligned: the SPU mesher DMAs these straight from here.
+#  define PC_LEGACY_SNAPSHOT_ALIGN alignas(16)
+#else
+#  define PC_LEGACY_SNAPSHOT_ALIGN
+#endif
+    PC_LEGACY_SNAPSHOT_ALIGN std::array<std::uint16_t, kCellCount> blockIds{};
     std::array<std::uint8_t, kCellCount> exposedFaceMask{};
-    std::array<std::array<std::uint16_t, kSectionBlockCount>, 2> renderWorksets{};
+    PC_LEGACY_SNAPSHOT_ALIGN std::array<std::array<std::uint16_t, kSectionBlockCount>, 2> renderWorksets{};
     std::array<int_t, 2> renderWorkCounts{};
     PcLegacySectionVisibility visibility;
-    std::array<std::uint8_t, kCellCount> metadata{};
+    PC_LEGACY_SNAPSHOT_ALIGN std::array<std::uint8_t, kCellCount> metadata{};
     std::array<std::uint8_t, kCellCount> metadataValid{};
     std::array<int_t, kCellCount> packedLight{};
     std::array<std::uint8_t, kCellCount> packedLightValid{};
@@ -126,7 +141,7 @@ private:
     std::array<float, 16> snapshotBrightnessTable{};
     // Saved sky light << 4 | saved block light, as getSavedLightValue answers
     // (defaults for a missing chunk or section).
-    std::array<std::uint8_t, kLightCellCount> savedLight{};
+    PC_LEGACY_SNAPSHOT_ALIGN std::array<std::uint8_t, kLightCellCount> savedLight{};
     // ChunkCache's fast path has a section for this cell (else scalar light is
     // the open-sky value).
     std::array<std::uint8_t, kLightCellCount> sectionPresent{};

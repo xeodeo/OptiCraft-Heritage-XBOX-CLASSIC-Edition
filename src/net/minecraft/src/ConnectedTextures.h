@@ -19,6 +19,10 @@ public:
 	static int_t getCtmTextureId();
 	static int_t getGlassPaneTexture(bool linkP, bool linkN, bool linkYp, bool linkYn);
 	static int_t getReverseGlassPaneTexture(int_t texture);
+	// Whether getConnectedTexture could change this block's tile (any CTM
+	// property for the tile or the block). The SPU mesher leaves such blocks
+	// to the PPU.
+	static bool mayChangeTexture(int_t blockId, int_t tileNum);
 
 private:
 	static RenderEngine *renderEngine;

@@ -108,8 +108,9 @@ function(ps3_add_spu_tasks out_sources)
         "${_dir}/PerlinNoise/PerlinNoiseJob.cpp"
         "${_dir}/PerlinNoise/PerlinNoise_SPU.cpp"
         "${_dir}/PerlinNoise/ImprovedNoise_SPU.cpp"
+        "${_dir}/ChunkMesh/ChunkMeshJob.cpp"
     )
-    file(GLOB_RECURSE _headers CONFIGURE_DEPENDS "${_dir}/*.h")
+    file(GLOB_RECURSE _headers CONFIGURE_DEPENDS "${_dir}/*.h" "${_dir}/*.inl")
     set(_elf "${CMAKE_BINARY_DIR}/ps3_spu/spu_tasks.elf")
     set(_c "${PS3_SHADER_OUT}/ps3_spu_tasks_elf.c")
     set(_h "${PS3_SHADER_OUT}/ps3_spu_tasks_elf.h")

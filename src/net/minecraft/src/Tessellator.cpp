@@ -670,6 +670,24 @@ bool Tessellator::addAxisAlignedUnitFaceWithPackedUVFast(int_t side, tess_coord_
 
 #endif
 
+#if PLATFORM_THREADED_TERRAIN_MESH
+bool Tessellator::appendRawQuadVertices(const std::uint32_t *vertices, int count)
+{
+	if (!isDrawing || drawMode != 7 || convertQuadsToTriangles || hasNormals || vertices == nullptr ||
+		count <= 0 || (count & 3) != 0)
+		return false;
+	ensureRawBufferCapacity(static_cast<int_t>(count) * 8);
+	std::memcpy(rawBuffer + rawBufferIndex, vertices, static_cast<std::size_t>(count) * 8 * sizeof(int_t));
+	rawBufferIndex += static_cast<int_t>(count) * 8;
+	vertexCount += count;
+	addedVertices += count;
+	hasTexture = true;
+	hasColor = true;
+	hasBrightness = true;
+	return true;
+}
+#endif
+
 void Tessellator::addVertex(tess_coord_t d, tess_coord_t d1, tess_coord_t d2)
 {
 	const bool expandsQuad = drawMode == 7 && convertQuadsToTriangles && (addedVertices + 1) % 4 == 0;

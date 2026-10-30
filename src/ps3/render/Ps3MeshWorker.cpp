@@ -22,6 +22,9 @@
 #include "platform/PlatformCompat.h"
 #include "platform/PlatformMeshThread.h"
 #include "platform/PlatformTuning.h"
+#if PLATFORM_SPU_CHUNK_MESH
+#include "ps3/spu/Ps3SpuChunkMesh.h"
+#endif
 
 #ifndef PS3_MESH_WORKER_JOBS
 #define PS3_MESH_WORKER_JOBS 3
@@ -70,6 +73,9 @@ namespace
     };
 
     MeshJob s_jobs[PS3_MESH_WORKER_JOBS];
+#if PLATFORM_SPU_CHUNK_MESH
+    static_assert(PS3_MESH_WORKER_JOBS <= kPs3SpuMeshTickets, "one SPU mesh ticket per worker job");
+#endif
     std::uint32_t s_nextSequence = 1;
 
     sys_ppu_thread_t s_thread = 0;
@@ -178,6 +184,13 @@ namespace
                 continue;
 
             sectionCache.beginStep();
+#if PLATFORM_SPU_CHUNK_MESH
+            // Opaque pass: the SPU meshes the plain cubes and grass while this
+            // thread renders everything else.
+            const int spuSlot = static_cast<int>(&job - s_jobs);
+            const bool spu = pass == 0 && ps3SpuMeshBegin(spuSlot, sectionCache);
+            int ppuBlocks = 0;
+#endif
             RenderBlocks renderblocks(&sectionCache);
             renderblocks.setMeshTessellator(&tessellator);
             if (PLATFORM_COMPACT_TERRAIN_VERTICES)
@@ -209,6 +222,11 @@ namespace
                 const PcLegacyBlockRenderInfo &blockInfo = pcLegacyGetBlockRenderInfo(id);
                 if (blockInfo.renderPass != pass)
                     continue;
+#if PLATFORM_SPU_CHUNK_MESH
+                if (spu && ps3SpuMeshHandles(spuSlot, id))
+                    continue;
+                ++ppuBlocks;
+#endif
 
                 if (blockInfo.simpleOpaqueCube)
                 {
@@ -222,6 +240,15 @@ namespace
                 }
             }
 
+#if PLATFORM_SPU_CHUNK_MESH
+            // Always wait for the SPU (its job reads this snapshot), then add
+            // its quads to the batch; a failed or unverified SPU result is
+            // rendered here on the PPU instead.
+            if (spu)
+                ps3SpuMeshEnd(spuSlot, sectionCache, tessellator, x0, y0, z0);
+            if (pass == 0)
+                ps3SpuMeshNotePpuBlocks(ppuBlocks);
+#endif
             // Always consume the batch, aborted or not: a texture group left
             // drawing would carry its vertices into the next section.
             const bool groupsOk = tessellator.captureTextureGroups(staging.extraTextureMeshes[pass], true);
@@ -268,6 +295,9 @@ namespace
             }
             catch (...)
             {
+#if PLATFORM_SPU_CHUNK_MESH
+                ps3SpuMeshCancel(static_cast<int>(job - s_jobs));
+#endif
                 // A throw inside a block renderer leaves the tessellator mid
                 // batch; start the next section from a fresh one.
                 delete tessellator;
@@ -398,6 +428,9 @@ void ps3MeshWorkerPump()
             resetJob(job);
     }
     logCounters();
+#if PLATFORM_SPU_CHUNK_MESH
+    ps3SpuMeshLogCounters();
+#endif
 }
 
 PcLegacyTerrainStaging *ps3MeshWorkerAcquire(WorldRenderer *owner)

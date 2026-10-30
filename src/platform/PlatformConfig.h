@@ -275,6 +275,18 @@
 #  endif
 #endif
 
+// Section meshing on the PS3's SPUs (src/ps3/spu/Ps3SpuChunkMesh.cpp, 4J's
+// ChunkUpdate idea with a transcription of our own cube renderer). The mesh
+// worker hands the SPU plain AO cubes and grass and renders the rest; the
+// first sections are verified against the PPU vertex for vertex.
+#ifndef PLATFORM_SPU_CHUNK_MESH
+#  if defined(PS3_SPU_TASKS) && PS3_SPU_TASKS
+#    define PLATFORM_SPU_CHUNK_MESH (PLATFORM_PS3 && PLATFORM_THREADED_TERRAIN_MESH)
+#  else
+#    define PLATFORM_SPU_CHUNK_MESH 0
+#  endif
+#endif
+
 #ifndef PLATFORM_SECTION_VISIBILITY_CULL
 #  define PLATFORM_SECTION_VISIBILITY_CULL (PLATFORM_PC_LEGACY || PLATFORM_XBOX || PLATFORM_PS3)
 #endif

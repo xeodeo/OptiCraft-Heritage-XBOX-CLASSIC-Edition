@@ -12,6 +12,8 @@
 #include "SpuJob.h"
 #include "Common/DmaData.h"
 #include "PerlinNoise/PerlinNoiseJob.h"
+#include "ChunkMesh/ChunkMeshJob.h"
+#include "ChunkMesh/SpuChunkMeshJob.h"
 
 static Ps3SpuJobHeader s_header __attribute__((aligned(128)));
 
@@ -33,6 +35,9 @@ int main(uint64_t slotCellEA, uint64_t, uint64_t, uint64_t)
 		{
 		case PS3_SPU_JOB_PERLIN_NOISE:
 			ok = PerlinNoiseJob_run(s_header.eaData);
+			break;
+		case PS3_SPU_JOB_CHUNK_MESH:
+			ok = ChunkMeshJob_run(s_header.eaData);
 			break;
 		default:
 			break;

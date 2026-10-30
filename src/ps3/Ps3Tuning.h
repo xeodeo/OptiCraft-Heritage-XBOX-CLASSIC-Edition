@@ -96,15 +96,23 @@
 #define PS3_MESH_WORKER_STACK_BYTES              (512 * 1024)
 
 // SPU job runtime (src/ps3/spu/Ps3Spu.cpp): raw SPU threads in one group. A
-// game gets six SPUs; the RSX and audio need none here. If the group cannot
+// game gets six SPUs; the RSX and audio need none here, so all six take jobs
+// (terrain noise and section meshing). If the group cannot
 // start with this many it retries with fewer, down to one, then gives up (PPU).
-#define PS3_SPU_THREADS                          4
+#define PS3_SPU_THREADS                          6
 #define PS3_SPU_GROUP_PRIORITY                   100
 // Terrain noise on the SPUs (PLATFORM_SPU_NOISE): the first calls run on both
 // SPU and PPU and are compared bit for bit ("ps3.spu noise verify" in the log);
 // the PPU values are used meanwhile, and any mismatch keeps the noise on the
 // PPU for the session. 0 = trust the SPU from the first call.
 #define PS3_SPU_NOISE_VERIFY_CALLS               200
+// Section meshing on the SPUs (PLATFORM_SPU_CHUNK_MESH, src/ps3/spu/Ps3SpuChunkMesh.cpp):
+// the first sections are also meshed on the PPU and compared vertex for vertex
+// ("ps3.spumesh verify" in the log); any difference keeps meshing on the PPU
+// for the session. Output room per section in flight (32 bytes a vertex); a
+// section that needs more is rendered by the PPU worker.
+#define PS3_SPU_MESH_VERIFY_SECTIONS             64
+#define PS3_SPU_MESH_OUTPUT_VERTICES             12288
 
 // Tessellator: quads straight to the RSX quad primitive (no conversion to triangles,
 // a third fewer vertices to build, store and draw) and the console-sized

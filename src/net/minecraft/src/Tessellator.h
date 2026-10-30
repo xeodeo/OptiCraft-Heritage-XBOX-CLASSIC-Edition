@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <vector>
@@ -84,6 +85,15 @@ public:
 	Tessellator *getSubTessellator(int_t textureId);
 	bool captureTextureGroups(std::vector<TessellatorTextureMesh> &out, bool append = false);
 	bool hasPendingVertices() const { return isDrawing && vertexCount > 0; }
+#if PLATFORM_THREADED_TERRAIN_MESH
+	// SPU mesher (src/ps3/spu/Ps3SpuChunkMesh.cpp): appends ready-made quad
+	// vertices in this class's 8-int layout (x y z u v colour normal brightness,
+	// positions already translated). False when the batch cannot take them.
+	bool appendRawQuadVertices(const std::uint32_t *vertices, int count);
+	// The open batch's raw vertices (8 ints each), for the SPU verify mode.
+	const int_t *pendingRawVertices() const { return rawBuffer; }
+	int_t pendingVertexCount() const { return isDrawing ? vertexCount : 0; }
+#endif
 	bool hasTranslation() const { return xOffset != 0 || yOffset != 0 || zOffset != 0; }
 
 private:

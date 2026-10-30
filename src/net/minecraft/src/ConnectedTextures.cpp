@@ -145,6 +145,19 @@ bool ConnectedTextures::metadataMatches(const ConnectedProperties &cp, int_t met
 	return cp.metadata.empty() || std::find(cp.metadata.begin(), cp.metadata.end(), metadata) != cp.metadata.end();
 }
 
+bool ConnectedTextures::mayChangeTexture(int_t blockId, int_t tileNum)
+{
+	if (!Config::isConnectedTextures())
+		return false;
+	if (hasTerrainProperties && tileNum >= 0 && tileNum < static_cast<int_t>(terrainProperties.size()) &&
+		!terrainProperties[static_cast<size_t>(tileNum)].empty())
+		return true;
+	if (hasBlockProperties && blockId >= 0 && blockId < static_cast<int_t>(blockProperties.size()) &&
+		!blockProperties[static_cast<size_t>(blockId)].empty())
+		return true;
+	return false;
+}
+
 int_t ConnectedTextures::getConnectedTexture(IBlockAccess *access, Block *block, int_t x, int_t y, int_t z, int_t side, int_t tileNum)
 {
 	if (!Config::isConnectedTextures() || access == nullptr || block == nullptr)
