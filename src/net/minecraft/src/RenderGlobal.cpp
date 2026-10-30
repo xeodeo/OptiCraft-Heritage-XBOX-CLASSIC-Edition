@@ -1259,6 +1259,7 @@ int_t RenderGlobal::sortAndRender(EntityLiving *entityliving, int_t i, double d)
 		// holds the closest occluders before farther chunks' boxes are queried.
 		int_t totalRenderers = renderChunksWide * renderChunksTall * renderChunksDeep;
 		XBOX_TERRAIN_SLOT(1);
+		PS3_STAGE_SCOPE("terrainSort");
 		std::sort(sortedWorldRenderers, sortedWorldRenderers + totalRenderers, EntitySorter(entityliving));
 	}
 
@@ -1280,6 +1281,7 @@ int_t RenderGlobal::sortAndRender(EntityLiving *entityliving, int_t i, double d)
 	if (i == 0)
 	{
 		XBOX_TERRAIN_SLOT(0);
+		PS3_STAGE_SCOPE("sectionVis");
 		updatePcLegacySectionVisibility(entityliving);
 	}
 #endif
@@ -1483,6 +1485,7 @@ int_t RenderGlobal::renderSortedRenderers(int_t i, int_t j, int_t k, double d)
 	if (k != 0)
 		return 0;
 #endif
+	PS3_STAGE_SCOPE("terrainSelect");
 	renderBatchRenderers.clear();
 #if PLATFORM_XBOX
 	const unsigned long long xboxSelectStart = __rdtsc();

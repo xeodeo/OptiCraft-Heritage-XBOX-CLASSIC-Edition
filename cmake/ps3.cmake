@@ -127,6 +127,8 @@ else()
         "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacySectionVisibility.cpp"
         "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyStaticTileEntityMesh.cpp"
     )
+    # The audio backend decodes Ogg Vorbis with stb_vorbis (as Xbox/Wii).
+    list(APPEND PS3_SOURCES "${CMAKE_SOURCE_DIR}/src/pc/external/stb_vorbis.cpp")
     # newlib has no fopen64/ftello64/fseeko64 (same as the Wii build).
     set_source_files_properties(${PS3_MINIZIP_SOURCES} PROPERTIES COMPILE_DEFINITIONS USE_FILE32API)
 
@@ -139,7 +141,7 @@ else()
     ps3_add_shader(PS3_SOURCES "${CMAKE_SOURCE_DIR}/src/ps3/shaders/opticraft.vcg")
     ps3_add_shader(PS3_SOURCES "${CMAKE_SOURCE_DIR}/src/ps3/shaders/opticraft.fcg")
 
-    set(PS3_LIBS z rsx gcm_sys sysutil io)
+    set(PS3_LIBS z rsx gcm_sys sysutil io audio)
     if(PS3_NETLOG_HOST)
         list(APPEND PS3_LIBS net sysmodule)
     endif()
