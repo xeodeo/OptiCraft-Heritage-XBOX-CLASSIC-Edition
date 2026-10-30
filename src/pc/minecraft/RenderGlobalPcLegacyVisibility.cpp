@@ -63,6 +63,31 @@ void RenderGlobal::updatePcLegacySectionVisibility(EntityLiving *viewer)
     if (total <= 0)
         return;
 
+    // The walk depends only on the camera's section and on the renderers'
+    // positions and published faces. Redoing it every frame cost a fifth of
+    // the frame on the PS3; skip it while none of that changed.
+    const int_t walkCameraX = viewer != nullptr ? JavaArithmetic::intShr(MathHelper::floor_double(viewer->posX), 4) : 0;
+    const int_t walkCameraY = viewer != nullptr ? JavaArithmetic::intShr(MathHelper::floor_double(viewer->posY), 4) : 0;
+    const int_t walkCameraZ = viewer != nullptr ? JavaArithmetic::intShr(MathHelper::floor_double(viewer->posZ), 4) : 0;
+    const bool sameView = viewer != nullptr && pcLegacyVisibilityRenderers == worldRenderers &&
+        pcLegacyVisibilityTotal == total && pcLegacyVisibilityCamera[0] == walkCameraX &&
+        pcLegacyVisibilityCamera[1] == walkCameraY && pcLegacyVisibilityCamera[2] == walkCameraZ;
+    // While walking, some section is rebuilt nearly every frame: a freshly
+    // published section may wait up to three frames for the next walk.
+    if (sameView && (pcLegacyVisibilityGenerationSeen == WorldRenderer::pcLegacyVisibilityGeneration ||
+                     pcLegacyVisibilityFramesSkipped < 3))
+    {
+        ++pcLegacyVisibilityFramesSkipped;
+        return;
+    }
+    pcLegacyVisibilityFramesSkipped = 0;
+    pcLegacyVisibilityRenderers = worldRenderers;
+    pcLegacyVisibilityTotal = viewer != nullptr ? total : -1;
+    pcLegacyVisibilityCamera[0] = walkCameraX;
+    pcLegacyVisibilityCamera[1] = walkCameraY;
+    pcLegacyVisibilityCamera[2] = walkCameraZ;
+    pcLegacyVisibilityGenerationSeen = WorldRenderer::pcLegacyVisibilityGeneration;
+
     for (int_t i = 0; i < total; ++i)
     {
         if (worldRenderers[i] != nullptr)

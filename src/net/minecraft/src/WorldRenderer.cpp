@@ -266,6 +266,9 @@ void WorldRenderer::setPosition(int_t x, int_t y, int_t z)
 {
 	if (x == posX && y == posY && z == posZ)
 		return;
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
+	++pcLegacyVisibilityGeneration;
+#endif
 
 	setDontDraw();
 	posX = x;
@@ -519,6 +522,9 @@ void WorldRenderer::updateRenderer()
 
 	isChunkLit  = Chunk::isLit;
 	isInitialized = true;
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
+	++pcLegacyVisibilityGeneration;
+#endif
 	tileEntityRenderers = rebuiltTileEntityRenderers;
 	needsUpdate = false;
 }
@@ -731,6 +737,9 @@ void WorldRenderer::setDontDraw()
 	isVisibleFromPosition = false;
 #endif
 	isInitialized = false;
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
+	++pcLegacyVisibilityGeneration;
+#endif
 }
 
 void WorldRenderer::detachFromWorld()

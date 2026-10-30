@@ -139,6 +139,8 @@ bool WorldRenderer::lastTerrainBuildStepDidWork() const
     return pcLegacyStepDidWork;
 }
 
+std::uint32_t WorldRenderer::pcLegacyVisibilityGeneration = 0;
+
 std::uint8_t WorldRenderer::pcLegacyVisibleFacesFrom(int_t face) const
 {
     if (!isInitialized || face < 0 || face >= 6)
@@ -286,6 +288,7 @@ void WorldRenderer::pcLegacyPublishBuild(PcLegacyTerrainStaging &staging)
     }
     isChunkLit = pcLegacyBuildChunkLit;
     isInitialized = true;
+    ++pcLegacyVisibilityGeneration;
     const bool dirtyDuringBuild = pcLegacyBuildDirtyDuringBuild;
     needsUpdate = dirtyDuringBuild;
     ++chunksUpdated;

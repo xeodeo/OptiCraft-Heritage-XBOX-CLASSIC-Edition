@@ -16,6 +16,7 @@
 //   fogParams: x = -1/(end-start), y = end/(end-start), z = density. Fog off = weights (0, 0, 0, 1).
 // alphaTest is passed through for the same reason: x = 1 when GL_ALPHA_TEST is on, y = the
 // reference; the fragment program discards alpha <= reference (GL_GREATER, all Minecraft uses).
+// z = 1 applies the Legacy Look gamma in the fragment program.
 void main(float4 position : POSITION,
           float4 color : COLOR,
           float2 uv : TEXCOORD0,

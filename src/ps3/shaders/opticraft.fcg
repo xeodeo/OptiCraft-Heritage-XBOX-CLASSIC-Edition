@@ -17,5 +17,8 @@ float4 main(float4 color : COLOR,
     if (alphaTest.x > 0.5f && result.a <= alphaTest.y)
         discard;
     result.rgb = lerp(fog.rgb, result.rgb, fog.a);
+    // Legacy Look (alphaTest.z = 1): x^0.8, LEGACY_LOOK_GAMMA_EXPONENT in LegacyLook.h.
+    if (alphaTest.z > 0.5f)
+        result.rgb = pow(max(result.rgb, 0.0f), 0.8f);
     return result;
 }

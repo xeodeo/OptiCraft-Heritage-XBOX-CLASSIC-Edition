@@ -349,6 +349,12 @@ private:
 	bool pcLegacyStepDidWork;
 	bool pcLegacyBuildDirtyDuringBuild;
 	std::uint8_t pcLegacyPublishedVisibility[6];
+public:
+	// Bumped whenever anything the section-visibility walk reads changes
+	// (position, initialized, published faces), so RenderGlobal can skip the
+	// walk on frames where neither this nor the camera section moved.
+	static std::uint32_t pcLegacyVisibilityGeneration;
+private:
 
 	void pcLegacyResetBuildState();
 	bool pcLegacyBeginBuildState();

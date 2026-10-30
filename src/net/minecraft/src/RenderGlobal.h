@@ -207,6 +207,12 @@ private:
 #if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	std::vector<std::uint8_t> pcLegacyVisibilityEntryMasks;
 	std::vector<int_t> pcLegacyVisibilityQueue;
+	// Inputs of the last walk: it is only redone when one of them changed.
+	WorldRenderer **pcLegacyVisibilityRenderers = nullptr;
+	int_t pcLegacyVisibilityTotal = -1;
+	int_t pcLegacyVisibilityCamera[3] = {0, 0, 0};
+	std::uint32_t pcLegacyVisibilityGenerationSeen = 0;
+	int_t pcLegacyVisibilityFramesSkipped = 0;
 #endif
 #if !PLATFORM_PS2
 	RenderList *allRenderLists[4];

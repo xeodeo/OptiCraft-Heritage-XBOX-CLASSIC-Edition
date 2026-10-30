@@ -167,6 +167,7 @@ bool s_fogDirty = true;
 bool s_alphaTestEnabled = false;
 float s_alphaRef = 0.0f;
 bool s_alphaTestDirty = true;
+bool s_legacyGamma = false;  // Legacy Look; travels in alphaTest.z
 
 bool s_cullEnabled = false;
 RenderFace s_cullFace = RenderFace::Back;
@@ -626,7 +627,7 @@ bool applyDrawState(bool constantLight)
     }
     if (s_alphaTestDirty)
     {
-        const float values[4] = {s_alphaTestEnabled ? 1.0f : 0.0f, s_alphaRef, 0.0f, 0.0f};
+        const float values[4] = {s_alphaTestEnabled ? 1.0f : 0.0f, s_alphaRef, s_legacyGamma ? 1.0f : 0.0f, 0.0f};
         setVertexUniform(s_uAlphaTest, values);
         s_alphaTestDirty = false;
     }
@@ -1418,9 +1419,14 @@ unsigned int renderOcclusionQueryResult(int) { return 1; }
 // ===========================================================================
 bool renderReadPixelsRgb(int, int, int, int, void*) { return false; }
 bool renderCopyFramebufferToBoundTexture(int, int, int, int) { return false; }
-// Legacy Look's presentation gamma: not wired yet on the PS3 (the RSX can do it
-// with a gamma-corrected scan-out; to be measured against the Xbox picture).
-void renderSetLegacyPresentationGamma(bool) {}
+// Legacy Look: the Xbox uses a scan-out gamma ramp; PSL1GHT exposes none, so the
+// fragment program raises every draw to LEGACY_LOOK_GAMMA_EXPONENT instead.
+void renderSetLegacyPresentationGamma(bool enabled)
+{
+    if (s_legacyGamma == enabled) return;
+    s_legacyGamma = enabled;
+    s_alphaTestDirty = true;
+}
 
 // Called by Display_ps3.cpp after each flip: per-frame GPU state the next frame
 // must re-send (vertex program, uniforms, texture units).

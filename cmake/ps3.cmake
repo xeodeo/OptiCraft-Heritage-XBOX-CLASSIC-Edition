@@ -21,7 +21,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/SourceSelection.cmake)
 # --- PS3 options ----------------------------------------------------------------
 option(PS3_BRINGUP "Build only the PS3 RSX smoke test instead of the game" OFF)
 set(PS3_TITLE_ID "OPTC00001" CACHE STRING "9-character title id (folder under /dev_hdd0/game)")
-set(PS3_TITLE "OptiCraft" CACHE STRING "Title shown in the XMB")
+set(PS3_TITLE "OptiCraft by xeodeo" CACHE STRING "Title shown in the XMB")
 set(PS3_SCETOOL_DIR "$ENV{HOME}/ps3tools/scetool" CACHE PATH
     "Folder holding scetool and its data/ keys (see ps3\\tools\\firmar_npdrm.sh)")
 set(PS3_NETLOG_HOST "" CACHE STRING
