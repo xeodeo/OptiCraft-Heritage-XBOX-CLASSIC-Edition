@@ -265,7 +265,9 @@ void AnvilChunkLoader::saveChunk(World *world, Chunk *chunk)
         root->setTag("Level", level);
         writeChunkToLevel(chunk, world, level);
 
-#if XBOX_ASYNC_CHUNK_IO
+        // PS3: zlib on the IO thread too. Compressing on the game thread made
+        // the pause-menu save and the autosave drop to ~20 FPS.
+#if XBOX_ASYNC_CHUNK_IO || PLATFORM_PS3
         queueChunkToSaveNBT(ChunkCoordIntPair(chunk->xPosition, chunk->zPosition), std::move(root));
 #else
         std::vector<byte_t> serialized;

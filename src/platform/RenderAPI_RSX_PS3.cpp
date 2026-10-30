@@ -635,7 +635,17 @@ bool applyDrawState(bool constantLight)
         const Mat4 mvp = multiply(s_projection, s_modelView);
         setVertexUniform(s_uMvp, mvp.m);
         setVertexUniform(s_uModelView, s_modelView.m);
-        setVertexUniform(s_uTextureMatrix, s_textureMatrix.m);
+        // Every chunk's translate dirties the matrices; the texture matrix is
+        // almost always identity, so only send it when it really changed.
+        static Mat4 s_sentTextureMatrix;
+        static std::uint32_t s_sentTextureFrame = 0;
+        if (s_sentTextureFrame != s_programFrame ||
+            std::memcmp(&s_sentTextureMatrix, &s_textureMatrix, sizeof(Mat4)) != 0)
+        {
+            setVertexUniform(s_uTextureMatrix, s_textureMatrix.m);
+            s_sentTextureMatrix = s_textureMatrix;
+            s_sentTextureFrame = s_programFrame;
+        }
         s_matricesDirty = false;
     }
     if (s_fogDirty)
