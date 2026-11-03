@@ -1,5 +1,6 @@
 #include "ItemCarrotOnAStick.h"
 #include "ItemStack.h"
+#include "NBTTagCompound.h"
 #include "Item.h"
 #include "EntityPlayer.h"
 #include "EntityPig.h"

@@ -1,4 +1,5 @@
 #include "EntityAIControlledByPlayer.h"
+#include "NBTTagCompound.h"
 #include "EntityLiving.h"
 #include "EntityPlayer.h"
 #include "EntityJumpHelper.h"
