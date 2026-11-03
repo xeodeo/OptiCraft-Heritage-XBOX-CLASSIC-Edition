@@ -654,9 +654,12 @@ void GuiContainerCreative::setCurrentCreativeTab(CreativeTabs *tab)
         {
             searchField->setEnabled(true);
             searchField->setCanLoseFocus(false);
-            searchField->setFocused(true);
 #if PLATFORM_HAS_VIRTUAL_KEYBOARD
-            VirtualKeyboard::instance().notifyFocus(searchField, true);
+            // Consoles: focusing opens the on-screen keyboard, which the user
+            // wants only when the search bar is clicked, not on entering the tab.
+            searchField->setFocused(false);
+#else
+            searchField->setFocused(true);
 #endif
             searchField->setText("");
             updateCreativeSearch();
