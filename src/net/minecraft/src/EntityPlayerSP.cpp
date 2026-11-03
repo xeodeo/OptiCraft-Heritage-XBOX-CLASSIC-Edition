@@ -242,6 +242,14 @@ void EntityPlayerSP::onLivingUpdate()
 			motionY -= 0.15;
 		if (movementInput->jump)
 			motionY += 0.15;
+		Minecraft *mc = Minecraft::getMinecraft();
+		if (mc != nullptr && mc->gameSettings != nullptr)
+		{
+			if (mc->gameSettings->keyBindFlyUp != nullptr && mc->gameSettings->keyBindFlyUp->pressed)
+				motionY += 0.15;
+			if (mc->gameSettings->keyBindChat != nullptr && mc->gameSettings->keyBindChat->pressed)
+				motionY -= 0.15;
+		}
 	}
 
 	EntityPlayer::onLivingUpdate();

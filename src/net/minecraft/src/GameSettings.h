@@ -105,6 +105,10 @@ public:
 	KeyBinding *keyBindPickBlock;
 	KeyBinding *keyBindToggleFog;
 	KeyBinding *keyBindSneak;
+	KeyBinding *keyBindPrevItem;
+	KeyBinding *keyBindNextItem;
+	KeyBinding *keyBindTogglePerspective;
+	KeyBinding *keyBindFlyUp;
 	std::vector<KeyBinding *> keyBindings;
 	Minecraft *mc;
 	std::string optionsFile;

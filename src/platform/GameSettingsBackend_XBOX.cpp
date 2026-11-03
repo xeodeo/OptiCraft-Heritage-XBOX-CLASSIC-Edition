@@ -26,6 +26,18 @@ void applyDefaultBindings(GameSettings& settings)
 	settings.keyBindSneak->keyCode = XBOX_KEY_LEFT_THUMB;
 	settings.keyBindAttack->keyCode = XBOX_KEY_RIGHT_TRIGGER;
 	settings.keyBindUseItem->keyCode = XBOX_KEY_LEFT_TRIGGER;
+	if (settings.keyBindCrafting != nullptr)
+		settings.keyBindCrafting->keyCode = XBOX_KEY_X;
+	if (settings.keyBindPrevItem != nullptr)
+		settings.keyBindPrevItem->keyCode = XBOX_KEY_DPAD_LEFT;
+	if (settings.keyBindNextItem != nullptr)
+		settings.keyBindNextItem->keyCode = XBOX_KEY_DPAD_RIGHT;
+	if (settings.keyBindTogglePerspective != nullptr)
+		settings.keyBindTogglePerspective->keyCode = XBOX_KEY_RIGHT_THUMB;
+	if (settings.keyBindFlyUp != nullptr)
+		settings.keyBindFlyUp->keyCode = XBOX_KEY_DPAD_UP;
+	if (settings.keyBindChat != nullptr)
+		settings.keyBindChat->keyCode = XBOX_KEY_DPAD_DOWN;
 }
 
 // An options.txt written with keyboard codes (or by another platform) gets the
@@ -91,6 +103,13 @@ void platformGameSettingsFinalizeLoad(GameSettings& settings)
 	migrateKey(settings.keyBindSneak, XBOX_KEY_LEFT_THUMB);
 	migrateKey(settings.keyBindAttack, XBOX_KEY_RIGHT_TRIGGER);
 	migrateKey(settings.keyBindUseItem, XBOX_KEY_LEFT_TRIGGER);
+	if (settings.keyBindCrafting != nullptr)
+		migrateKey(settings.keyBindCrafting, XBOX_KEY_X);
+	migrateKey(settings.keyBindPrevItem, XBOX_KEY_DPAD_LEFT);
+	migrateKey(settings.keyBindNextItem, XBOX_KEY_DPAD_RIGHT);
+	migrateKey(settings.keyBindTogglePerspective, XBOX_KEY_RIGHT_THUMB);
+	migrateKey(settings.keyBindFlyUp, XBOX_KEY_DPAD_UP);
+	migrateKey(settings.keyBindChat, XBOX_KEY_DPAD_DOWN);
 }
 
 void platformGameSettingsSyncControllerBindings(const GameSettings&) {}

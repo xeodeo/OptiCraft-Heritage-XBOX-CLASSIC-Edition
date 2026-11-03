@@ -258,6 +258,14 @@ void tick(Minecraft *mc)
         return;
     }
 
+    if (p2->capabilities.isFlying)
+    {
+        if (held & XBOX_PAD_DPAD_UP)
+            p2->motionY += 0.15;
+        if (held & XBOX_PAD_DPAD_DOWN)
+            p2->motionY -= 0.15;
+    }
+
     if (p2->inventory != nullptr)
     {
         if (pressed & (XBOX_PAD_BLACK | XBOX_PAD_DPAD_RIGHT))
