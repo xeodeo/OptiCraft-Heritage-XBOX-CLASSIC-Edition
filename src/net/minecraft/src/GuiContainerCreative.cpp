@@ -785,6 +785,13 @@ void GuiContainerCreative::drawCreativeTabHoveringText(const std::string &text, 
     if (ty < 4)
         ty = 4;
 
+    // Java GuiContainer.drawCreativeTabHoveringText: no depth test or lighting,
+    // so the tab icons (drawn with depth) cannot cover the label.
+    renderDisable(RenderCapability::RescaleNormal);
+    RenderHelper::disableStandardItemLighting();
+    renderDisable(RenderCapability::Lighting);
+    renderDisable(RenderCapability::DepthTest);
+    renderClear(RenderClearMask::Depth);
     drawGradientRect(tx - 3, ty - 3, tx + textW + 3, ty + 11, 0xf0100010, 0xf0100010);
     drawGradientRect(tx - 4, ty - 2, tx - 3, ty + 10, 0x505000ff, 0x5028007f);
     drawGradientRect(tx + textW + 3, ty - 2, tx + textW + 4, ty + 10, 0x505000ff, 0x5028007f);
