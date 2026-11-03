@@ -2120,7 +2120,8 @@ void Minecraft::runTick()
                 else
                     gameSettings->showDebugInfo = !gameSettings->showDebugInfo;
             }
-            if (eventKey == lwjgl::Keyboard::KEY_F5)
+            if (eventKey == lwjgl::Keyboard::KEY_F5 &&
+                (gameSettings->keyBindTogglePerspective == nullptr || gameSettings->keyBindTogglePerspective->keyCode != lwjgl::Keyboard::KEY_F5))
             {
                 if (!isSplitScreenActive())
                 {
@@ -2236,8 +2237,34 @@ void Minecraft::runTick()
                 thePlayer->dropCurrentItem();
         }
 
+        while (gameSettings->keyBindPrevItem != nullptr && gameSettings->keyBindPrevItem->isPressed())
+        {
+            if (!isPlayerScreenActive(0) && thePlayer != nullptr && thePlayer->inventory != nullptr)
+                thePlayer->inventory->changeCurrentItem(1);
+        }
+
+        while (gameSettings->keyBindNextItem != nullptr && gameSettings->keyBindNextItem->isPressed())
+        {
+            if (!isPlayerScreenActive(0) && thePlayer != nullptr && thePlayer->inventory != nullptr)
+                thePlayer->inventory->changeCurrentItem(-1);
+        }
+
+        while (gameSettings->keyBindTogglePerspective != nullptr && gameSettings->keyBindTogglePerspective->isPressed())
+        {
+            if (!isSplitScreenActive())
+            {
+                ++gameSettings->thirdPersonView;
+                if (gameSettings->thirdPersonView > 2)
+                    gameSettings->thirdPersonView = 0;
+            }
+        }
+
         while (gameSettings->keyBindChat->isPressed())
+        {
+            if (thePlayer != nullptr && thePlayer->capabilities.isFlying)
+                continue;
             displayGuiScreen(new GuiChat());
+        }
 
         if (isMultiplayerWorld() && currentScreen == nullptr &&
             (lwjgl::Keyboard::isKeyDown(lwjgl::Keyboard::KEY_SLASH) ||

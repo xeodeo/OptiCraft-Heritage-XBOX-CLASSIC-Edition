@@ -87,6 +87,7 @@ GameSettings::~GameSettings()
     keyBindJump = keyBindInventory = keyBindCrafting = keyBindDrop = keyBindChat = nullptr;
     keyBindPlayerList = keyBindPickBlock = nullptr;
     keyBindToggleFog = keyBindSneak = ofKeyBindZoom = nullptr;
+    keyBindPrevItem = keyBindNextItem = keyBindTogglePerspective = keyBindFlyUp = nullptr;
 }
 
 void GameSettings::setDefaults()
@@ -123,6 +124,10 @@ void GameSettings::setDefaults()
     keyBindPickBlock = new KeyBinding("key.pickItem", -98);
     keyBindToggleFog = new KeyBinding("key.fog", 33);
     keyBindSneak = new KeyBinding("key.sneak", 42);
+    keyBindPrevItem = new KeyBinding("Previous Item", lwjgl::Keyboard::KEY_NONE);
+    keyBindNextItem = new KeyBinding("Next Item", lwjgl::Keyboard::KEY_NONE);
+    keyBindTogglePerspective = new KeyBinding("Change Perspective", lwjgl::Keyboard::KEY_F5);
+    keyBindFlyUp = new KeyBinding("Fly Up", lwjgl::Keyboard::KEY_NONE);
     // The PS2 defaults depend on which crafting menu is on, so set the
     // crafting options before the platform picks the default buttons.
     legacyCrafting = PLATFORM_XBOX != 0;
@@ -130,8 +135,9 @@ void GameSettings::setDefaults()
     platformGameSettingsInitialize(*this);
     keyBindings = {
         keyBindAttack, keyBindUseItem, keyBindForward, keyBindLeft, keyBindBack, keyBindRight,
-        keyBindJump, keyBindSneak, keyBindDrop, keyBindInventory, keyBindCrafting, keyBindChat, keyBindPlayerList,
-        keyBindPickBlock, keyBindToggleFog
+        keyBindJump, keyBindSneak, keyBindDrop, keyBindInventory, keyBindCrafting,
+        keyBindPrevItem, keyBindNextItem, keyBindTogglePerspective, keyBindFlyUp,
+        keyBindChat, keyBindPlayerList, keyBindPickBlock, keyBindToggleFog
     };
     mc = nullptr;
     optionsFile = "options.txt";
@@ -401,7 +407,19 @@ void GameSettings::setAllAnimations(bool flag)
 
 std::string GameSettings::getKeyBindingDescription(int_t i)
 {
-    return translateKey(keyBindings[i]->keyDescription);
+    const std::string &desc = keyBindings[i]->keyDescription;
+    std::string t = translateKey(desc);
+    if (t != desc)
+        return t;
+    const std::string &lang = StringTranslate::getInstance()->getCurrentLanguage();
+    if (lang.rfind("es_", 0) == 0)
+    {
+        if (desc == "Previous Item") return "Objeto anterior";
+        if (desc == "Next Item") return "Objeto siguiente";
+        if (desc == "Change Perspective") return "Cambiar perspectiva";
+        if (desc == "Fly Up") return "Subir";
+    }
+    return uiText(desc);
 }
 
 std::string GameSettings::getOptionDisplayString(int_t i)
@@ -442,6 +460,14 @@ void GameSettings::resetControlBindingsToDefaults()
     keyBindSneak->keyCode = 42;
     if (ofKeyBindZoom != nullptr)
         ofKeyBindZoom->keyCode = 46;
+    if (keyBindPrevItem != nullptr)
+        keyBindPrevItem->keyCode = lwjgl::Keyboard::KEY_NONE;
+    if (keyBindNextItem != nullptr)
+        keyBindNextItem->keyCode = lwjgl::Keyboard::KEY_NONE;
+    if (keyBindTogglePerspective != nullptr)
+        keyBindTogglePerspective->keyCode = lwjgl::Keyboard::KEY_F5;
+    if (keyBindFlyUp != nullptr)
+        keyBindFlyUp->keyCode = lwjgl::Keyboard::KEY_NONE;
 
     platformGameSettingsResetControlBindings(*this);
     KeyBinding::resetKeyBindingArrayAndHash();
