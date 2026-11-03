@@ -256,8 +256,8 @@ void EntityItem::setAgeToCreativeDespawnTime()
 void EntityItem::searchForOtherItemsNearby()
 {
 	AxisAlignedBB *searchBox = boundingBox->expand(0.5, 0.0, 0.5);
+	// expand() hands out a box from the AABB pool: it must not be deleted.
 	const std::vector<Entity *> nearby = worldObj->getEntitiesWithinAABB(typeid(EntityItem), searchBox);
-	delete searchBox;
 	for (Entity *entity : nearby)
 	{
 		EntityItem *other = dynamic_cast<EntityItem *>(entity);

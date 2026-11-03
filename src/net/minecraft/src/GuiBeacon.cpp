@@ -261,9 +261,9 @@ void GuiBeacon::actionPerformed(GuiButton *button)
                 beacon->setSecondaryEffect(effectId);
             }
 
-            for (GuiButton *b : controlList)
-                delete b;
-            controlList.clear();
+            // Java: buttonList.clear(). This button is the one being clicked:
+            // clearControlList also drops GuiScreen's pointer to it.
+            clearControlList();
             initGui();
             updateScreen();
         }
