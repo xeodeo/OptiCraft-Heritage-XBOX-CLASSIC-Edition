@@ -4655,7 +4655,7 @@ void RenderBlocks::renderBlockOnInventory(Block *block, int_t i, float f)
 		renderColor4f(f1 * f, f3 * f, f5 * f, 1.0f);
 	}
 	int_t k = block->getRenderType();
-	if (k == 0 || k == 16 || k == 39)
+	if (k == 0 || k == 16 || k == 26 || k == 39)
 	{
 		if (k == 16)
 		{
@@ -5372,7 +5372,7 @@ bool RenderBlocks::renderItemIn3d(int_t i)
 	{
 		return true;
 	}
-	if (i == 11 || i == 22 || i == 21 || i == 27)
+	if (i == 11 || i == 22 || i == 21 || i == 26 || i == 27)
 	{
 		return true;
 	}
