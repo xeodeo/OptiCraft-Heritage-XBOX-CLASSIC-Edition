@@ -507,6 +507,31 @@ def merge_languages(base_lang: Path, old_lang: Path, new_lang: Path, out_lang: P
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("\n".join(out) + "\n", encoding="utf-8")
         merged_names.append(base.name)
+
+    # Update languages.txt with corrected names from 1.5.2 while preserving OptiCraft's 58 supported languages
+    base_txt = base_lang / "languages.txt"
+    new_txt = new_lang / "languages.txt"
+    if base_txt.exists():
+        new_languages_map = {}
+        if new_txt.exists():
+            for line in new_txt.read_text(encoding="utf-8").splitlines():
+                if "=" in line and not line.lstrip().startswith("#"):
+                    k, v = line.split("=", 1)
+                    new_languages_map[k.strip()] = v.strip()
+        updated_lines = []
+        for line in base_txt.read_text(encoding="utf-8").splitlines():
+            if "=" in line and not line.lstrip().startswith("#"):
+                k, v = line.split("=", 1)
+                k = k.strip()
+                v = new_languages_map.get(k, v.strip())
+                updated_lines.append(f"{k}={v}")
+            else:
+                updated_lines.append(line)
+        target_txt = out_lang / "languages.txt"
+        target_txt.parent.mkdir(parents=True, exist_ok=True)
+        target_txt.write_text("\n".join(updated_lines) + "\n", encoding="utf-8")
+        merged_names.append("languages.txt")
+
     return merged_names
 
 
