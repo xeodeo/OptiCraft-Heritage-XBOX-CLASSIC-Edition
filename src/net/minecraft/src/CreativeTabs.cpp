@@ -344,7 +344,6 @@ void CreativeTabs::initTabsForBlocksAndItems()
         {  40,  1 }, // mushroomRed -> tabDecorations
         {  41,  0 }, // blockGold -> tabBlock
         {  42,  0 }, // blockIron -> tabBlock
-        {  43,  0 }, // stoneDoubleSlab -> tabBlock
         {  44,  0 }, // stoneSingleSlab -> tabBlock
         {  45,  0 }, // brick -> tabBlock
         {  46,  2 }, // tnt -> tabRedstone
@@ -357,7 +356,6 @@ void CreativeTabs::initTabsForBlocksAndItems()
         {  56,  0 }, // oreDiamond -> tabBlock
         {  57,  0 }, // blockDiamond -> tabBlock
         {  58,  1 }, // workbench -> tabDecorations
-        {  59,  1 }, // crops -> tabDecorations
         {  61,  1 }, // furnaceIdle -> tabDecorations
         {  65,  1 }, // ladder -> tabDecorations
         {  66,  3 }, // rail -> tabTransport
@@ -366,7 +364,6 @@ void CreativeTabs::initTabsForBlocksAndItems()
         {  70,  2 }, // pressurePlateStone -> tabRedstone
         {  72,  2 }, // pressurePlatePlanks -> tabRedstone
         {  73,  0 }, // oreRedstone -> tabBlock
-        {  75,  1 }, // torchRedstoneIdle -> tabDecorations
         {  76,  2 }, // torchRedstoneActive -> tabRedstone
         {  77,  2 }, // stoneButton -> tabRedstone
         {  78,  1 }, // snow -> tabDecorations
@@ -387,8 +384,6 @@ void CreativeTabs::initTabsForBlocksAndItems()
         { 101,  1 }, // fenceIron -> tabDecorations
         { 102,  1 }, // thinGlass -> tabDecorations
         { 103,  0 }, // melon -> tabBlock
-        { 104,  1 }, // pumpkinStem -> tabDecorations
-        { 105,  1 }, // melonStem -> tabDecorations
         { 106,  1 }, // vine -> tabDecorations
         { 107,  2 }, // fenceGate -> tabRedstone
         { 108,  0 }, // stairsBrick -> tabBlock
@@ -398,12 +393,10 @@ void CreativeTabs::initTabsForBlocksAndItems()
         { 112,  0 }, // netherBrick -> tabBlock
         { 113,  1 }, // netherFence -> tabDecorations
         { 114,  0 }, // stairsNetherBrick -> tabBlock
-        { 115,  1 }, // netherStalk -> tabDecorations
         { 116,  1 }, // enchantmentTable -> tabDecorations
         { 120,  1 }, // endPortalFrame -> tabDecorations
         { 121,  0 }, // whiteStone -> tabBlock
         { 123,  2 }, // redstoneLampIdle -> tabRedstone
-        { 125,  0 }, // woodDoubleSlab -> tabBlock
         { 126,  0 }, // woodSingleSlab -> tabBlock
         { 128,  0 }, // stairsSandStone -> tabBlock
         { 129,  0 }, // oreEmerald -> tabBlock
@@ -415,8 +408,6 @@ void CreativeTabs::initTabsForBlocksAndItems()
         { 136,  0 }, // stairsWoodJungle -> tabBlock
         { 138,  4 }, // beacon -> tabMisc
         { 139,  0 }, // cobblestoneWall -> tabBlock
-        { 141,  1 }, // carrot -> tabDecorations
-        { 142,  1 }, // potato -> tabDecorations
         { 143,  2 }, // woodenButton -> tabRedstone
         { 145,  1 }, // anvil -> tabDecorations
         { 146,  1 }, // chestTrapped -> tabDecorations
