@@ -175,7 +175,7 @@ void StringTranslate::setLanguage(const std::string &language)
         if (group == "gui" || group == "menu" || group == "options" || group == "controls" ||
             group == "selectWorld" || group == "createWorld" || group == "gameMode" ||
             group == "multiplayer" || group == "disconnect" || group == "connect" ||
-            group == "container" || group == "key" || group == "deathScreen")
+            group == "container" || group == "key" || group == "deathScreen" || group == "itemGroup")
             englishUiKeys.emplace(entry.second, entry.first);
     }
     const char *aliases[][2] = {
@@ -190,7 +190,18 @@ void StringTranslate::setLanguage(const std::string &language)
         {"Invert Mouse", "options.invertMouse"}, {"Attack", "key.attack"},
         {"Use", "key.use"}, {"Jump", "key.jump"}, {"Sneak", "key.sneak"},
         {"Drop", "key.drop"}, {"Inventory", "key.inventory"},
-        {"ON", "options.on"}, {"OFF", "options.off"}
+        {"ON", "options.on"}, {"OFF", "options.off"},
+        {"Structures", "itemGroup.buildingBlocks"},
+        {"Tools", "itemGroup.tools"},
+        {"Food", "itemGroup.food"},
+        {"Armour", "itemGroup.combat"},
+        {"Armor", "itemGroup.combat"},
+        {"Mechanisms", "itemGroup.redstone"},
+        {"Transport", "itemGroup.transportation"},
+        {"Decoration", "itemGroup.decorations"},
+        {"Back", "gui.back"},
+        {"Done", "gui.done"},
+        {"Cancel", "gui.cancel"}
     };
     for (const auto &alias : aliases)
         if (translateTable.find(alias[1]) != translateTable.end())
@@ -274,7 +285,36 @@ void StringTranslate::setLanguage(const std::string &language)
         {"entity.Witch.name", "Witch", "Bruja"},
         {"entity.WitherSkeleton.name", "Wither Skeleton", "Esqueleto del Wither"},
         {"generator.largeBiomes", "Large Biomes", "Biomas grandes"},
-        {"selectWorld.bonusItems", "Bonus Chest:", "Cofre extra:"}
+        {"selectWorld.bonusItems", "Bonus Chest:", "Cofre extra:"},
+        {"item.enchantedBook.name", "Enchanted Book", "Libro encantado"},
+        {"item.writingBook.name", "Book and Quill", "Libro y pluma"},
+        {"item.writtenBook.name", "Written Book", "Libro escrito"},
+        {"item.emptyMap.name", "Empty Map", "Mapa en blanco"},
+        {"item.carrotOnAStick.name", "Carrot on a Stick", "Zanahoria en una caña"},
+        {"item.frame.name", "Item Frame", "Marco del objeto"},
+        {"container.repair", "Repair & Name", "Reparar y Nombrar"},
+        {"container.repair.cost", "Enchantment Cost: %1$d", "Coste de Encantamiento: %1$d"},
+        {"container.repair.expensive", "Too Expensive!", "¡Demasiado caro!"},
+        {"tile.beacon.primary", "Primary Power", "Poder Primario"},
+        {"tile.beacon.secondary", "Secondary Power", "Poder Secundario"},
+        {"book.editTitle", "Enter Book Title:", "Introduce el Título del Libro:"},
+        {"book.signButton", "Sign", "Firmar"},
+        {"book.finalizeButton", "Sign and Close", "Firmar y cerrar"},
+        {"book.finalizeWarning", "Note! When you sign the book, it will no longer be editable.", "¡Aviso! Una vez firmado, no podrá ser editado."},
+        {"book.pageIndicator", "Page %1$s of %2$s", "Página %1$s de %2$s"},
+        {"book.byAuthor", "by %1$s", "por %1$s"},
+        {"itemGroup.buildingBlocks", "Building Blocks", "Bloques de Construcción"},
+        {"itemGroup.decorations", "Decoration Blocks", "Bloques de Decoración"},
+        {"itemGroup.redstone", "Redstone", "Redstone"},
+        {"itemGroup.transportation", "Transportation", "Transporte"},
+        {"itemGroup.misc", "Miscellaneous", "Miscelánea"},
+        {"itemGroup.search", "Search Items", "Buscar"},
+        {"itemGroup.food", "Foodstuffs", "Comida"},
+        {"itemGroup.tools", "Tools", "Herramientas"},
+        {"itemGroup.combat", "Combat", "Combate"},
+        {"itemGroup.brewing", "Brewing", "Pociones"},
+        {"itemGroup.materials", "Materials", "Materiales"},
+        {"itemGroup.inventory", "Survival Inventory", "Inventario de modo supervivencia"}
     };
     for (const auto &entry : port152Defaults)
     {
@@ -320,6 +360,39 @@ std::string StringTranslate::translateUi(const std::string &english)
         if (english == "Vertical") return "Vertical";
         if (english == "Toggle") return "Alternar";
         if (english == "Delete") return "Eliminar";
+        if (english == "Structures") return "Estructuras";
+        if (english == "Tools") return "Herramientas";
+        if (english == "Food") return "Comida";
+        if (english == "Armour" || english == "Armor") return "Armadura";
+        if (english == "Mechanisms") return "Mecanismos";
+        if (english == "Transport") return "Transporte";
+        if (english == "Decoration") return "Decoraci\xc3\xb3n";
+        if (english == "Craft") return "Fabricar";
+        if (english == "Back") return "Atr\xc3\xa1s";
+        if (english == "Group") return "Grupo";
+        if (english == "Ingredients") return "Ingredientes";
+        if (english == "Inventory") return "Inventario";
+        if (english == "Nothing to craft here") return "No hay nada que fabricar aqu\xc3\xad";
+        if (english == "Category") return "Categor\xc3\xad" "a";
+        if (english == "Navigate") return "Navegar";
+        if (english == "Play Tutorial") return "Jugar tutorial";
+        if (english == "Tutorial World") return "Mundo tutorial";
+        if (english == "Could not load Tutorial World") return "No se pudo cargar el mundo tutorial";
+        if (english == "No Games Found") return "No se encontraron partidas";
+        if (english == "Reset to Defaults") return "Restablecer valores";
+        if (english == "Press a button...") return "Pulsa un bot\xc3\xb3n...";
+        if (english == "Press a key...") return "Pulsa una tecla...";
+        if (english == "Select a command to edit.") return "Selecciona un comando para editar.";
+        if (english == "Previous") return "Anterior";
+        if (english == "Next") return "Siguiente";
+        if (english == "Done") return "Listo";
+        if (english == "Cancel") return "Cancelar";
+        if (english == "Fullbright") return "Brillo m\xc3\xa1ximo";
+        if (english == "Show Coordinates") return "Mostrar coordenadas";
+        if (english == "30 FPS Limit") return "L\xc3\xadmite de 30 FPS";
+        if (english == "Deflicker Filter") return "Filtro antiparpadeo";
+        if (english == "Fog") return "Niebla";
+        if (english == "Dolby Digital") return "Dolby Digital";
     }
     return english;
 }
@@ -378,6 +451,20 @@ std::string StringTranslate::translateKeyFormat(const std::string &s, const std:
 std::string StringTranslate::translateKeyFormat(const std::string &s, const char *arg)
 {
     return translateKeyFormat(s, std::vector<std::string>{arg != nullptr ? arg : ""});
+}
+
+std::string StringTranslate::translateKeyFormat(const std::string &s, const std::string &arg1, const std::string &arg2)
+{
+    return translateKeyFormat(s, std::vector<std::string>{arg1, arg2});
+}
+
+bool StringTranslate::containsTranslateKey(const std::string &s) const
+{
+    if (translateTable.find(s) != translateTable.end())
+        return true;
+    if (s == "key.crafting")
+        return true;
+    return false;
 }
 
 std::string StringTranslate::translateNamedKey(const std::string &s)

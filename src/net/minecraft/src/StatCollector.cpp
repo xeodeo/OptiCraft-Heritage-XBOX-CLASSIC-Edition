@@ -30,3 +30,18 @@ std::string StatCollector::translateToLocalFormatted(const std::string &s, const
 {
 	return StringTranslate::getInstance()->translateKeyFormat(s, arg);
 }
+
+std::string StatCollector::translateToLocalFormatted(const std::string &s, const std::string &arg1, const std::string &arg2)
+{
+	return StringTranslate::getInstance()->translateKeyFormat(s, arg1, arg2);
+}
+
+bool StatCollector::func_94522_b(const std::string &s)
+{
+	return StringTranslate::getInstance()->containsTranslateKey(s);
+}
+
+bool StatCollector::canTranslate(const std::string &s)
+{
+	return StringTranslate::getInstance()->containsTranslateKey(s);
+}

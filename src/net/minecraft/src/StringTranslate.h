@@ -47,6 +47,8 @@ public:
     std::string translateKeyFormat(const std::string &s, const std::vector<std::string> &args);
     std::string translateKeyFormat(const std::string &s, const std::string &arg);
     std::string translateKeyFormat(const std::string &s, const char *arg);
+    std::string translateKeyFormat(const std::string &s, const std::string &arg1, const std::string &arg2);
+    bool containsTranslateKey(const std::string &s) const;
     std::string translateNamedKey(const std::string &s);
 
 private:
