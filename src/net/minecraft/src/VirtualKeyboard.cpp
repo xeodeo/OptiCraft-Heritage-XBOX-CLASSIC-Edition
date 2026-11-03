@@ -5,6 +5,8 @@
 
 #include "platform/ConsoleInputClock.h"
 #include "GuiTextField.h"
+#include "GuiChat.h"
+#include "Minecraft.h"
 #include "FontRenderer.h"
 #include "lwjgl/Keyboard.h"
 #include "platform/Input.h"
@@ -218,7 +220,15 @@ void VirtualKeyboard::tick()
 	// Circle: close the keyboard by unfocusing the field (back to cursor nav).
 	if (pressed & keyClose)
 	{
-		if (focusedField)
+		// In the chat the keyboard IS the screen: B leaves the chat at once
+		// (Legacy), instead of first closing the keyboard over an empty chat.
+		Minecraft *mc = Minecraft::getMinecraft();
+		if (mc != nullptr && dynamic_cast<GuiChat *>(mc->currentScreen) != nullptr)
+		{
+			lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_ESCAPE, true);
+			lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_ESCAPE, false);
+		}
+		else if (focusedField)
 			focusedField->setFocused(false); // -> notifyFocus(this, false)
 	}
 }

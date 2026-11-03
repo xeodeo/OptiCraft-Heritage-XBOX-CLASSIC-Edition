@@ -120,6 +120,8 @@ public:
 	virtual void displayGUIEditSign(TileEntitySign *tileentitysign);
 	void useCurrentItemOnEntity(Entity *entity);
 	ItemStack *getCurrentEquippedItem();
+	// Java EntityPlayer.getHeldItem: the hotbar item (EntityLiving's is for mobs).
+	ItemStack *getHeldItem() override;
 	void destroyCurrentEquippedItem();
 	double getYOffset() override;
 	virtual void swingItem();
