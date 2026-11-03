@@ -428,7 +428,7 @@ void GuiScreenBook::drawScreen(int_t mouseX, int_t mouseY, float_t partialTicks)
     }
     else
     {
-        std::string pageIndicator = StatCollector::translateToLocalFormatted("book.pageIndicator", std::to_string(currPage + 1) + " of " + std::to_string(bookTotalPages));
+        std::string pageIndicator = StatCollector::translateToLocalFormatted("book.pageIndicator", std::to_string(currPage + 1), std::to_string(bookTotalPages));
         std::string pageText = func_74158_i();
 
         if (bookIsUnsigned)

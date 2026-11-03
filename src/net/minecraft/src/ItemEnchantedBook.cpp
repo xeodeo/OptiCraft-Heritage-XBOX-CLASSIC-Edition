@@ -13,6 +13,7 @@ ItemEnchantedBook::ItemEnchantedBook(int id)
     : Item(id)
 {
     setMaxStackSize(1);
+    Enchantment::initEnchantments();
 }
 
 bool ItemEnchantedBook::hasEffect(ItemStack *stack)
@@ -48,6 +49,7 @@ NBTTagList *ItemEnchantedBook::func_92110_g(ItemStack *stack)
 
 void ItemEnchantedBook::addInformation(ItemStack *stack, std::vector<std::string> &information)
 {
+    Enchantment::initEnchantments();
     Item::addInformation(stack, information);
     NBTTagList *stored = func_92110_g(stack);
     if (stored != nullptr)
@@ -118,6 +120,7 @@ ItemStack *ItemEnchantedBook::func_92111_a(const EnchantmentData &data)
 
 void ItemEnchantedBook::func_92113_a(Enchantment *enchantment, std::vector<ItemStack *> &list)
 {
+    Enchantment::initEnchantments();
     if (enchantment == nullptr)
         return;
 
@@ -129,6 +132,7 @@ void ItemEnchantedBook::func_92113_a(Enchantment *enchantment, std::vector<ItemS
 
 ItemStack *ItemEnchantedBook::func_92109_a(Random &random)
 {
+    Enchantment::initEnchantments();
     if (Enchantment::field_92090_c.empty())
         return new ItemStack(this->itemID, 1, 0);
 
@@ -146,6 +150,7 @@ WeightedRandomChestContent ItemEnchantedBook::func_92114_b(Random &random)
 
 WeightedRandomChestContent ItemEnchantedBook::func_92112_a(Random &random, int minCount, int maxCount, int weight)
 {
+    Enchantment::initEnchantments();
     if (Enchantment::field_92090_c.empty())
     {
         ItemStack fallback(this->itemID, 1, 0);
