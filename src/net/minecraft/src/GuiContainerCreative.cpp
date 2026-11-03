@@ -1059,8 +1059,16 @@ void GuiContainerCreative::renderCreativeTab(CreativeTabs *tab)
         ItemStack *icon = s_tabIcons[idx];
         if (icon != nullptr)
         {
+#if PLATFORM_GUI_FORCE_DEPTH_DISABLED
+            renderEnable(RenderCapability::DepthTest);
+            renderDepthMask(true);
+            renderDepthFunc(RenderCompare::LessEqual);
+#endif
             itemRenderer->renderItemIntoGUI(fontRenderer, mc->renderEngine, icon, x, y);
             itemRenderer->renderItemOverlayIntoGUI(fontRenderer, mc->renderEngine, icon, x, y);
+#if PLATFORM_GUI_FORCE_DEPTH_DISABLED
+            renderDisable(RenderCapability::DepthTest);
+#endif
         }
     }
 

@@ -4935,6 +4935,8 @@ void RenderBlocks::renderBlockOnInventory(Block *block, int_t i, float f)
 	}
 	else if (k == 22)
 	{
+		renderRotate(90.0f, 0.0f, 1.0f, 0.0f);
+		renderTranslate(-0.5f, -0.5f, -0.5f);
 		ChestItemRenderHelper::instance.renderChest(block, i, f);
 		renderEnable(RenderCapability::RescaleNormal);
 	}
