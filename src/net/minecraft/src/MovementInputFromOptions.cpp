@@ -102,10 +102,6 @@ void MovementInputFromOptions::updatePlayerMoveState(EntityPlayer *entityplayer)
             };
             moveStrafe -= axis(pad2.leftX);
             moveForward -= axis(pad2.leftY);
-            if (pad2.held & XBOX_PAD_DPAD_UP) moveForward++;
-            if (pad2.held & XBOX_PAD_DPAD_DOWN) moveForward--;
-            if (pad2.held & XBOX_PAD_DPAD_LEFT) moveStrafe++;
-            if (pad2.held & XBOX_PAD_DPAD_RIGHT) moveStrafe--;
             jump = (pad2.held & XBOX_PAD_A) != 0;
             sneak = (pad2.held & XBOX_PAD_LEFT_THUMB) != 0;
         }

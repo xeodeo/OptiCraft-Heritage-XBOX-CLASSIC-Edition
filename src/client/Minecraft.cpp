@@ -2246,7 +2246,7 @@ void Minecraft::runTick()
                 thePlayer->dropCurrentItem();
         }
 
-        while (isMultiplayerWorld() && gameSettings->keyBindChat->isPressed())
+        while (gameSettings->keyBindChat->isPressed())
             displayGuiScreen(new GuiChat());
 
         if (isMultiplayerWorld() && currentScreen == nullptr &&
