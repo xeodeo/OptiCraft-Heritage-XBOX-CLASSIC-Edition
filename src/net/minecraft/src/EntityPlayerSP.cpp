@@ -1,6 +1,7 @@
 #include "EntityPlayerSP.h"
 
 #include "GameSettings.h"
+#include "KeyBinding.h"
 #include "skin/SkinManager.h"
 #include "GuiIngame.h"
 #include "Material.h"
