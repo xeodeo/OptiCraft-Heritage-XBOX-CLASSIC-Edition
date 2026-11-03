@@ -894,6 +894,11 @@ ItemStack *EntityPlayer::getCurrentEquippedItem()
 	return inventory->getCurrentItem();
 }
 
+ItemStack *EntityPlayer::getHeldItem()
+{
+	return inventory != nullptr ? inventory->getCurrentItem() : nullptr;
+}
+
 void EntityPlayer::destroyCurrentEquippedItem()
 {
 	inventory->setInventorySlotContents(inventory->currentItem, nullptr);

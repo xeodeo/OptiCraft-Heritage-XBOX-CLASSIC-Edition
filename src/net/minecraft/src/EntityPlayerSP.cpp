@@ -491,8 +491,12 @@ int_t EntityPlayerSP::getPlayerArmorValue()
 	return inventory->getTotalArmorValue();
 }
 
-void EntityPlayerSP::sendChatMessage(const std::string &)
+void EntityPlayerSP::sendChatMessage(const std::string &message)
 {
+	// Single player has no server to echo the line back: show it as the 1.5.2
+	// integrated server does ("<name> message"). Commands are not ported yet.
+	if (mc != nullptr && mc->ingameGUI != nullptr)
+		mc->ingameGUI->addChatMessage("<" + String::toUtf8(username) + "> " + message);
 }
 
 bool EntityPlayerSP::isSneaking()
