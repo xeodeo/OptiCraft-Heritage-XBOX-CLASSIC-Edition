@@ -27,6 +27,7 @@ public:
 
     static void initialize();
     static void cleanup();
+    static void initTabsForBlocksAndItems();
 
     CreativeTabs(int tabIndex, const std::string &tabLabel);
     virtual ~CreativeTabs() = default;

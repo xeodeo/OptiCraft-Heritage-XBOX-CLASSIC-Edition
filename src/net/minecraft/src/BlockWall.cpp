@@ -2,6 +2,7 @@
 
 #include "AxisAlignedBB.h"
 #include "IBlockAccess.h"
+#include "ItemStack.h"
 #include "Material.h"
 #include "World.h"
 
@@ -79,4 +80,11 @@ AxisAlignedBB *BlockWall::getCollisionBoundingBoxFromPool(World *world, int_t i,
 bool BlockWall::shouldSideBeRendered(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t side)
 {
 	return side == 0 ? Block::shouldSideBeRendered(iblockaccess, i, j, k, side) : true;
+}
+
+void BlockWall::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	list.push_back(new ItemStack(id, 1, 0));
+	list.push_back(new ItemStack(id, 1, 1));
 }

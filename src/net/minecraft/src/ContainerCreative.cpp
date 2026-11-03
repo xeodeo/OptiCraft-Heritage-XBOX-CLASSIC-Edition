@@ -15,13 +15,13 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
     {
         for (int_t col = 0; col < 9; ++col)
         {
-            addSlotToContainer(new Slot(GuiContainerCreative::getInventory(), row * 9 + col, 9 + col * 18, 18 + row * 18));
+            addSlot(new Slot(GuiContainerCreative::getInventory(), row * 9 + col, 9 + col * 18, 18 + row * 18));
         }
     }
 
     for (int_t col = 0; col < 9; ++col)
     {
-        addSlotToContainer(new Slot(playerInventory, col, 9 + col * 18, 112));
+        addSlot(new Slot(playerInventory, col, 9 + col * 18, 112));
     }
 
     scrollTo(0.0f);
@@ -34,11 +34,25 @@ ContainerCreative::~ContainerCreative()
 
 void ContainerCreative::clearItemList()
 {
+    InventoryBasic *inv = GuiContainerCreative::getInventory();
+    if (inv != nullptr)
+    {
+        for (int_t i = 0; i < 45; ++i)
+        {
+            inv->setInventorySlotContents(i, nullptr);
+        }
+    }
     for (ItemStack *stack : itemList)
     {
         delete stack;
     }
     itemList.clear();
+}
+
+bool ContainerCreative::isUsableByPlayer(EntityPlayer *player)
+{
+    (void)player;
+    return true;
 }
 
 bool ContainerCreative::canInteractWith(EntityPlayer *player)
@@ -89,9 +103,9 @@ void ContainerCreative::retrySlotClick(int_t slot, int_t button, bool shift, Ent
 ItemStack *ContainerCreative::transferStackInSlot(EntityPlayer *player, int_t slotIndex)
 {
     (void)player;
-    if (slotIndex >= (int_t)inventorySlots.size() - 9 && slotIndex < (int_t)inventorySlots.size())
+    if (slotIndex >= (int_t)slots.size() - 9 && slotIndex < (int_t)slots.size())
     {
-        Slot *slot = inventorySlots[slotIndex];
+        Slot *slot = slots[slotIndex];
         if (slot != nullptr && slot->getHasStack())
         {
             slot->putStack(nullptr);
@@ -110,6 +124,6 @@ bool ContainerCreative::func_94531_b(Slot *slot)
 {
     if (slot == nullptr)
         return false;
-    return dynamic_cast<InventoryPlayer *>(slot->inventory) != nullptr ||
+    return dynamic_cast<InventoryPlayer *>(slot->getInventory()) != nullptr ||
            (slot->yDisplayPosition > 90 && slot->xDisplayPosition <= 162);
 }

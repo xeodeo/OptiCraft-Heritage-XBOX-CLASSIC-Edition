@@ -14,3 +14,9 @@ std::string ItemCoal::getItemNameIS(ItemStack* itemstack) {
         return "item.coal";
     }
 }
+
+void ItemCoal::getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list) {
+    (void)tab;
+    list.push_back(new ItemStack(id, 1, 0));
+    list.push_back(new ItemStack(id, 1, 1));
+}

@@ -14,6 +14,7 @@ public:
 	std::string getFullSlabName(int_t metadata) override;
 
 	static const jstring blockStepTypes[8];
+	void getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 
 protected:
 	ItemStack *createStackedBlock(int_t metadata) override;

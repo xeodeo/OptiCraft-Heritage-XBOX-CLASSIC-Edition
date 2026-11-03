@@ -90,3 +90,12 @@ bool ItemSkull::onItemUse(ItemStack *itemstack, EntityPlayer *entityplayer, Worl
 	--itemstack->stackSize;
 	return true;
 }
+
+void ItemSkull::getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	for (int i = 0; i < 5; ++i)
+	{
+		list.push_back(new ItemStack(id, 1, i));
+	}
+}

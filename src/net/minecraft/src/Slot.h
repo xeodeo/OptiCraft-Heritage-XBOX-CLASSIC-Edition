@@ -18,14 +18,16 @@ public:
 	virtual void onPickupFromSlot(EntityPlayer *player, ItemStack *itemstack) { onPickupFromSlot(itemstack); }
 	virtual bool canTakeStack(EntityPlayer *player) { return true; }
 	virtual bool isItemValid(ItemStack *itemstack);
-	ItemStack *getStack();
-	bool getHasStack();
-	void putStack(ItemStack *itemstack);
+	virtual ItemStack *getStack();
+	virtual bool getHasStack();
+	virtual void putStack(ItemStack *itemstack);
 	ItemStack *takeStack();
 	virtual void onSlotChanged();
 	virtual int_t getSlotStackLimit();
 	virtual int_t getBackgroundIconIndex();
 	virtual ItemStack *decrStackSize(int_t i);
+	virtual bool isSlotInInventory(IInventory *inv, int_t slot) { return inv == inventory && slot == slotIndex; }
+	int_t getSlotIndex() const { return slotIndex; }
 
 	// Not in Java: Container::usesInventory() needs to know which IInventory a
 	// slot is backed by so an open container can be closed before that inventory

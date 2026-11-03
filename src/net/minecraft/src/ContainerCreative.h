@@ -14,6 +14,7 @@ public:
     explicit ContainerCreative(EntityPlayer *player);
     ~ContainerCreative() override;
 
+    bool isUsableByPlayer(EntityPlayer *player) override;
     bool canInteractWith(EntityPlayer *player) override;
     void scrollTo(float_t scroll);
     bool hasMoreThan1PageOfItemsInList() const;

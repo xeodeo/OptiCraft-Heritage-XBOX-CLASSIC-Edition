@@ -90,3 +90,11 @@ ItemStack *BlockQuartz::createStackedBlock(int_t metadata)
 {
 	return metadata != 3 && metadata != 4 ? Block::createStackedBlock(metadata) : new ItemStack(blockID, 1, 2);
 }
+
+void BlockQuartz::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	list.push_back(new ItemStack(id, 1, 0));
+	list.push_back(new ItemStack(id, 1, 1));
+	list.push_back(new ItemStack(id, 1, 2));
+}

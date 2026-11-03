@@ -7,6 +7,7 @@ class BlockWoodSlab : public BlockHalfSlab
 {
 public:
 	static const char *const woodType[4];
+	void getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 
 	BlockWoodSlab(int_t id, bool isDouble);
 

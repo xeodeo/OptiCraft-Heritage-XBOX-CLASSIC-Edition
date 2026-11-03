@@ -57,8 +57,9 @@ public:
 		entityEggOrder.add(i);
 	}
 
-private:
     static std::map<int_t, EntityEggInfo> entityEggs;
+
+private:
     static JavaHashSet<int_t, EntityEggIdHash, EntityEggIdEqual> entityEggOrder;
     static std::map<jstring, std::function<Entity *(World *)>> stringToClassMapping;
     static std::map<std::type_index, jstring> classToStringMapping;

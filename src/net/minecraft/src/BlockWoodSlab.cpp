@@ -42,3 +42,15 @@ ItemStack *BlockWoodSlab::createStackedBlock(int_t metadata)
 {
 	return new ItemStack(Block::woodSingleSlab->blockID, 2, metadata & 7);
 }
+
+void BlockWoodSlab::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	if (Block::woodDoubleSlab != nullptr && id != Block::woodDoubleSlab->blockID)
+	{
+		for (int_t i = 0; i < 4; ++i)
+		{
+			list.push_back(new ItemStack(id, 1, i));
+		}
+	}
+}
