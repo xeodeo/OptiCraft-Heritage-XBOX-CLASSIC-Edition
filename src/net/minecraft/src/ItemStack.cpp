@@ -314,7 +314,7 @@ std::vector<std::string> ItemStack::getItemNameandInformation()
 
     // 1.5.2 getTooltip: the anvil name (display.Name) in italics.
     if (hasDisplayName())
-        information.push_back(std::string("Â§o") + getDisplayName() + "Â§r");
+        information.push_back(std::string("\xc2\xa7o") + getDisplayName() + "\xc2\xa7r");
     else
         information.push_back(item->getItemDisplayName(this));
     item->addInformation(this, information);
