@@ -354,9 +354,16 @@ bool GuiContainer::getIsMouseOverSlot(Slot *slot, int_t mouseX, int_t mouseY)
 
 void GuiContainer::mouseClicked(int_t x, int_t y, int_t button)
 {
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	ContainerSlotNavigator &navigator = ContainerSlotNavigator::instance(getOwnerPlayerIndex());
+#if PLATFORM_XBOX
+	// A is also turned into a mouse click at the cursor, which the D-pad keeps
+	// on the selected slot: with the D-pad in charge that second click put the
+	// item straight back. The stick-driven pointer is not a hardware pointer.
+	const bool pointerActive = false;
+#else
 	const bool pointerActive = platformMenuPointerActive();
+#endif
 	// Console confirm buttons are exposed both as controller input and mouse
 	// clicks. When D-pad selection owns the inventory (and the user is not pointing
 	// with a hardware pointer like the Wii remote IR sensor), ignore the synthesized
@@ -376,7 +383,7 @@ void GuiContainer::mouseClicked(int_t x, int_t y, int_t button)
 	if (button == 0 || button == 1)
 	{
 		Slot *slot = nullptr;
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 		if (controllerSlot != nullptr)
 			slot = controllerSlot;
 #endif
