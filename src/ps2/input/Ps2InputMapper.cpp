@@ -309,8 +309,7 @@ void updateGameplay(const Ps2PadSnapshot& p) {
     if (p.pressed & PAD_START) { ps2SetMenuPad(0); ps2SetMenuOwnerPad(0); lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_ESCAPE, true); }
     if (p.released & PAD_START) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_ESCAPE, false);
     if (p.pressed & (PAD_SQUARE | PAD_TRIANGLE)) ps2SetMenuPad(0);
-    if (p.pressed & PAD_R1) lwjgl::Mouse::detail::pushWheel(-1, 0, 0);
-    if (p.pressed & PAD_L1) lwjgl::Mouse::detail::pushWheel(1, 0, 0);
+    // L1/R1 change item through keyBindPrevItem/NextItem (rebindable).
     if (p.pressed & PAD_SELECT) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_F3, true);
     if (p.released & PAD_SELECT) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_F3, false);
 

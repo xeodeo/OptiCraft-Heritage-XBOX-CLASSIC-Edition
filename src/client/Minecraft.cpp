@@ -2265,11 +2265,7 @@ void Minecraft::runTick()
         }
 
         while (gameSettings->keyBindChat->isPressed())
-        {
-            if (thePlayer != nullptr && thePlayer->capabilities.isFlying)
-                continue;
             displayGuiScreen(new GuiChat());
-        }
 
         if (isMultiplayerWorld() && currentScreen == nullptr &&
             (lwjgl::Keyboard::isKeyDown(lwjgl::Keyboard::KEY_SLASH) ||
