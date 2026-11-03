@@ -1,4 +1,5 @@
 #include "LegacyOptionsLayout.h"
+#include "net/minecraft/src/Minecraft.h"
 
 #include <algorithm>
 
@@ -97,8 +98,10 @@ int_t legacyCenteredPanelY(int_t screenWidth, int_t screenHeight, int_t panelHei
 {
     const int_t safeWidth = std::max<int_t>(1, screenWidth);
     const int_t safeHeight = std::max<int_t>(1, screenHeight);
+    Minecraft *mc = Minecraft::getMinecraft();
+    const bool is480 = (mc != nullptr && mc->displayHeight <= 480);
     const LegacySceneLayout scene = legacySceneLayout(safeWidth, safeHeight);
-    const int_t availableTop = scene.contentTop;
+    const int_t availableTop = is480 ? 6 : scene.contentTop;
     const int_t footerTop = legacyHintRowY(safeHeight) - std::max<int_t>(0, footerGap);
     const int_t centeredPanelY = (safeHeight - panelHeight) / 2;
     const int_t maxPanelY = std::max<int_t>(availableTop, footerTop - panelHeight);
@@ -146,11 +149,14 @@ int_t legacyOptionsMaxRows(int_t screenWidth, int_t screenHeight, LegacyOptionsL
     const int_t rowHeight = profile.scaleRows ? scaledRowHeight(safeHeight, profile.rowHeight) : profile.rowHeight;
     const int_t rowSpacing = profile.scaleRows ? scaledRowSpacing(safeHeight, profile.rowSpacing) : profile.rowSpacing;
 
+    Minecraft *mc = Minecraft::getMinecraft();
+    const bool is480 = (mc != nullptr && mc->displayHeight <= 480);
     const LegacySceneLayout scene = legacySceneLayout(std::max<int_t>(1, screenWidth), safeHeight);
+    const int_t contentTop = is480 ? 6 : scene.contentTop;
     // Same budget legacyOptionsLayout() centers within: below the title and above
     // the bottom hint row.
     const int_t availableBottom = legacyHintRowY(safeHeight) - profile.footerGap;
-    const int_t available = availableBottom - scene.contentTop - profile.topPadding - profile.bottomPadding;
+    const int_t available = availableBottom - contentTop - profile.topPadding - profile.bottomPadding;
     if (available < rowHeight)
         return 1;
     return std::max<int_t>(1, (available + rowSpacing) / (rowHeight + rowSpacing));

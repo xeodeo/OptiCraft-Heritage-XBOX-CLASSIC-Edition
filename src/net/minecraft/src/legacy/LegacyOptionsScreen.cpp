@@ -228,11 +228,15 @@ void LegacyOptionsScreen::drawLegacyBackground(float_t partialTick)
             drawGradientRect(0, 0, width, height, static_cast<int_t>(0x14000000u), static_cast<int_t>(0x3c000000u));
     }
 
-    LegacyMainMenuLayout titleLayout{};
-    titleLayout.titleY = legacyLayout.titleY;
-    titleLayout.titleMaxWidth = legacyLayout.titleMaxWidth;
-    titleLayout.titleMaxHeight = legacyLayout.titleMaxHeight;
-    legacyDrawTitleTexture(mc, titleLayout, width, zLevel, nullptr);
+    const bool is480 = (mc != nullptr && mc->displayHeight <= 480);
+    if (!is480)
+    {
+        LegacyMainMenuLayout titleLayout{};
+        titleLayout.titleY = legacyLayout.titleY;
+        titleLayout.titleMaxWidth = legacyLayout.titleMaxWidth;
+        titleLayout.titleMaxHeight = legacyLayout.titleMaxHeight;
+        legacyDrawTitleTexture(mc, titleLayout, width, zLevel, nullptr);
+    }
 
     if (panelVisible)
         panelRenderer.draw(legacyLayout);
