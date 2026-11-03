@@ -579,7 +579,7 @@ void Item::initItems() {
     flint = (new Item(62))->setIconCoord(6, 0)->setItemName("flint");
     porkRaw = (new ItemFood(63, 3, 0.3f, true))->setIconCoord(7, 5)->setItemName("porkchopRaw");
     porkCooked = (new ItemFood(64, 8, 0.8f, true))->setIconCoord(8, 5)->setItemName("porkchopCooked");
-    painting = (new ItemPainting(65))->setIconCoord(10, 1)->setItemName("painting");
+    painting = (new ItemHangingEntity(65, ItemHangingEntity::TYPE_PAINTING))->setIconCoord(10, 1)->setItemName("painting");
     appleGold = (new ItemAppleGold(66, 4, 1.2f, false))->setAlwaysEdible()->setIconCoord(11, 0)->setItemName("appleGold");
     sign = (new ItemSign(67))->setIconCoord(10, 2)->setItemName("sign");
     doorWood = (new ItemDoor(68, Material::wood))->setIconCoord(11, 2)->setItemName("doorWood");

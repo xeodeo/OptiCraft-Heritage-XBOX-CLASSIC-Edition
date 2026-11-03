@@ -172,8 +172,9 @@ void EntityAIControlledByPlayer::updateTask()
             if (held->stackSize == 0)
             {
                 ItemStack *rod = new ItemStack(Item::fishingRod);
-                rod->setTagCompound(held->getTagCompound());
+                rod->setTagCompound(held->getTagCompound() != nullptr ? static_cast<NBTTagCompound *>(held->getTagCompound()->copy()) : nullptr);
                 player->inventory->mainInventory[player->inventory->currentItem] = rod;
+                delete held;
             }
         }
     }

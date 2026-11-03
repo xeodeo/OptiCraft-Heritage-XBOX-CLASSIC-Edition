@@ -24,6 +24,9 @@ GuiRepair::GuiRepair(InventoryPlayer *playerInv, World *world, int x, int y, int
 
 GuiRepair::~GuiRepair()
 {
+    // The on-screen keyboard keeps a pointer to the focused field.
+    if (itemNameField != nullptr)
+        itemNameField->setFocused(false);
     delete itemNameField;
     itemNameField = nullptr;
 }
@@ -35,6 +38,8 @@ void GuiRepair::initGui()
     int guiX = (width - xSize) / 2;
     int guiY = (height - ySize) / 2;
 
+    if (itemNameField != nullptr)
+        itemNameField->setFocused(false);
     delete itemNameField;
     itemNameField = new GuiTextField(fontRenderer, guiX + 62, guiY + 24, 103, 12);
     itemNameField->setTextColor(-1);

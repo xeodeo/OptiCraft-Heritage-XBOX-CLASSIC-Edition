@@ -36,7 +36,7 @@ public:
 	bool canInteractWith(EntityPlayer *entityplayer) override;
 	bool isStackValidForSlot(int_t slot, ItemStack *stack) override;
 
-	static const Potion *effectsList[4][2];
+	static const Potion *getEffect(int tier, int index);
 	static const int effectsCount[4];
 
 private:

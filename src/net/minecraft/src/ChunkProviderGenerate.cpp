@@ -1161,6 +1161,8 @@ void ChunkProviderGenerate::recreateStructures(int_t x, int_t z)
 			strongholdGenerator->generate(this, worldObj, x, z, nullptr);
 		if (scatteredFeatureGenerator != nullptr)
 			scatteredFeatureGenerator->generate(this, worldObj, x, z, nullptr);
+		// Loaded chunks add starts too: keep the same bound as new chunks.
+		trimStructureStarts(x, z);
 	}
 }
 

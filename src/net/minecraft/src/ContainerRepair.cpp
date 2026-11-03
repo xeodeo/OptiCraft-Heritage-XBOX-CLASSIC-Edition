@@ -360,7 +360,10 @@ ItemStack *ContainerRepair::transferStackInSlot(EntityPlayer *player, int slotIn
             return nullptr;
         }
 
-        if (stack->stackSize == 0)
+        // putStack(nullptr) deletes the stack: keep its size, and give
+        // onPickupFromSlot the copy (Java passes the now empty stack).
+        const int remaining = stack->stackSize;
+        if (remaining == 0)
         {
             slot->putStack(nullptr);
         }
@@ -369,13 +372,13 @@ ItemStack *ContainerRepair::transferStackInSlot(EntityPlayer *player, int slotIn
             slot->onSlotChanged();
         }
 
-        if (stack->stackSize == result->stackSize)
+        if (remaining == result->stackSize)
         {
             delete result;
             return nullptr;
         }
 
-        slot->onPickupFromSlot(player, stack);
+        slot->onPickupFromSlot(player, remaining == 0 ? result : stack);
     }
     return result;
 }

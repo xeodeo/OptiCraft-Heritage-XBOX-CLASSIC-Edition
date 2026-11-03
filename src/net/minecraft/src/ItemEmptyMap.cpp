@@ -42,9 +42,14 @@ ItemStack *ItemEmptyMap::onItemRightClick(ItemStack *itemstack, World *world, En
         return mapStack;
     }
 
-    if (!entityplayer->inventory->addItemStackToInventory(mapStack->copy()))
+    // addItemStackToInventory moves the items out of the stack it is given.
+    if (!entityplayer->inventory->addItemStackToInventory(mapStack))
     {
         entityplayer->dropPlayerItem(mapStack);
+    }
+    else
+    {
+        delete mapStack;
     }
 
     return itemstack;

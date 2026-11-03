@@ -1055,9 +1055,11 @@ Chunk *ChunkProvider::loadChunkFromFile(int_t i, int_t j, bool &readFailed)
 		Chunk *chunk = chunkLoader->loadChunk(worldObj, i, j, &status);
 		readFailed = status == ChunkLoadStatus::ReadError;
 		if (chunk != nullptr)
+		{
 			chunk->lastSaveTime = worldObj->getWorldTime();
 			if (chunkProvider != nullptr)
 				chunkProvider->recreateStructures(i, j);
+		}
 		return chunk;
 	}
 	catch (...)

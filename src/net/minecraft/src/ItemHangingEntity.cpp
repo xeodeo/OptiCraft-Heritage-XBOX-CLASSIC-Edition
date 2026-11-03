@@ -42,9 +42,9 @@ bool ItemHangingEntity::onItemUse(ItemStack *stack, EntityPlayer *player, World 
 
     if (entity != nullptr && entity->onValidSurface())
     {
-        if (world != nullptr && !world->multiplayerWorld)
+        if (world == nullptr || world->multiplayerWorld || !world->spawnEntityInWorld(entity))
         {
-            world->spawnEntityInWorld(entity);
+            delete entity;
         }
 
         if (stack != nullptr)

@@ -10,6 +10,8 @@
 #include "java/Math.h"
 #include "java/Arithmetic.h"
 
+#include <algorithm>
+
 EntityXPOrb::EntityXPOrb(World *world) : Entity(world)
 {
 	setSize(0.25f, 0.25f);
@@ -75,6 +77,10 @@ void EntityXPOrb::onUpdate()
 
 	pushOutOfBlocks(posX, (boundingBox->minY + boundingBox->maxY) / 2.0, posZ);
 	const double attractionRange = 8.0;
+	// The cached player may have died (respawn deletes it) or left split screen.
+	// Check membership first: a deleted player must not be dereferenced.
+	if (closestPlayer != nullptr && (std::find(worldObj->playerEntities.begin(), worldObj->playerEntities.end(), closestPlayer) == worldObj->playerEntities.end() || closestPlayer->isDead))
+		closestPlayer = nullptr;
 	if (xpColor - xpTargetColor >= 20)
 	{
 		if (closestPlayer == nullptr || closestPlayer->getDistanceSqToEntity(this) > attractionRange * attractionRange)

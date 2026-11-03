@@ -27,7 +27,8 @@ public:
 	virtual void detectAndSendChanges() { updateCraftingResults(); }
 	virtual void addCraftingToCrafters(ICrafting *icrafting);
 	virtual void removeCraftingFromCrafters(ICrafting *icrafting);
-	virtual ItemStack *transferStackInSlot(EntityPlayer *player, int_t slotIndex) { return nullptr; }
+	// 1.5.2 shift-click hook. Older containers still implement getStackInSlot(int).
+	virtual ItemStack *transferStackInSlot(EntityPlayer *player, int_t slotIndex) { (void)player; return getStackInSlot(slotIndex); }
 	virtual bool canInteractWith(EntityPlayer *player) { return isUsableByPlayer(player); }
 	virtual bool enchantItem(EntityPlayer *entityplayer, int_t enchantment);
 	Slot *getSlot(int_t i);

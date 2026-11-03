@@ -80,7 +80,6 @@ ItemStack* ItemStack::splitStack(int i) {
     ItemStack* result = new ItemStack(itemID, i, itemDamage);
     if (stackTagCompound != nullptr)
         result->stackTagCompound = static_cast<NBTTagCompound*>(stackTagCompound->copy());
-    result->itemFrame = itemFrame;
     result->animationsToGo = animationsToGo;
     stackSize -= i;
     return result;
@@ -263,7 +262,6 @@ ItemStack* ItemStack::copy() {
     ItemStack* result = new ItemStack(itemID, stackSize, itemDamage);
     if (stackTagCompound != nullptr)
         result->stackTagCompound = static_cast<NBTTagCompound*>(stackTagCompound->copy());
-    result->itemFrame = itemFrame;
     result->animationsToGo = animationsToGo;
     return result;
 }

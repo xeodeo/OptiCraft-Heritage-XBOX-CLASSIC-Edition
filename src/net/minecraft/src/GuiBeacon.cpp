@@ -155,10 +155,10 @@ void GuiBeacon::updateScreen()
 
             for (int i = 0; i < count; ++i)
             {
-                if (TileEntityBeacon::effectsList[tier][i] == nullptr)
+                if (TileEntityBeacon::getEffect(tier, i) == nullptr)
                     continue;
 
-                int effectId = TileEntityBeacon::effectsList[tier][i]->id;
+                int effectId = TileEntityBeacon::getEffect(tier, i)->id;
                 int btnX = guiX + 76 + i * 24 - totalW / 2;
                 int btnY = guiY + 22 + tier * 25;
                 GuiBeaconButtonPower *btn = new GuiBeaconButtonPower(this, (tier << 8) | effectId, btnX, btnY, effectId, tier);
@@ -181,10 +181,10 @@ void GuiBeacon::updateScreen()
 
         for (int i = 0; i < count3 - 1; ++i)
         {
-            if (TileEntityBeacon::effectsList[tier3][i] == nullptr)
+            if (TileEntityBeacon::getEffect(tier3, i) == nullptr)
                 continue;
 
-            int effectId = TileEntityBeacon::effectsList[tier3][i]->id;
+            int effectId = TileEntityBeacon::getEffect(tier3, i)->id;
             int btnX = guiX + 167 + i * 24 - totalW3 / 2;
             int btnY = guiY + 47;
             GuiBeaconButtonPower *btn = new GuiBeaconButtonPower(this, (tier3 << 8) | effectId, btnX, btnY, effectId, tier3);
@@ -238,7 +238,7 @@ void GuiBeacon::actionPerformed(GuiButton *button)
     {
         if (beacon->getStackInSlot(0) != nullptr && beacon->getPrimaryEffect() > 0)
         {
-            beacon->decrStackSize(0, 1);
+            delete beacon->decrStackSize(0, 1);
         }
         mc->displayGuiScreen(nullptr);
     }

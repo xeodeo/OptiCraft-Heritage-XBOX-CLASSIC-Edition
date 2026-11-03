@@ -11,7 +11,7 @@ static ItemStack **createRecipePattern()
     items[1] = new ItemStack(Item::paper);
     items[2] = new ItemStack(Item::paper);
     items[3] = new ItemStack(Item::paper);
-    items[4] = new ItemStack(Item::mapItem, 0, 32767);
+    items[4] = new ItemStack(Item::mapItem, 0, -1) // ShapedRecipes uses -1 as the wildcard;
     items[5] = new ItemStack(Item::paper);
     items[6] = new ItemStack(Item::paper);
     items[7] = new ItemStack(Item::paper);

@@ -15,7 +15,7 @@ public:
 	EntityPainting(World *world, int_t i, int_t j, int_t k, int_t l);
 	EntityPainting(World *world, int_t i, int_t j, int_t k, int_t l, const jstring &s);
 
-	static constexpr int_t CLASS_ID = 9;
+	static constexpr int_t CLASS_ID = 10;
 	int_t getEntityClassID() const override { return CLASS_ID; }
 
 	void writeEntityToNBT(NBTTagCompound *nbttagcompound) override;

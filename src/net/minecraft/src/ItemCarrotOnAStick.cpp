@@ -36,7 +36,7 @@ ItemStack *ItemCarrotOnAStick::onItemRightClick(ItemStack *itemstack, World *wor
                 if (itemstack->stackSize == 0)
                 {
                     ItemStack *rod = new ItemStack(Item::fishingRod);
-                    rod->setTagCompound(itemstack->getTagCompound());
+                    rod->setTagCompound(itemstack->getTagCompound() != nullptr ? static_cast<NBTTagCompound *>(itemstack->getTagCompound()->copy()) : nullptr);
                     return rod;
                 }
             }

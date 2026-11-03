@@ -127,7 +127,8 @@ ItemStack *Container::slotClick(int_t slotIndex, int_t mouseButton, bool_t shift
 		}
 		else if(shiftClick)
 		{
-			ItemStack *transferred = getStackInSlot(slotIndex);
+			Slot *from = slotIndex >= 0 && slotIndex < (int_t)slots.size() ? slots[slotIndex] : nullptr;
+			ItemStack *transferred = from != nullptr && from->canTakeStack(entityplayer) ? transferStackInSlot(entityplayer, slotIndex) : nullptr;
 			if(transferred != nullptr)
 			{
 				int_t itemId = transferred->itemID;
@@ -171,6 +172,9 @@ ItemStack *Container::slotClick(int_t slotIndex, int_t mouseButton, bool_t shift
 				}
 				else if(itemstack3 == nullptr)
 				{
+					// 1.5.2: SlotRepair refuses while the player lacks the XP.
+					if(!slot->canTakeStack(entityplayer))
+						return itemstack;
 					int_t j1 = mouseButton != 0 ? (itemstack2->stackSize + 1) / 2 : itemstack2->stackSize;
 					ItemStack *itemstack5 = slot->decrStackSize(j1);
 					inventoryplayer->setItemStack(itemstack5);
@@ -178,7 +182,7 @@ ItemStack *Container::slotClick(int_t slotIndex, int_t mouseButton, bool_t shift
 					{
 						slot->putStack(nullptr);
 					}
-					slot->onPickupFromSlot(inventoryplayer->getItemStack());
+					slot->onPickupFromSlot(entityplayer, inventoryplayer->getItemStack());
 				}
 				else if(slot->isItemValid(itemstack3))
 				{
@@ -222,7 +226,7 @@ ItemStack *Container::slotClick(int_t slotIndex, int_t mouseButton, bool_t shift
 					{
 						itemstack3->stackSize += l1;
 						ItemStack *removed = slot->decrStackSize(l1);
-						slot->onPickupFromSlot(inventoryplayer->getItemStack());
+						slot->onPickupFromSlot(entityplayer, inventoryplayer->getItemStack());
 						delete removed;
 					}
 				}

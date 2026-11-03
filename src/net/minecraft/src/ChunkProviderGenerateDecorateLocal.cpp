@@ -99,7 +99,7 @@ void ChunkProviderGenerate::decorateChunkLocal(int_t chunkX, int_t chunkZ, byte_
 		const StructureBoundingBox chunkBounds(
 			minX, 0, minZ, JavaArithmetic::intAdd(minX, 15),
 			ChunkLocalDecorationTarget::BUFFER_HEIGHT - 1, JavaArithmetic::intAdd(minZ, 15));
-		MapGenStructure *generators[3];
+		MapGenStructure *generators[4];
 		const int_t count = structureGenerators(generators);
 		for (int_t index = 0; index < count; ++index)
 			generators[index]->appendIntersectingComponentBounds(chunkBounds, structureBounds, 1);

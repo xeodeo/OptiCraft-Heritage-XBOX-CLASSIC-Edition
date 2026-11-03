@@ -10,12 +10,18 @@
 #include "PotionEffect.h"
 #include "World.h"
 
-const Potion *TileEntityBeacon::effectsList[4][2] = {
-	{ Potion::moveSpeed, Potion::digSpeed },
-	{ Potion::resistance, Potion::jump },
-	{ Potion::damageBoost, nullptr },
-	{ Potion::regeneration, nullptr }
-};
+// Java's static effectsList table. The Potion pointers only exist after
+// Potion::initPotions(), so they are read when asked for, not at static init.
+const Potion *TileEntityBeacon::getEffect(int tier, int index)
+{
+	const Potion *const table[4][2] = {
+		{ Potion::moveSpeed, Potion::digSpeed },
+		{ Potion::resistance, Potion::jump },
+		{ Potion::damageBoost, nullptr },
+		{ Potion::regeneration, nullptr }
+	};
+	return tier >= 0 && tier < 4 && index >= 0 && index < 2 ? table[tier][index] : nullptr;
+}
 const int TileEntityBeacon::effectsCount[4] = { 2, 2, 1, 1 };
 
 TileEntityBeacon::TileEntityBeacon()
@@ -44,7 +50,7 @@ void TileEntityBeacon::setPrimaryEffect(int_t eff)
 	{
 		for (int i = 0; i < effectsCount[tier]; ++i)
 		{
-			if (effectsList[tier][i] != nullptr && effectsList[tier][i]->id == eff)
+			if (getEffect(tier, i) != nullptr && getEffect(tier, i)->id == eff)
 			{
 				primaryEffect = eff;
 				return;
@@ -62,7 +68,7 @@ void TileEntityBeacon::setSecondaryEffect(int_t eff)
 		{
 			for (int i = 0; i < effectsCount[tier]; ++i)
 			{
-				if (effectsList[tier][i] != nullptr && effectsList[tier][i]->id == eff)
+				if (getEffect(tier, i) != nullptr && getEffect(tier, i)->id == eff)
 				{
 					secondaryEffect = eff;
 					return;
