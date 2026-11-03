@@ -250,3 +250,66 @@ void ItemPotion::addInformation(ItemStack *itemstack, std::vector<std::string>& 
         information.push_back(std::string(potion != nullptr && potion->getIsBadEffect() ? u8"§c" : u8"§7") + line);
     }
 }
+
+static bool areEffectsEqual(const std::vector<PotionEffect> &a, const std::vector<PotionEffect> &b)
+{
+    if (a.size() != b.size())
+        return false;
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        if (!a[i].equals(b[i]))
+            return false;
+    }
+    return true;
+}
+
+void ItemPotion::getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+    Item::getSubItems(id, tab, list);
+
+    static std::vector<int> cachedDamageValues;
+    if (cachedDamageValues.empty())
+    {
+        std::vector<std::vector<PotionEffect>> seenEffects;
+        for (int var4 = 0; var4 <= 15; ++var4)
+        {
+            for (int var5 = 0; var5 <= 1; ++var5)
+            {
+                int var6 = (var5 == 0) ? (var4 | 8192) : (var4 | 16384);
+                for (int var7 = 0; var7 <= 2; ++var7)
+                {
+                    int var8 = var6;
+                    if (var7 == 1)
+                        var8 = var6 | 32;
+                    else if (var7 == 2)
+                        var8 = var6 | 64;
+
+                    std::vector<PotionEffect> effects = PotionHelper::getPotionEffects(var8, false);
+                    if (!effects.empty())
+                    {
+                        bool found = false;
+                        for (size_t i = 0; i < seenEffects.size(); ++i)
+                        {
+                            if (areEffectsEqual(seenEffects[i], effects))
+                            {
+                                cachedDamageValues[i] = var8;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found)
+                        {
+                            seenEffects.push_back(effects);
+                            cachedDamageValues.push_back(var8);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (int dmg : cachedDamageValues)
+    {
+        list.push_back(new ItemStack(id, 1, dmg));
+    }
+}

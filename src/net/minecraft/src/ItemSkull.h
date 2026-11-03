@@ -14,4 +14,5 @@ public:
 	int getMetadata(int damage) override;
 	std::string getItemNameIS(ItemStack *itemstack) override;
 	bool onItemUse(ItemStack *itemstack, EntityPlayer *entityplayer, World *world, int i, int j, int k, int side) override;
+	void getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 };

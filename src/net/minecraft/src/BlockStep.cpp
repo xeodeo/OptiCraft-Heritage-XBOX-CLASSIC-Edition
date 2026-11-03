@@ -51,3 +51,16 @@ ItemStack *BlockStep::createStackedBlock(int_t metadata)
 {
 	return new ItemStack(Block::stairSingle, 1, metadata & 7);
 }
+
+void BlockStep::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	if (Block::stairDouble != nullptr && id != Block::stairDouble->blockID)
+	{
+		for (int_t i = 0; i <= 7; ++i)
+		{
+			if (i != 2)
+				list.push_back(new ItemStack(id, 1, i));
+		}
+	}
+}

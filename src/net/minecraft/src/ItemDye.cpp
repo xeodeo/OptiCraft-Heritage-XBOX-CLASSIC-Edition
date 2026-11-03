@@ -169,3 +169,10 @@ void ItemDye::useItemOnEntity(ItemStack* itemstack, EntityLiving* entityliving) 
 void ItemDye::saddleEntity(ItemStack* itemstack, EntityLiving* entityliving) {
     useItemOnEntity(itemstack, entityliving);
 }
+
+void ItemDye::getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list) {
+    (void)tab;
+    for (int i = 0; i < 16; ++i) {
+        list.push_back(new ItemStack(id, 1, i));
+    }
+}

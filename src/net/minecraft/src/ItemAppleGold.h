@@ -12,4 +12,5 @@ public:
 	const EnumRarity& getRarity(ItemStack *itemstack) override;
 	ItemStack *onFoodEaten(ItemStack *itemstack, World *world, EntityPlayer *player) override;
 	std::vector<int> getSubItemDamageValues() const;
+	void getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 };

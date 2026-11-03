@@ -33,6 +33,7 @@ public:
     bool isEffectInstant(int damage);
 
     static bool isSplash(int damage);
+    void getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 
 private:
     std::unordered_map<int, std::vector<PotionEffect>> effectCache;

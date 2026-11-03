@@ -14,4 +14,5 @@ public:
     bool onItemUse(ItemStack *stack, EntityPlayer *player, World *world, int x, int y, int z, int side) override;
 
     static bool spawnCreature(World *world, int_t entityId, double x, double y, double z);
+    void getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 };

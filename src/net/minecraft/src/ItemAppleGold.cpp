@@ -21,6 +21,13 @@ const EnumRarity& ItemAppleGold::getRarity(ItemStack *stack)
 	return stack != nullptr && stack->getItemDamage() > 0 ? EnumRarity::epic : EnumRarity::rare;
 }
 
+void ItemAppleGold::getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	list.push_back(new ItemStack(id, 1, 0));
+	list.push_back(new ItemStack(id, 1, 1));
+}
+
 ItemStack *ItemAppleGold::onFoodEaten(ItemStack *stack, World *world, EntityPlayer *player)
 {
 	if (stack != nullptr && stack->getItemDamage() > 0)

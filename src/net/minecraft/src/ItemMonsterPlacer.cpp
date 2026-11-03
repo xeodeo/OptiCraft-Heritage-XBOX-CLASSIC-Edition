@@ -94,3 +94,12 @@ bool ItemMonsterPlacer::spawnCreature(World *world, int_t entityId, double x, do
     }
     return true;
 }
+
+void ItemMonsterPlacer::getSubItems(int id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+    (void)tab;
+    for (const auto &pair : EntityList::entityEggs)
+    {
+        list.push_back(new ItemStack(id, 1, pair.second.spawnedID));
+    }
+}

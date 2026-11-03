@@ -4,6 +4,7 @@
 #include "EntityFallingSand.h"
 #include "EntityLiving.h"
 #include "IBlockAccess.h"
+#include "ItemStack.h"
 #include "Material.h"
 #include "MathHelper.h"
 #include "World.h"
@@ -71,4 +72,12 @@ void BlockAnvil::onFinishFalling(World *world, int_t i, int_t j, int_t k, int_t 
 {
 	(void)metadata;
 	world->playAuxSFX(1022, i, j, k, 0);
+}
+
+void BlockAnvil::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	list.push_back(new ItemStack(id, 1, 0));
+	list.push_back(new ItemStack(id, 1, 1));
+	list.push_back(new ItemStack(id, 1, 2));
 }

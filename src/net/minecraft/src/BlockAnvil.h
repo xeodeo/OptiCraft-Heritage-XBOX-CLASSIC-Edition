@@ -24,4 +24,5 @@ public:
 	void onFinishFalling(World *world, int_t i, int_t j, int_t k, int_t metadata) override;
 	bool shouldSideBeRendered(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t side) override { (void)iblockaccess; (void)i; (void)j; (void)k; (void)side; return true; }
 	bool usesDefaultFaceCulling() const override { return false; }
+	void getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list) override;
 };

@@ -50,6 +50,7 @@
 #include "net/minecraft/src/Block.h"
 #include "net/minecraft/src/Container.h"
 #include "net/minecraft/src/ChunkBlockMap.h"
+#include "net/minecraft/src/CreativeTabs.h"
 #include "net/minecraft/src/EnumOptionsMappingHelper.h"
 #include "net/minecraft/src/Item.h"
 #include "net/minecraft/src/ItemBlock.h"
@@ -330,6 +331,7 @@ Minecraft::Minecraft(int_t width, int_t height, bool flag) :
     Block::initialize();
     ChunkBlockMap::initialize();
     Item::initItems();
+    CreativeTabs::initialize();
     WorldType::initialize();
     BiomeGenBase::initialize();
     AchievementList::initialize();

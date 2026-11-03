@@ -64,3 +64,11 @@ int_t BlockSilverfish::getMetadataForBlockType(int_t blockId)
 	if (Block::stoneBrick != nullptr && blockId == Block::stoneBrick->blockID) return 2;
 	return 0;
 }
+
+
+void BlockSilverfish::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
+{
+	(void)tab;
+	for (int_t i = 0; i < 3; ++i)
+		list.push_back(new ItemStack(id, 1, i));
+}
