@@ -33,7 +33,12 @@ enum class Ps2ButtonIcon : int
     DPadUp = 13,
     DPadDown = 14,
     DPadLeft = 15,
-    DPadRight = 16
+    DPadRight = 16,
+    // Left stick directions for the Controls screen.
+    LStickUp = 17,
+    LStickDown = 18,
+    LStickLeft = 19,
+    LStickRight = 20
 };
 
 struct Ps2ButtonPromptInfo
