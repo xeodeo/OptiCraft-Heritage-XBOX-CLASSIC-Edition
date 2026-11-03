@@ -289,7 +289,7 @@ void GuiScreen::handleInput()
 		if (mc->currentScreen != this && mc->getPlayerScreen(0) != this && mc->getPlayerScreen(1) != this)
 			return;
 	}
-#if PLATFORM_PS2 || PLATFORM_WII
+#if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
 	if (mc != nullptr && mc->isSplitScreenActive() && (this == mc->getPlayerScreen(0) || this == mc->getPlayerScreen(1)))
 	{
 		handleSplitscreenPlayerInput();
@@ -686,6 +686,7 @@ void GuiScreen::handleSplitscreenPlayerInput()
 	if (mc == nullptr || pIdx < 0 || pIdx >= 2)
 		return;
 
+	VirtualKeyboard::instance().tick();
 	ContainerSlotNavigator &navigator = ContainerSlotNavigator::instance(pIdx);
 
 	// Read input snapshot EXACTLY ONCE this frame

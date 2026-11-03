@@ -1655,6 +1655,17 @@ void EntityRenderer::renderSplitScreen(float partialTicks, int64_t renderTimeLim
                 {
                     pScreen->guiParticles->renderParticles(partialTicks);
                 }
+#if PLATFORM_HAS_VIRTUAL_KEYBOARD
+                if (VirtualKeyboard::instance().isActive())
+                {
+                    renderClear(RenderClearMask::Depth);
+                    renderDisable(RenderCapability::DepthTest);
+                    renderDisable(RenderCapability::Lighting);
+                    renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+                    VirtualKeyboard::instance().render(mc->fontRenderer,
+                        pScreen->width, pScreen->height);
+                }
+#endif
 #if PLATFORM_XBOX
                 if (i == 1) mc->leavePlayer2Context();
 #endif

@@ -118,6 +118,9 @@ void GuiContainerCreative::updateScreen()
     if (searchField != nullptr)
         searchField->updateCursorCounter();
 
+    if (platformTextInputExclusive())
+        return;
+
 #if PLATFORM_PS2
     const int pIdx = getOwnerPlayerIndex();
     const Ps2PadSnapshot &pad = ps2PadGetSnapshot(pIdx);
@@ -648,6 +651,9 @@ void GuiContainerCreative::setCurrentCreativeTab(CreativeTabs *tab)
             searchField->setEnabled(true);
             searchField->setCanLoseFocus(false);
             searchField->setFocused(true);
+#if PLATFORM_HAS_VIRTUAL_KEYBOARD
+            VirtualKeyboard::instance().notifyFocus(searchField, true);
+#endif
             searchField->setText("");
             updateCreativeSearch();
         }

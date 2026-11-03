@@ -275,6 +275,8 @@ void GuiTextField::mouseClicked(int_t x, int_t y, int_t button)
     bool inside = x >= xPos && x < xPos + width && y >= yPos && y < yPos + height;
     if (canLoseFocus)
         setFocused(isEnabled && inside);
+    else if (isEnabled && inside)
+        setFocused(true);
 
     if (isFocused && button == 0)
     {
