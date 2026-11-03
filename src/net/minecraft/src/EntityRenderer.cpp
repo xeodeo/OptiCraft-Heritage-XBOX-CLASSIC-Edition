@@ -1542,9 +1542,17 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
 
 #if PLATFORM_HAS_VIRTUAL_KEYBOARD
         // On-screen keyboard overlay (drawn on top of the focused text screen).
+        // Container screens leave the depth test on with item icons at a
+        // higher z, which would show through the keyboard.
         if (VirtualKeyboard::instance().isActive())
+        {
+            renderClear(RenderClearMask::Depth);
+            renderDisable(RenderCapability::DepthTest);
+            renderDisable(RenderCapability::Lighting);
+            renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
             VirtualKeyboard::instance().render(mc->fontRenderer,
                 mc->currentScreen->width, mc->currentScreen->height);
+        }
 #endif
 
         if (mc->currentScreen != nullptr && mc->currentScreen->guiParticles != nullptr)

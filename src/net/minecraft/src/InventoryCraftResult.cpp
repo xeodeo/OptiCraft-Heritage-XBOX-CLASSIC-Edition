@@ -15,8 +15,9 @@ int_t InventoryCraftResult::getSizeInventory() {
     return 1;
 }
 
-ItemStack* InventoryCraftResult::getStackInSlot(int_t slot) {
-    return slot == 0 ? stackResult[0] : nullptr;
+// As in Java the index is ignored: the anvil's result slot is index 2.
+ItemStack* InventoryCraftResult::getStackInSlot(int_t) {
+    return stackResult[0];
 }
 
 std::string InventoryCraftResult::getInvName() {
@@ -26,30 +27,27 @@ std::string InventoryCraftResult::getInvName() {
 
 ItemStack *InventoryCraftResult::getStackInSlotOnClosing(int_t i)
 {
-    if (i != 0 || stackResult[0] == nullptr)
+    (void)i;
+    if (stackResult[0] == nullptr)
         return nullptr;
-    ItemStack *stack = stackResult[i];
-    stackResult[i] = nullptr;
+    ItemStack *stack = stackResult[0];
+    stackResult[0] = nullptr;
     return stack;
 }
 
-ItemStack* InventoryCraftResult::decrStackSize(int_t slot, int_t amount) {
-    if (slot == 0 && amount > 0 && stackResult[0] != nullptr) {
-        ItemStack* stack = stackResult[slot];
-        stackResult[slot] = nullptr;
+ItemStack* InventoryCraftResult::decrStackSize(int_t, int_t amount) {
+    if (amount > 0 && stackResult[0] != nullptr) {
+        ItemStack* stack = stackResult[0];
+        stackResult[0] = nullptr;
         return stack;
     }
     return nullptr;
 }
 
-void InventoryCraftResult::setInventorySlotContents(int_t slot, ItemStack* stack) {
-    if (slot != 0) {
-        delete stack;
-        return;
-    }
+void InventoryCraftResult::setInventorySlotContents(int_t, ItemStack* stack) {
     if (stackResult[0] != stack)
-        delete stackResult[slot];
-    stackResult[slot] = stack;
+        delete stackResult[0];
+    stackResult[0] = stack;
 }
 
 int_t InventoryCraftResult::getInventoryStackLimit() {
