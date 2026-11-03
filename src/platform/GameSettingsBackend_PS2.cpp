@@ -36,23 +36,27 @@ void platformGameSettingsApplyLegacyCrafting(GameSettings& settings)
 
 void platformGameSettingsInitialize(GameSettings& settings)
 {
-	settings.keyBindForward->keyCode = PS2_KEY_DPAD_UP;
-	settings.keyBindLeft->keyCode = PS2_KEY_DPAD_LEFT;
-	settings.keyBindBack->keyCode = PS2_KEY_DPAD_DOWN;
-	settings.keyBindRight->keyCode = PS2_KEY_DPAD_RIGHT;
+	settings.keyBindForward->keyCode = 17;
+	settings.keyBindLeft->keyCode = 30;
+	settings.keyBindBack->keyCode = 31;
+	settings.keyBindRight->keyCode = 32;
 	settings.keyBindJump->keyCode = PS2_KEY_CROSS;
 	settings.keyBindSneak->keyCode = PS2_KEY_L3;
+	settings.keyBindAttack->keyCode = PS2_KEY_R2;
+	settings.keyBindUseItem->keyCode = PS2_KEY_L2;
 	platformGameSettingsApplyLegacyCrafting(settings);
 }
 
 void platformGameSettingsResetControlBindings(GameSettings& settings)
 {
-	settings.keyBindForward->keyCode = PS2_KEY_DPAD_UP;
-	settings.keyBindLeft->keyCode = PS2_KEY_DPAD_LEFT;
-	settings.keyBindBack->keyCode = PS2_KEY_DPAD_DOWN;
-	settings.keyBindRight->keyCode = PS2_KEY_DPAD_RIGHT;
+	settings.keyBindForward->keyCode = 17;
+	settings.keyBindLeft->keyCode = 30;
+	settings.keyBindBack->keyCode = 31;
+	settings.keyBindRight->keyCode = 32;
 	settings.keyBindJump->keyCode = PS2_KEY_CROSS;
 	settings.keyBindSneak->keyCode = PS2_KEY_L3;
+	settings.keyBindAttack->keyCode = PS2_KEY_R2;
+	settings.keyBindUseItem->keyCode = PS2_KEY_L2;
 	platformGameSettingsApplyLegacyCrafting(settings);
 }
 
@@ -71,14 +75,16 @@ bool platformGameSettingsLoadOption(GameSettings&, const std::string&, const std
 void platformGameSettingsFinalizeLoad(GameSettings& settings)
 {
 	settings.ofChunkUpdates = std::max(settings.ofChunkUpdates, (int_t)PLATFORM_MAX_RENDERER_UPDATES_PER_FRAME);
-	migrateKey(settings.keyBindForward, PS2_KEY_DPAD_UP);
-	migrateKey(settings.keyBindLeft, PS2_KEY_DPAD_LEFT);
-	migrateKey(settings.keyBindBack, PS2_KEY_DPAD_DOWN);
-	migrateKey(settings.keyBindRight, PS2_KEY_DPAD_RIGHT);
+	if (settings.keyBindForward->keyCode == PS2_KEY_DPAD_UP) settings.keyBindForward->keyCode = 17;
+	if (settings.keyBindLeft->keyCode == PS2_KEY_DPAD_LEFT) settings.keyBindLeft->keyCode = 30;
+	if (settings.keyBindBack->keyCode == PS2_KEY_DPAD_DOWN) settings.keyBindBack->keyCode = 31;
+	if (settings.keyBindRight->keyCode == PS2_KEY_DPAD_RIGHT) settings.keyBindRight->keyCode = 32;
 	migrateKey(settings.keyBindJump, PS2_KEY_CROSS);
 	migrateKey(settings.keyBindInventory, PS2_KEY_TRIANGLE);
 	migrateKey(settings.keyBindDrop, PS2_KEY_CIRCLE);
 	migrateKey(settings.keyBindSneak, PS2_KEY_L3);
+	migrateKey(settings.keyBindAttack, PS2_KEY_R2);
+	migrateKey(settings.keyBindUseItem, PS2_KEY_L2);
 }
 
 void platformGameSettingsSyncControllerBindings(const GameSettings&) {}

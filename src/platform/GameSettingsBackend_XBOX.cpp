@@ -16,14 +16,16 @@ namespace
 // directly by src/xbox/input/XboxInput.cpp.
 void applyDefaultBindings(GameSettings& settings)
 {
-	settings.keyBindForward->keyCode = XBOX_KEY_DPAD_UP;
-	settings.keyBindLeft->keyCode = XBOX_KEY_DPAD_LEFT;
-	settings.keyBindBack->keyCode = XBOX_KEY_DPAD_DOWN;
-	settings.keyBindRight->keyCode = XBOX_KEY_DPAD_RIGHT;
+	settings.keyBindForward->keyCode = 17;
+	settings.keyBindLeft->keyCode = 30;
+	settings.keyBindBack->keyCode = 31;
+	settings.keyBindRight->keyCode = 32;
 	settings.keyBindJump->keyCode = XBOX_KEY_A;
 	settings.keyBindInventory->keyCode = XBOX_KEY_Y;
 	settings.keyBindDrop->keyCode = XBOX_KEY_B;
 	settings.keyBindSneak->keyCode = XBOX_KEY_LEFT_THUMB;
+	settings.keyBindAttack->keyCode = XBOX_KEY_RIGHT_TRIGGER;
+	settings.keyBindUseItem->keyCode = XBOX_KEY_LEFT_TRIGGER;
 }
 
 // An options.txt written with keyboard codes (or by another platform) gets the
@@ -77,14 +79,16 @@ void platformGameSettingsFinalizeLoad(GameSettings& settings)
 	if (settings.renderDistance < 1 || settings.renderDistance > 3)
 		settings.renderDistance = PLATFORM_DEFAULT_RENDER_DISTANCE;
 	settings.ofChunkUpdates = std::max(settings.ofChunkUpdates, (int_t)PLATFORM_MAX_RENDERER_UPDATES_PER_FRAME);
-	migrateKey(settings.keyBindForward, XBOX_KEY_DPAD_UP);
-	migrateKey(settings.keyBindLeft, XBOX_KEY_DPAD_LEFT);
-	migrateKey(settings.keyBindBack, XBOX_KEY_DPAD_DOWN);
-	migrateKey(settings.keyBindRight, XBOX_KEY_DPAD_RIGHT);
+	if (settings.keyBindForward->keyCode == XBOX_KEY_DPAD_UP) settings.keyBindForward->keyCode = 17;
+	if (settings.keyBindLeft->keyCode == XBOX_KEY_DPAD_LEFT) settings.keyBindLeft->keyCode = 30;
+	if (settings.keyBindBack->keyCode == XBOX_KEY_DPAD_DOWN) settings.keyBindBack->keyCode = 31;
+	if (settings.keyBindRight->keyCode == XBOX_KEY_DPAD_RIGHT) settings.keyBindRight->keyCode = 32;
 	migrateKey(settings.keyBindJump, XBOX_KEY_A);
 	migrateKey(settings.keyBindInventory, XBOX_KEY_Y);
 	migrateKey(settings.keyBindDrop, XBOX_KEY_B);
 	migrateKey(settings.keyBindSneak, XBOX_KEY_LEFT_THUMB);
+	migrateKey(settings.keyBindAttack, XBOX_KEY_RIGHT_TRIGGER);
+	migrateKey(settings.keyBindUseItem, XBOX_KEY_LEFT_TRIGGER);
 }
 
 void platformGameSettingsSyncControllerBindings(const GameSettings&) {}
