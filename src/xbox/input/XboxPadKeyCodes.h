@@ -27,6 +27,11 @@ enum XboxPadKeyCode : int
 	XBOX_KEY_DPAD_DOWN,
 	XBOX_KEY_DPAD_LEFT,
 	XBOX_KEY_DPAD_RIGHT,
+	// Left stick directions: walking, now that the D-pad has its own actions.
+	XBOX_KEY_LSTICK_UP,
+	XBOX_KEY_LSTICK_DOWN,
+	XBOX_KEY_LSTICK_LEFT,
+	XBOX_KEY_LSTICK_RIGHT,
 	XBOX_KEY_SENTINEL_END
 };
 

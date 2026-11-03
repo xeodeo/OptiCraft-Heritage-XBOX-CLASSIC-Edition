@@ -20,6 +20,10 @@ const char *ps2PadKeyName(int key)
 		case PS2_KEY_DPAD_DOWN: return "D-Pad Down";
 		case PS2_KEY_DPAD_LEFT: return "D-Pad Left";
 		case PS2_KEY_DPAD_RIGHT: return "D-Pad Right";
+		case PS2_KEY_LSTICK_UP: return "Left Stick Up";
+		case PS2_KEY_LSTICK_DOWN: return "Left Stick Down";
+		case PS2_KEY_LSTICK_LEFT: return "Left Stick Left";
+		case PS2_KEY_LSTICK_RIGHT: return "Left Stick Right";
 		default: return nullptr;
 	}
 }

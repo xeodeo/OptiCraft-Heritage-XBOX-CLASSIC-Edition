@@ -338,6 +338,10 @@ void updateGameplay(const XboxPadSnapshot& p)
 		if (p.pressed & XBOX_PAD_DPAD_LEFT) lwjgl::Mouse::detail::pushWheel(1, 0, 0);
 		if (p.pressed & XBOX_PAD_DPAD_RIGHT) lwjgl::Mouse::detail::pushWheel(-1, 0, 0);
 	}
+	setKey(XBOX_KEY_LSTICK_UP, moveY < -0.05f);
+	setKey(XBOX_KEY_LSTICK_DOWN, moveY > 0.05f);
+	setKey(XBOX_KEY_LSTICK_LEFT, moveX < -0.05f);
+	setKey(XBOX_KEY_LSTICK_RIGHT, moveX > 0.05f);
 	setKey(XBOX_KEY_DPAD_UP, (dpadHeld & XBOX_PAD_DPAD_UP) != 0);
 	setKey(XBOX_KEY_DPAD_DOWN, (dpadHeld & XBOX_PAD_DPAD_DOWN) != 0);
 	setKey(XBOX_KEY_DPAD_LEFT, (dpadHeld & XBOX_PAD_DPAD_LEFT) != 0);

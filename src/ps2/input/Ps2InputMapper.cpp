@@ -52,6 +52,8 @@ void releaseGameplayKeys() {
     setKey(PS2_KEY_L1, false);        setKey(PS2_KEY_R1, false);
     setKey(PS2_KEY_L2, false);        setKey(PS2_KEY_R2, false);
     setKey(PS2_KEY_L3, false);        setKey(PS2_KEY_R3, false);
+    setKey(PS2_KEY_LSTICK_UP, false);   setKey(PS2_KEY_LSTICK_DOWN, false);
+    setKey(PS2_KEY_LSTICK_LEFT, false); setKey(PS2_KEY_LSTICK_RIGHT, false);
 }
 
 int menuPadPort()
@@ -278,6 +280,12 @@ void updateGameplay(const Ps2PadSnapshot& p) {
     setKey(PS2_KEY_DPAD_LEFT, (p.held & PAD_LEFT) != 0);
     setKey(PS2_KEY_DPAD_RIGHT, (p.held & PAD_RIGHT) != 0);
 #else
+    const float moveX = Ps2AnalogFilter::apply(p.leftX);
+    const float moveY = Ps2AnalogFilter::apply(p.leftY);
+    setKey(PS2_KEY_LSTICK_UP, moveY < -0.05f);
+    setKey(PS2_KEY_LSTICK_DOWN, moveY > 0.05f);
+    setKey(PS2_KEY_LSTICK_LEFT, moveX < -0.05f);
+    setKey(PS2_KEY_LSTICK_RIGHT, moveX > 0.05f);
     setKey(PS2_KEY_DPAD_UP, (p.held & PAD_UP) != 0);
     setKey(PS2_KEY_DPAD_DOWN, (p.held & PAD_DOWN) != 0);
     setKey(PS2_KEY_DPAD_LEFT, (p.held & PAD_LEFT) != 0);
@@ -301,12 +309,14 @@ void updateGameplay(const Ps2PadSnapshot& p) {
     if (p.pressed & PAD_START) { ps2SetMenuPad(0); ps2SetMenuOwnerPad(0); lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_ESCAPE, true); }
     if (p.released & PAD_START) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_ESCAPE, false);
     if (p.pressed & (PAD_SQUARE | PAD_TRIANGLE)) ps2SetMenuPad(0);
-    if (p.pressed & (PAD_R1 | PAD_RIGHT)) lwjgl::Mouse::detail::pushWheel(-1, 0, 0);
-    if (p.pressed & (PAD_L1 | PAD_LEFT)) lwjgl::Mouse::detail::pushWheel(1, 0, 0);
-    if (p.pressed & (PAD_R3 | PAD_UP)) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_F5, true);
-    if (p.released & (PAD_R3 | PAD_UP)) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_F5, false);
-    if (p.pressed & PAD_DOWN) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_T, true);
-    if (p.released & PAD_DOWN) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_T, false);
+    // The D-pad no longer walks (the stick does): camera, chat and hotbar.
+    const unsigned short dpadActions = PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT;
+    if (p.pressed & (PAD_R1 | (PAD_RIGHT & dpadActions))) lwjgl::Mouse::detail::pushWheel(-1, 0, 0);
+    if (p.pressed & (PAD_L1 | (PAD_LEFT & dpadActions))) lwjgl::Mouse::detail::pushWheel(1, 0, 0);
+    if (p.pressed & (PAD_R3 | (PAD_UP & dpadActions))) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_F5, true);
+    if (p.released & (PAD_R3 | (PAD_UP & dpadActions))) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_F5, false);
+    if (p.pressed & (PAD_DOWN & dpadActions)) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_T, true);
+    if (p.released & (PAD_DOWN & dpadActions)) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_T, false);
     if (p.pressed & PAD_SELECT) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_F3, true);
     if (p.released & PAD_SELECT) lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_F3, false);
 

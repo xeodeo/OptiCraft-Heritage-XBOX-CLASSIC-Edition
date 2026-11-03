@@ -32,6 +32,11 @@ enum Ps2PadKeyCode : int
 	PS2_KEY_DPAD_DOWN,
 	PS2_KEY_DPAD_LEFT,
 	PS2_KEY_DPAD_RIGHT,
+	// Left stick directions: walking, now that the D-pad has its own actions.
+	PS2_KEY_LSTICK_UP,
+	PS2_KEY_LSTICK_DOWN,
+	PS2_KEY_LSTICK_LEFT,
+	PS2_KEY_LSTICK_RIGHT,
 	PS2_KEY_SENTINEL_END
 };
 

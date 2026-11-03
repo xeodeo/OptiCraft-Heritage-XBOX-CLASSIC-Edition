@@ -20,6 +20,10 @@ const char *xboxPadKeyName(int key)
 		case XBOX_KEY_DPAD_DOWN: return "D-Pad Down";
 		case XBOX_KEY_DPAD_LEFT: return "D-Pad Left";
 		case XBOX_KEY_DPAD_RIGHT: return "D-Pad Right";
+		case XBOX_KEY_LSTICK_UP: return "Left Stick Up";
+		case XBOX_KEY_LSTICK_DOWN: return "Left Stick Down";
+		case XBOX_KEY_LSTICK_LEFT: return "Left Stick Left";
+		case XBOX_KEY_LSTICK_RIGHT: return "Left Stick Right";
 		default: return nullptr;
 	}
 }
