@@ -36,10 +36,10 @@ void platformGameSettingsApplyLegacyCrafting(GameSettings& settings)
 
 void platformGameSettingsInitialize(GameSettings& settings)
 {
-	settings.keyBindForward->keyCode = 17;
-	settings.keyBindLeft->keyCode = 30;
-	settings.keyBindBack->keyCode = 31;
-	settings.keyBindRight->keyCode = 32;
+	settings.keyBindForward->keyCode = PS2_KEY_LSTICK_UP;
+	settings.keyBindLeft->keyCode = PS2_KEY_LSTICK_LEFT;
+	settings.keyBindBack->keyCode = PS2_KEY_LSTICK_DOWN;
+	settings.keyBindRight->keyCode = PS2_KEY_LSTICK_RIGHT;
 	settings.keyBindJump->keyCode = PS2_KEY_CROSS;
 	settings.keyBindSneak->keyCode = PS2_KEY_L3;
 	settings.keyBindAttack->keyCode = PS2_KEY_R2;
@@ -49,10 +49,10 @@ void platformGameSettingsInitialize(GameSettings& settings)
 
 void platformGameSettingsResetControlBindings(GameSettings& settings)
 {
-	settings.keyBindForward->keyCode = 17;
-	settings.keyBindLeft->keyCode = 30;
-	settings.keyBindBack->keyCode = 31;
-	settings.keyBindRight->keyCode = 32;
+	settings.keyBindForward->keyCode = PS2_KEY_LSTICK_UP;
+	settings.keyBindLeft->keyCode = PS2_KEY_LSTICK_LEFT;
+	settings.keyBindBack->keyCode = PS2_KEY_LSTICK_DOWN;
+	settings.keyBindRight->keyCode = PS2_KEY_LSTICK_RIGHT;
 	settings.keyBindJump->keyCode = PS2_KEY_CROSS;
 	settings.keyBindSneak->keyCode = PS2_KEY_L3;
 	settings.keyBindAttack->keyCode = PS2_KEY_R2;
@@ -75,10 +75,12 @@ bool platformGameSettingsLoadOption(GameSettings&, const std::string&, const std
 void platformGameSettingsFinalizeLoad(GameSettings& settings)
 {
 	settings.ofChunkUpdates = std::max(settings.ofChunkUpdates, (int_t)PLATFORM_MAX_RENDERER_UPDATES_PER_FRAME);
-	if (settings.keyBindForward->keyCode == PS2_KEY_DPAD_UP) settings.keyBindForward->keyCode = 17;
-	if (settings.keyBindLeft->keyCode == PS2_KEY_DPAD_LEFT) settings.keyBindLeft->keyCode = 30;
-	if (settings.keyBindBack->keyCode == PS2_KEY_DPAD_DOWN) settings.keyBindBack->keyCode = 31;
-	if (settings.keyBindRight->keyCode == PS2_KEY_DPAD_RIGHT) settings.keyBindRight->keyCode = 32;
+	// Saves from before the D-pad split walked with the D-pad (or a keyboard
+	// code): move them to the stick so the stick walks again.
+	if (settings.keyBindForward->keyCode == PS2_KEY_DPAD_UP || settings.keyBindForward->keyCode == 17) settings.keyBindForward->keyCode = PS2_KEY_LSTICK_UP;
+	if (settings.keyBindLeft->keyCode == PS2_KEY_DPAD_LEFT || settings.keyBindLeft->keyCode == 30) settings.keyBindLeft->keyCode = PS2_KEY_LSTICK_LEFT;
+	if (settings.keyBindBack->keyCode == PS2_KEY_DPAD_DOWN || settings.keyBindBack->keyCode == 31) settings.keyBindBack->keyCode = PS2_KEY_LSTICK_DOWN;
+	if (settings.keyBindRight->keyCode == PS2_KEY_DPAD_RIGHT || settings.keyBindRight->keyCode == 32) settings.keyBindRight->keyCode = PS2_KEY_LSTICK_RIGHT;
 	migrateKey(settings.keyBindJump, PS2_KEY_CROSS);
 	migrateKey(settings.keyBindInventory, PS2_KEY_TRIANGLE);
 	migrateKey(settings.keyBindDrop, PS2_KEY_CIRCLE);

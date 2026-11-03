@@ -16,10 +16,10 @@ namespace
 // directly by src/xbox/input/XboxInput.cpp.
 void applyDefaultBindings(GameSettings& settings)
 {
-	settings.keyBindForward->keyCode = 17;
-	settings.keyBindLeft->keyCode = 30;
-	settings.keyBindBack->keyCode = 31;
-	settings.keyBindRight->keyCode = 32;
+	settings.keyBindForward->keyCode = XBOX_KEY_LSTICK_UP;
+	settings.keyBindLeft->keyCode = XBOX_KEY_LSTICK_LEFT;
+	settings.keyBindBack->keyCode = XBOX_KEY_LSTICK_DOWN;
+	settings.keyBindRight->keyCode = XBOX_KEY_LSTICK_RIGHT;
 	settings.keyBindJump->keyCode = XBOX_KEY_A;
 	settings.keyBindInventory->keyCode = XBOX_KEY_Y;
 	settings.keyBindDrop->keyCode = XBOX_KEY_B;
@@ -79,10 +79,12 @@ void platformGameSettingsFinalizeLoad(GameSettings& settings)
 	if (settings.renderDistance < 1 || settings.renderDistance > 3)
 		settings.renderDistance = PLATFORM_DEFAULT_RENDER_DISTANCE;
 	settings.ofChunkUpdates = std::max(settings.ofChunkUpdates, (int_t)PLATFORM_MAX_RENDERER_UPDATES_PER_FRAME);
-	if (settings.keyBindForward->keyCode == XBOX_KEY_DPAD_UP) settings.keyBindForward->keyCode = 17;
-	if (settings.keyBindLeft->keyCode == XBOX_KEY_DPAD_LEFT) settings.keyBindLeft->keyCode = 30;
-	if (settings.keyBindBack->keyCode == XBOX_KEY_DPAD_DOWN) settings.keyBindBack->keyCode = 31;
-	if (settings.keyBindRight->keyCode == XBOX_KEY_DPAD_RIGHT) settings.keyBindRight->keyCode = 32;
+	// Saves from before the D-pad split walked with the D-pad codes (or a
+	// keyboard code): move them to the stick so the stick walks again.
+	if (settings.keyBindForward->keyCode == XBOX_KEY_DPAD_UP || settings.keyBindForward->keyCode == 17) settings.keyBindForward->keyCode = XBOX_KEY_LSTICK_UP;
+	if (settings.keyBindLeft->keyCode == XBOX_KEY_DPAD_LEFT || settings.keyBindLeft->keyCode == 30) settings.keyBindLeft->keyCode = XBOX_KEY_LSTICK_LEFT;
+	if (settings.keyBindBack->keyCode == XBOX_KEY_DPAD_DOWN || settings.keyBindBack->keyCode == 31) settings.keyBindBack->keyCode = XBOX_KEY_LSTICK_DOWN;
+	if (settings.keyBindRight->keyCode == XBOX_KEY_DPAD_RIGHT || settings.keyBindRight->keyCode == 32) settings.keyBindRight->keyCode = XBOX_KEY_LSTICK_RIGHT;
 	migrateKey(settings.keyBindJump, XBOX_KEY_A);
 	migrateKey(settings.keyBindInventory, XBOX_KEY_Y);
 	migrateKey(settings.keyBindDrop, XBOX_KEY_B);
