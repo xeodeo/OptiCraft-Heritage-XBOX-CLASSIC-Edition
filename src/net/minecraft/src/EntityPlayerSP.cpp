@@ -453,7 +453,7 @@ void EntityPlayerSP::sendChatMessage(const std::string &message)
 	// Single player has no server to echo the line back: show it as the 1.5.2
 	// integrated server does ("<name> message"). Commands are not ported yet.
 	if (mc != nullptr && mc->ingameGUI != nullptr)
-		mc->ingameGUI->addChatMessage("<" + String::toUtf8(username) + "> " + message);
+		mc->ingameGUI->addChatMessage("<" + static_cast<const std::string &>(username) + "> " + message);
 }
 
 bool EntityPlayerSP::isSneaking()
