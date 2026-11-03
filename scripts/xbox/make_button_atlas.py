@@ -67,6 +67,34 @@ def round_button(src, fill, rim):
     return im.crop(im.getbbox())
 
 
+def stick_dir(src, direction):
+    im = Image.open(os.path.join(src, 'ButtonLeftStick_Navigate.png')).convert('RGBA')
+    px = im.load()
+    w, h = im.size
+    if direction != 'U':
+        for y in range(12):
+            for x in range(w):
+                px[x, y] = (0, 0, 0, 0)
+    if direction != 'L':
+        for y in range(h):
+            for x in range(13):
+                px[x, y] = (0, 0, 0, 0)
+    if direction != 'R':
+        for y in range(h):
+            for x in range(45, w):
+                px[x, y] = (0, 0, 0, 0)
+    if direction != 'D':
+        for y in range(40, h):
+            for x in range(w):
+                px[x, y] = (0, 0, 0, 0)
+        for y in range(34, 40):
+            for x in range(24, 34):
+                c = px[x, y]
+                if c[0] > 150:
+                    px[x, y] = (55, 59, 60, 255) if y >= 38 else (96, 101, 102, 255)
+    return im.crop(im.getbbox())
+
+
 def build(src):
     slots = [
         ('Cross (A)', load(src, 'ButtonA.png')),
@@ -86,6 +114,10 @@ def build(src):
         ('DPad Down', load(src, 'ButtonDpadD.png')),
         ('DPad Left', load(src, 'ButtonDpadL.png')),
         ('DPad Right', load(src, 'ButtonDpadR.png')),
+        ('Left Stick Up', stick_dir(src, 'U')),
+        ('Left Stick Down', stick_dir(src, 'D')),
+        ('Left Stick Left', stick_dir(src, 'L')),
+        ('Left Stick Right', stick_dir(src, 'R')),
     ]
 
     atlas = Image.new('RGBA', (ATLAS_SIZE, ATLAS_SIZE), (0, 0, 0, 0))

@@ -72,7 +72,15 @@ Ps2ButtonIcon iconFromName(const std::string &name)
         return Ps2ButtonIcon::L2;
     if (name == "RT")
         return Ps2ButtonIcon::R2;
-    if (name == "LS" || name.rfind("Left Stick", 0) == 0)
+    if (name == "Left Stick Up")
+        return Ps2ButtonIcon::LStickUp;
+    if (name == "Left Stick Down")
+        return Ps2ButtonIcon::LStickDown;
+    if (name == "Left Stick Left")
+        return Ps2ButtonIcon::LStickLeft;
+    if (name == "Left Stick Right")
+        return Ps2ButtonIcon::LStickRight;
+    if (name == "LS" || name == "Left Stick")
         return Ps2ButtonIcon::L3;
     if (name == "RS" || name == "Right Stick")
         return Ps2ButtonIcon::R3;
