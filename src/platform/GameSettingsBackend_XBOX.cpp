@@ -28,16 +28,20 @@ void applyDefaultBindings(GameSettings& settings)
 	settings.keyBindUseItem->keyCode = XBOX_KEY_LEFT_TRIGGER;
 	if (settings.keyBindCrafting != nullptr)
 		settings.keyBindCrafting->keyCode = XBOX_KEY_X;
+	// The D-pad does only what the player binds to it (user, 03-11): hotbar
+	// stays on White/Black, up/down fly in creative, left/right are free.
 	if (settings.keyBindPrevItem != nullptr)
-		settings.keyBindPrevItem->keyCode = XBOX_KEY_DPAD_LEFT;
+		settings.keyBindPrevItem->keyCode = XBOX_KEY_WHITE;
 	if (settings.keyBindNextItem != nullptr)
-		settings.keyBindNextItem->keyCode = XBOX_KEY_DPAD_RIGHT;
+		settings.keyBindNextItem->keyCode = XBOX_KEY_BLACK;
 	if (settings.keyBindTogglePerspective != nullptr)
 		settings.keyBindTogglePerspective->keyCode = XBOX_KEY_RIGHT_THUMB;
 	if (settings.keyBindFlyUp != nullptr)
 		settings.keyBindFlyUp->keyCode = XBOX_KEY_DPAD_UP;
+	if (settings.keyBindFlyDown != nullptr)
+		settings.keyBindFlyDown->keyCode = XBOX_KEY_DPAD_DOWN;
 	if (settings.keyBindChat != nullptr)
-		settings.keyBindChat->keyCode = XBOX_KEY_DPAD_DOWN;
+		settings.keyBindChat->keyCode = lwjgl::Keyboard::KEY_NONE;
 }
 
 // An options.txt written with keyboard codes (or by another platform) gets the
@@ -105,11 +109,14 @@ void platformGameSettingsFinalizeLoad(GameSettings& settings)
 	migrateKey(settings.keyBindUseItem, XBOX_KEY_LEFT_TRIGGER);
 	if (settings.keyBindCrafting != nullptr)
 		migrateKey(settings.keyBindCrafting, XBOX_KEY_X);
-	migrateKey(settings.keyBindPrevItem, XBOX_KEY_DPAD_LEFT);
-	migrateKey(settings.keyBindNextItem, XBOX_KEY_DPAD_RIGHT);
+	migrateKey(settings.keyBindPrevItem, XBOX_KEY_WHITE);
+	migrateKey(settings.keyBindNextItem, XBOX_KEY_BLACK);
 	migrateKey(settings.keyBindTogglePerspective, XBOX_KEY_RIGHT_THUMB);
 	migrateKey(settings.keyBindFlyUp, XBOX_KEY_DPAD_UP);
-	migrateKey(settings.keyBindChat, XBOX_KEY_DPAD_DOWN);
+	migrateKey(settings.keyBindFlyDown, XBOX_KEY_DPAD_DOWN);
+	// Chat has no default button on the pad: a keyboard code (T) means unbound.
+	if (settings.keyBindChat != nullptr && settings.keyBindChat->keyCode < lwjgl::Keyboard::KEY_MAX)
+		settings.keyBindChat->keyCode = lwjgl::Keyboard::KEY_NONE;
 }
 
 void platformGameSettingsSyncControllerBindings(const GameSettings&) {}

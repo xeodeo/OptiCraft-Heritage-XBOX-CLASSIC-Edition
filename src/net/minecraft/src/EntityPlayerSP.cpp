@@ -241,7 +241,7 @@ void EntityPlayerSP::onLivingUpdate()
 		{
 			if (mc->gameSettings->keyBindFlyUp != nullptr && mc->gameSettings->keyBindFlyUp->pressed)
 				motionY += 0.15;
-			if (mc->gameSettings->keyBindChat != nullptr && mc->gameSettings->keyBindChat->pressed)
+			if (mc->gameSettings->keyBindFlyDown != nullptr && mc->gameSettings->keyBindFlyDown->pressed)
 				motionY -= 0.15;
 		}
 	}

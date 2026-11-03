@@ -45,15 +45,17 @@ void platformGameSettingsInitialize(GameSettings& settings)
 	settings.keyBindAttack->keyCode = PS2_KEY_R2;
 	settings.keyBindUseItem->keyCode = PS2_KEY_L2;
 	if (settings.keyBindPrevItem != nullptr)
-		settings.keyBindPrevItem->keyCode = PS2_KEY_DPAD_LEFT;
+		settings.keyBindPrevItem->keyCode = PS2_KEY_L1;
 	if (settings.keyBindNextItem != nullptr)
-		settings.keyBindNextItem->keyCode = PS2_KEY_DPAD_RIGHT;
+		settings.keyBindNextItem->keyCode = PS2_KEY_R1;
 	if (settings.keyBindTogglePerspective != nullptr)
 		settings.keyBindTogglePerspective->keyCode = PS2_KEY_R3;
 	if (settings.keyBindFlyUp != nullptr)
 		settings.keyBindFlyUp->keyCode = PS2_KEY_DPAD_UP;
+	if (settings.keyBindFlyDown != nullptr)
+		settings.keyBindFlyDown->keyCode = PS2_KEY_DPAD_DOWN;
 	if (settings.keyBindChat != nullptr)
-		settings.keyBindChat->keyCode = PS2_KEY_DPAD_DOWN;
+		settings.keyBindChat->keyCode = lwjgl::Keyboard::KEY_NONE;
 	platformGameSettingsApplyLegacyCrafting(settings);
 }
 
@@ -68,15 +70,17 @@ void platformGameSettingsResetControlBindings(GameSettings& settings)
 	settings.keyBindAttack->keyCode = PS2_KEY_R2;
 	settings.keyBindUseItem->keyCode = PS2_KEY_L2;
 	if (settings.keyBindPrevItem != nullptr)
-		settings.keyBindPrevItem->keyCode = PS2_KEY_DPAD_LEFT;
+		settings.keyBindPrevItem->keyCode = PS2_KEY_L1;
 	if (settings.keyBindNextItem != nullptr)
-		settings.keyBindNextItem->keyCode = PS2_KEY_DPAD_RIGHT;
+		settings.keyBindNextItem->keyCode = PS2_KEY_R1;
 	if (settings.keyBindTogglePerspective != nullptr)
 		settings.keyBindTogglePerspective->keyCode = PS2_KEY_R3;
 	if (settings.keyBindFlyUp != nullptr)
 		settings.keyBindFlyUp->keyCode = PS2_KEY_DPAD_UP;
+	if (settings.keyBindFlyDown != nullptr)
+		settings.keyBindFlyDown->keyCode = PS2_KEY_DPAD_DOWN;
 	if (settings.keyBindChat != nullptr)
-		settings.keyBindChat->keyCode = PS2_KEY_DPAD_DOWN;
+		settings.keyBindChat->keyCode = lwjgl::Keyboard::KEY_NONE;
 	platformGameSettingsApplyLegacyCrafting(settings);
 }
 
@@ -107,11 +111,13 @@ void platformGameSettingsFinalizeLoad(GameSettings& settings)
 	migrateKey(settings.keyBindSneak, PS2_KEY_L3);
 	migrateKey(settings.keyBindAttack, PS2_KEY_R2);
 	migrateKey(settings.keyBindUseItem, PS2_KEY_L2);
-	migrateKey(settings.keyBindPrevItem, PS2_KEY_DPAD_LEFT);
-	migrateKey(settings.keyBindNextItem, PS2_KEY_DPAD_RIGHT);
+	migrateKey(settings.keyBindPrevItem, PS2_KEY_L1);
+	migrateKey(settings.keyBindNextItem, PS2_KEY_R1);
 	migrateKey(settings.keyBindTogglePerspective, PS2_KEY_R3);
 	migrateKey(settings.keyBindFlyUp, PS2_KEY_DPAD_UP);
-	migrateKey(settings.keyBindChat, PS2_KEY_DPAD_DOWN);
+	migrateKey(settings.keyBindFlyDown, PS2_KEY_DPAD_DOWN);
+	if (settings.keyBindChat != nullptr && settings.keyBindChat->keyCode < lwjgl::Keyboard::KEY_MAX)
+		settings.keyBindChat->keyCode = lwjgl::Keyboard::KEY_NONE;
 }
 
 void platformGameSettingsSyncControllerBindings(const GameSettings&) {}

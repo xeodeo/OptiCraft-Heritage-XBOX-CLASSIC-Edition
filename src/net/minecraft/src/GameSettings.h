@@ -109,6 +109,7 @@ public:
 	KeyBinding *keyBindNextItem;
 	KeyBinding *keyBindTogglePerspective;
 	KeyBinding *keyBindFlyUp;
+	KeyBinding *keyBindFlyDown;
 	std::vector<KeyBinding *> keyBindings;
 	Minecraft *mc;
 	std::string optionsFile;
