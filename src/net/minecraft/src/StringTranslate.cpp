@@ -2,6 +2,7 @@
 
 #include "GameResources.h"
 #include "platform/Log.h"
+#include <algorithm>
 #include <memory>
 
 namespace
@@ -344,7 +345,8 @@ std::string StringTranslate::translateKeyFormat(const std::string &s, const std:
     std::size_t searchFrom = 0;
     while (sequentialArg < args.size())
     {
-        std::size_t pos = result.find("%s", searchFrom);
+        // Java's String.format: the arguments are already strings, so %d works like %s.
+        std::size_t pos = std::min(result.find("%s", searchFrom), result.find("%d", searchFrom));
         if (pos == std::string::npos)
             break;
         result.replace(pos, 2, args[sequentialArg]);
@@ -354,12 +356,15 @@ std::string StringTranslate::translateKeyFormat(const std::string &s, const std:
 
     for (std::size_t i = 0; i < args.size(); ++i)
     {
-        std::string token = "%" + std::to_string(i + 1) + "$s";
-        std::size_t pos = 0;
-        while ((pos = result.find(token, pos)) != std::string::npos)
+        for (const char *suffix : {"$s", "$d"})
         {
-            result.replace(pos, token.length(), args[i]);
-            pos += args[i].length();
+            const std::string token = "%" + std::to_string(i + 1) + suffix;
+            std::size_t pos = 0;
+            while ((pos = result.find(token, pos)) != std::string::npos)
+            {
+                result.replace(pos, token.length(), args[i]);
+                pos += args[i].length();
+            }
         }
     }
     return result;
