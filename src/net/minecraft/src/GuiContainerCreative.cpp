@@ -49,6 +49,10 @@
 #include "xbox/input/XboxPad.h"
 #endif
 
+#if PLATFORM_HAS_VIRTUAL_KEYBOARD
+#include "VirtualKeyboard.h"
+#endif
+
 InventoryBasic GuiContainerCreative::inventory("tmp", 45, false);
 int GuiContainerCreative::selectedTabIndex = 0;
 ItemStack *GuiContainerCreative::s_tabIcons[12] = { nullptr };
