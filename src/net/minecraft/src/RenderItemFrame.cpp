@@ -26,6 +26,9 @@ static void renderBox(RenderBlocks &rb, Block *block, double minX, double minY, 
 {
     block->setBlockBounds(minX, minY, minZ, maxX, maxY, maxZ);
     rb.overrideBlockTexture = texture;
+    // Java renderBlockAsItem (render type 0) turns 90 degrees about Y first;
+    // without it the frame stood off the wall, away from its hitbox.
+    renderRotate(90.0f, 0.0f, 1.0f, 0.0f);
     renderTranslate(-0.5f, -0.5f, -0.5f);
     Tessellator *tessellator = &Tessellator::instance;
     tessellator->startDrawingQuads();

@@ -28,8 +28,8 @@ ItemStack *ItemEmptyMap::onItemRightClick(ItemStack *itemstack, World *world, En
 
     mapData->scale = 0;
     int scaleFactor = 128 * (1 << mapData->scale);
-    mapData->xCenter = (int)(std::round(entityplayer->posX / (double)scaleFactor) * (long)scaleFactor);
-    mapData->zCenter = (int)(std::round(entityplayer->posZ / (double)scaleFactor) * (long)scaleFactor);
+    mapData->xCenter = (int)(std::floor(entityplayer->posX / (double)scaleFactor + 0.5) * (long)scaleFactor);
+    mapData->zCenter = (int)(std::floor(entityplayer->posZ / (double)scaleFactor + 0.5) * (long)scaleFactor);
     if (world->worldProvider != nullptr)
     {
         mapData->dimension = (byte_t)world->worldProvider->worldType;

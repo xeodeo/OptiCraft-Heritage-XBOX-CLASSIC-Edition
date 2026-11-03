@@ -92,6 +92,11 @@ void ItemMap::initDimension(World* world, Entity* entity, MapData* mapdata) {
             int i4 = 0;
             int ai[256] = {0};
             Chunk* chunk = world->getChunkFromBlockCoords(i3, j3);
+            // Java: if (!chunk.isEmpty()). The Xbox hands out an empty chunk past
+            // the loaded radius; drawing it erased explored map as blank.
+            if (chunk == nullptr || chunk->isEmpty()) {
+                continue;
+            }
             int j4 = i3 & 0xf;
             int k4 = j3 & 0xf;
             int l4 = 0;

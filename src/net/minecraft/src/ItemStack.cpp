@@ -312,7 +312,11 @@ std::vector<std::string> ItemStack::getItemNameandInformation()
         return information;
     }
 
-    information.push_back(item->getItemDisplayName(this));
+    // 1.5.2 getTooltip: the anvil name (display.Name) in italics.
+    if (hasDisplayName())
+        information.push_back(std::string("Â§o") + getDisplayName() + "Â§r");
+    else
+        information.push_back(item->getItemDisplayName(this));
     item->addInformation(this, information);
 
     NBTTagList *enchantments = getEnchantmentTagList();
