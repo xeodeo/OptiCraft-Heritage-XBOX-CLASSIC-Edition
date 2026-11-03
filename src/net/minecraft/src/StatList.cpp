@@ -132,7 +132,11 @@ void StatList::initCraftingStats()
 
 	JavaHashSet<int_t, JavaIntHash, JavaIntEqual> hashset;
 	for (IRecipe *irecipe : CraftingManager::getInstance()->getRecipeList())
-		hashset.add(irecipe->getRecipeOutput()->itemID);
+	{
+		// 1.5.2: RecipesMapCloning has no fixed output (null).
+		if (irecipe->getRecipeOutput() != nullptr)
+			hashset.add(irecipe->getRecipeOutput()->itemID);
+	}
 	for (ItemStack *itemstack : FurnaceRecipes::smelting()->getSmeltingValuesInJavaOrder())
 		hashset.add(itemstack->itemID);
 
