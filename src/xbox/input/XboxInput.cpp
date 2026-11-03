@@ -331,13 +331,6 @@ void updateGameplay(const XboxPadSnapshot& p)
 	}
 	// The D-pad does not walk while it is part of a Back combo.
 	const unsigned short dpadHeld = backHeld ? 0 : p.held;
-	if (!backHeld)
-	{
-		pushKeyEdge(p, XBOX_PAD_DPAD_UP, lwjgl::Keyboard::KEY_F5);
-		pushKeyEdge(p, XBOX_PAD_DPAD_DOWN, lwjgl::Keyboard::KEY_T);
-		if (p.pressed & XBOX_PAD_DPAD_LEFT) lwjgl::Mouse::detail::pushWheel(1, 0, 0);
-		if (p.pressed & XBOX_PAD_DPAD_RIGHT) lwjgl::Mouse::detail::pushWheel(-1, 0, 0);
-	}
 	setKey(XBOX_KEY_LSTICK_UP, moveY < -0.05f);
 	setKey(XBOX_KEY_LSTICK_DOWN, moveY > 0.05f);
 	setKey(XBOX_KEY_LSTICK_LEFT, moveX < -0.05f);
@@ -364,7 +357,6 @@ void updateGameplay(const XboxPadSnapshot& p)
 	pushKeyEdge(p, XBOX_PAD_START, lwjgl::Keyboard::KEY_ESCAPE);
 	if (p.pressed & XBOX_PAD_BLACK) lwjgl::Mouse::detail::pushWheel(-1, 0, 0);
 	if (p.pressed & XBOX_PAD_WHITE) lwjgl::Mouse::detail::pushWheel(1, 0, 0);
-	pushKeyEdge(p, XBOX_PAD_RIGHT_THUMB, lwjgl::Keyboard::KEY_F5);
 	if (p.released & XBOX_PAD_BACK)
 	{
 		if (!s_backCombo)
