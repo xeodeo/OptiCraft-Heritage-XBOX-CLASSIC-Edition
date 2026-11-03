@@ -268,9 +268,9 @@ void tick(Minecraft *mc)
 
     if (p2->inventory != nullptr)
     {
-        if (pressed & (XBOX_PAD_BLACK | XBOX_PAD_DPAD_RIGHT))
+        if (pressed & XBOX_PAD_BLACK)
             p2->inventory->currentItem = (p2->inventory->currentItem + 1) % 9;
-        if (pressed & (XBOX_PAD_WHITE | XBOX_PAD_DPAD_LEFT))
+        if (pressed & XBOX_PAD_WHITE)
             p2->inventory->currentItem = (p2->inventory->currentItem + 8) % 9;
     }
 

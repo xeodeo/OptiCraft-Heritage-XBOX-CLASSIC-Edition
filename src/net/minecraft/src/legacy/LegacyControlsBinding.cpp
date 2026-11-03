@@ -160,6 +160,8 @@ bool legacyControlsBindingConflicts(GameSettings *settings, const LegacyControls
         if (row.bindingIndex < 0 || row.bindingIndex >= static_cast<int_t>(settings->keyBindings.size()))
             return false;
         const int_t code = settings->keyBindings[row.bindingIndex]->keyCode;
+        if (code <= 0)
+            return false;
         for (int_t i = 0; i < static_cast<int_t>(settings->keyBindings.size()); ++i)
         {
             if (i != row.bindingIndex && settings->keyBindings[i]->keyCode == code)

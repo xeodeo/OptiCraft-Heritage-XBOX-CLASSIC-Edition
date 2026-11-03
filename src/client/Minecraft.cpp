@@ -2264,9 +2264,11 @@ void Minecraft::runTick()
             }
         }
 
-        while (gameSettings->keyBindChat->isPressed())
+        while (gameSettings->keyBindChat != nullptr && gameSettings->keyBindChat->isPressed())
         {
-            if (thePlayer != nullptr && thePlayer->capabilities.isFlying)
+            if (thePlayer != nullptr && thePlayer->capabilities.isFlying &&
+                gameSettings->keyBindFlyDown != nullptr &&
+                gameSettings->keyBindChat->keyCode == gameSettings->keyBindFlyDown->keyCode)
                 continue;
             displayGuiScreen(new GuiChat());
         }

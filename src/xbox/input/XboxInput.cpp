@@ -355,8 +355,6 @@ void updateGameplay(const XboxPadSnapshot& p)
 	if (p.pressed & XBOX_PAD_LT) lwjgl::Mouse::detail::pushButton(1, true, 0, 0);
 	if (p.released & XBOX_PAD_LT) lwjgl::Mouse::detail::pushButton(1, false, 0, 0);
 	pushKeyEdge(p, XBOX_PAD_START, lwjgl::Keyboard::KEY_ESCAPE);
-	if (p.pressed & XBOX_PAD_BLACK) lwjgl::Mouse::detail::pushWheel(-1, 0, 0);
-	if (p.pressed & XBOX_PAD_WHITE) lwjgl::Mouse::detail::pushWheel(1, 0, 0);
 	if (p.released & XBOX_PAD_BACK)
 	{
 		if (!s_backCombo)

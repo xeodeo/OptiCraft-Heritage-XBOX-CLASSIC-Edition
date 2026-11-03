@@ -87,7 +87,7 @@ GameSettings::~GameSettings()
     keyBindJump = keyBindInventory = keyBindCrafting = keyBindDrop = keyBindChat = nullptr;
     keyBindPlayerList = keyBindPickBlock = nullptr;
     keyBindToggleFog = keyBindSneak = ofKeyBindZoom = nullptr;
-    keyBindPrevItem = keyBindNextItem = keyBindTogglePerspective = keyBindFlyUp = nullptr;
+    keyBindPrevItem = keyBindNextItem = keyBindTogglePerspective = keyBindFlyUp = keyBindFlyDown = nullptr;
 }
 
 void GameSettings::setDefaults()
@@ -128,6 +128,7 @@ void GameSettings::setDefaults()
     keyBindNextItem = new KeyBinding("Next Item", lwjgl::Keyboard::KEY_NONE);
     keyBindTogglePerspective = new KeyBinding("Change Perspective", lwjgl::Keyboard::KEY_F5);
     keyBindFlyUp = new KeyBinding("Fly Up", lwjgl::Keyboard::KEY_NONE);
+    keyBindFlyDown = new KeyBinding("Fly Down", lwjgl::Keyboard::KEY_NONE);
     // The PS2 defaults depend on which crafting menu is on, so set the
     // crafting options before the platform picks the default buttons.
     legacyCrafting = PLATFORM_XBOX != 0;
@@ -136,7 +137,7 @@ void GameSettings::setDefaults()
     keyBindings = {
         keyBindAttack, keyBindUseItem, keyBindForward, keyBindLeft, keyBindBack, keyBindRight,
         keyBindJump, keyBindSneak, keyBindDrop, keyBindInventory, keyBindCrafting,
-        keyBindPrevItem, keyBindNextItem, keyBindTogglePerspective, keyBindFlyUp,
+        keyBindPrevItem, keyBindNextItem, keyBindTogglePerspective, keyBindFlyUp, keyBindFlyDown,
         keyBindChat, keyBindPlayerList, keyBindPickBlock, keyBindToggleFog
     };
     mc = nullptr;
@@ -418,6 +419,7 @@ std::string GameSettings::getKeyBindingDescription(int_t i)
         if (desc == "Next Item") return "Objeto siguiente";
         if (desc == "Change Perspective") return "Cambiar perspectiva";
         if (desc == "Fly Up") return "Subir";
+        if (desc == "Fly Down") return "Bajar";
     }
     return uiText(desc);
 }
@@ -468,6 +470,8 @@ void GameSettings::resetControlBindingsToDefaults()
         keyBindTogglePerspective->keyCode = lwjgl::Keyboard::KEY_F5;
     if (keyBindFlyUp != nullptr)
         keyBindFlyUp->keyCode = lwjgl::Keyboard::KEY_NONE;
+    if (keyBindFlyDown != nullptr)
+        keyBindFlyDown->keyCode = lwjgl::Keyboard::KEY_NONE;
 
     platformGameSettingsResetControlBindings(*this);
     KeyBinding::resetKeyBindingArrayAndHash();

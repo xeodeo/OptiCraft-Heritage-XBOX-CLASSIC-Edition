@@ -431,7 +431,8 @@ void GuiContainerCreative::keyTyped(char_t c, int_t key)
 
     if (selectedTabIndex != CreativeTabs::tabAllSearch->getTabIndex())
     {
-        if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->keyBindChat != nullptr && key == mc->gameSettings->keyBindChat->keyCode)
+        if (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->keyBindChat != nullptr &&
+            mc->gameSettings->keyBindChat->keyCode > 0 && key == mc->gameSettings->keyBindChat->keyCode)
         {
             setCurrentCreativeTab(CreativeTabs::tabAllSearch);
         }
