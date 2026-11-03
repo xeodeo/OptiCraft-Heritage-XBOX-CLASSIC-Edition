@@ -455,6 +455,19 @@ def copy_source_textures(source_root: Path, assets: Path, staged: list[str]) -> 
         staged.append(dest.relative_to(assets.parent).as_posix())
 
 
+def add_wither_hearts(console_icons: Path, icons_152: Path) -> str:
+    """gui/icons.png stays the console one (SKIP_CONSOLE_GUI), but 1.2.5 has no
+    wither hearts: copy only those 9x9 cells (x 117..161, normal and hardcore rows)."""
+    with Image.open(console_icons) as base, Image.open(icons_152) as new:
+        icons = base.convert("RGBA")
+        source = new.convert("RGBA")
+        for y in (0, 45):
+            box = (117, y, 162, y + 9)
+            icons.paste(source.crop(box), box[:2])
+    icons.save(console_icons, optimize=True)
+    return "assets/gui/icons.png"
+
+
 def read_lang(path: Path) -> tuple[list[str], dict[str, str]]:
     lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
     values = {}
@@ -580,6 +593,7 @@ def main() -> int:
     merged_langs = merge_languages(args.base_data / "assets/lang", args.source.parent / "src125/lang",
                                    args.source / "lang", assets / "lang")
     staged += [f"assets/lang/{name}" for name in merged_langs]
+    staged.append(add_wither_hearts(assets / "gui/icons.png", args.source / "gui/icons.png"))
     block_report = parse_block_report(block_cpp, block_slots)
 
     args.preview.parent.mkdir(parents=True, exist_ok=True)

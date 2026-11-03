@@ -511,6 +511,8 @@ void GuiIngame::renderPlayerStatusHudGeometry(int_t sw, int_t sh, Tessellator *c
 		int_t heartTextureX = 16;
 		if (mc->thePlayer->isPotionActive(Potion::poison))
 			heartTextureX += 36;
+		else if (mc->thePlayer->isPotionActive(Potion::wither))
+			heartTextureX += 72;
 		const int_t flash = flashHearts ? 1 : 0;
 		const int_t hx = left + index * 8;
 		int_t hy = healthY;
