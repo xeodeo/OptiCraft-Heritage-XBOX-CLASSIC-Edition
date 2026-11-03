@@ -26,10 +26,9 @@ MapData* ItemMap::getMapData(int_t id, World* world)
     MapData *mapdata = dynamic_cast<MapData*>(world->loadItemData(typeid(MapData), key));
     if (mapdata == nullptr)
     {
-        const int_t newId = world->getUniqueDataId("map");
-        const std::string newKey = "map_" + std::to_string(newId);
-        mapdata = new MapData(newKey);
-        world->setItemData(newKey, mapdata);
+        // Java getMPMapData: the server's map packets fill this id.
+        mapdata = new MapData(key);
+        world->setItemData(key, mapdata);
     }
     return mapdata;
 }

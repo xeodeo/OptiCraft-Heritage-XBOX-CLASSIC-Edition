@@ -8,6 +8,7 @@
 #include "RenderItem.h"
 #include "RenderManager.h"
 #include "RenderEngine.h"
+#include "Texture152Atlas.h"
 #include "ItemRenderer.h"
 #include "MapItemRenderer.h"
 #include "ItemMap.h"
@@ -55,12 +56,14 @@ void RenderItemFrame::renderFrameItemAsBlock(EntityItemFrame *var1)
     float var4 = 0.75f;
     float var5 = var4 / 2.0f;
 
-    int birchTex = var2->getBlockTextureFromSideAndMetadata(2, 2);
+    // Java: back plate itemframe_back, borders Block.planks.getIcon(1, 2) (birch).
+    int birchTex = var2->getBlockTextureFromSideAndMetadata(1, 2);
+    const int backTex = TEX152_BLOCK_ICON("itemframe_back.png");
 
     // Back plate
     renderPushMatrix();
     renderBox(renderBlocksInstance, var2, 0.0, (double)(0.5f - var5 + 0.0625f), (double)(0.5f - var5 + 0.0625f),
-              (double)(var3 * 0.5f), (double)(0.5f + var5 - 0.0625f), (double)(0.5f + var5 - 0.0625f), birchTex);
+              (double)(var3 * 0.5f), (double)(0.5f + var5 - 0.0625f), (double)(0.5f + var5 - 0.0625f), backTex);
     renderPopMatrix();
 
     // Top border
@@ -137,7 +140,7 @@ void RenderItemFrame::func_82402_b(EntityItemFrame *var1)
             var4->addVertexWithUV((double)(128 + var5), (double)(0 - var5), 0.0, 1.0, 0.0);
             var4->addVertexWithUV((double)(0 - var5), (double)(0 - var5), 0.0, 0.0, 0.0);
             var4->draw();
-            MapData *var6 = ((ItemMap*)Item::map)->getMapData(var3.getEntityItem(), var1->worldObj);
+            MapData *var6 = ((ItemMap*)Item::map)->getMapData(var2, var1->worldObj); // the frame's own stack, not the temporary copy
             renderTranslate(0.0f, 0.0f, -1.0f);
             if (var6 != nullptr && renderManager->itemRenderer != nullptr && renderManager->itemRenderer->field_28131_f != nullptr)
             {

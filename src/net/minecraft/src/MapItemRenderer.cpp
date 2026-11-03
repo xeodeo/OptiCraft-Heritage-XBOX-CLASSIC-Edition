@@ -70,11 +70,12 @@ void MapItemRenderer::renderMap(EntityPlayer *entityplayer, RenderEngine *render
 	renderBlendFunc(RenderBlendFactor::One, RenderBlendFactor::OneMinusSrcAlpha);
 	renderDisable(RenderCapability::AlphaTest);
 	tessellator->startDrawingQuads();
-	tessellator->setColorRGBA_F(f, f, f, 1.0f);
-	tessellator->addVertexWithUV(j + 0, k + 128, 0.0, 0.0, 1.0);
-	tessellator->addVertexWithUV(j + 128, k + 128, 0.0, 1.0, 1.0);
-	tessellator->addVertexWithUV(j + 128, k + 0, 0.0, 1.0, 0.0);
-	tessellator->addVertexWithUV(j + 0, k + 0, 0.0, 0.0, 0.0);
+	// Java's var18 is only an offset: no vertex colour. A black colour here
+	// modulated every map pixel to black on the Xbox.
+	tessellator->addVertexWithUV(j + 0 + f, k + 128 - f, -0.01, 0.0, 1.0);
+	tessellator->addVertexWithUV(j + 128 - f, k + 128 - f, -0.01, 1.0, 1.0);
+	tessellator->addVertexWithUV(j + 128 - f, k + 0 + f, -0.01, 1.0, 0.0);
+	tessellator->addVertexWithUV(j + 0 + f, k + 0 + f, -0.01, 0.0, 0.0);
 	tessellator->draw();
 
 	renderengine->bindTexture(renderengine->getTexture("/misc/mapicons.png"));

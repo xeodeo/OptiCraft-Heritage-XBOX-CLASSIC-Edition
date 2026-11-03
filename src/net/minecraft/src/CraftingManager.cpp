@@ -130,7 +130,6 @@ CraftingManager::CraftingManager()
 	addRecipe(new ItemStack(Item::redstoneRepeater, 1),       { "#X#", "III", '#', Block::torchRedstoneActive, 'X', Item::redstone, 'I', Block::stone });
 	addRecipe(new ItemStack(Item::pocketSundial, 1),          { " # ", "#X#", " # ", '#', Item::ingotGold, 'X', Item::redstone });
 	addRecipe(new ItemStack(Item::compass, 1),                { " # ", "#X#", " # ", '#', Item::ingotIron, 'X', Item::redstone });
-	addRecipe(new ItemStack(Item::mapItem, 1),                { "###", "#X#", "###", '#', Item::paper, 'X', Item::compass });
 	addRecipe(new ItemStack(Block::button, 1),                { "#", '#', Block::stone });
 	addRecipe(new ItemStack(Block::woodenButton, 1),          { "#", '#', Block::planks });
 	addRecipe(new ItemStack(Block::pressurePlateStone, 1),    { "##", '#', Block::stone });
