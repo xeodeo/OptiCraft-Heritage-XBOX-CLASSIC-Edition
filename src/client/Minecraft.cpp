@@ -1625,11 +1625,6 @@ void Minecraft::clickMouse(int_t i)
         rightClickDelayTimer = 4;
 
     bool flag = true;
-    // TEMP diagnostic (item frame, 03-11): what a right click is aimed at.
-    if (i == 1)
-        MC_LOG_INFO("diag.use", "right click: hit=%d entity=%s\n",
-                    objectMouseOver == nullptr ? -1 : (int)objectMouseOver->typeOfHit,
-                    objectMouseOver != nullptr && objectMouseOver->entityHit != nullptr ? typeid(*objectMouseOver->entityHit).name() : "-");
     if (objectMouseOver == nullptr)
     {
         if (i == 0 && playerController->isNotCreative())

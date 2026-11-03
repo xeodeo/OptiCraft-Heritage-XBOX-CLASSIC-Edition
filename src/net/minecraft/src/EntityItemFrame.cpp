@@ -1,6 +1,4 @@
 #include "EntityItemFrame.h"
-#include "platform/Log.h"
-#include <cstdio>
 
 #include "DataWatcher.h"
 #include "EntityPlayer.h"
@@ -136,12 +134,6 @@ bool EntityItemFrame::interact(EntityPlayer *player)
 {
     if (player == nullptr)
         return false;
-
-    // TEMP diagnostic (item frame, 03-11).
-    MC_LOG_INFO("diag.frame", "interact: held=%d shown=%d mp=%d\n",
-                player->getHeldItem() != nullptr ? player->getHeldItem()->itemID : -1,
-                getDisplayedItem() != nullptr ? getDisplayedItem()->itemID : -1,
-                worldObj != nullptr && worldObj->multiplayerWorld ? 1 : 0);
 
     if (getDisplayedItem() == nullptr)
     {

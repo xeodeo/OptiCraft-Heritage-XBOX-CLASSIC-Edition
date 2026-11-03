@@ -1,6 +1,4 @@
 #include "GuiRepair.h"
-#include "platform/Log.h"
-#include <cstdio>
 
 #include <string>
 #include "ContainerRepair.h"
@@ -99,18 +97,6 @@ void GuiRepair::drawGuiContainerForegroundLayer()
             color = 0xFF6060;
         }
 
-        // TEMP diagnostic (anvil cost text, 03-11): log the exact bytes once per change.
-        {
-            static std::string lastLogged;
-            if (costText != lastLogged)
-            {
-                lastLogged = costText;
-                std::string hex;
-                char b[4];
-                for (unsigned char ch : costText) { snprintf(b, sizeof b, "%02x", ch); hex += b; }
-                MC_LOG_INFO("diag.anvil", "cost=%d text=[%s] hex=%s\n", repairContainer->maximumCost, costText.c_str(), hex.c_str());
-            }
-        }
         if (hasResult)
         {
             int shadowColor = 0xFF000000 | ((color & 0xFCFCFC) >> 2);
