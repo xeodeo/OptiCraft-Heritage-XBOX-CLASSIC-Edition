@@ -5,13 +5,14 @@
 
 #include "ContainerMerchant.h"
 #include "EntityPlayer.h"
+#include "EntityPlayerSP.h"
 #include "FontRenderer.h"
 #include "GuiButton.h"
 #include "GuiButtonMerchant.h"
 #include "IMerchant.h"
 #include "InventoryPlayer.h"
 #include "ItemStack.h"
-#include "ItemRarity.h"
+#include "EnumRarity.h"
 #include "MerchantRecipe.h"
 #include "MerchantRecipeList.h"
 #include "Minecraft.h"
@@ -171,17 +172,17 @@ void GuiMerchant::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 				itemRenderer->zLevel = 100.0f;
 				if (firstBuy != nullptr)
 				{
-					itemRenderer->renderItemAndEffectIntoGUI(fontRenderer, mc->renderEngine, firstBuy, x + 36, y + 24);
+					itemRenderer->renderItemIntoGUI(fontRenderer, mc->renderEngine, firstBuy, x + 36, y + 24);
 					itemRenderer->renderItemOverlayIntoGUI(fontRenderer, mc->renderEngine, firstBuy, x + 36, y + 24);
 				}
 				if (secondBuy != nullptr)
 				{
-					itemRenderer->renderItemAndEffectIntoGUI(fontRenderer, mc->renderEngine, secondBuy, x + 62, y + 24);
+					itemRenderer->renderItemIntoGUI(fontRenderer, mc->renderEngine, secondBuy, x + 62, y + 24);
 					itemRenderer->renderItemOverlayIntoGUI(fontRenderer, mc->renderEngine, secondBuy, x + 62, y + 24);
 				}
 				if (sell != nullptr)
 				{
-					itemRenderer->renderItemAndEffectIntoGUI(fontRenderer, mc->renderEngine, sell, x + 120, y + 24);
+					itemRenderer->renderItemIntoGUI(fontRenderer, mc->renderEngine, sell, x + 120, y + 24);
 					itemRenderer->renderItemOverlayIntoGUI(fontRenderer, mc->renderEngine, sell, x + 120, y + 24);
 				}
 				itemRenderer->zLevel = 0.0f;

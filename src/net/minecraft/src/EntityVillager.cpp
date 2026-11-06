@@ -27,6 +27,7 @@
 #include "EntityAIWatchClosest2.h"
 #include "EntityLiving.h"
 #include "EntityPlayer.h"
+#include "InventoryPlayer.h"
 #include "EntityZombie.h"
 #include "IMob.h"
 #include "Item.h"
