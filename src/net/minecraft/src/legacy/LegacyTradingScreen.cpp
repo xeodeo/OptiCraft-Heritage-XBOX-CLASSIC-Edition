@@ -25,7 +25,6 @@
 #include "platform/PlatformConfig.h"
 #include "platform/RenderAPI.h"
 #include "LegacyMenuHints.h"
-#include "LegacySelectionCursor.h"
 #include "pc/lwjgl/Keyboard.h"
 
 RenderItem *LegacyTradingScreen::itemRenderer = new RenderItem();
@@ -436,6 +435,8 @@ void LegacyTradingScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partial
         const int_t sy = top + BAR_Y;
         MerchantRecipe *recipe = offerAt(i + offersStartIndex);
         drawSlotBox(sx, sy, BAR_BOX, recipe != nullptr && !canMake(recipe));
+        if (i == selectedSlot && count > 0)
+            drawRect(sx + 1, sy + 1, sx + BAR_BOX - 1, sy + BAR_BOX - 1, 0x70ffffff);
         if (recipe != nullptr)
         {
             drawItem(recipe->getItemToSell(), sx + 5, sy + 5);
@@ -500,11 +501,18 @@ void LegacyTradingScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partial
         }
     }
 
-    // Selector over the chosen offer (CraftingPanelHighlight).
+    // Chosen offer: a yellow frame instead of the menu cursor, which covered the item.
     if (count > 0)
     {
-        const int_t cx = left + BAR_X + selectedSlot * BAR_SLOT + BAR_BOX / 2;
-        legacyDrawSelectionCursorCentered(mc, cx, top + BAR_Y + BAR_BOX / 2, 34, zLevel + 64.0f);
+        const int_t x0 = left + BAR_X + selectedSlot * BAR_SLOT - 1;
+        const int_t y0 = top + BAR_Y - 1;
+        const int_t x1 = x0 + BAR_BOX + 2;
+        const int_t y1 = y0 + BAR_BOX + 2;
+        const int_t frame = static_cast<int_t>(0xffffd23cu);
+        drawRect(x0, y0, x1, y0 + 2, frame);
+        drawRect(x0, y1 - 2, x1, y1, frame);
+        drawRect(x0, y0 + 2, x0 + 2, y1 - 2, frame);
+        drawRect(x1 - 2, y0 + 2, x1, y1 - 2, frame);
     }
 
     renderDisable(RenderCapability::RescaleNormal);
