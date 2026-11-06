@@ -1178,10 +1178,16 @@ void Block::initialize()
 	dropper = (new BlockDropper(158))->setHardness(3.5f)->setStepSound(soundStoneFootstep)->setBlockName("dropper")->setRequiresSelfNotify();
 
 	Item::itemsList[cloth->blockID] = (new ItemCloth(cloth->blockID - 256))->setItemName("cloth");
-	Item::itemsList[wood->blockID] = (new ItemMetadata(wood->blockID - 256, wood))->setItemName("log");
-	Item::itemsList[planks->blockID] = (new ItemMetadata(planks->blockID - 256, planks))->setItemName("wood");
-	Item::itemsList[stoneBrick->blockID] = (new ItemMetadata(stoneBrick->blockID - 256, stoneBrick))->setItemName("stonebricksmooth");
-	Item::itemsList[sandStone->blockID] = (new ItemMetadata(sandStone->blockID - 256, sandStone))->setItemName("sandStone");
+	// As Java 1.5.2: each variant has its own name key (tile.log.oak, tile.monsterStoneEgg.stone...).
+	static const char *const s_woodTypes[4] = { "oak", "spruce", "birch", "jungle" };
+	static const char *const s_silverfishTypes[3] = { "stone", "cobble", "brick" };
+	static const char *const s_stoneBrickTypes[4] = { "default", "mossy", "cracked", "chiseled" };
+	static const char *const s_sandStoneTypes[3] = { "default", "chiseled", "smooth" };
+	Item::itemsList[wood->blockID] = (new ItemMultiTextureTile(wood->blockID - 256, wood, s_woodTypes, 4))->setItemName("log");
+	Item::itemsList[planks->blockID] = (new ItemMultiTextureTile(planks->blockID - 256, planks, s_woodTypes, 4))->setItemName("wood");
+	Item::itemsList[silverfish->blockID] = (new ItemMultiTextureTile(silverfish->blockID - 256, silverfish, s_silverfishTypes, 3))->setItemName("monsterStoneEgg");
+	Item::itemsList[stoneBrick->blockID] = (new ItemMultiTextureTile(stoneBrick->blockID - 256, stoneBrick, s_stoneBrickTypes, 4))->setItemName("stonebricksmooth");
+	Item::itemsList[sandStone->blockID] = (new ItemMultiTextureTile(sandStone->blockID - 256, sandStone, s_sandStoneTypes, 3))->setItemName("sandStone");
 	Item::itemsList[stairSingle->blockID] = (new ItemSlab(stairSingle->blockID - 256, static_cast<BlockHalfSlab *>(stairSingle), static_cast<BlockHalfSlab *>(stairDouble), false))->setItemName("stoneSlab");
 	Item::itemsList[stairDouble->blockID] = (new ItemSlab(stairDouble->blockID - 256, static_cast<BlockHalfSlab *>(stairSingle), static_cast<BlockHalfSlab *>(stairDouble), true))->setItemName("stoneSlab");
 	Item::itemsList[woodSingleSlab->blockID] = (new ItemSlab(woodSingleSlab->blockID - 256, static_cast<BlockHalfSlab *>(woodSingleSlab), static_cast<BlockHalfSlab *>(woodDoubleSlab), false))->setItemName("woodSlab");
