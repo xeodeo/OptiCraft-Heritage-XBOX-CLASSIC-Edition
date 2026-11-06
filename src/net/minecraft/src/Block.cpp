@@ -1114,7 +1114,7 @@ void Block::initialize()
 	redstoneRepeaterActive = (new BlockRedstoneRepeater(94, true))->setHardness(0.0f)->setLightValue(0.625f)->setStepSound(soundWoodFootstep)->setBlockName("diode")->disableStats()->setRequiresSelfNotify();
 	lockedChest = (new BlockLockedChest(95))->setHardness(0.0f)->setLightValue(1.0f)->setStepSound(soundWoodFootstep)->setBlockName("lockedchest")->setTickOnLoad(true)->setRequiresSelfNotify();
 	trapdoor = (new BlockTrapDoor(96, Material::wood))->setHardness(3.0f)->setStepSound(soundWoodFootstep)->setBlockName("trapdoor")->disableStats()->setRequiresSelfNotify();
-	silverfish = (new BlockSilverfish(97))->setHardness(12.0f / 16.0f);
+	silverfish = (new BlockSilverfish(97))->setHardness(12.0f / 16.0f)->setBlockName("monsterStoneEgg");
 	stoneBrick = (new BlockStoneBrick(98))->setHardness(1.5f)->setResistance(10.0f)->setStepSound(soundStoneFootstep)->setBlockName("stonebricksmooth");
 	mushroomCapBrown = static_cast<BlockMushroomCap *>((new BlockMushroomCap(99, Material::wood, 142, 0))->setHardness(0.2f)->setStepSound(soundWoodFootstep)->setBlockName("mushroom")->setRequiresSelfNotify());
 	mushroomCapRed = static_cast<BlockMushroomCap *>((new BlockMushroomCap(100, Material::wood, 142, 1))->setHardness(0.2f)->setStepSound(soundWoodFootstep)->setBlockName("mushroom")->setRequiresSelfNotify());
