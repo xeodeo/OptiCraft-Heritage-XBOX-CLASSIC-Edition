@@ -478,6 +478,7 @@ public:
 	void setItemData(const jstring &s, MapDataBase *mapdatabase);
 	MapDataBase *loadItemData(const std::type_info &class1, const jstring &s);
 	MapDataBase *loadItemData(const jstring &s, MapDataFactory factory);
+	MapStorage *getMapStorage() const { return mapStorage; }
 	int_t getUniqueDataId(const jstring &s);
 	void isTrapdoorOpen(int_t i, int_t j, int_t k, int_t l, int_t i1);
 	void getTrapdoorFacing(EntityPlayer *entityplayer, int_t i, int_t j, int_t k, int_t l, int_t i1);

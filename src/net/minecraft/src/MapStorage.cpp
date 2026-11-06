@@ -116,6 +116,18 @@ void MapStorage::setData(const std::string &s, MapDataBase *mapdatabase)
 	loadedDataList.push_back(mapdatabase);
 }
 
+MapDataBase *MapStorage::takeData(const std::string &s)
+{
+	auto it = loadedDataMap.find(s);
+	if (it == loadedDataMap.end())
+		return nullptr;
+	MapDataBase *data = it->second;
+	loadedDataMap.erase(it);
+	auto lit = std::find(loadedDataList.begin(), loadedDataList.end(), data);
+	if (lit != loadedDataList.end()) loadedDataList.erase(lit);
+	return data;
+}
+
 void MapStorage::saveAllData()
 {
 	if (saveHandler != nullptr && saveHandler->isReadOnly())

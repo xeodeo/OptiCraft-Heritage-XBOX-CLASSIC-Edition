@@ -8,6 +8,7 @@
 #include "Block.h"
 #include "BlockDoor.h"
 #include "Entity.h"
+#include "EntityVillager.h"
 #include "Village.h"
 #include "VillageDoorInfo.h"
 #include "NBTTagCompound.h"
@@ -27,17 +28,20 @@ MapDataBase *createVillageData(const std::string &name)
 
 VillageCollection::VillageCollection(World *world) : MapDataBase("villages"), worldObj(world), tickCounter(0)
 {
-	if (worldObj != nullptr)
+	// Java registers the collection in MapStorage; here the World owns it (it deletes it and
+	// saves it), so only the villages.dat copy is read and then freed.
+	if (worldObj != nullptr && worldObj->getMapStorage() != nullptr)
 	{
-		MapDataBase *saved = worldObj->loadItemData("villages", &createVillageData);
+		MapStorage *storage = worldObj->getMapStorage();
+		MapDataBase *saved = storage->loadData("villages", &createVillageData);
 		if (auto *loaded = dynamic_cast<VillageCollection *>(saved))
 		{
 			NBTTagCompound data;
 			loaded->writeToNBT(&data);
 			readFromNBT(&data);
 		}
-		worldObj->setItemData("villages", this);
-		markDirty();
+		if (saved != nullptr && storage->takeData("villages") == saved)
+			delete saved;
 	}
 }
 
@@ -133,7 +137,14 @@ void VillageCollection::removeAnnihilatedVillages()
 	for (auto it = villageList.begin(); it != villageList.end();)
 	{
 		if ((*it)->isAnnihilated())
+		{
+			// Java villagers keep the dead Village alive until their next lookup; here it is freed.
+			if (worldObj != nullptr)
+				for (Entity *entity : worldObj->loadedEntityList)
+					if (auto *villager = dynamic_cast<EntityVillager *>(entity))
+						villager->forgetVillage(it->get());
 			it = villageList.erase(it);
+		}
 		else
 			++it;
 	}

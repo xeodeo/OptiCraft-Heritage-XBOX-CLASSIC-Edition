@@ -8,6 +8,7 @@ class NBTTagCompound;
 class MerchantRecipe
 {
 public:
+	// Takes ownership of the stacks, as Java keeps the references it is given.
 	MerchantRecipe(ItemStack *buy, ItemStack *sell);
 	MerchantRecipe(ItemStack *buy, ItemStack *secondBuy, ItemStack *sell);
 	explicit MerchantRecipe(NBTTagCompound *tag);

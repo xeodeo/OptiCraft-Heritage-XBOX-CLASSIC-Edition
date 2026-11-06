@@ -37,6 +37,9 @@ public:
 	MapDataBase* loadData(const std::string &s, MapDataFactory factory);
 	void setData(const std::string &s, MapDataBase *mapdatabase);
 	void saveAllData();
+	// For data a World owns itself (villages): write it now, or hand a loaded copy to the caller.
+	void saveOwnedData(MapDataBase *mapdatabase) { saveData(mapdatabase); }
+	MapDataBase *takeData(const std::string &s);
 	int_t getUniqueDataId(const std::string &s);
 
 private:

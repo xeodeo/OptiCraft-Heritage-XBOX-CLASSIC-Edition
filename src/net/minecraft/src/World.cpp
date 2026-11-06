@@ -875,6 +875,12 @@ void World::saveLevel()
     const long_t mapStorageStartNs = System::nanoTime();
 #endif
     mapStorage->saveAllData();
+    // The World owns its VillageCollection, so MapStorage does not save it with the rest.
+    if (villageCollectionObj != nullptr && villageCollectionObj->isDirty())
+    {
+        mapStorage->saveOwnedData(villageCollectionObj);
+        villageCollectionObj->setDirty(false);
+    }
 #if PLATFORM_PROFILE_STREAMING && MC_LOG_LEVEL >= 2
     platformProfileMapStorage(System::nanoTime() - mapStorageStartNs);
 #endif

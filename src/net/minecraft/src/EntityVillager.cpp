@@ -10,7 +10,9 @@
 #include "DamageSource.h"
 #include "DataWatcher.h"
 #include "Enchantment.h"
+#include "EnchantmentData.h"
 #include "EnchantmentHelper.h"
+#include "ItemEnchantedBook.h"
 #include "EntityAIAvoidEntity.h"
 #include "EntityAIFollowGolem.h"
 #include "EntityAILookAtTradePlayer.h"
@@ -505,13 +507,17 @@ void EntityVillager::addDefaultEquipmentAndRecipies(int_t count)
 		addBlacksmithItem(&candidates, Block::glass->blockID, getRNG(), func_82188_j(0.2f));
 		addBlacksmithItem(&candidates, Item::compass->shiftedIndex, getRNG(), func_82188_j(0.2f));
 		addBlacksmithItem(&candidates, Item::pocketSundial->shiftedIndex, getRNG(), func_82188_j(0.2f));
-		if (getRNG().nextFloat() < func_82188_j(0.07f) && Item::emerald != nullptr && Item::enchantedBook != nullptr)
+		if (getRNG().nextFloat() < func_82188_j(0.07f) && Item::emerald != nullptr && Item::enchantedBook != nullptr &&
+			!Enchantment::field_92090_c.empty())
 		{
-			int_t cost = 2 + getRNG().nextInt(15);
+			Enchantment *enchantment = Enchantment::field_92090_c[getRNG().nextInt(static_cast<int_t>(Enchantment::field_92090_c.size()))];
+			int_t level = MathHelper::getRandomIntegerInRange(getRNG(), enchantment->getMinLevel(), enchantment->getMaxLevel());
+			ItemStack *book = static_cast<ItemEnchantedBook *>(Item::enchantedBook)->func_92111_a(EnchantmentData(enchantment, level));
+			int_t cost = 2 + getRNG().nextInt(5 + level * 10) + 3 * level;
 			candidates.add(new MerchantRecipe(
 				new ItemStack(Item::book->shiftedIndex, 1, 0),
 				new ItemStack(Item::emerald->shiftedIndex, cost, 0),
-				new ItemStack(Item::enchantedBook->shiftedIndex, 1, 0)));
+				book));
 		}
 		break;
 	case 2: // Priest
@@ -608,6 +614,7 @@ void EntityVillager::addDefaultEquipmentAndRecipies(int_t count)
 		MerchantRecipe *r = list[i];
 		if (r)
 		{
+			// The candidates list keeps its own recipes, so the villager gets copies.
 			buyingList->addToListWithCheck(new MerchantRecipe(
 				r->getItemToBuy() ? r->getItemToBuy()->copy() : nullptr,
 				r->getSecondItemToBuy() ? r->getSecondItemToBuy()->copy() : nullptr,

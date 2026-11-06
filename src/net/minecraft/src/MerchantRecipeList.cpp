@@ -41,7 +41,12 @@ void MerchantRecipeList::readRecipiesFromTags(NBTTagCompound *tag)
 	if (!tag || !tag->hasKey("Recipes")) return;
 	NBTTagList *list = tag->getTagList("Recipes");
 	for (int i = 0; i < list->tagCount(); ++i)
-		if (auto *entry = dynamic_cast<NBTTagCompound *>(list->tagAt(i))) add(new MerchantRecipe(entry));
+		if (auto *entry = dynamic_cast<NBTTagCompound *>(list->tagAt(i)))
+		{
+			// An offer whose item no longer loads would leave a null stack every screen dereferences.
+			auto *recipe = new MerchantRecipe(entry);
+			if (recipe->getItemToBuy() && recipe->getItemToSell()) add(recipe); else delete recipe;
+		}
 }
 NBTTagCompound *MerchantRecipeList::getRecipiesAsTags() const
 {

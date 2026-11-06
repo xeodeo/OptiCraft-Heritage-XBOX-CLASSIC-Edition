@@ -144,6 +144,8 @@ bool VillageSiege::spawnZombie()
         return false;
 
     EntityZombie *zombie = new EntityZombie(worldObj);
+    zombie->initCreature();
+    zombie->setVillager(false);
     zombie->setLocationAndAngles(position->xCoord, position->yCoord, position->zCoord, worldObj->rand.nextFloat() * 360.0f, 0.0f);
     if (!worldObj->entityJoinedWorld(zombie))
     {

@@ -5,7 +5,7 @@
 
 MerchantRecipe::MerchantRecipe(ItemStack *buy, ItemStack *sell) : MerchantRecipe(buy, nullptr, sell) {}
 MerchantRecipe::MerchantRecipe(ItemStack *buy, ItemStack *secondBuy, ItemStack *sell)
-	: itemToBuy(buy ? buy->copy() : nullptr), secondItemToBuy(secondBuy ? secondBuy->copy() : nullptr), itemToSell(sell ? sell->copy() : nullptr) {}
+	: itemToBuy(buy), secondItemToBuy(secondBuy), itemToSell(sell) {}
 MerchantRecipe::MerchantRecipe(NBTTagCompound *tag) { readFromTags(tag); }
 ItemStack *MerchantRecipe::getItemToBuy() const { return itemToBuy.get(); }
 ItemStack *MerchantRecipe::getSecondItemToBuy() const { return secondItemToBuy.get(); }
