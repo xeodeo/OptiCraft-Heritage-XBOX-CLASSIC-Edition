@@ -74,8 +74,10 @@ ItemStack *ContainerMerchant::getStackInSlot(int_t slotIndex)
 	}
 
 	ItemStack *orphaned = nullptr;
-	if (source->stackSize == 0)
+	if (source->stackSize == 0 || slotIndex == 2)
 	{
+		// The result slot is refilled by resetRecipeAndSlots, which deletes inventory[2];
+		// take `source` out first so it stays valid for onPickupFromSlot (Java's leftover is dropped the same way).
 		orphaned = slot->takeStack();
 	}
 	else

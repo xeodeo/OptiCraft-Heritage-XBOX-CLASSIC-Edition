@@ -13,6 +13,9 @@
 #include "EnchantmentData.h"
 #include "EnchantmentHelper.h"
 #include "ItemEnchantedBook.h"
+#include "EntityArrow.h"
+#include "EntityFireball.h"
+#include "EntityThrowable.h"
 #include "EntityAIAvoidEntity.h"
 #include "EntityAIFollowGolem.h"
 #include "EntityAILookAtTradePlayer.h"
@@ -222,8 +225,7 @@ EntityVillager::EntityVillager(World *world, int_t profession)
 
 EntityVillager::~EntityVillager()
 {
-	if (buyingPlayer != nullptr)
-		merchantScreensForget(this);
+	merchantScreensForget(this);
 }
 
 void EntityVillager::entityInit()
@@ -260,7 +262,12 @@ void EntityVillager::readEntityFromNBT(NBTTagCompound *tag)
 	setProfession(tag->getInteger("Profession"));
 	wealth = tag->getInteger("Riches");
 	if (tag->hasKey("Offers"))
+	{
 		buyingList.reset(new MerchantRecipeList(tag->getCompoundTag("Offers")));
+		// Every saved offer may have been dropped as unloadable; then getRecipes regenerates them.
+		if (buyingList->empty())
+			buyingList.reset();
+	}
 }
 
 void EntityVillager::onLivingUpdate()
@@ -654,14 +661,19 @@ void EntityVillager::onDeath(const DamageSource &source)
 
 void EntityVillager::onDeath(Entity *entity)
 {
-	if (entity != nullptr)
-	{
-		onDeath(DamageSource::causeMobDamage(dynamic_cast<EntityLiving *>(entity)));
-	}
+	// Java's DamageSource.getEntity() is the shooter for arrows, fireballs and thrown items.
+	Entity *responsible = entity;
+	if (auto *arrow = dynamic_cast<EntityArrow *>(entity))
+		responsible = arrow->getShootingEntity();
+	else if (auto *fireball = dynamic_cast<EntityFireball *>(entity))
+		responsible = fireball->getShootingEntity();
+	else if (auto *thrown = dynamic_cast<EntityThrowable *>(entity))
+		responsible = thrown->getThrower();
+
+	if (auto *living = dynamic_cast<EntityLiving *>(responsible))
+		onDeath(DamageSource::causeMobDamage(living));
 	else
-	{
 		onDeath(DamageSource::generic);
-	}
 }
 
 void EntityVillager::func_82187_q()

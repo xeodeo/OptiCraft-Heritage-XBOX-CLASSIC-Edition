@@ -59,12 +59,15 @@ constexpr int_t INV_GRID_Y = 90;
 constexpr int_t INV_HOTBAR_Y = 146;
 constexpr int_t INV_CELL = 16;
 
+// MerchantRecipeList.canRecipeBeUsed compares item IDs only.
 bool sameTradeItem(const ItemStack *have, const ItemStack *want)
 {
-    if (have == nullptr || want == nullptr || have->itemID != want->itemID)
-        return false;
-    ItemStack *w = const_cast<ItemStack *>(want);
-    return !w->getHasSubtypes() || const_cast<ItemStack *>(have)->getItemDamage() == w->getItemDamage();
+    return have != nullptr && want != nullptr && have->itemID == want->itemID;
+}
+
+bool isPlainStack(const ItemStack *stack)
+{
+    return !stack->isItemEnchanted() && !stack->hasDisplayName();
 }
 }
 
@@ -174,18 +177,22 @@ void LegacyTradingScreen::removeResources(const ItemStack *want)
     if (want == nullptr || inventory == nullptr || inventory->mainInventory == nullptr)
         return;
     int_t toTake = want->stackSize;
-    for (int_t i = 0; i < 36 && toTake > 0; ++i)
+    // Plain stacks first, so an enchanted or renamed item is only paid when nothing else is left.
+    for (int pass = 0; pass < 2 && toTake > 0; ++pass)
     {
-        ItemStack *st = inventory->mainInventory[i];
-        if (st == nullptr || !st->isValid() || !sameTradeItem(st, want))
-            continue;
-        const int_t take = std::min(st->stackSize, toTake);
-        st->stackSize -= take;
-        toTake -= take;
-        if (st->stackSize <= 0)
+        for (int_t i = 0; i < 36 && toTake > 0; ++i)
         {
-            delete st;
-            inventory->mainInventory[i] = nullptr;
+            ItemStack *st = inventory->mainInventory[i];
+            if (st == nullptr || !st->isValid() || !sameTradeItem(st, want) || isPlainStack(st) != (pass == 0))
+                continue;
+            const int_t take = std::min(st->stackSize, toTake);
+            st->stackSize -= take;
+            toTake -= take;
+            if (st->stackSize <= 0)
+            {
+                delete st;
+                inventory->mainInventory[i] = nullptr;
+            }
         }
     }
     inventory->inventoryChanged = true;

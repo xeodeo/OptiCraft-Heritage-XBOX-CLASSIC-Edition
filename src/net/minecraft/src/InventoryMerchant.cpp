@@ -55,9 +55,25 @@ void InventoryMerchant::resetRecipeAndSlots()
 	if (first && theMerchant && thePlayer)
 	{
 		MerchantRecipeList *recipes = theMerchant->getRecipes(thePlayer);
-		MerchantRecipe *recipe = recipes ? recipes->canRecipeBeUsed(first, second, currentRecipeIndex) : nullptr;
-		if (!recipe && second) recipe = recipes->canRecipeBeUsed(second, first, currentRecipeIndex);
-		if (recipe && !recipe->isRecipeDisabled()) { currentRecipe = recipe; replacement = recipe->getItemToSell()->copy(); }
+		if (recipes != nullptr)
+		{
+			MerchantRecipe *recipe = recipes->canRecipeBeUsed(first, second, currentRecipeIndex);
+			if (recipe != nullptr && !recipe->isRecipeDisabled())
+			{
+				currentRecipe = recipe;
+				replacement = recipe->getItemToSell()->copy();
+			}
+			else if (second != nullptr)
+			{
+				// Java tries the swapped order when the first match is missing or used up.
+				recipe = recipes->canRecipeBeUsed(second, first, currentRecipeIndex);
+				if (recipe != nullptr && !recipe->isRecipeDisabled())
+				{
+					currentRecipe = recipe;
+					replacement = recipe->getItemToSell()->copy();
+				}
+			}
+		}
 	}
 	delete inventory[2]; inventory[2] = replacement;
 }

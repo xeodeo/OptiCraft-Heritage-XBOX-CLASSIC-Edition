@@ -88,13 +88,13 @@ void EntityAIVillagerMate::updateTask()
 	else if (matingTimeout == 0 && mate->getIsMatingFlag())
 		giveBirth(mate);
 	if (villagerObj->getRNG().nextInt(35) == 0)
-		spawnHeartParticles(villagerObj);
+		worldObj->setEntityState(villagerObj, static_cast<byte_t>(12));
 }
 
 bool EntityAIVillagerMate::checkSufficientDoorsPresentForNewVillager() const
 {
 	Village *village = resolveVillage();
-	if (village == nullptr)
+	if (village == nullptr || !village->isMatingSeason())
 		return false;
 	int_t capacity = JavaArithmetic::doubleToInt((double)(float)village->getNumVillageDoors() * 0.35);
 	return village->getNumVillagers() < capacity;
@@ -115,22 +115,5 @@ void EntityAIVillagerMate::giveBirth(EntityVillager *mate)
 		delete child;
 		return;
 	}
-	spawnHeartParticles(child);
-}
-
-void EntityAIVillagerMate::spawnHeartParticles(EntityLiving *entity)
-{
-	if (entity == nullptr || worldObj == nullptr)
-		return;
-	Random &random = entity->getRNG();
-	for (int_t i = 0; i < 5; ++i)
-	{
-		double motionX = random.nextGaussian() * 0.02;
-		double motionY = random.nextGaussian() * 0.02;
-		double motionZ = random.nextGaussian() * 0.02;
-		const double particleX = entity->posX + (double)(random.nextFloat() * entity->width * 2.0f) - (double)entity->width;
-		const double particleY = entity->posY + 1.0 + (double)(random.nextFloat() * entity->height);
-		const double particleZ = entity->posZ + (double)(random.nextFloat() * entity->width * 2.0f) - (double)entity->width;
-		worldObj->spawnParticle("heart", particleX, particleY, particleZ, motionX, motionY, motionZ);
-	}
+	worldObj->setEntityState(child, static_cast<byte_t>(12));
 }

@@ -16,6 +16,7 @@
 #include "MapDataBase.h"
 #include "MapStorage.h"
 #include "World.h"
+#include "WorldProvider.h"
 #include "java/Arithmetic.h"
 
 namespace
@@ -28,9 +29,15 @@ MapDataBase *createVillageData(const std::string &name)
 
 VillageCollection::VillageCollection(World *world) : MapDataBase("villages"), worldObj(world), tickCounter(0)
 {
+}
+
+void VillageCollection::loadSavedVillages()
+{
 	// Java registers the collection in MapStorage; here the World owns it (it deletes it and
-	// saves it), so only the villages.dat copy is read and then freed.
-	if (worldObj != nullptr && worldObj->getMapStorage() != nullptr)
+	// saves it), so only the villages.dat copy is read and then freed. villages.dat belongs to
+	// the overworld: the Nether/End must not read or overwrite it.
+	if (worldObj != nullptr && worldObj->getMapStorage() != nullptr && worldObj->worldProvider != nullptr &&
+		worldObj->worldProvider->worldType == 0)
 	{
 		MapStorage *storage = worldObj->getMapStorage();
 		MapDataBase *saved = storage->loadData("villages", &createVillageData);
@@ -57,6 +64,12 @@ void VillageCollection::addVillagerPosition(int_t x, int_t y, int_t z)
 
 void VillageCollection::tick()
 {
+	// The provider's dimension is only known after World registers it, so load on the first tick.
+	if (!savedVillagesLoaded)
+	{
+		savedVillagesLoaded = true;
+		loadSavedVillages();
+	}
 	tickCounter = JavaArithmetic::intAdd(tickCounter, 1);
 	for (const auto &village : villageList)
 		village->tick(tickCounter);

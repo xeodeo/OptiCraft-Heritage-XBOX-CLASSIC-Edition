@@ -2,6 +2,7 @@
 
 #include "EntityIronGolem.h"
 #include "EntityLiving.h"
+#include "EntityPlayer.h"
 #include "Village.h"
 #include "World.h"
 
@@ -28,7 +29,14 @@ bool EntityAIDefendVillage::shouldExecute()
 		return false;
 	EntityLiving *target = village->findNearestVillageAggressor(ironGolem);
 	if (!isSuitableTarget(target, false))
-		return false;
+	{
+		// Java 1.5.2: now and then the golem also goes after a player the village dislikes.
+		if (ironGolem->getRNG().nextInt(20) != 0)
+			return false;
+		target = village->findNearestPlayerWithNegativeReputation(ironGolem);
+		if (!isSuitableTarget(target, false))
+			return false;
+	}
 	villageAggressorEntityId = target->entityId;
 	return true;
 }

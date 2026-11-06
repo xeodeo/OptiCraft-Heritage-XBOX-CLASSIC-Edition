@@ -3299,6 +3299,18 @@ EntityFX *RenderGlobal::spawnParticleEffect(const jstring &name, double x, doubl
 		effect = new EntityBreakingFX(worldObj, x, y, z, Item::slimeBall);
 	else if (name == "heart")
 		effect = new EntityHeartFX(worldObj, x, y, z, velocityX, velocityY, velocityZ);
+	else if (name == "angryVillager")
+	{
+		effect = new EntityHeartFX(worldObj, x, y + 0.5, z, velocityX, velocityY, velocityZ);
+		effect->setParticleTextureIndex(81);
+		effect->setParticleColor(1.0f, 1.0f, 1.0f);
+	}
+	else if (name == "happyVillager")
+	{
+		effect = new EntityAuraFX(worldObj, x, y, z, velocityX, velocityY, velocityZ);
+		effect->setParticleTextureIndex(82);
+		effect->setParticleColor(1.0f, 1.0f, 1.0f);
+	}
 	else if (name.rfind("iconcrack_", 0) == 0)
 	{
 		int_t itemId = -1;

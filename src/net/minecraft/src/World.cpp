@@ -876,7 +876,8 @@ void World::saveLevel()
 #endif
     mapStorage->saveAllData();
     // The World owns its VillageCollection, so MapStorage does not save it with the rest.
-    if (villageCollectionObj != nullptr && villageCollectionObj->isDirty())
+    if (villageCollectionObj != nullptr && villageCollectionObj->isDirty() &&
+        worldProvider != nullptr && worldProvider->worldType == 0)
     {
         mapStorage->saveOwnedData(villageCollectionObj);
         villageCollectionObj->setDirty(false);

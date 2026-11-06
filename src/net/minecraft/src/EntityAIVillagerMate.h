@@ -24,7 +24,6 @@ private:
 	Village *resolveVillage() const;
 	bool checkSufficientDoorsPresentForNewVillager() const;
 	void giveBirth(EntityVillager *mate);
-	void spawnHeartParticles(EntityLiving *entity);
 
 	EntityVillager *villagerObj;
 	World *worldObj;

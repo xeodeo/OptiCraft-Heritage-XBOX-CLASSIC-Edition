@@ -175,6 +175,7 @@ void EntityZombie::convertToVillager()
 	EntityVillager *villager = new EntityVillager(worldObj);
 	villager->setLocationAndAngles(posX, posY, posZ, rotationYaw, rotationPitch);
 	villager->initCreature();
+	villager->func_82187_q();
 	if (isChild())
 	{
 		villager->setGrowingAge(-24000);

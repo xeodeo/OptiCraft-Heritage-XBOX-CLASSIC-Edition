@@ -44,4 +44,6 @@ private:
 	std::vector<std::unique_ptr<VillageDoorInfo>> newDoors;
 	std::vector<std::unique_ptr<Village>> villageList;
 	int_t tickCounter;
+	bool savedVillagesLoaded = false;
+	void loadSavedVillages();
 };

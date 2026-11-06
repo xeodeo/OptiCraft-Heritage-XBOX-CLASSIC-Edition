@@ -239,6 +239,10 @@ void GuiMerchant::drawItemStackTooltip(ItemStack *stack, int_t mouseX, int_t mou
 	if (information.empty())
 		return;
 
+	// Drawn over the 3D item icons: without depth test, as LegacyTradingScreen does.
+	renderDisable(RenderCapability::DepthTest);
+	renderDisable(RenderCapability::Lighting);
+
 	int_t tooltipWidth = 0;
 	for (const std::string &line : information)
 		tooltipWidth = std::max(tooltipWidth, fontRenderer->getStringWidth(line));
@@ -289,6 +293,7 @@ void GuiMerchant::drawItemStackTooltip(ItemStack *stack, int_t mouseX, int_t mou
 			tooltipY += 2;
 		tooltipY += 10;
 	}
+	renderEnable(RenderCapability::DepthTest);
 }
 
 IMerchant *GuiMerchant::getIMerchant() const
