@@ -27,6 +27,13 @@ ContainerMerchant::~ContainerMerchant() { delete merchantInventory; }
 InventoryMerchant *ContainerMerchant::getMerchantInventory() const { return merchantInventory; }
 void ContainerMerchant::setCurrentRecipeIndex(int_t index) { merchantInventory->setCurrentRecipeIndex(index); }
 void ContainerMerchant::onCraftMatrixChanged(IInventory *inventory) { (void)inventory; merchantInventory->resetRecipeAndSlots(); Container::onCraftMatrixChanged(merchantInventory); }
+void ContainerMerchant::detachMerchant()
+{
+	theMerchant = nullptr;
+	merchantInventory->detachMerchant();
+	if (slots.size() > 2)
+		if (auto *result = dynamic_cast<SlotMerchantResult *>(slots[2])) result->detachMerchant();
+}
 bool ContainerMerchant::isUsableByPlayer(EntityPlayer *player) { return theMerchant && theMerchant->getCustomer() == player; }
 
 ItemStack *ContainerMerchant::getStackInSlot(int_t slotIndex)

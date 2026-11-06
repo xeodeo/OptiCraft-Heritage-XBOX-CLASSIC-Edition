@@ -127,6 +127,7 @@ ComponentVillage *StructureVillagePieces::getNextVillageComponent(
 				weight, components, random, x, y, z, direction, depth);
 			if (component != nullptr)
 			{
+				component->startPiece = start;
 				++weight->villagePiecesSpawned;
 				start->structVillagePieceWeight = weight;
 				if (!weight->canSpawnMoreVillagePieces())
@@ -143,7 +144,9 @@ ComponentVillage *StructureVillagePieces::getNextVillageComponent(
 		components, random, x, y, z, direction);
 	if (!bounds)
 		return nullptr;
-	return new ComponentVillageTorch(depth, random, std::move(bounds), direction);
+	auto *torch = new ComponentVillageTorch(depth, random, std::move(bounds), direction);
+	torch->startPiece = start;
+	return torch;
 }
 
 StructureComponent *StructureVillagePieces::getNextVillageStructureComponent(
@@ -189,6 +192,7 @@ StructureComponent *StructureVillagePieces::getNextComponentVillagePath(
 		return nullptr;
 
 	auto *path = new ComponentVillagePathGen(depth, random, std::move(bounds), direction);
+	path->startPiece = start;
 	StructureBoundingBox *pathBounds = path->getBoundingBox();
 	const int_t centerX = (pathBounds->minX + pathBounds->maxX) / 2;
 	const int_t centerZ = (pathBounds->minZ + pathBounds->maxZ) / 2;

@@ -121,7 +121,7 @@ bool ComponentVillagePathGen::addComponentParts(
 			if (chunkBounds.isVecInside(x, 64, z))
 			{
 				const int_t y = world->getTopSolidOrLiquidBlock(x, z) - 1;
-				world->setBlock(x, y, z, Block::gravel->blockID);
+				world->setBlock(x, y, z, getBiomeSpecificBlock(Block::gravel->blockID, 0));
 			}
 		}
 	}

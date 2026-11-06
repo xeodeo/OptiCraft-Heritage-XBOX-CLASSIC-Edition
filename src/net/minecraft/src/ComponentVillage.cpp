@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "Block.h"
 #include "ComponentVillageStartPiece.h"
 #include "EntityVillager.h"
 #include "StructureBoundingBox.h"
@@ -123,4 +124,56 @@ void ComponentVillage::spawnVillagers(
 int_t ComponentVillage::getVillagerType(int_t) const
 {
     return 0;
+}
+
+int_t ComponentVillage::getBiomeSpecificBlock(int_t blockId, int_t) const
+{
+    if (startPiece != nullptr && startPiece->inDesert)
+    {
+        if (blockId == Block::wood->blockID) return Block::sandStone->blockID;
+        if (blockId == Block::cobblestone->blockID) return Block::sandStone->blockID;
+        if (blockId == Block::planks->blockID) return Block::sandStone->blockID;
+        if (blockId == Block::stairsWoodOak->blockID) return Block::stairsSandStone->blockID;
+        if (blockId == Block::stairsCobblestone->blockID) return Block::stairsSandStone->blockID;
+        if (blockId == Block::gravel->blockID) return Block::sandStone->blockID;
+    }
+    return blockId;
+}
+
+int_t ComponentVillage::getBiomeSpecificBlockMetadata(int_t blockId, int_t metadata) const
+{
+    if (startPiece != nullptr && startPiece->inDesert)
+    {
+        if (blockId == Block::wood->blockID) return 0;
+        if (blockId == Block::cobblestone->blockID) return 0;
+        if (blockId == Block::planks->blockID) return 2;
+    }
+    return metadata;
+}
+
+void ComponentVillage::placeBlockAtCurrentPosition(World *world, int_t blockId, int_t metadata,
+                                                   int_t x, int_t y, int_t z,
+                                                   const StructureBoundingBox &chunkBounds) const
+{
+    StructureComponent::placeBlockAtCurrentPosition(world, getBiomeSpecificBlock(blockId, metadata),
+        getBiomeSpecificBlockMetadata(blockId, metadata), x, y, z, chunkBounds);
+}
+
+void ComponentVillage::fillWithBlocks(World *world, const StructureBoundingBox &chunkBounds,
+                                      int_t minX, int_t minY, int_t minZ,
+                                      int_t maxX, int_t maxY, int_t maxZ,
+                                      int_t boundaryBlockId, int_t insideBlockId, bool onlyReplaceNonAir) const
+{
+    fillWithMetadataBlocks(world, chunkBounds, minX, minY, minZ, maxX, maxY, maxZ,
+        getBiomeSpecificBlock(boundaryBlockId, 0), getBiomeSpecificBlockMetadata(boundaryBlockId, 0),
+        getBiomeSpecificBlock(insideBlockId, 0), getBiomeSpecificBlockMetadata(insideBlockId, 0),
+        onlyReplaceNonAir);
+}
+
+void ComponentVillage::fillCurrentPositionBlocksDownwards(World *world, int_t blockId, int_t metadata,
+                                                          int_t x, int_t y, int_t z,
+                                                          const StructureBoundingBox &chunkBounds) const
+{
+    StructureComponent::fillCurrentPositionBlocksDownwards(world, getBiomeSpecificBlock(blockId, metadata),
+        getBiomeSpecificBlockMetadata(blockId, metadata), x, y, z, chunkBounds);
 }

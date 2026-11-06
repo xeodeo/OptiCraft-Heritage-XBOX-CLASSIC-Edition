@@ -11,6 +11,9 @@ class InventoryPlayer;
 class ItemStack;
 class World;
 
+// Called by a villager that is deleted while a trade screen still points at it.
+void merchantScreensForget(IMerchant *merchant);
+
 // net.minecraft.src.GuiMerchant
 class GuiMerchant : public GuiContainer
 {
@@ -22,6 +25,7 @@ public:
 	void updateScreen() override;
 	void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
 	IMerchant *getIMerchant() const;
+	void detachMerchant();
 
 protected:
 	void drawGuiContainerForegroundLayer() override;

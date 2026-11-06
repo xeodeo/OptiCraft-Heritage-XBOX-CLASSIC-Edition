@@ -13,6 +13,7 @@ public:
 	bool isItemValid(ItemStack *stack) override;
 	ItemStack *decrStackSize(int_t amount) override;
 	void onPickupFromSlot(ItemStack *stack) override;
+	void detachMerchant() { theMerchant = nullptr; }
 
 private:
 	EntityPlayer *thePlayer;

@@ -19,6 +19,8 @@ public:
 	void onCraftGuiClosed(EntityPlayer *player) override;
 	bool isUsableByPlayer(EntityPlayer *player) override;
 	ItemStack *getStackInSlot(int_t slotIndex) override;
+	// The villager is being deleted while this container is open.
+	void detachMerchant();
 
 private:
 	IMerchant *theMerchant;

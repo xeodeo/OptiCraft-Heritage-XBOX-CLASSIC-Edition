@@ -21,6 +21,7 @@ public:
 	WorldChunkManager *getWorldChunkManager() const;
 
 	WorldChunkManager *worldChunkMngr;
+	bool inDesert;
 	int_t terrainType;
 	StructureVillagePieceWeight *structVillagePieceWeight;
 	std::vector<StructureVillagePieceWeight *> structureVillageWeightedPieceList;

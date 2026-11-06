@@ -25,6 +25,7 @@ public:
 	void resetRecipeAndSlots();
 	MerchantRecipe *getCurrentRecipe() const;
 	void setCurrentRecipeIndex(int_t index);
+	void detachMerchant() { theMerchant = nullptr; currentRecipe = nullptr; }
 
 private:
 	EntityPlayer *thePlayer;

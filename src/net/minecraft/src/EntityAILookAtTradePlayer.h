@@ -1,13 +1,12 @@
 #pragma once
-#include "EntityAIBase.h"
+#include "EntityAIWatchClosest.h"
 class EntityVillager;
-class EntityAILookAtTradePlayer : public EntityAIBase
+// net.minecraft.src.EntityAILookAtTradePlayer
+class EntityAILookAtTradePlayer : public EntityAIWatchClosest
 {
 public:
 	explicit EntityAILookAtTradePlayer(EntityVillager *villager);
 	bool shouldExecute() override;
-	bool continueExecuting() override;
-	void updateTask() override;
 private:
-	EntityVillager *villager;
+	EntityVillager *theMerchant;
 };

@@ -39,12 +39,12 @@ protected:
 	int_t getZWithOffset(int_t x, int_t z) const;
 	int_t getMetadataWithOffset(int_t blockId, int_t metadata) const;
 
-	void placeBlockAtCurrentPosition(World *world, int_t blockId, int_t metadata,
+	virtual void placeBlockAtCurrentPosition(World *world, int_t blockId, int_t metadata,
 	                                 int_t x, int_t y, int_t z,
 	                                 const StructureBoundingBox &chunkBounds) const;
 	int_t getBlockIdAtCurrentPosition(World *world, int_t x, int_t y, int_t z,
 	                                  const StructureBoundingBox &chunkBounds) const;
-	void fillWithBlocks(World *world, const StructureBoundingBox &chunkBounds,
+	virtual void fillWithBlocks(World *world, const StructureBoundingBox &chunkBounds,
 	                    int_t minX, int_t minY, int_t minZ,
 	                    int_t maxX, int_t maxY, int_t maxZ,
 	                    int_t boundaryBlockId, int_t insideBlockId, bool onlyReplaceNonAir) const;
@@ -73,7 +73,7 @@ protected:
 	                                int_t blockId, bool onlyReplaceNonAir) const;
 	void clearCurrentPositionBlocksUpwards(World *world, int_t x, int_t y, int_t z,
 	                                       const StructureBoundingBox &chunkBounds) const;
-	void fillCurrentPositionBlocksDownwards(World *world, int_t blockId, int_t metadata,
+	virtual void fillCurrentPositionBlocksDownwards(World *world, int_t blockId, int_t metadata,
 	                                        int_t x, int_t y, int_t z,
 	                                        const StructureBoundingBox &chunkBounds) const;
 	void createTreasureChestAtCurrentPosition(World *world, const StructureBoundingBox &chunkBounds,

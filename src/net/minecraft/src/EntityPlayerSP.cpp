@@ -23,6 +23,7 @@
 #include "TileEntityHopper.h"
 #include "EntityMinecartHopper.h"
 #include "legacy/LegacyCraftingScreen.h"
+#include "legacy/LegacyTradingScreen.h"
 #include "platform/PlatformConfig.h"
 #include "GuiCrafting.h"
 #include "net/minecraft/src/legacy/LegacyCraftingScreen.h"
@@ -407,14 +408,19 @@ void EntityPlayerSP::displayGUIChest(IInventory *iinventory)
 void EntityPlayerSP::displayGUIMerchant(IMerchant *merchant, const std::string &title)
 {
 	if (!mc) return;
+	GuiScreen *screen = nullptr;
+	if (mc->gameSettings != nullptr && mc->gameSettings->legacyUI)
+		screen = new LegacyTradingScreen(inventory, merchant, worldObj, title, this);
+	else
+		screen = new GuiMerchant(inventory, merchant, worldObj, title, this);
 	if (mc->isSplitScreenActive())
 	{
 		const int pIdx = (this == mc->thePlayer2) ? 1 : 0;
-		mc->displayPlayerScreen(pIdx, new GuiMerchant(inventory, merchant, worldObj, title, this));
+		mc->displayPlayerScreen(pIdx, screen);
 	}
 	else
 	{
-		mc->displayGuiScreen(new GuiMerchant(inventory, merchant, worldObj, title, this));
+		mc->displayGuiScreen(screen);
 	}
 }
 

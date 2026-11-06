@@ -22,6 +22,7 @@
 #include "StatCollector.h"
 #include "platform/Input.h"
 #include "platform/RenderAPI.h"
+#include "legacy/LegacyTradingScreen.h"
 
 GuiMerchant::GuiMerchant(InventoryPlayer *inventory, IMerchant *merchant, World *world, const std::string &title, EntityPlayer *player)
 	: GuiContainer(new ContainerMerchant(inventory, merchant, world), true, player ? player : (inventory ? inventory->player : nullptr)),
@@ -61,6 +62,16 @@ void GuiMerchant::updateScreen()
 	EntityPlayer *player = getContainerPlayer();
 	if (player == nullptr)
 		player = mc ? mc->thePlayer : nullptr;
+	// Java's server closes the container once InventoryMerchant.isUseableByPlayer fails
+	// (EntityAITradePlayer clears the customer when the player walks away or the villager is hit).
+	if (mc != nullptr && (theIMerchant == nullptr || theIMerchant->getCustomer() != player))
+	{
+		if (mc->isSplitScreenActive())
+			mc->closePlayerScreen(getOwnerPlayerIndex());
+		else
+			mc->displayGuiScreen(nullptr);
+		return;
+	}
 	MerchantRecipeList *recipeList = theIMerchant ? theIMerchant->getRecipes(player) : nullptr;
 	if (recipeList != nullptr)
 	{
@@ -283,4 +294,34 @@ void GuiMerchant::drawItemStackTooltip(ItemStack *stack, int_t mouseX, int_t mou
 IMerchant *GuiMerchant::getIMerchant() const
 {
 	return theIMerchant;
+}
+
+void GuiMerchant::detachMerchant()
+{
+	theIMerchant = nullptr;
+	if (auto *container = dynamic_cast<ContainerMerchant *>(inventorySlots))
+		container->detachMerchant();
+}
+
+void merchantScreensForget(IMerchant *merchant)
+{
+	Minecraft *mc = Minecraft::getMinecraft();
+	if (mc == nullptr || merchant == nullptr)
+		return;
+	for (int idx = 0; idx < 2; ++idx)
+	{
+		GuiScreen *screen = mc->getPlayerScreen(idx);
+		if (screen == nullptr && idx == 0)
+			screen = mc->currentScreen;
+		if (auto *gui = dynamic_cast<GuiMerchant *>(screen))
+		{
+			if (gui->getIMerchant() == merchant)
+				gui->detachMerchant();
+		}
+		else if (auto *legacy = dynamic_cast<LegacyTradingScreen *>(screen))
+		{
+			if (legacy->getMerchant() == merchant)
+				legacy->detachMerchant();
+		}
+	}
 }

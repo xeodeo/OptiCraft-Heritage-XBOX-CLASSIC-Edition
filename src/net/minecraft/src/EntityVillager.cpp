@@ -39,6 +39,7 @@
 #include "PathNavigate.h"
 #include "Potion.h"
 #include "PotionEffect.h"
+#include "GuiMerchant.h"
 #include "Village.h"
 #include "VillageCollection.h"
 #include "World.h"
@@ -217,7 +218,11 @@ EntityVillager::EntityVillager(World *world, int_t profession)
 	tasks.addTask(10, new EntityAIWatchClosest(this, typeid(EntityLiving), 8.0f));
 }
 
-EntityVillager::~EntityVillager() = default;
+EntityVillager::~EntityVillager()
+{
+	if (buyingPlayer != nullptr)
+		merchantScreensForget(this);
+}
 
 void EntityVillager::entityInit()
 {
