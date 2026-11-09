@@ -248,7 +248,8 @@ void Explosion::doExplosionB(bool flag)
 
         if (i1 > 0)
         {
-            Block::blocksList[i1]->dropBlockAsItemWithChance(worldObj, j, k, l, worldObj->getBlockMetadata(j, k, l), 0.3f);
+            if (Block::blocksList[i1]->canDropFromExplosion(this))
+                Block::blocksList[i1]->dropBlockAsItemWithChance(worldObj, j, k, l, worldObj->getBlockMetadata(j, k, l), 1.0f / explosionSize);   // 1.5.2: 1/size (1.2.5 used 0.3)
             worldObj->setBlockWithNotify(j, k, l, 0);
             Block::blocksList[i1]->onBlockDestroyedByExplosion(worldObj, j, k, l);
         }
