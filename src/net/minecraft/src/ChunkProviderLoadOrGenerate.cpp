@@ -417,7 +417,7 @@ void ChunkProviderLoadOrGenerate::unloadChunk(std::uint64_t key, Chunk *chunk)
 		saveExtraChunkData(chunk);
 	}
 #elif !PLATFORM_CONSOLE_LOW
-	if (!chunk->neverSave && (chunk->needsSaving(false) || (worldObj != nullptr && !worldObj->getPendingBlockUpdates(chunk, false).empty())))
+	if (!chunk->neverSave && chunk->needsSaving(false))
 	{
 #if defined(WII_PLATFORM) && MC_LOG_LEVEL >= 2
 		const long_t wiiUnloadSaveStartNs = System::nanoTime();

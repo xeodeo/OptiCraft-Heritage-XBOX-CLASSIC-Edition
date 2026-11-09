@@ -21,7 +21,6 @@
 #include "IChunkProvider.h"
 #include "Material.h"
 #include "MathHelper.h"
-#include "NextTickListEntry.h"
 #include "TileEntity.h"
 #include "World.h"
 #include "WorldProvider.h"
@@ -1350,10 +1349,6 @@ void Chunk::onChunkUnload()
 	{
 		for (int_t i = 0; i < SECTION_COUNT; ++i)
 			worldObj->unloadEntities(entities[i]);
-
-		std::vector<NextTickListEntry *> pendingTicks = worldObj->getPendingBlockUpdates(this, true);
-		for (NextTickListEntry *entry : pendingTicks)
-			delete entry;
 	}
 }
 
