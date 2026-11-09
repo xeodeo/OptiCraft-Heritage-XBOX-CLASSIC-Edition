@@ -327,7 +327,7 @@ public:
 	int_t findTopSolidBlock(int_t i, int_t j);
 	float getStarBrightness(float f);
 	virtual void scheduleBlockUpdate(int_t i, int_t j, int_t k, int_t l, int_t i1);
-	void scheduleBlockUpdateFromLoad(int_t x, int_t y, int_t z, int_t blockId, int_t delay);
+	void scheduleBlockUpdateFromLoad(int_t x, int_t y, int_t z, int_t blockId, int_t delay, int_t priority = 0);
 	bool isBlockTickScheduled(int_t x, int_t y, int_t z, int_t blockId);
 	void func_82740_a(int_t x, int_t y, int_t z, int_t blockId, int_t delay, int_t priority);
 	std::vector<NextTickListEntry *> getPendingBlockUpdates(Chunk *chunk, bool remove);

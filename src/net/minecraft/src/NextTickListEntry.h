@@ -26,6 +26,7 @@ public:
 	int_t blockID;
 	long_t scheduledTime = 0;
 	int_t priority = 0;
+	std::size_t chunkBucketIndex = static_cast<std::size_t>(-1);
 
 	void func_82753_a(int_t p) { priority = p; }
 
