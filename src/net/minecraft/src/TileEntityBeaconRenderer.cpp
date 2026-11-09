@@ -40,7 +40,7 @@ void TileEntityBeaconRenderer::renderTileEntityBeaconAt(TileEntityBeacon *beacon
 		float time = 0.0f;
 		if (beacon->worldObj != nullptr)
 		{
-			time = static_cast<float>(beacon->worldObj->getWorldTime()) + partialTick;
+			time = static_cast<float>(beacon->worldObj->getTotalWorldTime()) + partialTick;
 		}
 		float vOffset = -time * 0.2f - static_cast<float>(MathHelper::floor_float(-time * 0.1f));
 		char c = 1;

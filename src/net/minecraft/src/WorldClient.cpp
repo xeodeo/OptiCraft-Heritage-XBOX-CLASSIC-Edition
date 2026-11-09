@@ -125,6 +125,7 @@ WorldClient::~WorldClient()
 
 void WorldClient::tick()
 {
+	func_82738_a(JavaArithmetic::longAdd(getTotalWorldTime(), 1LL));
 	setWorldTime(JavaArithmetic::longAdd(getWorldTime(), 1LL));
 #if PLATFORM_PS2
 	// This override does not run World::tick(). Advance the client-only weather

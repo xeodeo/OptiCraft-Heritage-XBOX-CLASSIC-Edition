@@ -36,7 +36,7 @@ TileEntityBeacon::~TileEntityBeacon()
 void TileEntityBeacon::updateEntity()
 {
 	TileEntity::updateEntity();
-	if (worldObj != nullptr && worldObj->getWorldTime() % 80 == 0)
+	if (worldObj != nullptr && worldObj->getTotalWorldTime() % 80 == 0)
 	{
 		updateState();
 		addEffectsToPlayers();
@@ -172,8 +172,8 @@ float TileEntityBeacon::func_82125_v_()
 	}
 	if (worldObj != nullptr)
 	{
-		const int_t dt = static_cast<int_t>(worldObj->getWorldTime() - field_82137_b);
-		field_82137_b = worldObj->getWorldTime();
+		const int_t dt = static_cast<int_t>(worldObj->getTotalWorldTime() - field_82137_b);
+		field_82137_b = worldObj->getTotalWorldTime();
 		if (dt > 1)
 		{
 			field_82138_c -= static_cast<float>(dt) / 40.0f;

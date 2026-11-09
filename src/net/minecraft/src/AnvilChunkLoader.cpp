@@ -301,7 +301,7 @@ void AnvilChunkLoader::writeChunkToLevel(Chunk *chunk, World *world, NBTTagCompo
 {
     level->setInteger("xPos", chunk->xPosition);
     level->setInteger("zPos", chunk->zPosition);
-    level->setLong("LastUpdate", world->getWorldTime());
+    level->setLong("LastUpdate", world->getTotalWorldTime());
     level->setIntArray("HeightMap", std::vector<int_t>(chunk->heightMap, chunk->heightMap + 256));
     level->setBoolean("TerrainPopulated", chunk->isTerrainPopulated);
 
@@ -403,7 +403,7 @@ void AnvilChunkLoader::writeChunkToLevel(Chunk *chunk, World *world, NBTTagCompo
     std::vector<NextTickListEntry *> pending = world->getPendingBlockUpdates(chunk, false);
     if (!pending.empty())
     {
-        const long_t now = world->getWorldTime();
+        const long_t now = world->getTotalWorldTime();
         NBTTagList *ticks = new NBTTagList();
         for (NextTickListEntry *entry : pending)
         {

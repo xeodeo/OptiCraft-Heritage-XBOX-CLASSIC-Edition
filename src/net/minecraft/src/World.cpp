@@ -3320,7 +3320,7 @@ void World::scheduleBlockUpdate(int x, int y, int z, int blockId, int delay)
     }
 
     const long_t scheduledTime = blockId > 0
-        ? JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTime())
+        ? JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTotalTime())
         : 0;
 
 #if WORLD_CHUNK_TICK_SCHEDULER
@@ -3385,10 +3385,10 @@ void World::func_82740_a(int_t x, int_t y, int_t z, int_t blockId, int_t delay, 
 		if (pcLegacyTickScheduler == nullptr)
 			pcLegacyTickScheduler = new PcLegacyTickScheduler();
 		pcLegacyTickScheduler->schedule(x, y, z, blockId,
-			JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTime()), priority);
+			JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTotalTime()), priority);
 #else
 		NextTickListEntry *entry = new NextTickListEntry(x, y, z, blockId);
-		entry->setScheduledTime(JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTime()));
+		entry->setScheduledTime(JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTotalTime()));
 		entry->func_82753_a(priority);
 
 		auto inserted = scheduledTickSet.insert(entry);
@@ -3408,7 +3408,7 @@ void World::func_82740_a(int_t x, int_t y, int_t z, int_t blockId, int_t delay, 
 void World::scheduleBlockUpdateFromLoad(int_t x, int_t y, int_t z, int_t blockId, int_t delay)
 {
     const long_t scheduledTime = blockId > 0
-        ? JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTime())
+        ? JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTotalTime())
         : 0;
 
 #if WORLD_CHUNK_TICK_SCHEDULER
@@ -5110,7 +5110,7 @@ void World::tick()
 #endif
         // 1.2.5 attempts hostile spawns every tick but passive/animal spawning only
         // every 400 world ticks. The Beta path called peaceful spawning every tick.
-        const bool spawnPeacefulThisTick = spawnPeacefulMobs && (worldInfo->getWorldTime() % 400LL == 0LL);
+        const bool spawnPeacefulThisTick = spawnPeacefulMobs && (worldInfo->getWorldTotalTime() % 400LL == 0LL);
         SpawnerAnimals::performSpawning(this, spawnHostileMobs, spawnPeacefulThisTick);
 #if PLATFORM_PROFILE_STREAMING && MC_LOG_LEVEL >= 2
         platformProfileMobSpawn(System::nanoTime() - mobSpawnStartNs);
@@ -5150,11 +5150,12 @@ void World::tick()
     platformPhaseStartNs = System::nanoTime();
 #endif
 
+    const long_t totalTime = JavaArithmetic::longAdd(worldInfo->getWorldTotalTime(), 1LL);
     const long_t time = JavaArithmetic::longAdd(worldInfo->getWorldTime(), 1LL);
 #if !PLATFORM_DISABLE_RUNTIME_AUTOSAVE
     // autosavePeriod is PLATFORM_AUTOSAVE_PERIOD_TICKS. Keep the platform I/O
     // policy while preserving the vanilla point in the world-tick sequence.
-    if (time % (long)autosavePeriod == 0LL)
+    if (totalTime % (long)autosavePeriod == 0LL)
     {
 #if PLATFORM_RUNTIME_AUTOSAVE_LEVEL_DATA
         saveWorld(false, nullptr);
@@ -5169,6 +5170,7 @@ void World::tick()
     platformProfileTickPhase("autosave", System::nanoTime() - platformPhaseStartNs);
 #endif
 
+    worldInfo->incrementTotalWorldTime(totalTime);
     worldInfo->setWorldTime(time);
 #if PLATFORM_PROFILE_RENDER_PHASES
     platformPhaseStartNs = System::nanoTime();
@@ -5697,14 +5699,14 @@ bool World::TickUpdates(bool flag)
     for (int j = 0; j < size; j++)
     {
 #if WORLD_CHUNK_TICK_SCHEDULER
-        NextTickListEntry *entry = pcLegacyTickScheduler->popNext(worldInfo->getWorldTime(), flag);
+        NextTickListEntry *entry = pcLegacyTickScheduler->popNext(worldInfo->getWorldTotalTime(), flag);
         if (entry == nullptr)
             break;
 #else
         auto it = scheduledTickTreeSet.begin();
         NextTickListEntry* entry = *it;
 
-        if (!flag && entry->scheduledTime > worldInfo->getWorldTime())
+        if (!flag && entry->scheduledTime > worldInfo->getWorldTotalTime())
         {
             break;
         }
@@ -6429,6 +6431,21 @@ void World::sendQuittingDisconnectingPacket()
 void World::checkSessionLock()
 {
     saveHandler->checkSessionLock();
+}
+
+void World::func_82738_a(long_t time)
+{
+    worldInfo->incrementTotalWorldTime(time);
+}
+
+long_t World::getTotalWorldTime()
+{
+    return worldInfo->getWorldTotalTime();
+}
+
+long_t World::getWorldTotalTime()
+{
+    return worldInfo->getWorldTotalTime();
 }
 
 void World::setWorldTime(long_t time)

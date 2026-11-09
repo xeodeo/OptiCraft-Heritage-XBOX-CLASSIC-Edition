@@ -400,7 +400,7 @@ void ChunkLoader::storeChunkInCompound(Chunk *chunk, World *world, NBTTagCompoun
 	world->checkSessionLock();
 	nbttagcompound->setInteger("xPos", chunk->xPosition);
 	nbttagcompound->setInteger("zPos", chunk->zPosition);
-	nbttagcompound->setLong("LastUpdate", world->getWorldTime());
+	nbttagcompound->setLong("LastUpdate", world->getTotalWorldTime());
 	nbttagcompound->setByteArray("Blocks", flattenLegacyBlocks(chunk));
 	nbttagcompound->setByteArray("Data", flattenLegacyNibble(chunk, LegacyMetadata));
 	nbttagcompound->setByteArray("SkyLight", flattenLegacyNibble(chunk, LegacySkyLight));

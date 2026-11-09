@@ -33,6 +33,7 @@ public:
 	int_t getSpawnX();
 	int_t getSpawnY();
 	int_t getSpawnZ();
+	long_t getWorldTotalTime();
 	long_t getWorldTime();
 	long_t getSizeOnDisk();
 	NBTTagCompound *getPlayerNBTTagCompound();
@@ -41,6 +42,7 @@ public:
 	void setSpawnX(int_t i);
 	void setSpawnY(int_t i);
 	void setSpawnZ(int_t i);
+	void incrementTotalWorldTime(long_t l);
 	void setWorldTime(long_t l);
 	void setSizeOnDisk(long_t l);
 	void setPlayerNBTTagCompound(NBTTagCompound *nbttagcompound);
@@ -84,6 +86,7 @@ private:
 	int_t spawnX;
 	int_t spawnY;
 	int_t spawnZ;
+	long_t totalTime;
 	long_t worldTime;
 	long_t lastTimePlayed;
 	long_t sizeOnDisk;

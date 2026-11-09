@@ -31,7 +31,11 @@ WorldInfo::WorldInfo(NBTTagCompound *nbttagcompound)
 	spawnX = nbttagcompound->getInteger("SpawnX");
 	spawnY = nbttagcompound->getInteger("SpawnY");
 	spawnZ = nbttagcompound->getInteger("SpawnZ");
-	worldTime = nbttagcompound->getLong("Time");
+	totalTime = nbttagcompound->getLong("Time");
+	if (nbttagcompound->hasKey("DayTime"))
+		worldTime = nbttagcompound->getLong("DayTime");
+	else
+		worldTime = totalTime;
 	lastTimePlayed = nbttagcompound->getLong("LastPlayed");
 	sizeOnDisk = nbttagcompound->getLong("SizeOnDisk");
 	levelName = nbttagcompound->getString("LevelName");
@@ -75,6 +79,7 @@ WorldInfo::WorldInfo(long_t l, const jstring &s)
 	spawnX = 0;
 	spawnY = 0;
 	spawnZ = 0;
+	totalTime = 0;
 	worldTime = 0;
 	lastTimePlayed = 0;
 	sizeOnDisk = 0;
@@ -109,6 +114,7 @@ WorldInfo::WorldInfo(WorldSettings *settings, const jstring &s)
 	spawnX = 0;
 	spawnY = 0;
 	spawnZ = 0;
+	totalTime = 0;
 	worldTime = 0;
 	lastTimePlayed = 0;
 	sizeOnDisk = 0;
@@ -135,6 +141,7 @@ WorldInfo::WorldInfo(WorldInfo *worldinfo)
 	spawnX = worldinfo->spawnX;
 	spawnY = worldinfo->spawnY;
 	spawnZ = worldinfo->spawnZ;
+	totalTime = worldinfo->totalTime;
 	worldTime = worldinfo->worldTime;
 	lastTimePlayed = worldinfo->lastTimePlayed;
 	sizeOnDisk = worldinfo->sizeOnDisk;
@@ -218,7 +225,8 @@ void WorldInfo::updateTagCompound(NBTTagCompound *nbttagcompound, NBTTagCompound
 	nbttagcompound->setInteger("SpawnX", spawnX);
 	nbttagcompound->setInteger("SpawnY", spawnY);
 	nbttagcompound->setInteger("SpawnZ", spawnZ);
-	nbttagcompound->setLong("Time", worldTime);
+	nbttagcompound->setLong("Time", totalTime);
+	nbttagcompound->setLong("DayTime", worldTime);
 	nbttagcompound->setLong("SizeOnDisk", sizeOnDisk);
 	nbttagcompound->setLong("LastPlayed", System::currentTimeMillis());
 	nbttagcompound->setString("LevelName", levelName);
@@ -263,6 +271,7 @@ long_t WorldInfo::getSeed() { return randomSeed; }
 int_t WorldInfo::getSpawnX() { return spawnX; }
 int_t WorldInfo::getSpawnY() { return spawnY; }
 int_t WorldInfo::getSpawnZ() { return spawnZ; }
+long_t WorldInfo::getWorldTotalTime() { return totalTime; }
 long_t WorldInfo::getWorldTime() { return worldTime; }
 long_t WorldInfo::getSizeOnDisk() { return sizeOnDisk; }
 NBTTagCompound *WorldInfo::getPlayerNBTTagCompound() { return playerTag; }
@@ -271,6 +280,7 @@ int_t WorldInfo::getDimension() { return dimension; }
 void WorldInfo::setSpawnX(int_t i) { spawnX = i; }
 void WorldInfo::setSpawnY(int_t i) { spawnY = i; }
 void WorldInfo::setSpawnZ(int_t i) { spawnZ = i; }
+void WorldInfo::incrementTotalWorldTime(long_t l) { totalTime = l; }
 void WorldInfo::setWorldTime(long_t l) { worldTime = l; }
 void WorldInfo::setSizeOnDisk(long_t l) { sizeOnDisk = l; }
 void WorldInfo::setPlayerNBTTagCompound(NBTTagCompound *nbttagcompound)
