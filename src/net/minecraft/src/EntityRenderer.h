@@ -51,6 +51,7 @@ class PcLegacyLightmapCache;
 class EntityRenderer
 {
 public:
+    void resetBossColorModifier() { bossColorModifier = 0.0f; }
     static bool anaglyphEnabled;  // field_28135_a
     static int anaglyphField;
 

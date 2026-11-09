@@ -2661,7 +2661,7 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
     // The boss bar and the Wither's darkening must not carry over to the next world.
     BossStatus::statusBarLength = 0;
     if (entityRenderer != nullptr)
-        entityRenderer->bossColorModifier = 0.0f;
+        entityRenderer->resetBossColorModifier();
     if (oldWorld != world && portalTeleporter != nullptr &&
         (oldWorld == nullptr || world == nullptr || oldWorld->getSaveHandler() != world->getSaveHandler()))
         portalTeleporter->clearDestinationCoordinateCache();
