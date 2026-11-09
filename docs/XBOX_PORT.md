@@ -20,6 +20,7 @@ The short build recipe is also in the main [README](../README.md#original-xbox).
 - **OptiJuegos features** merged from upstream: bed respawn, creative inventory with tabs, world size Infinite / Limited / Island, Stronghold Locator and Rei Minimap waypoints (mods, switchable in the Mods menu).
 - **Multiplayer (experimental):** the Multiplayer screen joins Minecraft 1.2.5 servers (`online-mode=false`) over the console's network connection (XNet TCP, address from the dashboard's network settings).
 - **Saves** go to the title drive `T:`, which is `E:\TDATA\FFFF4F43` on the console.
+- **Two game versions:** the original Java 1.2.5 logic and a port to Java 1.5.2 (redstone, hoppers, minecarts, temples, potions, beacons, anvils, villagers and trading, Wither skeletons, 12-tab creative menu...). See [Phase 12](#phase-12-minecraft-152-on-the-xbox-and-fixes-that-only-showed-up-there-october-november).
 
 Known limits are listed in [section 9](#9-known-issues-and-next-steps).
 
@@ -468,7 +469,7 @@ About 95 shared files were touched. Most changes add `PLATFORM_XBOX` to existing
   1. Split the atomic base-terrain step of chunk generation into sub-steps that finish within a few consecutive frames.
   2. Fast lighting chunk access (`PLATFORM_FAST_LIGHTING_CHUNK_ACCESS`, as on Wii).
   3. Hardware `sqrt` and a magic-number `floor_double` (x87 `__ftol2` changes the rounding mode twice per call).
-  4. Chunk lookups through the last-used chunk; chunk saves without copying every pending tick.
+  4. Chunk lookups through the last-used chunk (chunk saves no longer scan every pending tick: done in Phase 12).
   5. SFX cache large enough for the overworld sounds (decoding happens on the main thread today).
 - **Rejected:** deferred/incremental population (`PLATFORM_DEFERRED_POPULATE`) and paced disk loads. On the console trees, passive mobs and snow appeared far too late; anything that postpones world content must be validated on hardware, not only in xemu.
 - **Mobs sinking into the ground at the edge of the loaded area:** a mob next to a column that is not loaded yet has no collision there (as in vanilla, missing chunks are air). The console keeps few columns resident, so it shows more than on PC. Fix planned: freeze mobs whose surroundings are not loaded and push them out of blocks when the column arrives.
@@ -664,6 +665,19 @@ Upstream merged five more pull requests (#52, #56, #57, #59, #60): their own con
 - **Controls screen.** Upstream's two-column layout with a controller illustration left PS2 without icons and with rebinding disabled (`#if !PLATFORM_PS2`). PS2 now uses the same single-column list with per-row button icons that this port wrote for the Xbox.
 
 **Building for PS2 on Windows** (useful because it catches mistakes the Xbox build never sees, such as missing platform guards): download `ps2dev-windows-latest.tar.gz` from the ps2dev releases, extract it into `psdevwindows/` at the repository root (the `ps2-release` preset points `PS2DEV`/`PS2SDK` there), and copy the 32-bit MinGW runtime DLLs it needs (`libiconv-2`, `libwinpthread-1`, `libstdc++-6`, `libgcc_s_dw2-1`, `libgmp-10`, `libmpfr-6`, `libmpc-3`, `libisl-23`, `libzstd`, `liblzma-5`, `libexpat-1`, `libtermcap-0`) next to every `.exe` of the toolchain, not just `ee/bin` — the assembler and `cc1plus` live in other folders and fail silently without them.
+
+### Phase 12: Minecraft 1.5.2 on the Xbox, and fixes that only showed up there (October-November)
+
+Since 21 October the game logic is being ported from Java 1.2.5 to Java 1.5.2, class by class, from MCP-named decompiled sources (`mcp-diff/src152`). Each version ships in its own launcher folder (`OptiCraft\1.2.5\`, `OptiCraft\1.5.2\`). Xbox-specific findings from that work:
+
+- **Fog never worked on the Xbox.** The XDK's Direct3D computes eye-distance (W) fog only with a "W-friendly" projection, whose (3,4) coefficient is +1; OpenGL's is -1, so the fog factor was taken from device Z and the linear fog range was never reached. `applyMatrices` (`RenderAPI_D3D8_XBOX.cpp`) now sends left-handed copies: the view with its Z row negated and the projection with its Z column negated. Clip space is identical; only the fog changes. Fixed on both versions.
+- **Sky, sun and clouds after the fog fix.** With fog really applied, two old shortcuts showed: the sky was drawn only at far/normal render distance (vanilla rule), and the clip plane (`farPlaneDistance * 2`) cut the sun and moon at 100 blocks. On the Xbox the sky now follows OptiFine: drawn when sky, sun/moon or stars are enabled, clip plane at least 128, and the clouds get a fog range from the render distance to the clip plane so they are not swallowed. PS2 and Wii keep the old rules.
+- **Entity events.** `World::setEntityState` was empty (Java's client half of the event never ran in this single-world port), so villager anger/happy particles, taming hearts and smoke, the sheep eating, the witch and the zombie cure were invisible. It now forwards the visual events; hurt (2), death (3), the golem swing (4) and the TNT cart fuse (10) are not replayed, because they already ran locally and would double or recurse.
+- **Spawn search.** Bounded consoles stopped the spawn walk after 8 probes, so seeds whose spawn biome search fails (seed `1621073931`) stayed in the ocean. The Xbox now does Java's 1000-step walk with the same random sequence, rejecting ocean probes from the biome map so only land probes generate a chunk (at most 32).
+- **Scheduled ticks per chunk** (`XBOX_CHUNK_TICK_SCHEDULER`, the PC-legacy `PcLegacyTickScheduler` taught 1.5.2 priorities): chunk saves and unloads no longer scan every pending tick. Order is unchanged (time, priority, id).
+- **Animated textures.** A texture effect does not upload a tile identical to the last one; the D3D path swizzles only the changed rectangle and locks with `D3DLOCK_NOOVERWRITE`. With animations switched off, fire and portal (and the compass and clock when unchanged) no longer upload every tick. `xbox.tex` in the network log reports uploads per second and lock vs swizzle time.
+- **Sounds Java 1.5.2 never shipped.** Villagers were silent until 1.6 and witches until 1.9; their files come from Mojang's later asset indexes, renamed to the 1.5.2 sound keys, in `scripts/port152/extra_sounds/`.
+- **Villager trading** has a Java screen (`GuiMerchant`) and a console screen copied from the Legacy Console Edition (`legacy/LegacyTradingScreen`), chosen by the Legacy UI option. With a controller there is no Shift+click; A trades from the inventory in the console screen.
 
 ## 11. Legal
 
