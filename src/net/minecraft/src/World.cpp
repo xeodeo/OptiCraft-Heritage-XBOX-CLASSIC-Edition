@@ -726,11 +726,53 @@ void World::generateSpawnPoint()
     }
 #elif PLATFORM_BOUNDED_WORLD
     WorldLoadTrace::step("canCoordinateBeSpawn");
-    for (int_t attempts = 0; attempts < 8 && !worldProvider->canCoordinateBeSpawn(spawnX, spawnZ); ++attempts)
+    if (isLimitedWorld())
     {
-		MC_LOG_DEBUG("world", "spawn probe %d at %d,%d\n", (int)attempts, (int)spawnX, (int)spawnZ);
-		spawnX = JavaArithmetic::intAdd(spawnX, spawnRandom.nextIntDifference(64));
-		spawnZ = JavaArithmetic::intAdd(spawnZ, spawnRandom.nextIntDifference(64));
+        for (int_t attempts = 0; attempts < 8 && !worldProvider->canCoordinateBeSpawn(spawnX, spawnZ); ++attempts)
+        {
+            MC_LOG_DEBUG("world", "spawn probe %d at %d,%d\n", (int)attempts, (int)spawnX, (int)spawnZ);
+            spawnX = JavaArithmetic::intAdd(spawnX, spawnRandom.nextIntDifference(64));
+            spawnZ = JavaArithmetic::intAdd(spawnZ, spawnRandom.nextIntDifference(64));
+        }
+    }
+    else
+    {
+        // Java's 1000-step walk, so a seed spawns where it does on Java (an ocean spawn biome
+        // walks to land). Ocean probes can never be grass and are rejected from the biome map;
+        // only land probes generate a chunk, and the provider is re-centred so it may exist.
+        const int_t kMaxChunkProbes = 32;
+        auto centreProvider = [this](int_t x, int_t z) {
+            const int_t cx = JavaArithmetic::intShr(x, 4);
+            const int_t cz = JavaArithmetic::intShr(z, 4);
+            if (ChunkProviderLoadOrGenerate *p = dynamic_cast<ChunkProviderLoadOrGenerate *>(chunkProvider))
+                p->setCurrentChunkOver(cx, cz);
+            else if (ChunkProvider *p2 = dynamic_cast<ChunkProvider *>(chunkProvider))
+                p2->setCurrentChunkOver(cx, cz);
+        };
+        const int_t startX = spawnX, startZ = spawnZ;
+        int_t firstLandX = 0, firstLandZ = 0;
+        bool haveLand = false, found = false;
+        int_t chunkProbes = 0;
+        for (int_t attempts = 0; attempts < 1000; ++attempts)
+        {
+            BiomeGenBase *biome = manager->getBiomeGenAt(spawnX, spawnZ);
+            if (biome != BiomeGenBase::ocean && biome != BiomeGenBase::frozenOcean)
+            {
+                if (!haveLand) { haveLand = true; firstLandX = spawnX; firstLandZ = spawnZ; }
+                centreProvider(spawnX, spawnZ);
+                if (worldProvider->canCoordinateBeSpawn(spawnX, spawnZ)) { found = true; break; }
+                if (++chunkProbes >= kMaxChunkProbes) break;
+            }
+            spawnX = JavaArithmetic::intAdd(spawnX, spawnRandom.nextIntDifference(64));
+            spawnZ = JavaArithmetic::intAdd(spawnZ, spawnRandom.nextIntDifference(64));
+        }
+        if (!found)
+        {
+            spawnX = haveLand ? firstLandX : startX;
+            spawnZ = haveLand ? firstLandZ : startZ;
+        }
+        MC_LOG_INFO("world", "spawn %d,%d found=%d chunkProbes=%d\n", (int)spawnX, (int)spawnZ, found ? 1 : 0, (int)chunkProbes);
+        centreProvider(spawnX, spawnZ);
     }
     WorldLoadTrace::step("findTopSpawnBlockY");
     spawnY = platformFindTopSpawnBlockY(this, spawnX, spawnZ);
