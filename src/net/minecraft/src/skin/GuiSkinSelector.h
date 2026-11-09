@@ -47,12 +47,18 @@ private:
                                float yawDeg, float pitchDeg, bool isCenterSlot,
                                float brightness, float partialTick);
 
+    void releaseUnusedPreviewTextures();
+    void recordPreviewTexture(const std::string &path);
+
     GuiScreen *parentScreen;
     bool isPlayer2Skin;
     bool initializedSelection;
     int currentPackIndex;
     int currentSkinIndex;
     float scrollOffset; // smooth transition offset: -1.0 (moving right) to +1.0 (moving left), dampens to 0.0
+
+    // Stored list of loaded preview textures for release on exit/pack switch
+    std::vector<std::string> loadedTextures;
 
     // 3D character preview state for LCE mode
     ModelBiped *previewModel32;
@@ -97,8 +103,7 @@ private:
     int_t legacyNameplateW;
 
     // Interactive GUI buttons
-    GuiButton *buttonTabDefault;
-    GuiButton *buttonTabCustom;
+    std::vector<GuiButton*> packButtons;
     GuiButton *buttonPlayer2Skin;
     GuiButton *buttonLoadSkins;
     GuiButton *buttonDeleteSkin;

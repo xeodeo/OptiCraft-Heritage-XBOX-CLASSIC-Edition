@@ -5,13 +5,20 @@
 
 struct SkinEntry
 {
-    std::string id;          // Internal ID, e.g. "LegacySteve", "custom_Goku"
-    std::string name;        // Display name, e.g. "Steve", "Goku"
+    std::string id;          // Internal ID, e.g. "LegacySteve", "pack:Halo:Master_Chief", "custom_Goku"
+    std::string name;        // Display name, e.g. "Steve", "Master Chief", "Goku"
     std::string skinPath;    // 64x64 or full skin path
     std::string modelPath;   // 64x32 model texture path
     std::string frontPath;   // 16x32 2D front preview path (or empty if custom)
     bool isCustom = false;
     std::string filePath;    // Source file path on disk
+};
+
+struct SkinPack
+{
+    std::string folder;      // e.g. "Halo", "MassEffect", "Skyrim"
+    std::string name;        // Display name, e.g. "Halo", "Mass Effect", "Skyrim"
+    std::vector<SkinEntry> skins;
 };
 
 class SkinManager

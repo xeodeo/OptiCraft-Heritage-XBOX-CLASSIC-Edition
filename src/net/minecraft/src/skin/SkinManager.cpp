@@ -28,12 +28,228 @@
 namespace
 {
 std::vector<SkinEntry> s_defaultSkins;
+std::vector<SkinPack> s_lcePacks;
 std::vector<SkinEntry> s_customSkins;
 std::string s_selectedId = "LegacySteve";
 std::string s_selectedIdP2 = "TennisSteve";
-int s_selectedPackIndex = 0; // 0 = Default, 1 = Custom
+int s_selectedPackIndex = 0; // 0 = Default, 1..N = LCE packs, Last = Custom
 int s_selectedIndex = 0;
 bool s_initialized = false;
+
+// Fallback built-in definitions for Halo, Mass Effect, and Skyrim
+static const char *s_haloDefs[] = {
+    "Master_Chief", "Master Chief",
+    "Cortana", "Cortana",
+    "Rampant_Cortana", "Rampant Cortana",
+    "Sergeant_Johnson", "Sergeant Johnson",
+    "Captain_Keyes", "Captain Keyes",
+    "Commander_Keyes", "Commander Keyes",
+    "Doctor_Halsey", "Doctor Halsey",
+    "Lord_Hood", "Lord Hood",
+    "Captain_Thomas_Lasky", "Captain Thomas Lasky",
+    "Corbulo_Cadet", "Corbulo Cadet",
+    "Arbiter", "Arbiter",
+    "Noble_Six", "Noble Six",
+    "Carter", "Carter",
+    "Kat", "Kat",
+    "Jorge", "Jorge",
+    "Emile", "Emile",
+    "Jun", "Jun",
+    "Rookie", "Rookie",
+    "Librarian", "Librarian",
+    "Roland", "Roland",
+    "UNSC_Marine", "UNSC Marine",
+    "Palmer", "Palmer",
+    "343_Guilty_Spark", "343 Guilty Spark",
+    "Grunt_Imperial", "Grunt Imperial",
+    "Jackal", "Jackal",
+    "Elite", "Elite",
+    "Drone", "Drone",
+    "Didact", "Didact",
+    "Brute_Captain", "Brute Captain",
+    "Brute_Chieftain", "Brute Chieftain",
+    "Brute_Honor_Guard", "Brute Honor Guard",
+    "Jul_Mdama", "Jul 'Mdama",
+    "Elite_Commander", "Elite Commander",
+    "Heretic_Elite", "Heretic Elite",
+    "Elite_Honor_Guard", "Elite Honor Guard",
+    "Hunter", "Hunter",
+    "Tartarus", "Tartarus",
+    "Gek_Lhar", "Gek 'Lhar",
+    "Shipmaster", "Shipmaster",
+    "Mister_Chief", "Mister Chief"
+};
+
+static const char *s_massEffectDefs[] = {
+    "Male_Shepard", "Male Shepard",
+    "Female_Shepard", "Female Shepard",
+    "Kaidan_Alenko", "Kaidan Alenko",
+    "TaliZorah_nar_Rayya", "Tali'Zorah nar Rayya",
+    "Liara_TSoni", "Liara T'Soni",
+    "Garrus_Vakarian", "Garrus Vakarian",
+    "James_Vega", "James Vega",
+    "Ashley_Williams", "Ashley Williams",
+    "Joker", "Joker",
+    "Jack", "Jack",
+    "Thane_Krios", "Thane Krios",
+    "Miranda_Lawson", "Miranda Lawson",
+    "Samara", "Samara",
+    "Legion", "Legion",
+    "Saren_Arterius", "Saren Arterius",
+    "Illusive_Man", "Illusive Man",
+    "Kai_Leng", "Kai Leng",
+    "Husk", "Husk",
+    "Geth_Trooper", "Geth Trooper",
+    "Geth_Prime", "Geth Prime",
+    "Cerberus_Assault_Trooper", "Cerberus Assault Trooper",
+    "Urdnot_Wrex", "Urdnot Wrex",
+    "Jacob_Taylor", "Jacob Taylor",
+    "Mordin_Solus", "Mordin Solus",
+    "Grunt", "Grunt",
+    "Zaeed_Massani", "Zaeed Massani",
+    "Kasumi_Goto", "Kasumi Goto",
+    "Javik", "Javik",
+    "Banshee", "Banshee",
+    "Morinth", "Morinth",
+    "Aria_TLoak", "Aria T'Loak",
+    "Dr_Karin_Chakwas", "Dr. Karin Chakwas",
+    "David_Anderson", "David Anderson",
+    "Donnel_Udina", "Donnel Udina",
+    "Collector", "Collector",
+    "EDI", "EDI"
+};
+
+static const char *s_skyrimDefs[] = {
+    "Dragonborn_Male", "Dragonborn Male",
+    "Dragonborn_Female", "Dragonborn Female",
+    "Ancano", "Ancano",
+    "Elenwen", "Elenwen",
+    "Argonian_Fighter", "Argonian Fighter",
+    "Argonian_Mage", "Argonian Mage",
+    "Wood_Elf_Archer", "Wood Elf Archer",
+    "Wood_Elf_Mage", "Wood Elf Mage",
+    "Breton_Mage", "Breton Mage",
+    "Forsworn_Shaman", "Forsworn Shaman",
+    "Dark_Elf_Mage", "Dark Elf Mage",
+    "Dark_Elf_Assassin", "Dark Elf Assassin",
+    "Imperial_Soldier", "Imperial Soldier",
+    "Vex", "Vex",
+    "Khajiit_Merchant", "Khajiit Merchant",
+    "Stormcloak_Soldier", "Stormcloak Soldier",
+    "Lydia", "Lydia",
+    "Orc_Blacksmith", "Orc Blacksmith",
+    "Orc_Warrior_Female", "Orc Warrior Female",
+    "Nazir", "Nazir",
+    "Saadia", "Saadia",
+    "Vampire_Lord", "Vampire Lord",
+    "Isran", "Isran",
+    "Astrid", "Astrid",
+    "Aela_the_Huntress", "Aela the Huntress",
+    "Maiq_the_Liar", "M'aiq the Liar",
+    "Greybeard", "Greybeard",
+    "Frost_Troll", "Frost Troll",
+    "Flame_Atronach", "Flame Atronach",
+    "Dragon_Priest", "Dragon Priest",
+    "Hagraven", "Hagraven",
+    "Draugr_Deathlord", "Draugr Deathlord",
+    "Sheogorath", "Sheogorath",
+    "Spriggan", "Spriggan",
+    "Dwarven_Centurion", "Dwarven Centurion",
+    "Wispmother", "Wispmother",
+    "Dremora_Lord", "Dremora Lord",
+    "Master_Necromancer", "Master Necromancer",
+    "Vilkas", "Vilkas",
+    "Orc_Warrior_Male", "Orc Warrior Male"
+};
+
+void loadLceSkinPacks()
+{
+    s_lcePacks.clear();
+
+    // 1. Dynamic load from packs manifest if available
+    auto manifestStream = GameResources::open("/skins/packs/packs.txt");
+    if (manifestStream != nullptr && manifestStream->good())
+    {
+        std::string line;
+        while (std::getline(*manifestStream, line))
+        {
+            while (!line.empty() && (line.back() == '\r' || line.back() == '\n' || line.back() == ' '))
+                line.pop_back();
+            if (line.empty() || line[0] == '#')
+                continue;
+
+            auto p1 = line.find('|');
+            if (p1 == std::string::npos)
+                continue;
+            std::string folder = line.substr(0, p1);
+            std::string rest = line.substr(p1 + 1);
+            auto p2 = rest.find('|');
+            std::string name = (p2 != std::string::npos) ? rest.substr(0, p2) : rest;
+
+            SkinPack pack;
+            pack.folder = folder;
+            pack.name = name;
+
+            auto packStream = GameResources::open("/skins/packs/" + folder + "/pack.txt");
+            if (packStream != nullptr && packStream->good())
+            {
+                std::string skinLine;
+                while (std::getline(*packStream, skinLine))
+                {
+                    while (!skinLine.empty() && (skinLine.back() == '\r' || skinLine.back() == '\n' || skinLine.back() == ' '))
+                        skinLine.pop_back();
+                    if (skinLine.empty() || skinLine[0] == '#')
+                        continue;
+
+                    auto sep = skinLine.find('|');
+                    std::string safeName = (sep != std::string::npos) ? skinLine.substr(0, sep) : skinLine;
+                    std::string dispName = (sep != std::string::npos) ? skinLine.substr(sep + 1) : safeName;
+
+                    SkinEntry entry;
+                    entry.id = "pack:" + folder + ":" + safeName;
+                    entry.name = dispName;
+                    entry.skinPath = "/skins/packs/" + folder + "/" + safeName + ".png";
+                    entry.modelPath = "/skins/packs/" + folder + "/" + safeName + "_32.png";
+                    entry.frontPath = "/skins/packs/" + folder + "/" + safeName + "_Front.png";
+                    entry.isCustom = false;
+                    entry.filePath = "";
+                    pack.skins.push_back(entry);
+                }
+            }
+            if (!pack.skins.empty())
+                s_lcePacks.push_back(pack);
+        }
+    }
+
+    // 2. Builtin fallback if manifest was missing or empty
+    if (s_lcePacks.empty())
+    {
+        auto addBuiltinPack = [](const std::string &folder, const std::string &name, const char **defs, size_t count) {
+            SkinPack pack;
+            pack.folder = folder;
+            pack.name = name;
+            for (size_t i = 0; i < count; i += 2)
+            {
+                std::string safeName = defs[i];
+                std::string dispName = defs[i + 1];
+                SkinEntry entry;
+                entry.id = "pack:" + folder + ":" + safeName;
+                entry.name = dispName;
+                entry.skinPath = "/skins/packs/" + folder + "/" + safeName + ".png";
+                entry.modelPath = "/skins/packs/" + folder + "/" + safeName + "_32.png";
+                entry.frontPath = "/skins/packs/" + folder + "/" + safeName + "_Front.png";
+                entry.isCustom = false;
+                entry.filePath = "";
+                pack.skins.push_back(entry);
+            }
+            s_lcePacks.push_back(pack);
+        };
+
+        addBuiltinPack("Halo", "Halo", s_haloDefs, sizeof(s_haloDefs) / sizeof(s_haloDefs[0]));
+        addBuiltinPack("MassEffect", "Mass Effect", s_massEffectDefs, sizeof(s_massEffectDefs) / sizeof(s_massEffectDefs[0]));
+        addBuiltinPack("Skyrim", "Skyrim", s_skyrimDefs, sizeof(s_skyrimDefs) / sizeof(s_skyrimDefs[0]));
+    }
+}
 
 // Helper to copy a rectangle of pixels with optional horizontal mirroring and alpha blending
 void copyPixelRect(const unsigned char *src, int srcW, int srcH,
@@ -228,6 +444,8 @@ void SkinManager::init()
     s_defaultSkins.push_back({"Crocodile", "Crocodile", "/skins/Crocodile.png", "/skins/Crocodile_32.png", "/skins/Crocodile_Front.png", false, ""});
     s_defaultSkins.push_back({"LegacySquid", "Legacy Squid", "/skins/LegacySquid.png", "/skins/LegacySquid_32.png", "/skins/LegacySquid_Front.png", false, ""});
 
+    loadLceSkinPacks();
+
     s_initialized = true;
 
     // Scan custom skins installed in storage
@@ -384,7 +602,8 @@ void SkinManager::scanCustomSkins()
     }
 
     // If active pack is Custom but custom list became empty, revert to Default pack
-    if (s_customSkins.empty() && s_selectedPackIndex == 1)
+    int customPackIdx = 1 + static_cast<int>(s_lcePacks.size());
+    if (s_customSkins.empty() && s_selectedPackIndex == customPackIdx)
     {
         s_selectedPackIndex = 0;
         s_selectedId = "LegacySteve";
@@ -395,12 +614,17 @@ void SkinManager::scanCustomSkins()
 int SkinManager::getPackCount()
 {
     init();
-    return s_customSkins.empty() ? 1 : 2;
+    return 1 + static_cast<int>(s_lcePacks.size()) + (s_customSkins.empty() ? 0 : 1);
 }
 
 std::string SkinManager::getPackName(int packIndex)
 {
-    if (packIndex == 1 && !s_customSkins.empty())
+    init();
+    if (packIndex == 0)
+        return "Default Skins";
+    if (packIndex >= 1 && packIndex <= static_cast<int>(s_lcePacks.size()))
+        return s_lcePacks[packIndex - 1].name;
+    if (!s_customSkins.empty() && packIndex == 1 + static_cast<int>(s_lcePacks.size()))
         return "Custom Skins";
     return "Default Skins";
 }
@@ -408,7 +632,11 @@ std::string SkinManager::getPackName(int packIndex)
 const std::vector<SkinEntry>& SkinManager::getSkinsForPack(int packIndex)
 {
     init();
-    if (packIndex == 1 && !s_customSkins.empty())
+    if (packIndex == 0)
+        return s_defaultSkins;
+    if (packIndex >= 1 && packIndex <= static_cast<int>(s_lcePacks.size()))
+        return s_lcePacks[packIndex - 1].skins;
+    if (!s_customSkins.empty() && packIndex == 1 + static_cast<int>(s_lcePacks.size()))
         return s_customSkins;
     return s_defaultSkins;
 }
@@ -435,8 +663,10 @@ int SkinManager::getSelectedPackIndex()
 
 void SkinManager::setSelectedPackIndex(int packIndex)
 {
-    if (packIndex == 1 && s_customSkins.empty())
-        packIndex = 0;
+    init();
+    int maxPack = getPackCount() - 1;
+    if (packIndex < 0) packIndex = 0;
+    if (packIndex > maxPack) packIndex = maxPack;
     s_selectedPackIndex = packIndex;
 }
 
@@ -524,7 +754,7 @@ bool SkinManager::installCustomSkin(const std::string &sourcePath, const std::st
 
     // Refresh custom skins and select the newly installed one
     scanCustomSkins();
-    s_selectedPackIndex = 1;
+    s_selectedPackIndex = 1 + static_cast<int>(s_lcePacks.size());
     std::string skinId = "custom_" + base;
     setSelectedSkinId(skinId);
 
@@ -603,12 +833,23 @@ const SkinEntry* SkinManager::getSkinById(const std::string& id)
     init();
     for (const auto& skin : s_defaultSkins)
     {
-        if (skin.id == id)
+        if (skin.id == id || skin.name == id)
             return &skin;
+    }
+    for (const auto& pack : s_lcePacks)
+    {
+        for (const auto& skin : pack.skins)
+        {
+            if (skin.id == id || skin.name == id)
+                return &skin;
+            std::string suffix = ":" + id;
+            if (skin.id.size() >= suffix.size() && skin.id.compare(skin.id.size() - suffix.size(), suffix.size(), suffix) == 0)
+                return &skin;
+        }
     }
     for (const auto& skin : s_customSkins)
     {
-        if (skin.id == id)
+        if (skin.id == id || skin.name == id)
             return &skin;
     }
     return nullptr;
@@ -634,22 +875,41 @@ std::string SkinManager::getSelectedSkinId()
 void SkinManager::setSelectedSkinId(const std::string& id)
 {
     init();
+    // 1. Check default skins
     for (std::size_t i = 0; i < s_defaultSkins.size(); ++i)
     {
-        if (s_defaultSkins[i].id == id)
+        if (s_defaultSkins[i].id == id || s_defaultSkins[i].name == id)
         {
             s_selectedPackIndex = 0;
-            s_selectedId = id;
+            s_selectedId = s_defaultSkins[i].id;
             s_selectedIndex = static_cast<int>(i);
             return;
         }
     }
+    // 2. Check LCE packs
+    for (std::size_t p = 0; p < s_lcePacks.size(); ++p)
+    {
+        for (std::size_t i = 0; i < s_lcePacks[p].skins.size(); ++i)
+        {
+            const auto &skin = s_lcePacks[p].skins[i];
+            std::string suffix = ":" + id;
+            if (skin.id == id || skin.name == id ||
+                (skin.id.size() >= suffix.size() && skin.id.compare(skin.id.size() - suffix.size(), suffix.size(), suffix) == 0))
+            {
+                s_selectedPackIndex = 1 + static_cast<int>(p);
+                s_selectedId = skin.id;
+                s_selectedIndex = static_cast<int>(i);
+                return;
+            }
+        }
+    }
+    // 3. Check custom skins
     for (std::size_t i = 0; i < s_customSkins.size(); ++i)
     {
-        if (s_customSkins[i].id == id)
+        if (s_customSkins[i].id == id || s_customSkins[i].name == id)
         {
-            s_selectedPackIndex = 1;
-            s_selectedId = id;
+            s_selectedPackIndex = 1 + static_cast<int>(s_lcePacks.size());
+            s_selectedId = s_customSkins[i].id;
             s_selectedIndex = static_cast<int>(i);
             return;
         }
