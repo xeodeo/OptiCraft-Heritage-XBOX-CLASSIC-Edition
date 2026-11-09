@@ -113,6 +113,11 @@ void GuiContainer::initGui()
 	EntityPlayer *p = getContainerPlayer();
 	if (p != nullptr)
 		p->craftingInventory = inventorySlots;
+	holdSawRelease = false;
+	holdArmed = false;
+	holdStopped = false;
+	holdSlot = nullptr;
+	holdInitialPickedUp = false;
 }
 
 void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
@@ -419,7 +424,17 @@ void GuiContainer::handleMouseClick(Slot *slot, int_t slotId, int_t button, bool
 	if (slot != nullptr)
 		slotId = slot->slotNumber;
 	EntityPlayer *p = getContainerPlayer();
-	delete mc->playerController->windowClick(inventorySlots->windowId, slotId, button, shift, p ? p : mc->thePlayer);
+	if (p == nullptr && mc != nullptr) p = mc->thePlayer;
+	const bool cursorEmptyBefore = (p != nullptr && p->inventory != nullptr && p->inventory->getItemStack() == nullptr);
+	const bool slotHasStackBefore = (slot != nullptr && slot->getHasStack() && slot->getStack() != nullptr && slot->getStack()->stackSize > 0);
+	const bool isResultSlot = (dynamic_cast<SlotCrafting *>(slot) != nullptr || dynamic_cast<SlotFurnace *>(slot) != nullptr);
+
+	delete mc->playerController->windowClick(inventorySlots->windowId, slotId, button, shift, p);
+
+	if (button == 0 && !shift && cursorEmptyBefore && slotHasStackBefore && !isResultSlot)
+	{
+		holdInitialPickedUp = true;
+	}
 }
 
 void GuiContainer::mouseMovedOrUp(int_t x, int_t y, int_t button)
@@ -492,6 +507,7 @@ void GuiContainer::tickHoldRepeat(Slot *target)
 		holdArmed = false;
 		holdStopped = false;
 		holdSlot = nullptr;
+		holdInitialPickedUp = false;
 		return;
 	}
 	if (!holdSawRelease || holdStopped)
@@ -513,6 +529,11 @@ void GuiContainer::tickHoldRepeat(Slot *target)
 	}
 	if (now < holdNextMs)
 		return;
+	if (holdInitialPickedUp)
+	{
+		holdInitialPickedUp = false;
+		returnInitialStack(target);
+	}
 	if (!holdRepeatTakeOne(target))
 	{
 		holdStopped = true;
@@ -523,6 +544,22 @@ void GuiContainer::tickHoldRepeat(Slot *target)
 #else
 	(void)target;
 #endif
+}
+
+void GuiContainer::returnInitialStack(Slot *slot)
+{
+	EntityPlayer *p = getContainerPlayer();
+	if (p == nullptr && mc != nullptr) p = mc->thePlayer;
+	if (slot == nullptr || p == nullptr || p->inventory == nullptr)
+		return;
+	if (slot->getHasStack())
+		return;
+	ItemStack *held = p->inventory->getItemStack();
+	if (held == nullptr)
+		return;
+
+	// In Java, clicking the empty slot again returns the held stack back into the slot
+	handleMouseClick(slot, slot->slotNumber, 0, false);
 }
 
 bool GuiContainer::holdRepeatTakeOne(Slot *slot)

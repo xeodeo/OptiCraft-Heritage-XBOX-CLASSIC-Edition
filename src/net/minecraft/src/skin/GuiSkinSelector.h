@@ -6,12 +6,13 @@
 #include <string>
 
 class GuiButton;
+class ModelBiped;
 
 class GuiSkinSelector : public GuiScreen
 {
 public:
     explicit GuiSkinSelector(GuiScreen *parent, bool isPlayer2 = false);
-    ~GuiSkinSelector() override = default;
+    ~GuiSkinSelector() override;
 
     void initGui() override;
     void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
@@ -22,13 +23,16 @@ public:
     bool doesGuiPauseGame() override;
 
 protected:
-    bool allowsPlatformPointerInput() const override { return true; }
+    bool allowsPlatformPointerInput() const override { return !isLegacyMode(); }
+    bool usesSpecializedMenuNavigation() const override { return isLegacyMode(); }
     void handleSpecializedMenuInput() override;
 
 private:
+    bool isLegacyMode() const;
     void nextSkin();
     void prevSkin();
     void switchPack(int newPackIndex);
+    void togglePlayer2Mode();
     void selectAndConfirm();
     void cancelAndReturn();
     void deleteCurrentCustomSkin();
@@ -38,12 +42,39 @@ private:
     void drawFrontPreview(const SkinEntry *skin, float x, float y, float w, float h, float alpha);
     void drawFeetShadow(float centerX, float groundY, float radiusX, float radiusY, float alpha);
 
+    void drawLegacyScreen(int_t mouseX, int_t mouseY, float_t partialTick);
+    void drawLegacyCharacter3D(const SkinEntry *skin, float centerX, float feetY, float scale,
+                               float yawDeg, float pitchDeg, bool isCenterSlot,
+                               float brightness, float partialTick);
+
+    void releaseUnusedPreviewTextures();
+    void recordPreviewTexture(const std::string &path);
+
     GuiScreen *parentScreen;
     bool isPlayer2Skin;
     bool initializedSelection;
     int currentPackIndex;
     int currentSkinIndex;
     float scrollOffset; // smooth transition offset: -1.0 (moving right) to +1.0 (moving left), dampens to 0.0
+
+    // Stored list of loaded preview textures for release on exit/pack switch
+    std::vector<std::string> loadedTextures;
+
+    // 3D character preview state for LCE mode
+    ModelBiped *previewModel32;
+    ModelBiped *previewModel64;
+    float previewYaw;
+    float previewPitch;
+    bool previewAutoRotate;
+    bool previewRotatingLeft;
+    float previewWalkPos;
+    float previewWalkSpeed;
+    float previewPrevWalkSpeed;
+    float previewBobTicks;
+    int previewPoseIndex;
+    float previewSwingTicks;
+    bool previewPoseStickLatch;
+    int navHoldRepeatTimer;
 
     // Stored dimensions for click hit-testing
     int_t dialogLeft;
@@ -58,9 +89,21 @@ private:
     int_t nameplateY;
     int_t nameplateHeight;
 
+    // LCE mode hit-test regions
+    int_t legacyStageTop;
+    int_t legacyStageBottom;
+    int_t legacyPackBarY;
+    int_t legacyPackBarH;
+    int_t legacyCenterTabX;
+    int_t legacyCenterTabW;
+    int_t legacyLeftTabX;
+    int_t legacyRightTabX;
+    int_t legacySideTabW;
+    int_t legacyNameplateX;
+    int_t legacyNameplateW;
+
     // Interactive GUI buttons
-    GuiButton *buttonTabDefault;
-    GuiButton *buttonTabCustom;
+    std::vector<GuiButton*> packButtons;
     GuiButton *buttonPlayer2Skin;
     GuiButton *buttonLoadSkins;
     GuiButton *buttonDeleteSkin;

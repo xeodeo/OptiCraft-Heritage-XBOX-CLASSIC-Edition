@@ -255,6 +255,8 @@ void GuiContainerCreative::handleMouseClick(Slot *slot, int_t slotId, int_t butt
                 if (copy != nullptr && shift)
                     copy->stackSize = copy->getMaxStackSize();
                 playerInventory->setItemStack(copy);
+                if (button == 0 && !shift)
+                    holdInitialPickedUp = true;
             }
             return;
         }
@@ -675,8 +677,38 @@ bool GuiContainerCreative::holdRepeatTakeOne(Slot *slot)
         return false;
     ItemStack *held = player->inventory->getItemStack();
     ItemStack *listed = slot->getStack();
-    if (held == nullptr || listed == nullptr || !held->isItemEqual(listed) || held->stackSize >= held->getMaxStackSize())
+    if (listed == nullptr)
+        return false;
+    if (held == nullptr)
+    {
+        ItemStack *one = ItemStack::copyItemStack(listed);
+        if (one == nullptr) return false;
+        one->stackSize = 1;
+        player->inventory->setItemStack(one);
+        return true;
+    }
+    if (!held->isItemEqual(listed) || held->stackSize >= held->getMaxStackSize())
         return false;
     held->stackSize++;
     return true;
+}
+
+void GuiContainerCreative::returnInitialStack(Slot *slot)
+{
+    if (slot == nullptr || slot->getInventory() != &inventory)
+    {
+        GuiContainer::returnInitialStack(slot);
+        return;
+    }
+    EntityPlayer *player = getContainerPlayer();
+    if (player == nullptr && mc != nullptr) player = mc->thePlayer;
+    if (player != nullptr && player->inventory != nullptr)
+    {
+        ItemStack *held = player->inventory->getItemStack();
+        if (held != nullptr)
+        {
+            delete held;
+            player->inventory->setItemStack(nullptr);
+        }
+    }
 }

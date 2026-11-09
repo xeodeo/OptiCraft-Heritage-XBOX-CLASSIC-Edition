@@ -43,6 +43,10 @@ public:
 	// Holding A on a slot: one more item per repeat (creative adds one, survival takes one).
 	// Returns false when nothing more can be taken, which stops the repeat until A is released.
 	virtual bool holdRepeatTakeOne(Slot *slot);
+	virtual void returnInitialStack(Slot *slot);
+
+protected:
+	bool holdInitialPickedUp = false;
 
 private:
 	bool getIsMouseOverSlot(Slot *slot, int_t mouseX, int_t mouseY);
