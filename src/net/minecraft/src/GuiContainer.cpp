@@ -28,6 +28,13 @@
 #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM) || defined(XBOX_PLATFORM)
 #include "ContainerSlotNavigator.h"
 #include "platform/Input.h"
+#include "SlotCrafting.h"
+#include "SlotFurnace.h"
+#include "SlotMerchantResult.h"
+#include "platform/ConsoleInputClock.h"
+#if defined(XBOX_PLATFORM)
+#include "xbox/input/XboxPad.h"
+#endif
 #endif
 
 RenderItem *GuiContainer::itemRenderer = new RenderItem();
@@ -138,6 +145,9 @@ void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 	}
 
 	Slot *selectedSlot = controllerSlot;
+#if defined(XBOX_PLATFORM)
+	tickHoldRepeat(controllerSlot != nullptr ? controllerSlot : getSlotAtPosition(mouseX, mouseY));
+#endif
 	if (mc == nullptr || !mc->isSplitScreenActive())
 	{
 		if (selectedSlot != nullptr && navigator.consumePrimaryClick())
@@ -471,4 +481,83 @@ void GuiContainer::updateScreen()
 	{
 		p->closeScreen();
 	}
+}
+
+void GuiContainer::tickHoldRepeat(Slot *target)
+{
+#if defined(XBOX_PLATFORM)
+	const bool down = (XboxPad::playerSnapshot(getOwnerPlayerIndex() == 1 ? 1 : 0).held & XBOX_PAD_A) != 0;
+	if (!down)
+	{
+		holdSawRelease = true;
+		holdArmed = false;
+		holdStopped = false;
+		holdSlot = nullptr;
+		return;
+	}
+	if (!holdSawRelease || holdStopped)
+		return;
+	const int now = consoleInputNowMs();
+	if (!holdArmed)
+	{
+		// The press itself already clicked once through the normal path; repeats start after a pause.
+		holdArmed = true;
+		holdSlot = target;
+		holdNextMs = now + 350;
+		holdIntervalMs = 80;
+		return;
+	}
+	if (target == nullptr || target != holdSlot)
+	{
+		holdStopped = true;   // moved to another slot: wait for A to be released
+		return;
+	}
+	if (now < holdNextMs)
+		return;
+	if (!holdRepeatTakeOne(target))
+	{
+		holdStopped = true;
+		return;
+	}
+	holdIntervalMs = std::max(40, holdIntervalMs - 8);
+	holdNextMs = now + holdIntervalMs;
+#else
+	(void)target;
+#endif
+}
+
+bool GuiContainer::holdRepeatTakeOne(Slot *slot)
+{
+	EntityPlayer *p = getContainerPlayer();
+	if (p == nullptr && mc != nullptr) p = mc->thePlayer;
+	if (slot == nullptr || p == nullptr || p->inventory == nullptr || inventorySlots == nullptr)
+		return false;
+	// Moving single items by hand would desync a server; result slots have their own pickup rules.
+	if (mc == nullptr || mc->theWorld == nullptr || mc->theWorld->multiplayerWorld)
+		return false;
+	if (dynamic_cast<SlotCrafting *>(slot) != nullptr || dynamic_cast<SlotFurnace *>(slot) != nullptr ||
+	    dynamic_cast<SlotMerchantResult *>(slot) != nullptr)
+		return false;
+	ItemStack *source = slot->getStack();
+	if (source == nullptr || source->stackSize <= 0 || !slot->canTakeStack(p))
+		return false;
+	ItemStack *held = p->inventory->getItemStack();
+	if (held != nullptr && (!held->isItemEqual(source) || !ItemStack::areItemStackTagsEqual(held, source) ||
+	    held->stackSize >= held->getMaxStackSize()))
+		return false;
+	ItemStack *one = slot->decrStackSize(1);
+	if (one == nullptr)
+		return false;
+	if (held != nullptr)
+	{
+		held->stackSize += one->stackSize;
+		delete one;
+	}
+	else
+	{
+		p->inventory->setItemStack(one);
+	}
+	slot->onSlotChanged();
+	inventorySlots->detectAndSendChanges();
+	return true;
 }

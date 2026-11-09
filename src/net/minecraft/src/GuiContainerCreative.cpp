@@ -1149,3 +1149,20 @@ void GuiContainerCreative::actionPerformed(GuiButton *button)
     else if (button->id == 1)
         mc->displayGuiScreen(new GuiStats(this, mc->statFileWriter));
 }
+
+bool GuiContainerCreative::holdRepeatTakeOne(Slot *slot)
+{
+    if (slot == nullptr || slot->getInventory() != &inventory)
+        return GuiContainer::holdRepeatTakeOne(slot);
+    // Palette: every repeat is one more of the listed item in the cursor, as a left click does.
+    EntityPlayer *player = getContainerPlayer();
+    if (player == nullptr && mc != nullptr) player = mc->thePlayer;
+    if (player == nullptr || player->inventory == nullptr)
+        return false;
+    ItemStack *held = player->inventory->getItemStack();
+    ItemStack *listed = slot->getStack();
+    if (held == nullptr || listed == nullptr || !held->isItemEqual(listed) || held->stackSize >= held->getMaxStackSize())
+        return false;
+    held->stackSize++;
+    return true;
+}
