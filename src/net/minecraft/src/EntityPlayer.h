@@ -195,6 +195,8 @@ public:
 	int_t getItemIcon(ItemStack *itemstack) override;
 	int_t getItemIcon(ItemStack *itemstack, int_t renderPass) override;
 	void setInPortal() override;
+	int_t getMaxInPortalTime() override;
+	int_t getPortalCooldown() override;
 
 	virtual int_t getPlayerArmorValue() { return 0; }
 	int_t getHealth() const { return health; }
@@ -228,7 +230,6 @@ public:
 	bool    isSwinging;
 	int_t   swingProgressInt;
 	jstring username;
-	int_t   dimension;
 	jstring playerCloakUrl;
 	double  field_20066_r;
 	double  field_20065_s;
@@ -249,10 +250,6 @@ public:
 private:
 	ChunkCoordinates *playerSpawnCoordinate;
 	ChunkCoordinates *startMinecartRidingCoordinate;
-public:
-	int_t   timeUntilPortal;
-protected:
-	bool    inPortal;
 public:
 	float   timeInPortal;
 	float   prevTimeInPortal;

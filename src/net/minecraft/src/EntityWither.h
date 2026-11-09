@@ -31,6 +31,7 @@ public:
 	int_t getMaxHealth() const override;
 	EnumCreatureAttribute getCreatureAttribute() const override;
 	void mountEntity(Entity *entity) override;
+	bool canChangeDimensions() const override { return false; }
 
 	void func_82206_m();                       // freshly summoned: invulnerable, charging, 1/3 health
 	int_t getBossHealth() const;

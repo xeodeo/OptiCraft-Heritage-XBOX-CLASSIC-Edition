@@ -180,6 +180,12 @@ public:
 	virtual float getCollisionBorderSize();
 	virtual Vec3D *getLookVec();
 	virtual void setInPortal();
+	virtual int_t getMaxInPortalTime() { return 0; }
+	virtual int_t getPortalCooldown() { return 900; }
+	virtual void travelToDimension(int_t targetDimension);
+	virtual bool canChangeDimensions() const { return true; }
+	virtual void copyDataFrom(Entity *other, bool flag = false);
+	virtual int_t getTeleportDirection() const { return teleportDirection; }
 	virtual void setVelocity(double d, double d1, double d2);
 	virtual void handleHealthUpdate(byte_t byte0);
 	virtual void func_48079_f(float yaw) {}
@@ -315,6 +321,11 @@ public:
 	int_t ticksExisted;
 	int_t fireResistance;
 	int_t fire;
+	int_t dimension;
+	bool inPortal;
+	int_t portalCounter;
+	int_t timeUntilPortal;
+	int_t teleportDirection;
 protected:
 	int_t maxAir;
 	bool inWater;

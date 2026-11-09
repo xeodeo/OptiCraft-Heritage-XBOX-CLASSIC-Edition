@@ -23,6 +23,7 @@ public:
 	bool canBeCollidedWith() override;
 	bool attackEntityFrom(Entity *entity, int_t damage) override;
 	bool attackEntityFrom(const DamageSource &source, int_t damage) override;
+	bool canChangeDimensions() const override { return false; }
 
 	bool isInvulnerable();
 	void setInvulnerable(bool value);

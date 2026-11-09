@@ -25,6 +25,7 @@
 #include "World.h"
 #include "WorldProvider.h"
 #include "Entity.h"
+#include "PortalTransferManager.h"
 
 bool Chunk::isLit = false;
 
@@ -1316,6 +1317,8 @@ void Chunk::onChunkLoad()
 	worldObj->addLoadedTileEntities(tileEntities);
 	for (int_t i = 0; i < SECTION_COUNT; ++i)
 		worldObj->addLoadedEntities(entities[i]);
+
+	PortalTransferManager::processQueueForChunk(worldObj, xPosition, zPosition);
 }
 
 void Chunk::onChunkUnload()

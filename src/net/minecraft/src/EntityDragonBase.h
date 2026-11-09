@@ -14,6 +14,7 @@ public:
     int_t getMaxHealth() const override;
     virtual bool attackEntityFromPart(EntityDragonPart *part, const DamageSource &source, int_t damage);
     bool attackEntityFrom(const DamageSource &source, int_t damage) override;
+    bool canChangeDimensions() const override { return false; }
 
 protected:
     bool superAttackFrom(const DamageSource &source, int_t damage);

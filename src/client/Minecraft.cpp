@@ -130,6 +130,7 @@
 #include "net/minecraft/src/StatList.h"
 #include "net/minecraft/src/StatStringFormatKeyInv.h"
 #include "net/minecraft/src/Teleporter.h"
+#include "net/minecraft/src/PortalTransferManager.h"
 #include "net/minecraft/src/Tessellator.h"
 #include "net/minecraft/src/legacy/startup/StartupPresentation.h"
 #include "net/minecraft/src/legacy/LegacyDebugOptions.h"
@@ -2642,6 +2643,7 @@ void Minecraft::usePortal(int_t targetDimension)
         if (portalTeleporter == nullptr)
             portalTeleporter = std::make_unique<Teleporter>();
         portalTeleporter->placeInPortal(theWorld, thePlayer);
+        PortalTransferManager::processQueueForNewPortal(theWorld, thePlayer->posX, thePlayer->posY, thePlayer->posZ);
     }
 }
 

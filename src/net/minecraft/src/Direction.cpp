@@ -17,3 +17,14 @@ const int Direction::bedDirection[4][6] = {
 const int Direction::rotateOpposite[4] = {2, 3, 0, 1};
 const int Direction::facingToDirection[6] = {-1, -1, 2, 0, 1, 3};
 const int Direction::directionToFacing[4] = {3, 4, 2, 5};
+
+#include <cmath>
+
+int Direction::getMovementDirection(double dx, double dz)
+{
+	if (std::abs(dx) > std::abs(dz))
+		return dx > 0.0 ? 1 : 3;
+	else
+		return dz > 0.0 ? 2 : 0;
+}
+

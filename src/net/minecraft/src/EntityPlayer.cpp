@@ -1415,10 +1415,20 @@ void EntityPlayer::setInPortal()
 {
 	if (timeUntilPortal > 0)
 	{
-		timeUntilPortal = 10;
+		timeUntilPortal = getPortalCooldown();
 		return;
 	}
 	inPortal = true;
+}
+
+int_t EntityPlayer::getMaxInPortalTime()
+{
+	return capabilities.disableDamage ? 1 : 80;
+}
+
+int_t EntityPlayer::getPortalCooldown()
+{
+	return 10;
 }
 
 void EntityPlayer::addExperience(int_t amount)

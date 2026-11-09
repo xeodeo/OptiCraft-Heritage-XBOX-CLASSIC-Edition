@@ -31,6 +31,9 @@
 #include "World.h"
 #include "WorldInfo.h"
 #include "Chunk.h"
+#include "Direction.h"
+#include "PortalTransferManager.h"
+#include "WorldProvider.h"
 
 int_t Entity::nextEntityID = 0;
 
@@ -303,6 +306,11 @@ Entity::Entity(World *world) :
 	chunkExistenceCacheResult = false;
 	chunkExistenceCacheValid = false;
 #endif
+	dimension = (world != nullptr && world->worldProvider != nullptr) ? world->worldProvider->worldType : 0;
+	inPortal = false;
+	portalCounter = 0;
+	timeUntilPortal = 0;
+	teleportDirection = 0;
 	worldObj = world;
 	setPosition(0.0, 0.0, 0.0);
 	dataWatcher->addObject(0, (byte_t)0);
@@ -439,6 +447,30 @@ void Entity::onEntityUpdate()
 	prevPosZ = posZ;
 	prevRotationPitch = rotationPitch;
 	prevRotationYaw = rotationYaw;
+	if (worldObj != nullptr && !worldObj->multiplayerWorld && !isPlayer())
+	{
+		if (inPortal)
+		{
+			if (ridingEntity == nullptr && ++portalCounter >= getMaxInPortalTime())
+			{
+				portalCounter = getMaxInPortalTime();
+				timeUntilPortal = getPortalCooldown();
+				const int_t targetDim = (dimension == -1) ? 0 : -1;
+				travelToDimension(targetDim);
+			}
+			inPortal = false;
+		}
+		else
+		{
+			if (portalCounter > 0)
+				portalCounter -= 4;
+			if (portalCounter < 0)
+				portalCounter = 0;
+		}
+
+		if (timeUntilPortal > 0)
+			timeUntilPortal--;
+	}
 	if (isSprinting() && !isInWater())
 	{
 		const int_t blockX = MathHelper::floor_double(posX);
@@ -1411,6 +1443,8 @@ void Entity::writeToNBT(NBTTagCompound *nbttagcompound)
 	nbttagcompound->setShort("Fire", JavaArithmetic::shortFromBits(static_cast<ushort_t>(fire)));
 	nbttagcompound->setShort("Air", JavaArithmetic::shortFromBits(static_cast<ushort_t>(getAir())));
 	nbttagcompound->setBoolean("OnGround", onGround);
+	nbttagcompound->setInteger("Dimension", dimension);
+	nbttagcompound->setInteger("PortalCooldown", timeUntilPortal);
 	writeEntityToNBT(nbttagcompound);
 }
 
@@ -1434,6 +1468,10 @@ void Entity::readFromNBT(NBTTagCompound *nbttagcompound)
 	fire = nbttagcompound->getShort("Fire");
 	setAir(nbttagcompound->getShort("Air"));
 	onGround = nbttagcompound->getBoolean("OnGround");
+	if (nbttagcompound->hasKey("Dimension"))
+		dimension = nbttagcompound->getInteger("Dimension");
+	if (nbttagcompound->hasKey("PortalCooldown"))
+		timeUntilPortal = nbttagcompound->getInteger("PortalCooldown");
 	setPosition(posX, posY, posZ);
 	setRotation(rotationYaw, rotationPitch);
 	readEntityFromNBT(nbttagcompound);
@@ -1640,6 +1678,43 @@ Vec3D *Entity::getLookVec()
 
 void Entity::setInPortal()
 {
+	if (timeUntilPortal > 0)
+	{
+		timeUntilPortal = getPortalCooldown();
+	}
+	else
+	{
+		if (worldObj != nullptr && !worldObj->multiplayerWorld && !inPortal)
+		{
+			const double dx = prevPosX - posX;
+			const double dz = prevPosZ - posZ;
+			teleportDirection = Direction::getMovementDirection(dx, dz);
+		}
+		inPortal = true;
+	}
+}
+
+void Entity::travelToDimension(int_t targetDimension)
+{
+	if (worldObj == nullptr || worldObj->multiplayerWorld || isDead)
+		return;
+	if (isPlayer() || ridingEntity != nullptr || riddenByEntity != nullptr)
+		return;
+	if (!canChangeDimensions())
+		return;
+
+	PortalTransferManager::transferEntity(this, targetDimension);
+}
+
+void Entity::copyDataFrom(Entity *other, bool flag)
+{
+	if (other == nullptr)
+		return;
+	NBTTagCompound tag;
+	other->writeToNBT(&tag);
+	readFromNBT(&tag);
+	timeUntilPortal = other->timeUntilPortal;
+	teleportDirection = other->teleportDirection;
 }
 
 void Entity::setVelocity(double d, double d1, double d2)

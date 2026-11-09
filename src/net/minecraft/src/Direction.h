@@ -16,4 +16,6 @@ public:
 	static const int rotateOpposite[4];
 	static const int facingToDirection[6];
 	static const int directionToFacing[4];
+
+	static int getMovementDirection(double dx, double dz);
 };

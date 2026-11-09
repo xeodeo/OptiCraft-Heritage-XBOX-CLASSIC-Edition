@@ -15,6 +15,7 @@ public:
     bool canBeCollidedWith() override;
     bool attackEntityFrom(const DamageSource &source, int_t damage) override;
     bool isEntityEqual(Entity *entity) override;
+    bool canChangeDimensions() const override { return false; }
 
     EntityDragonBase *const entityDragonObj;
     const jstring name;

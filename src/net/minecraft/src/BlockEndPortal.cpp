@@ -58,6 +58,8 @@ void BlockEndPortal::onEntityCollidedWithBlock(World *world, int_t, int_t, int_t
     EntityPlayer *player = dynamic_cast<EntityPlayer *>(entity);
     if (player != nullptr)
         player->travelToTheEnd(1);
+    else
+        entity->travelToDimension(1);
 }
 
 void BlockEndPortal::randomDisplayTick(World *world, int_t x, int_t y, int_t z, Random &random)
