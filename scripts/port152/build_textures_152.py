@@ -554,6 +554,21 @@ def copy_sound3(launcher_assets: Path, resources: Path) -> list[str]:
     return copied
 
 
+def copy_extra_sounds(extra_root: Path, resources: Path) -> list[str]:
+    """Sounds 1.5.2 names but never shipped (villagers stayed silent until 1.6): the 1.6
+    files from the launcher's legacy index, renamed to the 1.5.2 keys, kept in the repo."""
+    copied = []
+    if not extra_root.is_dir():
+        return copied
+    for source in sorted(extra_root.rglob("*.ogg")):
+        rel = source.relative_to(extra_root).as_posix()
+        dest = resources / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, dest)
+        copied.append("resources/" + rel)
+    return copied
+
+
 def load_make_pak(script: Path):
     spec = importlib.util.spec_from_file_location("make_pak", script)
     if spec is None or spec.loader is None:
@@ -614,6 +629,7 @@ def main() -> int:
     copy_source_textures(args.source, assets, staged)
     sound3 = copy_sound3(args.launcher_assets, output_data / "resources") if args.launcher_assets else []
     staged += sound3
+    staged += copy_extra_sounds(repo / "scripts/port152/extra_sounds", output_data / "resources")
     merged_langs = merge_languages(args.base_data / "assets/lang", args.source.parent / "src125/lang",
                                    args.source / "lang", assets / "lang")
     staged += [f"assets/lang/{name}" for name in merged_langs]
