@@ -1044,20 +1044,26 @@ void EntityRenderer::setupCameraTransform(float partialTicks, int anaglyphPass)
         renderTranslate((float)(-(anaglyphPass * 2 - 1)) * anaglyphOffset, 0.0f, 0.0f);
     }
     
+    // OptiFine: at least 128 so the sun and moon (100 blocks away) survive short render distances.
+#if PLATFORM_XBOX
+    const float clipDistance = std::max(farPlaneDistance * 2.0f, 128.0f);
+#else
+    const float clipDistance = farPlaneDistance * 2.0f;
+#endif
     if (cameraZoom != 1.0)
     {
         renderTranslate((float)cameraYawOffset, (float)(-cameraPitchOffset), 0.0f);
         renderScaleDouble(cameraZoom, cameraZoom, 1.0);
-        
+
         perspectiveGL(getFOVModifier(partialTicks, true),
                       projectionAspect,
-                      PLATFORM_NEAR_PLANE, farPlaneDistance * 2.0f);
+                      PLATFORM_NEAR_PLANE, clipDistance);
     }
     else
     {
         perspectiveGL(getFOVModifier(partialTicks, true),
                       projectionAspect,
-                      PLATFORM_NEAR_PLANE, farPlaneDistance * 2.0f);
+                      PLATFORM_NEAR_PLANE, clipDistance);
     }
     
     if (mc->playerController != nullptr && mc->playerController->func_35643_e())
@@ -1756,8 +1762,12 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
         
         ClippingHelperImpl::getInstance();
         
-        // Renderizar cielo (solo en distancias cortas)
+#if PLATFORM_XBOX
+        // OptiFine: the sky follows its own options, not the render distance.
+        if (Config::isSkyEnabled() || Config::isSunMoonEnabled() || Config::isStarsEnabled())
+#else
         if (mc->gameSettings->renderDistance < 2)
+#endif
         {
             setupFog(-1, partialTicks);
 #if PLATFORM_PROFILE_RENDER_PHASES
@@ -2133,6 +2143,17 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
         // Niebla para nubes
         renderDisable(RenderCapability::Fog);
         setupFog(0, partialTicks);
+#if PLATFORM_XBOX
+        // Fog really applies on the Xbox now: with the console's short distances the terrain fog
+        // swallowed the clouds, so they fade between the render distance and the clip plane.
+        if (!mc->renderViewEntity->isPotionActive(Potion::blindness) &&
+            !mc->renderViewEntity->isInsideOfMaterial(Material::water) &&
+            !mc->renderViewEntity->isInsideOfMaterial(Material::lava))
+        {
+            renderFogf(RenderFogParameter::Start, farPlaneDistance);
+            renderFogf(RenderFogParameter::End, std::max(farPlaneDistance * 2.0f, 128.0f));
+        }
+#endif
         renderEnable(RenderCapability::Fog);
 #if !PLATFORM_SKIP_CLOUDS
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2
