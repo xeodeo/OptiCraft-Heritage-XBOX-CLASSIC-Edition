@@ -120,3 +120,12 @@ void EntityWitherSkull::setInvulnerable(bool value)
 {
 	dataWatcher->updateObject(10, static_cast<byte_t>(value ? 1 : 0));
 }
+
+// Java keeps skulls whose shooter was not saved (after a reload) and they drift to a stop in mid-air.
+// Skulls that do know their Wither already die with it; ownerless ones are removed after 10 s of flight.
+void EntityWitherSkull::onUpdate()
+{
+	EntityFireball::onUpdate();
+	if (!isDead && worldObj != nullptr && !worldObj->multiplayerWorld && !hasShooterRecord() && getTicksInAir() > 200)
+		setEntityDead();
+}

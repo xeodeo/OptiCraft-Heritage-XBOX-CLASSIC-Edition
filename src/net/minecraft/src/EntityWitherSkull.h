@@ -17,6 +17,7 @@ public:
 	EntityWitherSkull(World *world, EntityLiving *shooter, double xAcceleration, double yAcceleration, double zAcceleration);
 	EntityWitherSkull(World *world, double x, double y, double z, double xAcceleration, double yAcceleration, double zAcceleration);
 
+	void onUpdate() override;
 	bool isBurning() override;
 	float func_82146_a(Explosion *explosion, World *world, int_t x, int_t y, int_t z, Block *block) override;
 	bool canBeCollidedWith() override;

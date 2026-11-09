@@ -39,6 +39,8 @@ public:
 	void setShootingEntity(EntityLiving *shooter);
 
 public:
+	bool hasShooterRecord() const { return shootingEntityId >= 0; }
+	int_t getTicksInAir() const { return ticksInAir; }
 	// Compatibility alias for older callers. Use getShootingEntity() for lifetime-safe access.
 	EntityLiving *shootingEntity;
 	double accelerationX;
