@@ -483,6 +483,7 @@ public:
 private:
 #if PLATFORM_PC_LEGACY || PLATFORM_XBOX
 	mutable std::unordered_set<const Entity *> loadedEntityPointerSet;
+	mutable std::size_t loadedEntityPointerSetListSize = static_cast<std::size_t>(-1);   // list size at the last rebuild
 #elif PLATFORM_PS2
 	mutable Ps2EntityPointerIndex loadedEntityPointerIndex;
 	mutable bool loadedEntityPointerIndexOverflow = false;
