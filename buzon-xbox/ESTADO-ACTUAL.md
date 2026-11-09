@@ -84,7 +84,7 @@ creativo y cofres). En 1.5.2 (`port152-controles-84`) y 1.2.5 (`opti30-cruceta`)
 - Skins de Halo (40), Mass Effect (36) y Skyrim (40) como pestañas en el selector (Legacy y Java), J1 y J2.
 - Mantener A coge de 1 en 1 desde el principio (creativo y cofres; contar objetos: ni duplica ni pierde).
 - Agacharse con interruptor (Controles). Carpeta `skins` junto al juego para skins propias.
-- Paks anteriores en `OptiCraft_respaldo_paks_09-11`. agy: encargo 86 (entidades por portales) en marcha.
+- Paks anteriores en `OptiCraft_respaldo_paks_09-11`. agy: encargo 86 (portales) hecho pero APARCADO.
 
 ## Pendiente de probar en 1.2.5 (el usuario la deja para DESPUÉS; rama `opti30-cruceta`, build 09-11 12:10)
 Niebla, cielo, sol, luna, nubes; agachado+bloque sobre un cofre; cruceta separada del stick y configurable (Controles),
@@ -100,7 +100,10 @@ con interruptor y mantener A (cuando entre el 84). Si va bien: avanzar `xbox-opt
    OptiFine (partículas, humo animado...), bien a 720p y 480p. `80-ENCARGO-agy-graficos-avanzados-legacy.md`.
 3. agy encargo 81 (EN COLA tras el 80): selector de skins al estilo LCE con legacyUI (`81-ENCARGO-agy-skins-estilo-lce.md`).
 4. Merge a `port152-claude`: HECHO 09-11 (`91b5f42`). Lo nuevo de agy se prueba en `port152-aldeanos` y luego se avanza.
-3. **Entidades por portales** (mobs, objetos, vagonetas): `Entity::setInPortal` está VACÍO; el port solo tiene cargado
+3. **Entidades por portales: APARCADO por el usuario (09-11).** agy lo hizo (encargo 86, rama `port152-portales`
+   `e816d58`, informe 86) pero NO está auditado ni en prueba: escribe en las regiones de la otra dimensión. Antes de
+   usarlo: auditar (corrupción de .mca, caché de regiones, hilo async de la exp, duplicar/perder, tirones).
+   Contexto: `Entity::setInPortal` estaba VACÍO; el port solo tiene cargado
    un mundo. Hacerlo: posición destino ×/÷8 + Teleporter (buscar/crear portal) + guardar la entidad en el chunk de la otra
    dimensión sin cargarla. Pedido por el usuario (aldeano no cruza), 09-11.
 3. Plan 69: comandos + reglas + modo aventura → Wither → fuegos artificiales → dispensador → ...
