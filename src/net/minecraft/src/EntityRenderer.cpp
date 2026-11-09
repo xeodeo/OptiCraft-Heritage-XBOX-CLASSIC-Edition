@@ -3035,7 +3035,13 @@ void EntityRenderer::setupFog(int fogMode, float partialTicks)
         if (mc->theWorld->worldProvider->func_48218_b((int_t)entityliving->posX, (int_t)entityliving->posZ))
         {
             fogStart = effectiveFar * 0.05f;
+#if PLATFORM_XBOX
+            // OptiFine: the Nether fog reaches the whole render distance. Vanilla stops at half of it,
+            // which with the console distances put a thick red wall right in front of the player.
+            fogEnd = effectiveFar;
+#else
             fogEnd = std::min(effectiveFar, 192.0f) * 0.5f;
+#endif
         }
 
         if (Config::isFogOff() && fogMode >= 0 && !mc->theWorld->worldProvider->isNether)
