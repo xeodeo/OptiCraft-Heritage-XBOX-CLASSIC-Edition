@@ -1,0 +1,46 @@
+---
+name: bt3-xbox-port
+description: Port de DBZ Budokai Tenkaichi 3 (PS2) a Xbox clásica en Desktop\port bodokaii 3; arranca y llega al menú en xemu (09-10-2026)
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: 9ea57fa1-686f-40ba-9a65-c39523a0ce3e
+  modified: 2026-11-02T20:53:53.880Z
+---
+
+Port de BT3 a Xbox clásica (XDK 5849 + D3D8, juego con MinGW i686 + Link.Exe del XDK, como [[re4-xbox-port]]).
+Carpeta `C:\Users\xeodeo\Desktop\port bodokaii 3`, repo `Tenkaichi3Decomp` rama `xbox-port`, todo lo Xbox en `port/xbox`.
+**Empezar por `port bodokaii 3\buzon\ESTADO-ACTUAL.md`** (cómo compilar, probar, qué falta). Plan: `buzon\PLAN.md`.
+
+09-10-2026: arranca en xemu, intro con sonido, menú y selección de personajes. La memoria manda (64 MB): montón del
+juego reservado y comprometido al primer acceso, texturas P8. El usuario mira xemu en vivo: no cerrar xemu sin leer
+antes el log de su sesión (gdblog.py). agy con Gemini Flash no sirvió para el encargo de herramientas.
+
+- 11-10: el "escenario directo" (fase 1 del plan OpenGOAL) rompió la imagen (rayas, parpadeos, sin personajes). Está guardado en la rama `xbox-escenario-directo`; el loader volvió a `xbox-mem-textures` 1fbbfdb. Nunca probarlo en el loader sin ver antes la imagen en xemu.
+- 11-10 tarde: la memoria al límite era de las paletas (una reserva física por paleta, ~11 KB por textura). Pool de paletas + barrido con 3 MB libres en rama `xbox-memoria` 5ebe2cf, ya en el loader; falta confirmarlo en la consola. Luego viene el escenario directo como dice agy (informe 03). El usuario pide apoyarse en lo que ya resolvieron otros proyectos (OpenGOAL, Minecraft, RE4), no inventar.
+- Envío a la consola: solo `default.xbe` + `BT3Xbox.dat` en `Downloads\ClassicXboxLoader\downloads\ClassiCube-xbox_extracted\ClassiCube-xbox` (los datos ya están en la consola); `compilar_xbox.ps1` lo copia solo (salvo -Demo / -SinLoader).
+- 11-10 noche: el usuario prueba sobre todo en la CONSOLA, no en xemu (la intro de pelea y sus animaciones fallan en la Xbox real y xemu no lo enseña). No abrir xemu "unos segundos" para darlo por bueno: mirar el netlog de la consola. Antes de leer un log, comprobar qué versión es (p. ej. el tope de uniformes o una línea nueva) para no confundir la consola con xemu.
+- 11-10 cierre: pelea sigue ~5 fps en consola (nada ganado), menú 13->18-19. Las animaciones de entrada quedaron PEOR que en 1fbbfdb (casi todo de un color); pendiente bisección en consola empezando por la mezcla z3xox 47a0c48. El usuario está harto de cambios sin fps: medir en consola antes de prometer. Resumen en buzon/ESTADO-ACTUAL.md sección 000. Su Xbox tiene 64 MB (Halo 2 HD a 720p pide 128 MB).
+- 11-10 noche RESUELTO (usuario: "quedó melo"): la imagen rota venía de una fuga de la pila x87: Dbg_ProfColor devuelve f32 y estaba declarada void (498e857). En consola, una función float declarada con otro tipo = NaN; xemu no lo enseña. El vigilante `xb_x87_check` ([X87] en el log) queda puesto. Lección: ante una imagen rota solo en la consola, mirar primero "nan" y [X87] en el netlog. Después: agentes opt-luchadores y opt-render (worktrees `opt-*`, ramas `xbox-opt-*`) optimizando fps (~4,7 fps en pelea).
+- 11-10 bisección en consola (builds en `Downloads\ClassicXboxLoader\downloads\BT3-bisect\pruebaN-<commit>`, worktrees en `port bodokaii 3\bisect\`): rompió la entrada la mezcla z3xox (fundido ScrXfade). Arreglo b9d6d6a en envío, sin confirmar. Bisectar así funcionó bien: el usuario prueba varias versiones seguidas. agy tiene el encargo 05 (por qué no hay fps, medir con d3d8i.lib/contadores PIII del XDK).
+- 12-10 noche VEREDICTO (bisección en la consola, carpetas BT3-bisect\prueba18/19/20): se queda xbox-memoria 2ca77ba.
+  - Escenario nativo con 3 MB de margen; las mallas pegadas a la cámara van por el camino emulado.
+  - Subida de texturas de dos filas en dos filas + prefetch: 33 → 14 ms en la consola. Es lo único que el usuario notó en fps.
+  - Luchadores nativos (fase 2 de agy, 6ce77a1) APAGADOS: en la consola rompían las entradas (negro, parpadeo), y en la pelea no cabían en memoria igualmente.
+  - Lo que manda ahora es la memoria libre en la pelea (2-3 MB). Hay que medir en la consola: xemu no enseña ni la memoria lenta ni los fallos de imagen.
+- 12-10 22:20: consola con 2ca77ba: menús 30-40 fps, pelea 6-8. El escenario grande se construía tras el menú (7,6 MB libres en ese momento) y dejaba la pelea sin memoria → 06365a3 pone tope de 800 KB. Siguiente: auditoría de memoria (.bss del port 11 MB; XDK solo ~150 KB; nxdk no ayuda).
+- 12-10 22:40: 06365a3 CONFIRMADA buena en la consola (sin pérdidas de texturas, entradas bien, pelea ~6 fps, menús 30-40). Versión de referencia.
+- 12-10 23:45: BUENA confirmada 97ea4d4 (BT3-bisect\prueba22). Memoria al cargar la pelea 1,2→5,2 MB (vídeo/MPEG/stream con VirtualAlloc); caché de pipelines revertida. Siguiente: luchadores nativos v2 hechos por Claude (bugs: ctx = capa, doble build, 48 B/vértice, doble de llamadas). Traspaso: buzon/TRASPASO-siguiente-chat.md.
+- 13-10 madrugada: rama xbox-luchadores-v2. Luchadores + sombras nativos (prueba25: 6,5 → ~9-10 fps en consola), copia de texturas aplazada (prueba26, sin confirmar). Estado y lecciones en buzon/ESTADO-13-10.md. Solo cabe UN xemu a la vez (el segundo se cierra): turnarse con BUILD.lock; xemu loguea a netlog_xemu.txt, la consola a netlog.txt. El usuario quiere: agentes en paralelo (agent teams), aprovechar el XDK (push buffers), meta realista 30 fps en pelea (la PS2 va a 30 en pelea).
+- 13-10 mañana: rama xbox-junto 9899ee6 = prueba37 (la buena): pelea real ~12,8 fps (de ~6). Resumen y lista de lo que falta al final de buzon/ESTADO-13-10.md. Siguiente: texturas por origen para escenario y efectos (el 90 % de la copia en pelea real). Ojo: si el XBE crece, el escenario nativo puede quedarse sin memoria (mirar "[STG] escenario nativo NO").
+- 15-10: el usuario juega SOLO desde la carpeta de envío (ClassiCube-xbox_extracted\ClassiCube-xbox): ahí solo default.xbe + BT3Xbox.dat, nada más. prueba38 (d450d53) = medida [SUBIDA] por origen; análisis en buzon/ANALISIS-15-10.md.
+- 15-10 mañana: prueba39 (b6d282a, xbox-junto) CONFIRMADA en consola: escenario sin copia de texturas (era el 80 % de la copia) + reintento del escenario nativo -> pelea ~15 fps (de 12,8). Ahora el frame (~66 ms) se reparte en tercios: juego 21, emulación GS 23 (draw_state 9,8), D3D 22. Detalle en buzon/ANALISIS-15-10.md.
+- 15-10: el usuario pide pruebas de xemu de ~30 s (basta), y que toda mejora sirva para TODOS los escenarios (no solo el de la demo). Sospecha reflejos dañados por el escenario sin copia: el bloque 0x2A00 también es lienzo de reflejos/sombras proyectadas (stg_b.c, stg_c.c, gfxm_e_b.c).
+- 15-10 11:00: prueba44 (956e134): la memoria de la pelea era el búfer del escenario de 6,8 MB (y modelos/animaciones) puestos a cero con memset => todo comprometido; ahora Port_XboxZeroLazy (+2,8 MB en xemu). [HEAPTOP]: direcciones +0x3F0000 para el .map. Start+A salta logos y vídeo del arranque. Detalle en buzon/ANALISIS-15-10.md.
+- 15-10 12:00: prueba46 (6253c44): las rayas de la 2.ª pelea tras cambiar de mapa = luchadores nunca reconstruidos (iban emulados, ~2300 dibujos); arreglado en Xb_FighterEnsureNative. Usuario no quiere atajos Back+algo en el mando.
+- 15-10 12:45: prueba47 (ceb26d4) CONFIRMADA: rayas de la 2.ª pelea = render targets D3D sin limpiar entre peleas (fallo viejo, también en la 37). Pelea ~13-16 fps, memoria ok. Siguiente: plan del agente en buzon/INFORME-opt-30fps.md.
+- 15-10 13:30: prueba49 (24062ca) = 48 + luchadores en una pasada (agente opt-30fps, interruptor BT3_XB_COMBINE). Plan de optimización en buzon/INFORME-opt-30fps.md; agente en pausa por créditos.
+- 19/20-10: **empezar por `buzon\ESTADO-20-10.md`**. Rama buena `xbox-memoria-pelea` en `bisect\wt-mem` (prueba72 f6baf25); todo lo de los agentes se integra ahí con cherry-pick. Log de la consola ahora en `bisect\wt-mem\port\build\xbox\logs\netlog.txt` (escuchador con secuencia). Pelea: mapas normales ~21-22 fps, pesado ~15, lava ~16 (desde ~16/13 el 15-10). Lo más grande del 19-10: push buffer de 1,5 MB (la CPU esperaba 9-13 ms/frame a la GPU). Efectos de ki siguen emulados. Lecciones: el back end ignoraba GsDraw.rect (esquina de lienzo) => rectángulo de sombra en lava (BT3_XB_VISTA); en .c del port malloc = montón del juego y free = CRT (usar VirtualAlloc); agy olvida commit y a veces no compila; al mandar texto a Orca desde Git Bash usar MSYS_NO_PATHCONV=1 (un "/model" llegó como ruta).
+- Si vuelve el cuadrado/rectángulo oscuro que persigue a los personajes junto a la sombra: leer `buzon\FALLO-CUADRADO-SOMBRA.md` (4 causas: lienzos sin limpiar ceb26d4, memoria bbf9ce9, lienzo no limpiado LIENZOVIVO, esquina del lienzo ignorada VISTA).
+- 02-11: existe el port a Xbox 360 (github Lucas-Tito/bt3xbx, MIT, mismo Tenkaichi3Decomp). Sus docs copiadas en `buzon\ref-bt3xbx-360\` (leer 00-LEEME.md): sirven las especificaciones de efectos nativos y formatos; su código no (PPC, D3D9, 3 núcleos, 512 MB).
+- 21-10: **empezar por `buzon\TRASPASO-21-10.md`** (prueba73 en la consola sin probar; ramas pendientes: [FIN] de Codex, HUD lote, calor nativo sin verificar; las ventanas de log idénticas son la PAUSA, no usarlas para medir).

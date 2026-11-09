@@ -1,0 +1,10 @@
+Mapping source name conflicts detected:
+  net/minecraft/server/MinecraftServer METHOD r (()V) -> [net/minecraft/server/MinecraftServer/updateTimeLightAndEntitiesDedicated, net/minecraft/server/MinecraftServer/updateTimeLightAndEntities]
+    fixable: replaced with updateTimeLightAndEntities
+  hz METHOD r (()V) -> [hz/updateTimeLightAndEntitiesDedicated, net/minecraft/server/MinecraftServer/updateTimeLightAndEntities]
+    fixable: replaced with updateTimeLightAndEntitiesDedicated
+  bjg METHOD q (()V) -> [net/minecraft/server/MinecraftServer/tick, bjg/tickIntegrated]
+    fixable: replaced with tickIntegrated
+  net/minecraft/server/MinecraftServer METHOD q (()V) -> [net/minecraft/server/MinecraftServer/tick, net/minecraft/server/MinecraftServer/tickIntegrated]
+    fixable: replaced with tick
+Finished after 984,21 ms.

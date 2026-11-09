@@ -1,0 +1,2 @@
+ERROR: Unable to simplify switch on enum: const(1) not found, available: {} in method net/minecraft/src/GameSettings getOptionOrdinalValue
+ERROR: Unable to simplify switch on enum: const(1) not found, available: {} in method net/minecraft/src/GameSettings getOptionOrdinalValue

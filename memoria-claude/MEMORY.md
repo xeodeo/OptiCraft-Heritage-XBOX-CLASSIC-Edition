@@ -1,0 +1,30 @@
+- [Respuestas cortas en español](respuestas-cortas-espanol.md) — breve, sin inglés ni tablas largas
+- [Consola real: SSE2 y log por red](xbox-consola-real-sse2.md) — por qué fallaba en la Xbox real y cómo se prueba (UDP)
+- [Siempre dos XBE: 480 y 720p](xbox-720p-xbe.md) — default.xbe + OptiCraft_720p.xbe, el usuario juega en 720p
+- [Plan de optimización Xbox](xbox-plan-optimizacion.md) — rama xbox-unificada (async + OptiJuegos), tirones que quedan, arreglos 29-09
+- [Copiar XBE a ClassicXboxLoader](xbox-loader-copy.md) — cada build a su carpeta OptiCraft\1.2.5 o \1.5.2; el lanzador las detecta
+- [No decoración diferida en Xbox](xbox-no-deferred-populate.md) — árboles/mobs tardaban en salir; probar en consola real, no solo xemu
+- [Builds de prueba vs pública y releases](xbox-builds-prueba-publica.md) — 4 builds + lanzador default.xbe (08-10); la IP del log va en cada carpeta de build
+- [Traspaso para otras IAs](traspaso-contexto-ia.md) — buzon-xbox/00-CONTEXTO.md, mantenerlo al día con estas memorias
+- [Legacy LCE permitido](legacy-lce-permitido.md) — recursos de Downloads\minecraft permitidos (sin tocarla); botones Xbox y crafteo consola ya hechos (v1.1)
+- [Anotar en buzon-xbox](anotar-en-buzon.md) — en tareas largas dejar hallazgos y plan en buzon-xbox/NN.md por si se corta la sesión
+- [agy y OpenCode sin permisos](agy-sin-permisos.md) — agy --dangerously-skip-permissions; OpenCode opencode.json allow; --worktree current
+- [Una compilación a la vez](una-compilacion-a-la-vez.md) — candado buzon-xbox/BUILD.lock antes de compilar o usar xemu (Claude, agy, OpenCode)
+- [Estado actual del proyecto](estado-actual.md) — empezar por buzon-xbox/ESTADO-ACTUAL.md (09-11): 1.2.5 wt-opti30, 1.5.2 prueba wt-152-pociones
+- [Música como el original](musica-comportamiento-original.md) — en Xbox y PS2 se revierte lo que cambia OptiJuegos, con guarda por plataforma
+- [Datos del juego en worktrees](xbox-data-dir-worktrees.md) — sin -DXBOX_DATA_DIR el ISO sale vacío
+- [RE4 a Xbox](re4-xbox-port.md) — GX v2 + salas en marcha (08-10 noche); empezar por buzon/TRASPASO-08-10-noche.md
+- [Melee-X, referencia del port RE4](melee-x-referencia.md) — revisarla antes de diseñar GX/memoria/ARAM/endianness
+- [Nunca /fp:fast](no-fp-fast.md) — nada que pueda cambiar el terreno de una semilla
+- [BT3 a Xbox](bt3-xbox-port.md) — Budokai Tenkaichi 3; empezar por buzon/TRASPASO-21-10.md; rama buena xbox-memoria-pelea (bisect\wt-mem)
+- [Skill agy y su escuchador](skill-agy.md) — lanzar/escuchar/revisar agy con ~/.claude/skills/agy (Monitor + escuchador.py)
+- [AnyXboxClasico](anyxboxclasico.md) — Xbox clásica→PC sin emulador, universal; desde 06-11 sobre XboxXBERecomp (suffering12, buzon/04)
+- [XDK sin instalar](xdk-sin-instalar.md) — 7z x XDKSetup<build>.exe; 24 versiones en xbox-sdks\
+- [No preguntar, decidir](no-preguntar-decidir.md) — en bypass no cerrar con '¿empiezo X?', hacerlo
+- [Versión: Java 1.2.5](version-java-125.md) — no Beta 1.7.3; de LCE solo cosas puntuales
+- [Port a 1.5.2](port152-estado.md) — empezar por buzon-xbox/71-TRASPASO-06-11.md (y 69-PLAN); rama buena port152-claude
+- [Dos interfaces: Java y Legacy](dos-interfaces-java-legacy.md) — comercio y pantallas nuevas en ambas (legacyUI); el creativo NO se toca
+- [OptiFine permitido](optifine-permitido.md) — reutilizar OptiFine 1.5.2 (mcp-diff\srcOF152) como la LCE, sin avisos de licencia
+- [Usar agy, no muchos subagentes](usar-agy-no-subagentes.md) — implementación larga = encargo a agy; Claude revisa
+- [60 fps de referencia 1.5.2](fps-referencia-152.md) — con niebla y nubes; medir todo cambio contra eso, no perderlo
+- [PS3: SDK listo](ps3-sdk.md) — Minecraft en xboox clasico\ps3 (SDK 3.70 sin instalar, ruta corta MINECR~1); port en otro chat
