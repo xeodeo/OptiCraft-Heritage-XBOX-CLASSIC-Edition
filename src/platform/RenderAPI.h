@@ -328,6 +328,13 @@ void renderClearDepth(double depth);
 void renderPolygonOffset(float factor, float units);
 void renderLineWidth(float width);
 void renderViewport(int x, int y, int width, int height);
+// Scissor in back-buffer pixels, origin top-left. Only the Xbox needs it (GUI panels whose
+// GL depth-buffer masking does not carry over); elsewhere it does nothing.
+#if PLATFORM_XBOX
+void renderScissorPixels(bool enable, int x, int y, int width, int height);
+#else
+inline void renderScissorPixels(bool, int, int, int, int) {}
+#endif
 void renderGetViewport(int* values);
 void renderGetMatrix(RenderMatrixQuery query, float* values);
 const unsigned char* renderGetString(RenderStringQuery query);

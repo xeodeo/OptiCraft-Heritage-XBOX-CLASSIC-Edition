@@ -1526,6 +1526,23 @@ void renderViewport(int x, int y, int width, int height)
     d->SetViewport(&vp);
 }
 
+void renderScissorPixels(bool enable, int x, int y, int width, int height)
+{
+    IDirect3DDevice8* d = device();
+    if (!d) return;
+    if (!enable || width <= 0 || height <= 0)
+    {
+        d->SetScissors(0, FALSE, NULL);
+        return;
+    }
+    D3DRECT r;
+    r.x1 = x < 0 ? 0 : x;
+    r.y1 = y < 0 ? 0 : y;
+    r.x2 = x + width;
+    r.y2 = y + height;
+    d->SetScissors(1, FALSE, &r);
+}
+
 void renderGetViewport(int* values)
 {
     if (!values) return;
