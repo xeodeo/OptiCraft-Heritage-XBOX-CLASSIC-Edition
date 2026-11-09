@@ -3333,7 +3333,7 @@ void World::func_82740_a(int_t x, int_t y, int_t z, int_t blockId, int_t delay, 
 #endif
 }
 
-void World::scheduleBlockUpdateFromLoad(int_t x, int_t y, int_t z, int_t blockId, int_t delay)
+void World::scheduleBlockUpdateFromLoad(int_t x, int_t y, int_t z, int_t blockId, int_t delay, int_t priority)
 {
     const long_t scheduledTime = blockId > 0
         ? JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTotalTime())
@@ -3342,10 +3342,12 @@ void World::scheduleBlockUpdateFromLoad(int_t x, int_t y, int_t z, int_t blockId
 #if WORLD_CHUNK_TICK_SCHEDULER
     if (pcLegacyTickScheduler == nullptr)
         pcLegacyTickScheduler = new PcLegacyTickScheduler();
-    pcLegacyTickScheduler->schedule(x, y, z, blockId, scheduledTime);
+    pcLegacyTickScheduler->schedule(x, y, z, blockId, scheduledTime, priority);
 #else
     NextTickListEntry *entry = new NextTickListEntry(x, y, z, blockId);
-    entry->setScheduledTime(scheduledTime);
+    entry->func_82753_a(priority);
+    if (blockId > 0)
+        entry->setScheduledTime(scheduledTime);
 
     auto inserted = scheduledTickSet.insert(entry);
     if (inserted.second)
@@ -3364,34 +3366,54 @@ std::vector<NextTickListEntry *> World::getPendingBlockUpdates(Chunk *chunk, boo
     if (chunk == nullptr)
         return result;
 
-#if WORLD_CHUNK_TICK_SCHEDULER
-    if (pcLegacyTickScheduler == nullptr)
-        return result;
-    return pcLegacyTickScheduler->getPendingForChunk(chunk->xPosition, chunk->zPosition, remove);
-#else
-    const int_t minX = JavaArithmetic::intShl(chunk->xPosition, 4);
-    const int_t maxX = JavaArithmetic::intAdd(minX, 16);
-    const int_t minZ = JavaArithmetic::intShl(chunk->zPosition, 4);
-    const int_t maxZ = JavaArithmetic::intAdd(minZ, 16);
+    const int_t minX = JavaArithmetic::intSub(JavaArithmetic::intShl(chunk->xPosition, 4), 2);
+    const int_t maxX = JavaArithmetic::intAdd(minX, 16 + 2);
+    const int_t minZ = JavaArithmetic::intSub(JavaArithmetic::intShl(chunk->zPosition, 4), 2);
+    const int_t maxZ = JavaArithmetic::intAdd(minZ, 16 + 2);
 
-    const std::vector<NextTickListEntry *> pendingOrder = scheduledTickOrder.valuesInIterationOrder();
-    for (NextTickListEntry *entry : pendingOrder)
+#if WORLD_CHUNK_TICK_SCHEDULER
+    if (pcLegacyTickScheduler != nullptr)
+        result = pcLegacyTickScheduler->getPendingForChunk(chunk->xPosition, chunk->zPosition, remove);
+#else
+    for (auto it = scheduledTickTreeSet.begin(); it != scheduledTickTreeSet.end(); )
     {
+        NextTickListEntry *entry = *it;
         if (entry == nullptr || entry->xCoord < minX || entry->xCoord >= maxX ||
             entry->zCoord < minZ || entry->zCoord >= maxZ)
+        {
+            ++it;
             continue;
+        }
 
-        result.push_back(entry);
         if (remove)
         {
-            scheduledTickTreeSet.erase(entry);
+            it = scheduledTickTreeSet.erase(it);
             scheduledTickSet.erase(entry);
             scheduledTickOrder.remove(entry);
         }
+        else
+        {
+            ++it;
+        }
+        result.push_back(entry);
+    }
+#endif
+
+    for (std::size_t i = 0; i < field_94579_S.size(); ++i)
+    {
+        NextTickListEntry *entry = field_94579_S[i];
+        if (entry == nullptr || entry->xCoord < minX || entry->xCoord >= maxX ||
+            entry->zCoord < minZ || entry->zCoord >= maxZ)
+        {
+            continue;
+        }
+
+        if (remove)
+            field_94579_S[i] = nullptr;
+        result.push_back(entry);
     }
 
     return result;
-#endif
 }
 
 #if PLATFORM_BOUNDED_PATHFIND

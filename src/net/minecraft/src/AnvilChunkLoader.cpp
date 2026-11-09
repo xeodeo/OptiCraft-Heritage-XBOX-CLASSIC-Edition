@@ -415,6 +415,7 @@ void AnvilChunkLoader::writeChunkToLevel(Chunk *chunk, World *world, NBTTagCompo
             tick->setInteger("y", entry->yCoord);
             tick->setInteger("z", entry->zCoord);
             tick->setInteger("t", JavaArithmetic::longToInt(JavaArithmetic::longSub(entry->scheduledTime, now)));
+            tick->setInteger("p", entry->priority);
             ticks->appendTag(tick);
         }
         level->setTag("TileTicks", ticks);
@@ -549,7 +550,7 @@ Chunk *AnvilChunkLoader::readChunkFromLevel(World *world, NBTTagCompound *level)
                 continue;
             world->scheduleBlockUpdateFromLoad(
                 tag->getInteger("x"), tag->getInteger("y"), tag->getInteger("z"),
-                tag->getInteger("i"), tag->getInteger("t"));
+                tag->getInteger("i"), tag->getInteger("t"), tag->getInteger("p"));
         }
     }
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2

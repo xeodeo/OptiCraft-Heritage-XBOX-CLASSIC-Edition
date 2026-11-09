@@ -1127,7 +1127,7 @@ void ChunkProvider::unloadChunk(std::uint64_t key, Chunk *chunk)
 	// Unloading must not force a disk write for clean chunks. The v10 cache
 	// optimization saved every chunk on eviction, which caused heavy IO spikes
 	// while walking. Save only chunks that Java would consider dirty/stale.
-	if (!chunk->neverSave && chunk->needsSaving(false))
+	if (!chunk->neverSave && (chunk->needsSaving(false) || (worldObj != nullptr && !worldObj->getPendingBlockUpdates(chunk, false).empty())))
 	{
 #if PLATFORM_PROFILE_STREAMING
 		const long_t unloadSaveStartNs = System::nanoTime();

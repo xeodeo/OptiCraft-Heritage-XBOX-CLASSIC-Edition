@@ -52,20 +52,42 @@ NextTickListEntry *PcLegacyTickScheduler::popNext(long_t currentTime, bool force
 std::vector<NextTickListEntry *> PcLegacyTickScheduler::getPendingForChunk(int_t chunkX, int_t chunkZ, bool remove)
 {
 	std::vector<NextTickListEntry *> result;
-	const ChunkKey key = makeChunkKey(chunkX, chunkZ);
-	auto bucketIterator = entriesByChunk.find(key);
-	if (bucketIterator == entriesByChunk.end())
-		return result;
+	const int_t minX = JavaArithmetic::intSub(JavaArithmetic::intShl(chunkX, 4), 2);
+	const int_t maxX = JavaArithmetic::intAdd(minX, 16 + 2);
+	const int_t minZ = JavaArithmetic::intSub(JavaArithmetic::intShl(chunkZ, 4), 2);
+	const int_t maxZ = JavaArithmetic::intAdd(minZ, 16 + 2);
 
-	ChunkEntries &entries = bucketIterator->second;
-	result.assign(entries.begin(), entries.end());
+	for (int_t dx = -1; dx <= 1; ++dx)
+	{
+		for (int_t dz = -1; dz <= 1; ++dz)
+		{
+			const ChunkKey key = makeChunkKey(JavaArithmetic::intAdd(chunkX, dx), JavaArithmetic::intAdd(chunkZ, dz));
+			auto bucketIterator = entriesByChunk.find(key);
+			if (bucketIterator == entriesByChunk.end())
+				continue;
+
+			const ChunkEntries &entries = bucketIterator->second;
+			for (NextTickListEntry *entry : entries)
+			{
+				if (entry != nullptr &&
+				    entry->xCoord >= minX && entry->xCoord < maxX &&
+				    entry->zCoord >= minZ && entry->zCoord < maxZ)
+				{
+					result.push_back(entry);
+				}
+			}
+		}
+	}
+
 	std::sort(result.begin(), result.end(), NextTickListEntryComparator{});
 	if (!remove)
 		return result;
 
 	for (NextTickListEntry *entry : result)
+	{
 		detachFromCoreIndexes(entry);
-	entriesByChunk.erase(bucketIterator);
+		detachFromChunk(entry);
+	}
 	return result;
 }
 
@@ -103,7 +125,9 @@ PcLegacyTickScheduler::ChunkKey PcLegacyTickScheduler::makeChunkKeyForEntry(cons
 
 void PcLegacyTickScheduler::attachToChunk(NextTickListEntry *entry)
 {
-	entriesByChunk[makeChunkKeyForEntry(entry)].push_back(entry);
+	ChunkEntries &entries = entriesByChunk[makeChunkKeyForEntry(entry)];
+	entry->chunkBucketIndex = entries.size();
+	entries.push_back(entry);
 }
 
 void PcLegacyTickScheduler::detachFromChunk(NextTickListEntry *entry)
@@ -114,11 +138,14 @@ void PcLegacyTickScheduler::detachFromChunk(NextTickListEntry *entry)
 		return;
 
 	ChunkEntries &entries = bucketIterator->second;
-	auto entryIterator = std::find(entries.begin(), entries.end(), entry);
-	if (entryIterator != entries.end())
+	const std::size_t idx = entry->chunkBucketIndex;
+	if (idx < entries.size() && entries[idx] == entry)
 	{
-		*entryIterator = entries.back();
+		NextTickListEntry *last = entries.back();
+		entries[idx] = last;
+		last->chunkBucketIndex = idx;
 		entries.pop_back();
+		entry->chunkBucketIndex = static_cast<std::size_t>(-1);
 	}
 
 	if (entries.empty())
