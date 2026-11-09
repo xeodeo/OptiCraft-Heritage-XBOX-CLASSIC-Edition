@@ -129,6 +129,15 @@ private:
 	std::map<int_t, std::vector<byte_t>> defaultTerrainFxTiles;
 	std::map<TextureFX *, bool> textureFxHasFrame;
 	std::map<TextureFX *, bool> textureFxFrameAnaglyph;
+	struct UploadedTextureFxTile
+	{
+		int_t texture = -1;
+		int_t tileWidth = 0;
+		byte_t pixels[1024] = {};
+	};
+	// Last tile each effect sent to its atlas: an unchanged frame (compass, clock, a still
+	// fire or portal) is not uploaded again. Cleared whenever an atlas is set up again.
+	std::map<TextureFX *, UploadedTextureFxTile> uploadedTextureFxTiles;
 	std::vector<TextureFX *> ownedTextureFx;
 	std::map<std::string, ThreadDownloadImageData *> urlToImageDataMap;
 	GameSettings *options;

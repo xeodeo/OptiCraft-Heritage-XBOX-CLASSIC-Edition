@@ -224,6 +224,7 @@ RenderEngine::~RenderEngine()
 		delete fx;
 	ownedTextureFx.clear();
 	textureList.clear();
+	uploadedTextureFxTiles.clear();
 
 	for (auto &entry : urlToImageDataMap)
 		delete entry.second;
@@ -803,6 +804,7 @@ int_t RenderEngine::allocateAndSetupTexture(BufferedImage *bufferedimage, bool h
 
 void RenderEngine::setupTexture(BufferedImage *bufferedimage, int_t texture, bool tileAtlas, bool terrainAlphaFix, bool highPrecision)
 {
+	uploadedTextureFxTiles.clear();
 	if (bufferedimage == nullptr)
 		bufferedimage = missingTextureImage.get();
 
@@ -1438,6 +1440,13 @@ void RenderEngine::uploadTextureFxTile(TextureFX *texturefx, int_t texture, int_
 		return;
 
 	tileWidth = Config::limit(tileWidth, 1, Config::getMaxDynamicTileWidth());
+	UploadedTextureFxTile &uploaded = uploadedTextureFxTiles[texturefx];
+	if (uploaded.texture == texture && uploaded.tileWidth == tileWidth &&
+		std::memcmp(uploaded.pixels, texturefx->imageData, sizeof(uploaded.pixels)) == 0)
+		return;
+	uploaded.texture = texture;
+	uploaded.tileWidth = tileWidth;
+	std::memcpy(uploaded.pixels, texturefx->imageData, sizeof(uploaded.pixels));
 	std::vector<byte_t> scaled(static_cast<std::size_t>(tileWidth) * static_cast<std::size_t>(tileWidth) * 4u);
 	for (int_t y = 0; y < tileWidth; ++y)
 	{
@@ -1749,6 +1758,7 @@ void RenderEngine::registerTextureFX(TextureFX *texturefx, bool takeOwnership)
 	if (texturefx == nullptr)
 		return;
 	textureList.push_back(texturefx);
+	uploadedTextureFxTiles.erase(texturefx);
 	if (takeOwnership && std::find(ownedTextureFx.begin(), ownedTextureFx.end(), texturefx) == ownedTextureFx.end())
 		ownedTextureFx.push_back(texturefx);
 	if (texturefx->isAnimationEnabled())
@@ -1782,7 +1792,10 @@ void RenderEngine::updateDynamicTextures()
 		const int_t tileWidth = texturefx->tileImage == 1 ? Config::getIconWidthItems() : Config::getIconWidthTerrain();
 		const SpecialTextureFxResult specialResult = updateSpecialTextureFx(texturefx, texture, tileWidth);
 		if (specialResult != SpecialTextureFxResult::NotHandled)
+		{
+			uploadedTextureFxTiles.erase(texturefx);
 			continue;
+		}
 
 		if (texturefx->isAnimationEnabled())
 		{
