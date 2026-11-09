@@ -1714,6 +1714,7 @@ void renderTextureImageRgba(int level, int width, int height, const void* pixels
         t.pixels.assign(static_cast<size_t>(width) * height, 0);   // CPU copy was dropped
     if (pixels)
         convertRgba(static_cast<const unsigned char*>(pixels), t.pixels.data(), width * height);
+    t.dirtyPartial = false;   // a whole-image upload must not be cut down to a pending animation rect
     swizzleUpload(t);
 }
 
