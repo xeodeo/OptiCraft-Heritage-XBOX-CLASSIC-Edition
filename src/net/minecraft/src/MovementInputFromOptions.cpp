@@ -46,6 +46,21 @@ void MovementInputFromOptions::resetKeyState()
         KeyBinding::unPressAllKeys();
 }
 
+bool MovementInputFromOptions::applySneak(bool rawDown, bool inScreen)
+{
+    if (gameSettings == nullptr || !gameSettings->toggleSneak)
+    {
+        sneakToggled = false;
+        sneakKeyWasDown = rawDown;
+        return inScreen ? false : rawDown;
+    }
+    // Only a fresh press during play flips it; a press that opened or closed a screen does not.
+    if (!inScreen && rawDown && !sneakKeyWasDown)
+        sneakToggled = !sneakToggled;
+    sneakKeyWasDown = rawDown;
+    return sneakToggled;
+}
+
 void MovementInputFromOptions::updatePlayerMoveState(EntityPlayer *entityplayer)
 {
     (void)entityplayer;
@@ -59,7 +74,7 @@ void MovementInputFromOptions::updatePlayerMoveState(EntityPlayer *entityplayer)
         if (minecraft != nullptr && minecraft->isPlayerScreenActive(0))
         {
             jump = false;
-            sneak = false;
+            sneak = applySneak(gameSettings->keyBindSneak->pressed, true);
         }
         else
         {
@@ -68,7 +83,7 @@ void MovementInputFromOptions::updatePlayerMoveState(EntityPlayer *entityplayer)
             if (gameSettings->keyBindLeft->pressed) moveStrafe++;
             if (gameSettings->keyBindRight->pressed) moveStrafe--;
             jump = gameSettings->keyBindJump->pressed;
-            sneak = gameSettings->keyBindSneak->pressed;
+            sneak = applySneak(gameSettings->keyBindSneak->pressed, false);
         }
     }
     else
@@ -78,11 +93,12 @@ void MovementInputFromOptions::updatePlayerMoveState(EntityPlayer *entityplayer)
         if (ps2Snap.connected && !(minecraft != nullptr && minecraft->isPlayerScreenActive(1)))
         {
             jump = (ps2Snap.held & PS2_PAD_CROSS) != 0;
-            sneak = (ps2Snap.held & PS2_PAD_R3) != 0;
+            sneak = applySneak((ps2Snap.held & PS2_PAD_R3) != 0, false);
         }
         else
         {
             jump = false;
+            if (ps2Snap.connected) applySneak((ps2Snap.held & PS2_PAD_R3) != 0, true);
             sneak = false;
         }
 #elif defined(XBOX_PLATFORM)
@@ -103,11 +119,12 @@ void MovementInputFromOptions::updatePlayerMoveState(EntityPlayer *entityplayer)
             moveStrafe -= axis(pad2.leftX);
             moveForward -= axis(pad2.leftY);
             jump = (pad2.held & XBOX_PAD_A) != 0;
-            sneak = (pad2.held & XBOX_PAD_LEFT_THUMB) != 0;
+            sneak = applySneak((pad2.held & XBOX_PAD_LEFT_THUMB) != 0, false);
         }
         else
         {
             jump = false;
+            if (pad2.connected) applySneak((pad2.held & XBOX_PAD_LEFT_THUMB) != 0, true);
             sneak = false;
         }
 #else

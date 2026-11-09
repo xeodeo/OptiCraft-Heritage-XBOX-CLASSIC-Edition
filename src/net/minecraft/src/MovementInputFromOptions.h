@@ -20,4 +20,8 @@ public:
 private:
 	GameSettings *gameSettings;
 	int padPort;
+	// Toggle-sneak state; a new MovementInputFromOptions on respawn/world change resets it.
+	bool sneakToggled = false;
+	bool sneakKeyWasDown = false;
+	bool applySneak(bool rawDown, bool inScreen);
 };

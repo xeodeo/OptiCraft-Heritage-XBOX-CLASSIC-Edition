@@ -47,7 +47,9 @@ void GuiControls::initGui()
 	controlList.push_back(new GuiButton(201, width / 2 - 100, nextY, uiText("Wii Pad Bindings...")));
 	nextY += 24;
 #endif
-	controlList.push_back(new GuiButton(200, width / 2 - 100, nextY, tr->translateKey("gui.done")));
+	controlList.push_back(new GuiButton(202, width / 2 - 155, nextY, 150, 20,
+		uiText(options->toggleSneak ? "Sneak: Toggle" : "Sneak: Hold")));
+	controlList.push_back(new GuiButton(200, width / 2 + 5, nextY, 150, 20, tr->translateKey("gui.done")));
 	screenTitle = tr->translateKey("controls.title");
 }
 
@@ -56,6 +58,13 @@ void GuiControls::actionPerformed(GuiButton *button)
 	for (int_t k = 0; k < (int_t)displayedBindings.size(); k++)
 		controlList[k]->displayString = options->getOptionDisplayString(displayedBindings[k]);
 
+	if (button->id == 202)
+	{
+		options->toggleSneak = !options->toggleSneak;
+		options->saveOptions();
+		button->displayString = uiText(options->toggleSneak ? "Sneak: Toggle" : "Sneak: Hold");
+		return;
+	}
 	if (button->id == 200)
 	{
 		// Guard against uiText("Done") being clicked while a binding is still

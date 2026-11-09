@@ -459,6 +459,8 @@ std::string StringTranslate::translateUi(const std::string &english)
         if (english == "Fog") return "Niebla";
         if (english == "Dolby Digital") return "Dolby Digital";
         if (english == "Advanced") return "Avanzado";
+        if (english == "Sneak: Hold") return "Agacharse: mantener";
+        if (english == "Sneak: Toggle") return "Agacharse: alternar";
         if (english == "Details") return "Detalles";
         if (english == "Animations") return "Animaciones";
         if (english == "Quality") return "Calidad";
