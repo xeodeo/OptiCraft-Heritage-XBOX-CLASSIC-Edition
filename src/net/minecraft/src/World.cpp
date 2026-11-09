@@ -11,8 +11,13 @@
 #if PLATFORM_PS2
 #include "ps2/diagnostics/Ps2OptimizationValidation.h"
 #endif
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
 #include "pc/world/PcLegacyTickScheduler.h"
+#endif
+#if (PLATFORM_PC_LEGACY && PC_LEGACY_TICK_SCHEDULER) || (PLATFORM_XBOX && XBOX_CHUNK_TICK_SCHEDULER)
+#define WORLD_CHUNK_TICK_SCHEDULER 1
+#else
+#define WORLD_CHUNK_TICK_SCHEDULER 0
 #endif
 #if PLATFORM_PROFILE_STREAMING && MC_LOG_LEVEL >= 2
 // Defined in client/Minecraft.cpp; see the matching comment in ChunkProvider.cpp
@@ -271,7 +276,7 @@ World::~World()
     // lightingToUpdate now holds MetadataChunkBlock by value; nothing to free.
     for (NextTickListEntry *entry : scheduledTickTreeSet)
         delete entry;
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
     delete pcLegacyTickScheduler;
     pcLegacyTickScheduler = nullptr;
 #endif
@@ -3318,7 +3323,7 @@ void World::scheduleBlockUpdate(int x, int y, int z, int blockId, int delay)
         ? JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTime())
         : 0;
 
-#if PLATFORM_PC_LEGACY && PC_LEGACY_TICK_SCHEDULER
+#if WORLD_CHUNK_TICK_SCHEDULER
     if (pcLegacyTickScheduler == nullptr)
         pcLegacyTickScheduler = new PcLegacyTickScheduler();
     pcLegacyTickScheduler->schedule(x, y, z, blockId, scheduledTime);
@@ -3343,8 +3348,12 @@ void World::scheduleBlockUpdate(int x, int y, int z, int blockId, int delay)
 
 bool World::isBlockTickScheduled(int_t x, int_t y, int_t z, int_t blockId)
 {
+#if WORLD_CHUNK_TICK_SCHEDULER
+	return pcLegacyTickScheduler != nullptr && pcLegacyTickScheduler->contains(x, y, z, blockId);
+#else
 	NextTickListEntry entry(x, y, z, blockId);
 	return scheduledTickSet.find(&entry) != scheduledTickSet.end();
+#endif
 }
 
 void World::func_82740_a(int_t x, int_t y, int_t z, int_t blockId, int_t delay, int_t priority)
@@ -3372,6 +3381,12 @@ void World::func_82740_a(int_t x, int_t y, int_t z, int_t blockId, int_t delay, 
 
 	if (blockId > 0)
 	{
+#if WORLD_CHUNK_TICK_SCHEDULER
+		if (pcLegacyTickScheduler == nullptr)
+			pcLegacyTickScheduler = new PcLegacyTickScheduler();
+		pcLegacyTickScheduler->schedule(x, y, z, blockId,
+			JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTime()), priority);
+#else
 		NextTickListEntry *entry = new NextTickListEntry(x, y, z, blockId);
 		entry->setScheduledTime(JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTime()));
 		entry->func_82753_a(priority);
@@ -3386,6 +3401,7 @@ void World::func_82740_a(int_t x, int_t y, int_t z, int_t blockId, int_t delay, 
 		{
 			delete entry;
 		}
+#endif
 	}
 }
 
@@ -3395,7 +3411,7 @@ void World::scheduleBlockUpdateFromLoad(int_t x, int_t y, int_t z, int_t blockId
         ? JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTime())
         : 0;
 
-#if PLATFORM_PC_LEGACY && PC_LEGACY_TICK_SCHEDULER
+#if WORLD_CHUNK_TICK_SCHEDULER
     if (pcLegacyTickScheduler == nullptr)
         pcLegacyTickScheduler = new PcLegacyTickScheduler();
     pcLegacyTickScheduler->schedule(x, y, z, blockId, scheduledTime);
@@ -3420,7 +3436,7 @@ std::vector<NextTickListEntry *> World::getPendingBlockUpdates(Chunk *chunk, boo
     if (chunk == nullptr)
         return result;
 
-#if PLATFORM_PC_LEGACY && PC_LEGACY_TICK_SCHEDULER
+#if WORLD_CHUNK_TICK_SCHEDULER
     if (pcLegacyTickScheduler == nullptr)
         return result;
     return pcLegacyTickScheduler->getPendingForChunk(chunk->xPosition, chunk->zPosition, remove);
@@ -5158,7 +5174,7 @@ void World::tick()
     platformPhaseStartNs = System::nanoTime();
 #endif
 #if PLATFORM_PROFILE_STREAMING && MC_LOG_LEVEL >= 2
-#if PLATFORM_PC_LEGACY && PC_LEGACY_TICK_SCHEDULER
+#if WORLD_CHUNK_TICK_SCHEDULER
     platformProfileTickQueue((long long)(pcLegacyTickScheduler != nullptr ? pcLegacyTickScheduler->size() : 0));
 #else
     platformProfileTickQueue((long long)scheduledTickTreeSet.size());
@@ -5663,7 +5679,7 @@ void World::updateBlocksAndPlayCaveSounds()
 
 bool World::TickUpdates(bool flag)
 {
-#if PLATFORM_PC_LEGACY && PC_LEGACY_TICK_SCHEDULER
+#if WORLD_CHUNK_TICK_SCHEDULER
     int size = pcLegacyTickScheduler != nullptr ? static_cast<int>(pcLegacyTickScheduler->size()) : 0;
 #else
     int size = scheduledTickTreeSet.size();
@@ -5680,7 +5696,7 @@ bool World::TickUpdates(bool flag)
 
     for (int j = 0; j < size; j++)
     {
-#if PLATFORM_PC_LEGACY && PC_LEGACY_TICK_SCHEDULER
+#if WORLD_CHUNK_TICK_SCHEDULER
         NextTickListEntry *entry = pcLegacyTickScheduler->popNext(worldInfo->getWorldTime(), flag);
         if (entry == nullptr)
             break;
@@ -5718,7 +5734,7 @@ bool World::TickUpdates(bool flag)
         delete entry;
     }
 
-#if PLATFORM_PC_LEGACY && PC_LEGACY_TICK_SCHEDULER
+#if WORLD_CHUNK_TICK_SCHEDULER
     return pcLegacyTickScheduler != nullptr && !pcLegacyTickScheduler->empty();
 #else
     return scheduledTickTreeSet.size() != 0;
