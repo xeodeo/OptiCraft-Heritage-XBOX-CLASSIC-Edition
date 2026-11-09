@@ -49,6 +49,7 @@ constexpr int_t BUTTON_ID_NEXT_SKIN = 4;
 constexpr int_t BUTTON_ID_PLAYER2 = 10;
 constexpr int_t BUTTON_ID_LOAD_SKINS = 11;
 constexpr int_t BUTTON_ID_DELETE_SKIN = 12;
+constexpr int_t BUTTON_ID_TAB_BASE = 100;
 
 std::string toUpperString(const std::string &str)
 {
@@ -102,8 +103,6 @@ GuiSkinSelector::GuiSkinSelector(GuiScreen *parent, bool isPlayer2)
     , legacySideTabW(0)
     , legacyNameplateX(0)
     , legacyNameplateW(0)
-    , buttonTabDefault(nullptr)
-    , buttonTabCustom(nullptr)
     , buttonPlayer2Skin(nullptr)
     , buttonLoadSkins(nullptr)
     , buttonDeleteSkin(nullptr)
@@ -126,8 +125,38 @@ GuiSkinSelector::GuiSkinSelector(GuiScreen *parent, bool isPlayer2)
     currentSkinIndex = SkinManager::getSelectedIndex();
 }
 
+void GuiSkinSelector::recordPreviewTexture(const std::string &path)
+{
+    if (path.empty())
+        return;
+    if (std::find(loadedTextures.begin(), loadedTextures.end(), path) == loadedTextures.end())
+        loadedTextures.push_back(path);
+}
+
+void GuiSkinSelector::releaseUnusedPreviewTextures()
+{
+    if (mc == nullptr || mc->renderEngine == nullptr)
+        return;
+
+    std::string p1Active = SkinManager::getActiveSkinTexture();
+    std::string p2Active = SkinManager::getPlayer2SkinTexture();
+    std::string defTex = SkinManager::getDefaultSkinTexture();
+
+    for (const std::string &path : loadedTextures)
+    {
+        if (path.empty())
+            continue;
+        if (path == p1Active || path == p2Active || path == defTex || path == "/mob/char.png")
+            continue;
+        mc->renderEngine->releaseTexture(path);
+    }
+    loadedTextures.clear();
+    mc->renderEngine->clearDecodedTextureCache();
+}
+
 GuiSkinSelector::~GuiSkinSelector()
 {
+    releaseUnusedPreviewTextures();
     delete previewModel32;
     previewModel32 = nullptr;
     delete previewModel64;
@@ -145,8 +174,7 @@ void GuiSkinSelector::initGui()
     XboxPad::clearLatchedPressed();
 #endif
     controlList.clear();
-    buttonTabDefault = nullptr;
-    buttonTabCustom = nullptr;
+    packButtons.clear();
     buttonPlayer2Skin = nullptr;
     buttonLoadSkins = nullptr;
     buttonDeleteSkin = nullptr;
@@ -241,25 +269,24 @@ void GuiSkinSelector::initGui()
     // Tabs in left panel (placed below pack cover art)
     const int_t packBtnX = dialogLeft + 6;
     const int_t packBtnW = leftPanelWidth - 12;
-    const int_t tabY = dialogTop + 78;
+    const int numPacks = SkinManager::getPackCount();
+    const int_t btnH = (numPacks > 3) ? 15 : 18;
+    const int_t btnGap = 2;
+    const int_t artSize = (numPacks > 3) ? 40 : std::min<int_t>(leftPanelWidth - 20, 56);
+    const int_t tabY = dialogTop + artSize + 12;
 
-    std::string defBase = isEs ? "Skins Originales" : "Default Skins";
-    std::string defLabel = (currentPackIndex == 0) ? ("> " + defBase + " <") : defBase;
-    buttonTabDefault = new GuiButton(BUTTON_ID_TAB_DEFAULT, packBtnX, tabY, packBtnW, 18, defLabel);
-    controlList.push_back(buttonTabDefault);
+    for (int p = 0; p < numPacks; ++p)
+    {
+        std::string pName = SkinManager::getPackName(p);
+        if (p == 0)
+            pName = isEs ? "Originales" : "Default";
+        else if (pName == "Custom Skins")
+            pName = std::string(isEs ? "Personal." : "Custom") + " (" + std::to_string(SkinManager::getSkinCountForPack(p)) + ")";
 
-    if (SkinManager::getPackCount() > 1)
-    {
-        std::string customBase = isEs ? "Personalizado" : "Custom";
-        std::string customLabel = customBase + " (" + std::to_string(SkinManager::getSkinCountForPack(1)) + ")";
-        if (currentPackIndex == 1)
-            customLabel = "> " + customLabel + " <";
-        buttonTabCustom = new GuiButton(BUTTON_ID_TAB_CUSTOM, packBtnX, tabY + 22, packBtnW, 18, customLabel);
-        controlList.push_back(buttonTabCustom);
-    }
-    else
-    {
-        buttonTabCustom = nullptr;
+        std::string label = (currentPackIndex == p) ? ("> " + pName + " <") : pName;
+        GuiButton *btn = new GuiButton(BUTTON_ID_TAB_BASE + p, packBtnX, tabY + p * (btnH + btnGap), packBtnW, btnH, label);
+        packButtons.push_back(btn);
+        controlList.push_back(btn);
     }
 
     // Bottom action buttons
@@ -286,7 +313,8 @@ void GuiSkinSelector::initGui()
     buttonLoadSkins = new GuiButton(BUTTON_ID_LOAD_SKINS, loadBtnX, btnY, loadBtnWidth, p2BtnHeight, loadBtnText);
     controlList.push_back(buttonLoadSkins);
 
-    if (currentPackIndex == 1 && !SkinManager::getCustomSkins().empty())
+    const bool isCustomPack = (SkinManager::getPackName(currentPackIndex) == "Custom Skins");
+    if (isCustomPack && !SkinManager::getCustomSkins().empty())
     {
         const int_t delBtnWidth = 85;
         std::string delBtnText = isEs ? "Eliminar Skin" : "Delete Skin";
@@ -301,11 +329,14 @@ void GuiSkinSelector::initGui()
 
 void GuiSkinSelector::switchPack(int newPackIndex)
 {
+    const int packCount = SkinManager::getPackCount();
+    if (packCount <= 0)
+        return;
+    newPackIndex = ((newPackIndex % packCount) + packCount) % packCount;
     if (newPackIndex == currentPackIndex)
         return;
 
-    if (newPackIndex == 1 && SkinManager::getCustomSkins().empty())
-        return;
+    releaseUnusedPreviewTextures();
 
     currentPackIndex = newPackIndex;
     if (!isPlayer2Skin)
@@ -333,7 +364,7 @@ void GuiSkinSelector::togglePlayer2Mode()
 
 void GuiSkinSelector::deleteCurrentCustomSkin()
 {
-    if (currentPackIndex != 1)
+    if (SkinManager::getPackName(currentPackIndex) != "Custom Skins")
         return;
 
     const auto &customs = SkinManager::getCustomSkins();
@@ -400,7 +431,7 @@ void GuiSkinSelector::handleSpecializedMenuInput()
     // Square: Delete current custom skin (when on custom pack), or toggle P2 skin in Legacy mode
     if ((pressed & PS2_PAD_SQUARE) != 0)
     {
-        if (currentPackIndex == 1)
+        if (SkinManager::getPackName(currentPackIndex) == "Custom Skins")
         {
             deleteCurrentCustomSkin();
             return;
@@ -429,12 +460,19 @@ void GuiSkinSelector::handleSpecializedMenuInput()
     }
 
     // L2 / R2 (and D-Pad Up/Down in Legacy mode): Switch between skin packs (tabs)
-    if ((pressed & (PS2_PAD_L2 | PS2_PAD_R2)) != 0 ||
-        (isLegacyMode() && (pad.pressed & (PLATFORM_TEXT_UP | PLATFORM_TEXT_DOWN)) != 0))
+    if ((pressed & PS2_PAD_L2) != 0 || (isLegacyMode() && (pad.pressed & PLATFORM_TEXT_UP) != 0))
     {
         if (SkinManager::getPackCount() > 1)
         {
-            switchPack(1 - currentPackIndex);
+            switchPack(currentPackIndex - 1);
+            return;
+        }
+    }
+    if ((pressed & PS2_PAD_R2) != 0 || (isLegacyMode() && (pad.pressed & PLATFORM_TEXT_DOWN) != 0))
+    {
+        if (SkinManager::getPackCount() > 1)
+        {
+            switchPack(currentPackIndex + 1);
             return;
         }
     }
@@ -514,9 +552,14 @@ void GuiSkinSelector::handleSpecializedMenuInput()
     {
 #if PLATFORM_XBOX
         const XboxPadSnapshot &xpad = XboxPad::playerSnapshot(XboxPad::menuPlayer());
-        if ((xpad.pressed & (XBOX_PAD_LT | XBOX_PAD_RT)) != 0 && SkinManager::getPackCount() > 1)
+        if ((xpad.pressed & XBOX_PAD_LT) != 0 && SkinManager::getPackCount() > 1)
         {
-            switchPack(1 - currentPackIndex);
+            switchPack(currentPackIndex - 1);
+            return;
+        }
+        if ((xpad.pressed & XBOX_PAD_RT) != 0 && SkinManager::getPackCount() > 1)
+        {
+            switchPack(currentPackIndex + 1);
             return;
         }
         if ((xpad.pressed & XBOX_PAD_RIGHT_THUMB) != 0)
@@ -551,7 +594,7 @@ void GuiSkinSelector::handleSpecializedMenuInput()
         // X (PLATFORM_TEXT_BACK on Xbox): Delete custom skin on custom pack, or toggle Player 2 mode
         if ((pad.pressed & PLATFORM_TEXT_BACK) != 0)
         {
-            if (currentPackIndex == 1 && !SkinManager::getCustomSkins().empty())
+            if (SkinManager::getPackName(currentPackIndex) == "Custom Skins" && !SkinManager::getCustomSkins().empty())
                 deleteCurrentCustomSkin();
             else
                 togglePlayer2Mode();
@@ -596,9 +639,14 @@ void GuiSkinSelector::handleSpecializedMenuInput()
         }
 
         // D-Pad / Left Stick Up/Down: Switch skin pack
-        if ((pad.pressed & (PLATFORM_TEXT_UP | PLATFORM_TEXT_DOWN)) != 0 && SkinManager::getPackCount() > 1)
+        if ((pad.pressed & PLATFORM_TEXT_UP) != 0 && SkinManager::getPackCount() > 1)
         {
-            switchPack(1 - currentPackIndex);
+            switchPack(currentPackIndex - 1);
+            return;
+        }
+        if ((pad.pressed & PLATFORM_TEXT_DOWN) != 0 && SkinManager::getPackCount() > 1)
+        {
+            switchPack(currentPackIndex + 1);
             return;
         }
 
@@ -623,9 +671,14 @@ void GuiSkinSelector::handleSpecializedMenuInput()
     else if ((pad.pressed & PLATFORM_TEXT_RIGHT) != 0)
         nextSkin();
 
-    if ((pad.pressed & (PLATFORM_TEXT_UP | PLATFORM_TEXT_DOWN)) != 0 && SkinManager::getPackCount() > 1)
+    if ((pad.pressed & PLATFORM_TEXT_UP) != 0 && SkinManager::getPackCount() > 1)
     {
-        switchPack(1 - currentPackIndex);
+        switchPack(currentPackIndex - 1);
+        return;
+    }
+    if ((pad.pressed & PLATFORM_TEXT_DOWN) != 0 && SkinManager::getPackCount() > 1)
+    {
+        switchPack(currentPackIndex + 1);
         return;
     }
 
@@ -699,11 +752,16 @@ void GuiSkinSelector::keyTyped(char_t c, int_t key)
     }
 
     // Up / Down arrows in Legacy mode: Switch pack
-    if (isLegacyMode() && (key == lwjgl::Keyboard::KEY_UP || key == lwjgl::Keyboard::KEY_DOWN ||
-                           key == lwjgl::Keyboard::KEY_W || key == lwjgl::Keyboard::KEY_S))
+    if (isLegacyMode() && (key == lwjgl::Keyboard::KEY_UP || key == lwjgl::Keyboard::KEY_W))
     {
         if (SkinManager::getPackCount() > 1)
-            switchPack(1 - currentPackIndex);
+            switchPack(currentPackIndex - 1);
+        return;
+    }
+    if (isLegacyMode() && (key == lwjgl::Keyboard::KEY_DOWN || key == lwjgl::Keyboard::KEY_S))
+    {
+        if (SkinManager::getPackCount() > 1)
+            switchPack(currentPackIndex + 1);
         return;
     }
 
@@ -741,7 +799,7 @@ void GuiSkinSelector::keyTyped(char_t c, int_t key)
     if (key == lwjgl::Keyboard::KEY_TAB)
     {
         if (SkinManager::getPackCount() > 1)
-            switchPack(1 - currentPackIndex);
+            switchPack(currentPackIndex + 1);
         return;
     }
 
@@ -842,22 +900,23 @@ void GuiSkinSelector::mouseClicked(int_t mouseX, int_t mouseY, int_t button)
         // Click on Left or Right pack tabs switches packs
         if (mouseY >= legacyPackBarY && mouseY <= legacyPackBarY + legacyPackBarH)
         {
+            const int pc = SkinManager::getPackCount();
             if (mouseX >= legacyLeftTabX && mouseX <= legacyLeftTabX + legacySideTabW)
             {
-                if (currentPackIndex > 0)
+                if (pc > 1)
                     switchPack(currentPackIndex - 1);
                 return;
             }
             if (mouseX >= legacyRightTabX && mouseX <= legacyRightTabX + legacySideTabW)
             {
-                if (currentPackIndex + 1 < SkinManager::getPackCount())
+                if (pc > 1)
                     switchPack(currentPackIndex + 1);
                 return;
             }
             if (mouseX >= legacyCenterTabX && mouseX <= legacyCenterTabX + legacyCenterTabW)
             {
-                if (SkinManager::getPackCount() > 1)
-                    switchPack(1 - currentPackIndex);
+                if (pc > 1)
+                    switchPack(currentPackIndex + 1);
                 return;
             }
         }
@@ -940,7 +999,11 @@ void GuiSkinSelector::actionPerformed(GuiButton *button)
     if (!button->enabled)
         return;
 
-    if (button->id == BUTTON_ID_TAB_DEFAULT)
+    if (button->id >= BUTTON_ID_TAB_BASE && button->id < BUTTON_ID_TAB_BASE + SkinManager::getPackCount())
+    {
+        switchPack(button->id - BUTTON_ID_TAB_BASE);
+    }
+    else if (button->id == BUTTON_ID_TAB_DEFAULT)
     {
         switchPack(0);
     }
@@ -1018,6 +1081,10 @@ void GuiSkinSelector::drawFrontPreview(const SkinEntry *skin, float x, float y, 
 {
     if (skin == nullptr || mc == nullptr || mc->renderEngine == nullptr)
         return;
+
+    if (!skin->frontPath.empty()) recordPreviewTexture(skin->frontPath);
+    if (!skin->skinPath.empty()) recordPreviewTexture(skin->skinPath);
+    if (!skin->modelPath.empty()) recordPreviewTexture(skin->modelPath);
 
     // If pre-rendered 16x32 front preview is present, draw single quad
     if (!skin->isCustom && !skin->frontPath.empty())
@@ -1142,6 +1209,7 @@ void GuiSkinSelector::drawLegacyCharacter3D(const SkinEntry *skin, float centerX
     std::string texPath = !skin->modelPath.empty() ? skin->modelPath : skin->skinPath;
     if (texPath.empty())
         texPath = SkinManager::getDefaultSkinTexture();
+    recordPreviewTexture(texPath);
 
     int_t texId = mc->renderEngine->getTexture(texPath);
     if (texId < 0 || mc->renderEngine->isTextureFailed(texPath))
@@ -1328,16 +1396,20 @@ void GuiSkinSelector::drawLegacyScreen(int_t mouseX, int_t mouseY, float_t parti
     const int totalSkins = SkinManager::getSkinCountForPack(currentPackIndex);
 
     auto getPackDisplayTitle = [&](int packIdx) -> std::string {
+        if (packIdx < 0 || packIdx >= packCount)
+            return "";
+        std::string pName = SkinManager::getPackName(packIdx);
         if (packIdx == 0)
             return isEs ? "Skins Originales" : "Default Skins";
-        const int customCount = SkinManager::getSkinCountForPack(1);
-        return (isEs ? "Personalizado (" : "Custom Skins (") + std::to_string(customCount) + ")";
+        if (pName == "Custom Skins")
+        {
+            const int customCount = SkinManager::getSkinCountForPack(packIdx);
+            return (isEs ? "Personalizado (" : "Custom Skins (") + std::to_string(customCount) + ")";
+        }
+        return pName;
     };
 
     const std::string activePackTitle = getPackDisplayTitle(currentPackIndex);
-    // Each neighbouring pack shows once, on its own side; an empty pack is dimmed.
-    const bool hasPrevPack = currentPackIndex > 0;
-    const bool hasNextPack = currentPackIndex + 1 < packCount;
 
     auto drawLegacyPackTab = [&](int_t x, int_t y, int_t w, int_t h, const std::string &text, bool isCenterActive, bool enabled) {
         if (isCenterActive)
@@ -1357,15 +1429,22 @@ void GuiSkinSelector::drawLegacyScreen(int_t mouseX, int_t mouseY, float_t parti
         drawCenteredString(fontRenderer, clipped, x + w / 2, textY, color);
     };
 
-    if (hasPrevPack)
+    if (packCount > 1)
+    {
+        int prevIdx = (currentPackIndex - 1 + packCount) % packCount;
+        int nextIdx = (currentPackIndex + 1) % packCount;
         drawLegacyPackTab(legacyLeftTabX, legacyPackBarY, legacySideTabW, legacyPackBarH,
-                          "< " + getPackDisplayTitle(currentPackIndex - 1), false,
-                          SkinManager::getSkinCountForPack(currentPackIndex - 1) > 0);
-    drawLegacyPackTab(legacyCenterTabX, legacyPackBarY, legacyCenterTabW, legacyPackBarH, activePackTitle, true, true);
-    if (hasNextPack)
+                          "< " + getPackDisplayTitle(prevIdx), false,
+                          SkinManager::getSkinCountForPack(prevIdx) > 0);
+        drawLegacyPackTab(legacyCenterTabX, legacyPackBarY, legacyCenterTabW, legacyPackBarH, activePackTitle, true, true);
         drawLegacyPackTab(legacyRightTabX, legacyPackBarY, legacySideTabW, legacyPackBarH,
-                          getPackDisplayTitle(currentPackIndex + 1) + " >", false,
-                          SkinManager::getSkinCountForPack(currentPackIndex + 1) > 0);
+                          getPackDisplayTitle(nextIdx) + " >", false,
+                          SkinManager::getSkinCountForPack(nextIdx) > 0);
+    }
+    else
+    {
+        drawLegacyPackTab(legacyCenterTabX, legacyPackBarY, legacyCenterTabW, legacyPackBarH, activePackTitle, true, true);
+    }
 
     // 6. 3D Character Carousel (Center + 4 Left + 4 Right)
     if (totalSkins > 0)
@@ -1530,7 +1609,7 @@ void GuiSkinSelector::drawLegacyScreen(int_t mouseX, int_t mouseY, float_t parti
     {
         const int_t iconH = hdLayout ? 11 : 10;
         const int_t gap = hdLayout ? 10 : 6;
-        const bool showDeleteOnX = (currentPackIndex == 1 && !SkinManager::getCustomSkins().empty());
+        const bool showDeleteOnX = (SkinManager::getPackName(currentPackIndex) == "Custom Skins" && !SkinManager::getCustomSkins().empty());
         const std::string &xLabel = showDeleteOnX ? lblDelete : lblP2;
 
         int_t totalPromptW = 0;
@@ -1559,7 +1638,7 @@ void GuiSkinSelector::drawLegacyScreen(int_t mouseX, int_t mouseY, float_t parti
     const std::string actions[] = {lblSelect, lblBack, uiText("Skin"), uiText("Tab")};
     drawControlHintRow(mc, width, footerY, buttons, actions, 4);
 #else
-    const bool showDelete = (currentPackIndex == 1 && !SkinManager::getCustomSkins().empty());
+    const bool showDelete = (SkinManager::getPackName(currentPackIndex) == "Custom Skins" && !SkinManager::getCustomSkins().empty());
     const std::string buttons[] = {"Enter", "Esc", "Left/Right", "Tab", "L", showDelete ? "Del" : "P"};
     const std::string actions[] = {lblSelect, lblBack, uiText("Skin"), uiText("Tab"), lblLoad, showDelete ? lblDelete : lblP2};
     drawControlHintRow(mc, width, footerY, buttons, actions, 6);
@@ -1587,14 +1666,16 @@ void GuiSkinSelector::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick
     drawInsetPanel(leftX1, leftY1, leftX2, leftY2, 0xD0101010);
 
     // Pack artwork container (square)
-    const int_t artSize = std::min<int_t>(leftPanelWidth - 20, 60);
+    const int numPacks = SkinManager::getPackCount();
+    const int_t artSize = (numPacks > 3) ? 40 : std::min<int_t>(leftPanelWidth - 20, 56);
     const int_t artX = leftX1 + (leftPanelWidth - artSize) / 2;
-    const int_t artY = leftY1 + 8;
+    const int_t artY = leftY1 + 6;
     drawInsetPanel(artX - 1, artY - 1, artX + artSize + 1, artY + artSize + 1, 0xFF000000);
 
     // Draw pack cover art
     if (mc != nullptr && mc->renderEngine != nullptr)
     {
+        recordPreviewTexture("/skins/default_pack.png");
         int coverTex = mc->renderEngine->getTexture("/skins/default_pack.png");
         if (coverTex >= 0)
         {

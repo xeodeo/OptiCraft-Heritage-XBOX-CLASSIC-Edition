@@ -569,6 +569,24 @@ def copy_extra_sounds(extra_root: Path, resources: Path) -> list[str]:
     return copied
 
 
+def copy_lce_skin_packs(base_data: Path, assets: Path, staged: list[str]) -> list[str]:
+    """Copies LCE DLC skin packs into the staged assets/skins/packs directory."""
+    copied = []
+    base_packs = base_data / "assets/skins/packs"
+    dest_packs = assets / "skins/packs"
+    if base_packs.is_dir():
+        for item in sorted(base_packs.rglob("*")):
+            if item.is_file():
+                rel = item.relative_to(base_packs)
+                dest = dest_packs / rel
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(item, dest)
+                p = "assets/skins/packs/" + rel.as_posix()
+                staged.append(p)
+                copied.append(p)
+    return copied
+
+
 def load_make_pak(script: Path):
     spec = importlib.util.spec_from_file_location("make_pak", script)
     if spec is None or spec.loader is None:
@@ -634,6 +652,7 @@ def main() -> int:
                                    args.source / "lang", assets / "lang")
     staged += [f"assets/lang/{name}" for name in merged_langs]
     staged.append(add_wither_hearts(assets / "gui/icons.png", args.source / "gui/icons.png"))
+    copy_lce_skin_packs(args.base_data, assets, staged)
     block_report = parse_block_report(block_cpp, block_slots)
 
     args.preview.parent.mkdir(parents=True, exist_ok=True)
