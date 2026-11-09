@@ -19,6 +19,7 @@ public:
     void mouseClicked(int_t mouseX, int_t mouseY, int_t button) override;
     void keyTyped(char_t c, int_t key) override;
     void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
+    bool holdRepeatTakeOne(Slot *slot) override;
     Slot *getControllerNavigationTarget(Slot *selected, int_t dirX, int_t dirY) override;
     bool scrollRows(int_t direction);
 
