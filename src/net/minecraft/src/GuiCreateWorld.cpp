@@ -1,3 +1,4 @@
+#include "FontRenderer.h"
 #include "GuiCreateWorld.h"
 #include "GuiTextField.h"
 #include "GuiButton.h"
@@ -12,6 +13,7 @@
 #include "PlayerControllerSP.h"
 #include "PlayerControllerCreative.h"
 #include "Minecraft.h"
+#include "GameSettings.h"
 #include "java/Random.h"
 #include "java/String.h"
 #include "pc/lwjgl/Keyboard.h"
@@ -75,9 +77,9 @@ void GuiCreateWorld::initGui()
     controlList.push_back(worldTypeButton = new GuiButton(5, width / 2 + 5, 100, 150, 20,
         tr->translateKey("selectWorld.mapType")));
     worldTypeButton->enabled2 = false;
-    controlList.push_back(worldSizeButton = new GuiButton(7, width / 2 - 75, 125, 150, 20, ""));
+    controlList.push_back(worldSizeButton = new GuiButton(7, width / 2 - 155, 151, 150, 20, ""));
     worldSizeButton->enabled2 = false;
-    controlList.push_back(bonusItemsButton = new GuiButton(8, width / 2 - 155, 125, 150, 20, ""));
+    controlList.push_back(bonusItemsButton = new GuiButton(8, width / 2 + 5, 151, 150, 20, ""));
     bonusItemsButton->enabled2 = false;
 
     delete textboxWorldName;
@@ -190,6 +192,12 @@ void GuiCreateWorld::updateButtonText()
                 : "World Size: Infinite";
         }
     }
+    // Long translations (e.g. Spanish) must not spill over the 150 px buttons.
+    constexpr int_t kOptionButtonWidth = 150;
+    for (GuiButton *b : {generateStructuresButton, worldTypeButton, bonusItemsButton, worldSizeButton, gameModeButton})
+        if (b != nullptr && fontRenderer != nullptr && !(mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI) &&
+            fontRenderer->getStringWidth(b->displayString) > kOptionButtonWidth - 8)
+            b->displayString = fontRenderer->trimStringToWidth(b->displayString, kOptionButtonWidth - 14) + "...";
 }
 
 std::string GuiCreateWorld::generateUnusedFolderName(ISaveFormat *fmt, const std::string &base)
