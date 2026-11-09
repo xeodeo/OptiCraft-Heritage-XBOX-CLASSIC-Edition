@@ -115,6 +115,7 @@ else()
         "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyMeshScheduler.cpp"
         "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacySectionVisibility.cpp"
         "${CMAKE_SOURCE_DIR}/src/pc/render/PcLegacyStaticTileEntityMesh.cpp"
+        "${CMAKE_SOURCE_DIR}/src/pc/world/PcLegacyTickScheduler.cpp"
     )
     file(GLOB XBOX_ZLIB_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/external/zlib/*.c")
     list(APPEND XBOX_SOURCES ${XBOX_ZLIB_SOURCES})

@@ -175,4 +175,8 @@
 #define XBOX_LEGACY_GUI_SCALE                    2
 #define XBOX_LEGACY_CREATE_WORLD_PANEL_WIDTH     310
 
+// Scheduled block ticks indexed per chunk (OptiFine's NextTickHashSet idea): saving or
+// unloading a chunk no longer walks every pending tick in the world.
+#define XBOX_CHUNK_TICK_SCHEDULER                1
+
 #endif // PLATFORM_XBOX

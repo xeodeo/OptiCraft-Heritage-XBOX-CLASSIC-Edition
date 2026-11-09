@@ -19,7 +19,8 @@ public:
 	PcLegacyTickScheduler(const PcLegacyTickScheduler &) = delete;
 	PcLegacyTickScheduler &operator=(const PcLegacyTickScheduler &) = delete;
 
-	bool schedule(int_t x, int_t y, int_t z, int_t blockId, long_t scheduledTime);
+	bool schedule(int_t x, int_t y, int_t z, int_t blockId, long_t scheduledTime, int_t priority = 0);
+	bool contains(int_t x, int_t y, int_t z, int_t blockId) const;
 	NextTickListEntry *popNext(long_t currentTime, bool force);
 	std::vector<NextTickListEntry *> getPendingForChunk(int_t chunkX, int_t chunkZ, bool remove);
 
