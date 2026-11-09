@@ -1,6 +1,7 @@
 #include "net/minecraft/src/UiStrings.h"
 #include "LegacyVideoOptions.h"
 
+#include "LegacyAdvancedVideoOptions.h"
 #include "LegacyGuiButton.h"
 #include "LegacyOptionCheckbox.h"
 #include "LegacyOptionSlider.h"
@@ -28,6 +29,7 @@ enum LegacyVideoButtonId
     BUTTON_FRAME_CAP = 308,
     BUTTON_COORDINATES = 309,
     BUTTON_FULLBRIGHT = 310,
+    BUTTON_ADVANCED = 311,
     BUTTON_DONE = 399
 };
 
@@ -44,13 +46,13 @@ LegacyVideoOptions::LegacyVideoOptions(GuiScreen *parent, GameSettings *settings
 void LegacyVideoOptions::initGui()
 {
 #if PLATFORM_WII
-    const int_t rowCount = 7;
-#elif PLATFORM_PS2
-    const int_t rowCount = 6;
-#elif PLATFORM_XBOX
-    const int_t rowCount = 11;
-#else
     const int_t rowCount = 8;
+#elif PLATFORM_PS2
+    const int_t rowCount = 7;
+#elif PLATFORM_XBOX
+    const int_t rowCount = 12;
+#else
+    const int_t rowCount = 9;
 #endif
     configureLegacyLayout(rowCount, true, LegacyOptionsLayoutPreset::Compact);
     const int_t x = legacyLayout.contentX;
@@ -114,6 +116,7 @@ void LegacyVideoOptions::initGui()
         settings, EnumOptions::RENDER_DISTANCE_FINE));
     controlList.push_back(new LegacyOptionSlider(BUTTON_BRIGHTNESS, x, legacyLayout.rowY(row++), w, h,
         settings, EnumOptions::BRIGHTNESS));
+    controlList.push_back(new LegacyGuiButton(BUTTON_ADVANCED, x, legacyLayout.rowY(row++), w, h, uiText("Advanced...")));
     controlList.push_back(new LegacyGuiButton(BUTTON_DONE, x, legacyLayout.rowY(row), w, h, uiText("Done")));
 }
 
@@ -186,6 +189,9 @@ void LegacyVideoOptions::actionPerformed(GuiButton *button)
         settings->fullbright = !settings->fullbright;
         settings->saveOptions();
         syncCheckboxes();
+        return;
+    case BUTTON_ADVANCED:
+        mc->displayGuiScreen(new LegacyAdvancedVideoOptions(this, settings, backgroundMode));
         return;
     case BUTTON_DONE:
         returnToParent();

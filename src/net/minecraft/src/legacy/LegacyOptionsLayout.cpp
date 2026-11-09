@@ -124,10 +124,26 @@ LegacyOptionsLayout legacyOptionsLayout(int_t screenWidth, int_t screenHeight, i
 
     layout.rowHeight = profile.scaleRows ? scaledRowHeight(safeHeight, profile.rowHeight) : profile.rowHeight;
     layout.rowSpacing = profile.scaleRows ? scaledRowSpacing(safeHeight, profile.rowSpacing) : profile.rowSpacing;
-    const int_t contentHeight = safeRows * layout.rowHeight + (safeRows - 1) * layout.rowSpacing;
+    int_t contentHeight = safeRows * layout.rowHeight + (safeRows - 1) * layout.rowSpacing;
     layout.panelHeight = profile.topPadding + contentHeight + profile.bottomPadding;
 
+    Minecraft *mc = Minecraft::getMinecraft();
+    const bool is480 = (mc != nullptr && mc->displayHeight <= 480);
     const LegacySceneLayout scene = legacySceneLayout(safeWidth, safeHeight);
+    const int_t availableTop = is480 ? 6 : scene.contentTop;
+    const int_t footerTop = legacyHintRowY(safeHeight) - std::max<int_t>(0, profile.footerGap);
+    const int_t maxAvailablePanelHeight = footerTop - availableTop;
+
+    if (profile.scaleRows)
+    {
+        while (layout.rowHeight > 14 && layout.panelHeight > maxAvailablePanelHeight)
+        {
+            --layout.rowHeight;
+            contentHeight = safeRows * layout.rowHeight + (safeRows - 1) * layout.rowSpacing;
+            layout.panelHeight = profile.topPadding + contentHeight + profile.bottomPadding;
+        }
+    }
+
     layout.panelY = legacyCenteredPanelY(safeWidth, safeHeight, layout.panelHeight, profile.footerGap);
     layout.firstRowY = layout.panelY + profile.topPadding;
 
