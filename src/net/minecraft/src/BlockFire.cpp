@@ -370,3 +370,8 @@ void BlockFire::randomDisplayTick(World *world, int_t i, int_t j, int_t k, Rando
 		}
 	}
 }
+
+bool BlockFire::func_82506_l()
+{
+	return false;
+}

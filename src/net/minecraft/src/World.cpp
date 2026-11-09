@@ -3276,13 +3276,13 @@ bool World::isBlockTickScheduled(int_t x, int_t y, int_t z, int_t blockId)
 
 void World::func_82740_a(int_t x, int_t y, int_t z, int_t blockId, int_t delay, int_t priority)
 {
+	const int RANGE = 0;
 	if (scheduledUpdatesAreImmediate && blockId > 0)
 	{
 		if (blockId < Block::BLOCK_REGISTRY_SIZE && Block::blocksList[blockId] != nullptr && Block::blocksList[blockId]->func_82506_l())
 		{
-			const int IMMEDIATE_RANGE = 8;
-			if (checkChunksExist(JavaArithmetic::intSub(x, IMMEDIATE_RANGE), JavaArithmetic::intSub(y, IMMEDIATE_RANGE), JavaArithmetic::intSub(z, IMMEDIATE_RANGE),
-								 JavaArithmetic::intAdd(x, IMMEDIATE_RANGE), JavaArithmetic::intAdd(y, IMMEDIATE_RANGE), JavaArithmetic::intAdd(z, IMMEDIATE_RANGE)))
+			if (checkChunksExist(JavaArithmetic::intSub(x, RANGE), JavaArithmetic::intSub(y, RANGE), JavaArithmetic::intSub(z, RANGE),
+								 JavaArithmetic::intAdd(x, RANGE), JavaArithmetic::intAdd(y, RANGE), JavaArithmetic::intAdd(z, RANGE)))
 			{
 				int currentBlockId = getBlockId(x, y, z);
 				if (currentBlockId == blockId && currentBlockId > 0)
@@ -3296,7 +3296,6 @@ void World::func_82740_a(int_t x, int_t y, int_t z, int_t blockId, int_t delay, 
 		delay = 1;
 	}
 
-	const int RANGE = 0;
 	if (!checkChunksExist(JavaArithmetic::intSub(x, RANGE), JavaArithmetic::intSub(y, RANGE), JavaArithmetic::intSub(z, RANGE),
 						  JavaArithmetic::intAdd(x, RANGE), JavaArithmetic::intAdd(y, RANGE), JavaArithmetic::intAdd(z, RANGE)))
 	{

@@ -8,6 +8,7 @@ public:
     BlockFlowing(int_t i, Material *material);
     void updateTick(World *world, int_t i, int_t j, int_t k, Random &random) override;
     void onBlockAdded(World *world, int_t i, int_t j, int_t k) override;
+    bool func_82506_l() override;
 
 protected:
     int_t getSmallestFlowDecay(World *world, int_t i, int_t j, int_t k, int_t l);
