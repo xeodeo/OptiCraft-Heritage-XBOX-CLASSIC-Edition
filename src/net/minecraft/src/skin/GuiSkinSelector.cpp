@@ -844,14 +844,14 @@ void GuiSkinSelector::mouseClicked(int_t mouseX, int_t mouseY, int_t button)
         {
             if (mouseX >= legacyLeftTabX && mouseX <= legacyLeftTabX + legacySideTabW)
             {
-                if (SkinManager::getPackCount() > 1)
-                    switchPack(1 - currentPackIndex);
+                if (currentPackIndex > 0)
+                    switchPack(currentPackIndex - 1);
                 return;
             }
             if (mouseX >= legacyRightTabX && mouseX <= legacyRightTabX + legacySideTabW)
             {
-                if (SkinManager::getPackCount() > 1)
-                    switchPack(1 - currentPackIndex);
+                if (currentPackIndex + 1 < SkinManager::getPackCount())
+                    switchPack(currentPackIndex + 1);
                 return;
             }
             if (mouseX >= legacyCenterTabX && mouseX <= legacyCenterTabX + legacyCenterTabW)
@@ -1335,9 +1335,9 @@ void GuiSkinSelector::drawLegacyScreen(int_t mouseX, int_t mouseY, float_t parti
     };
 
     const std::string activePackTitle = getPackDisplayTitle(currentPackIndex);
-    const std::string sidePackTitle = (packCount > 1)
-        ? getPackDisplayTitle(1 - currentPackIndex)
-        : (isEs ? "Personalizado (0)" : "Custom Skins (0)");
+    // Each neighbouring pack shows once, on its own side; an empty pack is dimmed.
+    const bool hasPrevPack = currentPackIndex > 0;
+    const bool hasNextPack = currentPackIndex + 1 < packCount;
 
     auto drawLegacyPackTab = [&](int_t x, int_t y, int_t w, int_t h, const std::string &text, bool isCenterActive, bool enabled) {
         if (isCenterActive)
@@ -1357,9 +1357,15 @@ void GuiSkinSelector::drawLegacyScreen(int_t mouseX, int_t mouseY, float_t parti
         drawCenteredString(fontRenderer, clipped, x + w / 2, textY, color);
     };
 
-    drawLegacyPackTab(legacyLeftTabX,   legacyPackBarY, legacySideTabW,   legacyPackBarH, "< " + sidePackTitle, false, packCount > 1);
-    drawLegacyPackTab(legacyCenterTabX, legacyPackBarY, legacyCenterTabW, legacyPackBarH, activePackTitle,      true,  true);
-    drawLegacyPackTab(legacyRightTabX,  legacyPackBarY, legacySideTabW,   legacyPackBarH, sidePackTitle + " >", false, packCount > 1);
+    if (hasPrevPack)
+        drawLegacyPackTab(legacyLeftTabX, legacyPackBarY, legacySideTabW, legacyPackBarH,
+                          "< " + getPackDisplayTitle(currentPackIndex - 1), false,
+                          SkinManager::getSkinCountForPack(currentPackIndex - 1) > 0);
+    drawLegacyPackTab(legacyCenterTabX, legacyPackBarY, legacyCenterTabW, legacyPackBarH, activePackTitle, true, true);
+    if (hasNextPack)
+        drawLegacyPackTab(legacyRightTabX, legacyPackBarY, legacySideTabW, legacyPackBarH,
+                          getPackDisplayTitle(currentPackIndex + 1) + " >", false,
+                          SkinManager::getSkinCountForPack(currentPackIndex + 1) > 0);
 
     // 6. 3D Character Carousel (Center + 4 Left + 4 Right)
     if (totalSkins > 0)
@@ -1402,6 +1408,11 @@ void GuiSkinSelector::drawLegacyScreen(int_t mouseX, int_t mouseY, float_t parti
             const float normX = sign * (0.295f * dist / (1.0f + 0.145f * dist));
             const float slotX = static_cast<float>(carouselCenterX) + normX * static_cast<float>(width);
             const float slotScale = centerScale * std::pow(0.79f, dist);
+            // The console's GPU does not clip triangles far past the screen edge; a model cut by
+            // the edge streaks across the screen (xemu clips them, so only real hardware shows it).
+            const float slotHalfWidth = slotScale * 0.8f;
+            if (slotX - slotHalfWidth < 0.0f || slotX + slotHalfWidth > static_cast<float>(width))
+                continue;
             const float slotFeetY = static_cast<float>(carouselGroundY) - std::min(dist, 3.5f) * (centerScale * 0.085f);
 
             // Facing: left slots (-t) face -45 deg (right, towards center); right slots (+t) face +45 deg (left, towards center);
