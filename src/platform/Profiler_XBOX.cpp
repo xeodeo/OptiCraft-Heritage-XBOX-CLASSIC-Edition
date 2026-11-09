@@ -123,6 +123,7 @@ int xboxClientProfileTake(long long out[4]);   // ClientProfilerBackend_XBOX.cpp
 
 void xboxRenderTakeDrawStats(double* drawMs, long* vbDraws, long* upDraws, long* upVertices, long* viewSets);
 void xboxRenderTakeListStats(double* transformMs, double* listMs, double* stageMs, long* listCalls);
+void xboxRenderTakeUploadStats(double* lockMs, double* swizzleMs, long* uploads, long* partialUploads);
 void pcLegacyTakeMeshSchedulerStats(long *calls, long *pending, long *steps, long *published, long *stepUs);
 void xboxTakeWorldDirtyStats();
 
@@ -218,6 +219,14 @@ void xboxProfileReport(unsigned int frames, unsigned long elapsedMs, double pres
         xboxRenderTakeListStats(&transformMs, &listMs, &stageMs, &listCalls);
         MC_LOG_INFO("xbox.draw", "per frame: lists=%ld replay=%.2fms setTransform=%.2fms textureStage=%.2fms\n",
                     listCalls / static_cast<long>(frames), listMs / frames, transformMs / frames, stageMs / frames);
+    }
+    {
+        double lockMs = 0.0, swizzleMs = 0.0;
+        long uploads = 0, partialUploads = 0;
+        xboxRenderTakeUploadStats(&lockMs, &swizzleMs, &uploads, &partialUploads);
+        const double seconds = elapsedMs / 1000.0;
+        MC_LOG_INFO("xbox.tex", "uploads per s=%.1f (partial %.1f) | per frame lock=%.2fms swizzle=%.2fms\n",
+                    uploads / seconds, partialUploads / seconds, lockMs / frames, swizzleMs / frames);
     }
     {
         double drawMs = 0.0;
