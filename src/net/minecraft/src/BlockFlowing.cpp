@@ -210,3 +210,8 @@ void BlockFlowing::onBlockAdded(World *world, int_t i, int_t j, int_t k)
     if (world->getBlockId(i, j, k) == blockID)
         world->scheduleBlockUpdate(i, j, k, blockID, tickRate());
 }
+
+bool BlockFlowing::func_82506_l()
+{
+    return false;
+}
