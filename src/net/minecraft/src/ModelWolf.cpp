@@ -140,11 +140,6 @@ void ModelWolf::setLivingAnimations(EntityLiving *entityliving, float f, float f
 	wolfMane->rotateAngleZ = entitywolf->getShakeAngle(f2, -0.08f);
 	wolfBody->rotateAngleZ = entitywolf->getShakeAngle(f2, -0.16f);
 	wolfTail->rotateAngleZ = entitywolf->getShakeAngle(f2, -0.2f);
-	if (entitywolf->getWolfShaking())
-	{
-		float f4 = entitywolf->getEntityBrightness(f2) * entitywolf->getShadingWhileShaking(f2);
-		renderColor3f(f4, f4, f4);
-	}
 }
 
 void ModelWolf::setRotationAngles(float f, float f1, float f2, float f3, float f4, float f5)

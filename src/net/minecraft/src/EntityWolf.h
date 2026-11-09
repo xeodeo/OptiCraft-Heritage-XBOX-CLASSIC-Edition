@@ -88,6 +88,9 @@ public:
 	void setWolfAngry(bool flag);
 	bool isWolfTamed();
 	void setWolfTamed(bool flag);
+	int_t getCollarColor() const;
+	void setCollarColor(int_t color);
+	bool func_70922_bv() const;
 
 private:
 	bool looksWithInterest;

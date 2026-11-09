@@ -178,7 +178,7 @@ void RenderManager::registerRenderers() {
     entityRenderMap[std::type_index(typeid(EntityPig))] = new RenderPig(new ModelPig(), new ModelPig(0.5f), 0.7f);
     entityRenderMap[std::type_index(typeid(EntitySheep))] = new RenderSheep(new ModelSheep2(), new ModelSheep1(), 0.7f);
     entityRenderMap[std::type_index(typeid(EntityCow))] = new RenderCow(new ModelCow(), 0.7f);
-    entityRenderMap[std::type_index(typeid(EntityWolf))] = new RenderWolf(new ModelWolf(), 0.5f);
+    entityRenderMap[std::type_index(typeid(EntityWolf))] = new RenderWolf(new ModelWolf(), new ModelWolf(), 0.5f);
     entityRenderMap[std::type_index(typeid(EntityOcelot))] = new RenderOcelot(new ModelOcelot(), 0.4f);
     entityRenderMap[std::type_index(typeid(EntityChicken))] = new RenderChicken(new ModelChicken(), 0.3f);
     entityRenderMap[std::type_index(typeid(EntityCreeper))] = new RenderCreeper();

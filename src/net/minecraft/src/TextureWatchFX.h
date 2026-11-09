@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "TextureFX.h"
 
 class Minecraft;
@@ -14,8 +15,9 @@ public:
 
 private:
 	Minecraft *mc;
-	int_t watchIconImageData[256];
-	int_t dialImageData[256];
-	double compassFrame; // angle
-	double compassAngle; // angleDelta
+	std::vector<int_t> clockImageData;
+	double field_94239_h;
+	double field_94240_i;
+	int_t frameCounter;
+	bool lastAnaglyph;
 };
