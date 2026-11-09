@@ -124,7 +124,9 @@ bool PlayerController::sendPlaceBlock(EntityPlayer *entityplayer, World *world, 
 {
 	World::PlayerEditMarkScope editScope(world);
 	int_t i1 = world->getBlockId(i, j, k);
-	if (i1 > 0 && Block::blocksList[i1]->blockActivated(world, i, j, k, entityplayer))
+	// Java 1.5.2: sneaking with an item in hand places it instead of opening the block.
+	const bool sneakPlace = entityplayer->isSneaking() && itemstack != nullptr;
+	if (!sneakPlace && i1 > 0 && Block::blocksList[i1]->blockActivated(world, i, j, k, entityplayer))
 		return true;
 	if (itemstack == nullptr)
 		return false;

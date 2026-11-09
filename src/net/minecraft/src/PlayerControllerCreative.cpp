@@ -55,7 +55,8 @@ bool PlayerControllerCreative::sendPlaceBlock(EntityPlayer *player, World *world
         return false;
     World::PlayerEditMarkScope editScope(world);
     int_t blockId = world->getBlockId(x, y, z);
-    if (blockId > 0 && blockId < Block::BLOCK_REGISTRY_SIZE && Block::blocksList[blockId] != nullptr &&
+    const bool sneakPlace = player->isSneaking() && itemstack != nullptr;
+    if (!sneakPlace && blockId > 0 && blockId < Block::BLOCK_REGISTRY_SIZE && Block::blocksList[blockId] != nullptr &&
         Block::blocksList[blockId]->blockActivated(world, x, y, z, player))
         return true;
     if (itemstack == nullptr)
