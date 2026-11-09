@@ -14,7 +14,7 @@ bool PcLegacyTickScheduler::schedule(int_t x, int_t y, int_t z, int_t blockId, l
 {
 	NextTickListEntry *entry = new NextTickListEntry(x, y, z, blockId);
 	entry->setScheduledTime(scheduledTime);
-	entry->func_82753_a(priority);
+	(void)priority;   // 1.2.5 ticks have no priority (order stays time, then id)
 
 	if (!uniqueEntries.add(entry))
 	{
