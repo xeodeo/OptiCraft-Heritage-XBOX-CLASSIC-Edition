@@ -27,4 +27,5 @@
 - [OptiFine permitido](optifine-permitido.md) — reutilizar OptiFine 1.5.2 (mcp-diff\srcOF152) como la LCE, sin avisos de licencia
 - [Usar agy, no muchos subagentes](usar-agy-no-subagentes.md) — implementación larga = encargo a agy; Claude revisa
 - [60 fps de referencia 1.5.2](fps-referencia-152.md) — con niebla y nubes; medir todo cambio contra eso, no perderlo
+- [Respaldo del contexto](respaldo-contexto.md) — rama `contexto` en xbox; `sh actualizar-contexto.sh`; push de ramas a xbox (fork da 403)
 - [PS3: SDK listo](ps3-sdk.md) — Minecraft en xboox clasico\ps3 (SDK 3.70 sin instalar, ruta corta MINECR~1); port en otro chat

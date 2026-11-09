@@ -4,7 +4,7 @@ Pedido del usuario: la pantalla de elegir skin se ve «rara»; quiere una más L
 se toca desde el 28-09 y es igual en 1.2.5; el diseño viene de OptiJuegos. No es una regresión.)
 
 ## Dónde
-- Worktree y rama: Claude te lo dirá al lanzarlo (sobre lo último de la rama de prueba). SIN reset.
+- Worktree `wt-152-rend`, rama `port152-skins-lce` (ya creada desde `6ea0ac1`). SIN reset.
 - Pantalla actual: `src/net/minecraft/src/skin/GuiSkinSelector.cpp` (946 líneas), `SkinManager`, `GuiLoadSkins*`.
   La usan también la PS2 y el jugador 2 en pantalla partida: no los rompas.
 - Referencia LCE (solo leer, nunca modificar): `C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\minecraft-legacy original\

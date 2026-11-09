@@ -66,8 +66,10 @@ Prueba quieta hecha con la build 11:43 (ver abajo).
 quieto: mediana 59,8-59,9, mínimo 57-59, HUD 0,1-0,4 ms → el menú Legacy YA NO quita fps. Moviéndose 56-59 por chunks.)
 1. Corazones de aldeanos al aparearse (el usuario lo prueba después).
 
-## Pendiente de probar en 1.2.5 (el usuario la deja para DESPUÉS; build 09-11 11:40)
-Niebla, cielo, sol, luna, nubes, y agachado+bloque sobre un cofre.
+## Pendiente de probar en 1.2.5 (el usuario la deja para DESPUÉS; rama `opti30-cruceta`, build 09-11 12:10)
+Niebla, cielo, sol, luna, nubes; agachado+bloque sobre un cofre; cruceta separada del stick y configurable (Controles),
+iconos del stick, chat (B sale); texturas animadas y HUD Legacy más rápidos; ticks por chunk (sin prioridades: 1.2.5 no
+las tiene). Si va bien: avanzar `xbox-opti-30` a `opti30-cruceta`.
 
 ## Lo siguiente
 1. agy encargo 79 ACEPTADO (`42c1148`, en prueba como `91b5f42`).
