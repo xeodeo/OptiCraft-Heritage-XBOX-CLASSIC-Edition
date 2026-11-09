@@ -665,6 +665,14 @@ Upstream merged five more pull requests (#52, #56, #57, #59, #60): their own con
 
 **Building for PS2 on Windows** (useful because it catches mistakes the Xbox build never sees, such as missing platform guards): download `ps2dev-windows-latest.tar.gz` from the ps2dev releases, extract it into `psdevwindows/` at the repository root (the `ps2-release` preset points `PS2DEV`/`PS2SDK` there), and copy the 32-bit MinGW runtime DLLs it needs (`libiconv-2`, `libwinpthread-1`, `libstdc++-6`, `libgcc_s_dw2-1`, `libgmp-10`, `libmpfr-6`, `libmpc-3`, `libisl-23`, `libzstd`, `liblzma-5`, `libexpat-1`, `libtermcap-0`) next to every `.exe` of the toolchain, not just `ee/bin` — the assembler and `cc1plus` live in other folders and fail silently without them.
 
+### Phase 12: fog and sky (November)
+
+- **Fog never worked on the Xbox.** The XDK's Direct3D computes eye-distance (W) fog only with a "W-friendly" projection, whose (3,4) coefficient is +1; OpenGL's is -1, so the fog factor was taken from device Z and the linear fog range was never reached. `applyMatrices` (`RenderAPI_D3D8_XBOX.cpp`) now sends left-handed copies: the view with its Z row negated and the projection with its Z column negated. Clip space is identical; only the fog changes.
+- **Sky, sun and clouds after the fog fix.** With fog really applied, two old shortcuts showed: the sky was drawn only at far/normal render distance (vanilla rule), and the clip plane (`farPlaneDistance * 2`) cut the sun and moon at 100 blocks. On the Xbox the sky now follows OptiFine: drawn when sky, sun/moon or stars are enabled, clip plane at least 128, and the clouds get a fog range from the render distance to the clip plane so they are not swallowed. PS2 and Wii keep the old rules.
+- Water and lava standing still is the *Animations* option switched off, not a bug.
+
+A port of the game logic to Minecraft 1.5.2 lives on the `port152-*` branches and ships in its own launcher folder (`OptiCraft\1.5.2\`).
+
 ## 11. Legal
 
 The XDK is Microsoft's and is **not** distributed with this project. Do not commit it or any file derived from it; the repository only contains original source and build scripts. A built XBE links XDK libraries, so do not redistribute binaries without considering that. Game assets are not included either.
