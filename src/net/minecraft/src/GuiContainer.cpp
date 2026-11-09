@@ -30,7 +30,6 @@
 #include "platform/Input.h"
 #include "SlotCrafting.h"
 #include "SlotFurnace.h"
-#include "SlotMerchantResult.h"
 #include "platform/ConsoleInputClock.h"
 #if defined(XBOX_PLATFORM)
 #include "xbox/input/XboxPad.h"
@@ -535,11 +534,10 @@ bool GuiContainer::holdRepeatTakeOne(Slot *slot)
 	// Moving single items by hand would desync a server; result slots have their own pickup rules.
 	if (mc == nullptr || mc->theWorld == nullptr || mc->theWorld->multiplayerWorld)
 		return false;
-	if (dynamic_cast<SlotCrafting *>(slot) != nullptr || dynamic_cast<SlotFurnace *>(slot) != nullptr ||
-	    dynamic_cast<SlotMerchantResult *>(slot) != nullptr)
+	if (dynamic_cast<SlotCrafting *>(slot) != nullptr || dynamic_cast<SlotFurnace *>(slot) != nullptr)
 		return false;
 	ItemStack *source = slot->getStack();
-	if (source == nullptr || source->stackSize <= 0 || !slot->canTakeStack(p))
+	if (source == nullptr || source->stackSize <= 0)
 		return false;
 	ItemStack *held = p->inventory->getItemStack();
 	if (held != nullptr && (!held->isItemEqual(source) || !ItemStack::areItemStackTagsEqual(held, source) ||
@@ -558,6 +556,6 @@ bool GuiContainer::holdRepeatTakeOne(Slot *slot)
 		p->inventory->setItemStack(one);
 	}
 	slot->onSlotChanged();
-	inventorySlots->detectAndSendChanges();
+	inventorySlots->updateCraftingResults();
 	return true;
 }
