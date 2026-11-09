@@ -21,6 +21,13 @@ EntityAINearestAttackableTarget::EntityAINearestAttackableTarget(EntityLiving *o
 	setMutexBits(1);
 }
 
+EntityAINearestAttackableTarget::EntityAINearestAttackableTarget(EntityLiving *owner, const std::type_info &targetType,
+	float distance, int_t chance, bool checkSight, bool nearbyOnly, EntitySelector selector)
+	: EntityAINearestAttackableTarget(owner, targetType, distance, chance, checkSight, nearbyOnly)
+{
+	entitySelector = selector;
+}
+
 EntityLiving *EntityAINearestAttackableTarget::resolveTarget() const
 {
 	if (taskOwner == nullptr || taskOwner->worldObj == nullptr || targetEntityId < 0)
@@ -38,7 +45,7 @@ bool EntityAINearestAttackableTarget::shouldExecute()
 	if (*targetClass == typeid(EntityPlayer))
 	{
 		EntityPlayer *player = taskOwner->worldObj->getClosestVulnerablePlayerToEntity(taskOwner, (double)targetDistance);
-		if (isSuitableTarget(player, false))
+		if ((entitySelector == nullptr || entitySelector(player)) && isSuitableTarget(player, false))
 		{
 			targetEntityId = player->entityId;
 			return true;
@@ -53,7 +60,7 @@ bool EntityAINearestAttackableTarget::shouldExecute()
 	for (Entity *entity : source)
 	{
 		EntityLiving *living = dynamic_cast<EntityLiving *>(entity);
-		if (living != nullptr)
+		if (living != nullptr && (entitySelector == nullptr || entitySelector(living)))
 			candidates.push_back(living);
 	}
 	std::stable_sort(candidates.begin(), candidates.end(), [this](EntityLiving *left, EntityLiving *right)

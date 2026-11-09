@@ -25,6 +25,14 @@ std::size_t ChunkPosTupleHash::operator()(const ChunkPosTuple &p) const
     return static_cast<std::size_t>(h);
 }
 
+// Java 1.5.2: the exploder may change a block's resistance (Entity.func_82146_a, used by the blue
+// Wither skull); without an exploder it is the block's own value.
+float Explosion::blockExplosionResistance(Block *block, int_t x, int_t y, int_t z)
+{
+    return exploder != nullptr ? exploder->func_82146_a(this, worldObj, x, y, z, block)
+                               : block->getExplosionResistance(nullptr);
+}
+
 Explosion::Explosion(World *world, Entity *entity, double x, double y, double z, float size) :
     isFlaming(false),
     explosionX(x),
@@ -83,7 +91,7 @@ void Explosion::doExplosionA()
                     const int_t i5 = worldObj->getBlockId(j4, k4, l4);
 
                     if (i5 > 0)
-                        f1 -= (Block::blocksList[i5]->getExplosionResistance(exploder) + 0.3f) * f2;
+                        f1 -= (blockExplosionResistance(Block::blocksList[i5], j4, k4, l4) + 0.3f) * f2;
 
                     if (f1 > 0.0f)
                         destroyedBlockPositions.add({j4, k4, l4});
@@ -119,7 +127,7 @@ void Explosion::doExplosionA()
                     int_t i5 = worldObj->getBlockId(j4, k4, l4);
 
                     if (i5 > 0)
-                        f1 -= (Block::blocksList[i5]->getExplosionResistance(exploder) + 0.3f) * f2;
+                        f1 -= (blockExplosionResistance(Block::blocksList[i5], j4, k4, l4) + 0.3f) * f2;
 
                     if (f1 > 0.0f)
                         destroyedBlockPositions.add({j4, k4, l4});

@@ -1,5 +1,6 @@
 #include "net/minecraft/src/UiStrings.h"
 #include "GuiIngame.h"
+#include "BossStatus.h"
 #include "mods/ModManager.h"
 #include "platform/PlatformTuning.h"
 #include "platform/Profiler.h"
@@ -432,29 +433,26 @@ void GuiIngame::renderDebugOverlay(FontRenderer *fontRenderer, int_t screenWidth
 
 void GuiIngame::renderBossHealth()
 {
-	EntityDragon* dragon = RenderDragon::entityDragon;
-	if (dragon == nullptr)
+	// Java 1.5.2: the boss renderer (dragon or Wither) refreshes BossStatus every frame it is drawn;
+	// the bar fades after 100 HUD frames without a boss.
+	if (BossStatus::bossName.empty() || BossStatus::statusBarLength <= 0)
 		return;
+	--BossStatus::statusBarLength;
 
-	RenderDragon::entityDragon = nullptr;
 	FontRenderer* fontRenderer = mc->fontRenderer;
 	ScaledResolution resolution(mc->gameSettings, mc->displayWidth, mc->displayHeight);
 	const int_t screenWidth = resolution.getScaledWidth();
 	constexpr int_t barWidth = 182;
 	const int_t x = screenWidth / 2 - barWidth / 2;
-	const int_t maxHealth = dragon->getMaxHealth();
-	const int_t filled = maxHealth > 0
-		? static_cast<int_t>(static_cast<float>(dragon->func_41010_ax()) / static_cast<float>(maxHealth) * static_cast<float>(barWidth + 1))
-		: 0;
+	const int_t filled = static_cast<int_t>(BossStatus::healthScale * static_cast<float>(barWidth + 1));
 	constexpr int_t y = 12;
 
 	drawTexturedModalRect(x, y, 0, 74, barWidth, 5);
-	// [FIX WII] Se eliminó la segunda llamada duplicada idéntica 'drawTexturedModalRect(x, y, 0, 74, barWidth, 5);' para evitar sobrecarga y emisión de vértices redundantes en el Tessellator.
 	if (filled > 0)
 		drawTexturedModalRect(x, y, 0, 79, filled, 5);
 
-	const std::string name = uiText("Boss health");
-	fontRenderer->drawStringWithShadow(name, screenWidth / 2 - fontRenderer->getStringWidth(name) / 2, y - 10, 0xff00ff);
+	const std::string &name = BossStatus::bossName;
+	fontRenderer->drawStringWithShadow(name, screenWidth / 2 - fontRenderer->getStringWidth(name) / 2, y - 10, 0xffffff);
 	renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	renderBindTexture(mc->renderEngine->getTexture("/gui/icons.png"));
 }

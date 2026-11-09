@@ -9,7 +9,6 @@ class ModelDragon;
 class RenderDragon : public RenderLiving
 {
 public:
-    static EntityDragon* entityDragon;
 
     RenderDragon();
 

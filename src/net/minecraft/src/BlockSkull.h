@@ -2,6 +2,8 @@
 
 #include "BlockContainer.h"
 
+class TileEntitySkull;
+
 // net.minecraft.src.BlockSkull
 class BlockSkull : public BlockContainer
 {
@@ -24,4 +26,9 @@ public:
 	void onBlockHarvested(World *world, int_t i, int_t j, int_t k, int_t metadata, EntityPlayer *entityplayer) override;
 	void onBlockRemoval(World *world, int_t i, int_t j, int_t k) override;
 	int_t idDropped(int_t metadata, Random &random) override;
+	// Java 1.5.2: three wither skeleton skulls on a T of soul sand summon the Wither.
+	void makeWither(World *world, int_t x, int_t y, int_t z, TileEntitySkull *skull);
+
+private:
+	bool func_82528_d(World *world, int_t x, int_t y, int_t z, int_t skullType);
 };

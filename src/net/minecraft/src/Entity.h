@@ -14,6 +14,8 @@
 
 class DataWatcher;
 class World;
+class Explosion;
+class Block;
 class Material;
 class Vec3D;
 class NBTTagCompound;
@@ -144,6 +146,8 @@ public:
 	virtual std::vector<Entity *> getParts() const;
 	bool isImmuneToFire() const;
 	virtual bool isEntityInvulnerable() const { return invulnerable; }
+	// Java 1.5.2 Entity.func_82146_a: this entity's view of a block's explosion resistance.
+	virtual float func_82146_a(Explosion *explosion, World *world, int_t x, int_t y, int_t z, Block *block);
 
 	bool addEntityID(NBTTagCompound *nbttagcompound);
 	void writeToNBT(NBTTagCompound *nbttagcompound);
@@ -171,7 +175,7 @@ public:
 	virtual void updateRiderPosition();
 	virtual double getYOffset();
 	virtual double getMountedYOffset();
-	void mountEntity(Entity *entity);
+	virtual void mountEntity(Entity *entity);
 	virtual void setPositionAndRotation2(double d, double d1, double d2, float f, float f1, int_t i);
 	virtual float getCollisionBorderSize();
 	virtual Vec3D *getLookVec();
