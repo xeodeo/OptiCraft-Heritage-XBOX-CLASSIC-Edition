@@ -1,4 +1,5 @@
 #include "World.h"
+#include "EntitySheep.h"
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -6456,6 +6457,20 @@ bool World::loadTexture(EntityPlayer* player, int x, int y, int z)
 
 void World::setEntityState(Entity* entity, byte_t byte0) // func_9425_a
 {
+    // Java's client half of the entity event. Here hurt/death (2, 3), the golem swing (4) and the
+    // TNT cart fuse (10) already ran where they were sent: replaying them doubles them or recurses.
+    if (entity == nullptr) return;
+    switch (byte0)
+    {
+        case 6: case 7: case 8: case 11: case 12: case 13: case 14: case 15: case 16:
+            entity->handleHealthUpdate(byte0);
+            break;
+        case 10:
+            if (dynamic_cast<EntitySheep*>(entity) != nullptr) entity->handleHealthUpdate(byte0);
+            break;
+        default:
+            break;
+    }
 }
 
 void World::updateEntityList()
