@@ -3495,6 +3495,15 @@ void World::rebuildLoadedEntityPointerSet() const
 #if PLATFORM_PC_LEGACY || PLATFORM_XBOX
     loadedEntityPointerSet.clear();
     loadedEntityPointerSet.insert(loadedEntityList.begin(), loadedEntityList.end());
+    loadedEntityPointerSetListSize = loadedEntityList.size();
+    static bool s_reportedDuplicates = false;
+    if (!s_reportedDuplicates && loadedEntityPointerSet.size() != loadedEntityList.size())
+    {
+        s_reportedDuplicates = true;
+        MC_LOG_ERROR("world", "loadedEntityList holds %u entries for %u distinct entities
+",
+            (unsigned)loadedEntityList.size(), (unsigned)loadedEntityPointerSet.size());
+    }
 #elif PLATFORM_PS2
     loadedEntityPointerIndex.clear();
     loadedEntityPointerIndexOverflow = false;
@@ -3514,7 +3523,9 @@ bool World::isLoadedEntityPointer(const Entity *entity) const
     if (entity == nullptr)
         return false;
 #if PLATFORM_PC_LEGACY || PLATFORM_XBOX
-    if (loadedEntityPointerSet.size() != loadedEntityList.size())
+    // Rebuild only when the list changed since the last rebuild: comparing against the set size rebuilt on
+    // every lookup whenever the list held a duplicate, which made each AABB query quadratic.
+    if (loadedEntityList.size() != loadedEntityPointerSetListSize)
         rebuildLoadedEntityPointerSet();
     return loadedEntityPointerSet.find(entity) != loadedEntityPointerSet.end();
 #elif PLATFORM_PS2
