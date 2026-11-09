@@ -519,6 +519,7 @@ private:
 	std::set<NextTickListEntry *, NextTickListEntryComparator> scheduledTickTreeSet;
 	std::unordered_set<NextTickListEntry *, NextTickListEntryHash, NextTickListEntryEqual> scheduledTickSet;
 	JavaHashSet<NextTickListEntry *, NextTickListEntryHash, NextTickListEntryEqual> scheduledTickOrder;
+	std::vector<NextTickListEntry *> field_94579_S;
 #if PLATFORM_PC_LEGACY || PLATFORM_XBOX
 	PcLegacyTickScheduler *pcLegacyTickScheduler = nullptr;
 #endif

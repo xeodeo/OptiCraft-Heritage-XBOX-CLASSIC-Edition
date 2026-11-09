@@ -156,3 +156,8 @@ void BlockRedstoneTorch::randomDisplayTick(World *world, int_t i, int_t j, int_t
     else
         world->spawnParticle("reddust", d, d1, d2, 0.0, 0.0, 0.0);
 }
+
+bool BlockRedstoneTorch::isAssociatedBlockID(int_t otherBlockId)
+{
+    return otherBlockId == Block::torchRedstoneIdle->blockID || otherBlockId == Block::torchRedstoneActive->blockID;
+}
