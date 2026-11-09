@@ -274,6 +274,9 @@ World::~World()
     for (TileEntity *tileEntity : tileEntities)
         delete tileEntity;
     // lightingToUpdate now holds MetadataChunkBlock by value; nothing to free.
+    for (NextTickListEntry *entry : field_94579_S)
+        delete entry;
+    field_94579_S.clear();
     for (NextTickListEntry *entry : scheduledTickTreeSet)
         delete entry;
 #if PLATFORM_PC_LEGACY || PLATFORM_XBOX
@@ -303,6 +306,7 @@ World::World(ISaveHandler* saveHandler, const jstring& name, WorldProvider* worl
     scheduledTickTreeSet.clear();
     scheduledTickSet.clear();
     scheduledTickOrder.clear();
+    field_94579_S.clear();
     loadedTileEntityList.clear();
     tileEntitiesToAdd.clear();
     playerEntities.clear();
@@ -348,6 +352,7 @@ World::World(World* world, WorldProvider* worldProvider)
     scheduledTickTreeSet.clear();
     scheduledTickSet.clear();
     scheduledTickOrder.clear();
+    field_94579_S.clear();
     loadedTileEntityList.clear();
     tileEntitiesToAdd.clear();
     playerEntities.clear();
@@ -412,6 +417,7 @@ World::World(ISaveHandler* saveHandler, const jstring& name, WorldSettings* sett
     scheduledTickTreeSet.clear();
     scheduledTickSet.clear();
     scheduledTickOrder.clear();
+    field_94579_S.clear();
     loadedTileEntityList.clear();
     tileEntitiesToAdd.clear();
     playerEntities.clear();
@@ -502,6 +508,7 @@ World::World(ISaveHandler* saveHandler, const jstring& name, long_t seed, WorldP
     scheduledTickTreeSet.clear();
     scheduledTickSet.clear();
     scheduledTickOrder.clear();
+    field_94579_S.clear();
     loadedTileEntityList.clear();
     tileEntitiesToAdd.clear();
     playerEntities.clear();
@@ -3295,114 +3302,77 @@ float World::getStarBrightness(float partialTicks)
 
 void World::scheduleBlockUpdate(int x, int y, int z, int blockId, int delay)
 {
-    const int RANGE = 8;
-
-    // Immediate updates do not need a heap allocation. The previous code
-    // allocated NextTickListEntry and returned without deleting it.
-    if (scheduledUpdatesAreImmediate)
-    {
-        if (checkChunksExist(JavaArithmetic::intSub(x, RANGE), JavaArithmetic::intSub(y, RANGE), JavaArithmetic::intSub(z, RANGE),
-                             JavaArithmetic::intAdd(x, RANGE), JavaArithmetic::intAdd(y, RANGE), JavaArithmetic::intAdd(z, RANGE)))
-        {
-            int currentBlockId = getBlockId(x, y, z);
-            if (currentBlockId == blockId && currentBlockId > 0)
-            {
-                Block::blocksList[currentBlockId]->updateTick(this, x, y, z, rand);
-            }
-        }
-        return;
-    }
-
-    if (!checkChunksExist(JavaArithmetic::intSub(x, RANGE), JavaArithmetic::intSub(y, RANGE), JavaArithmetic::intSub(z, RANGE),
-                          JavaArithmetic::intAdd(x, RANGE), JavaArithmetic::intAdd(y, RANGE), JavaArithmetic::intAdd(z, RANGE)))
-    {
-        return;
-    }
-
-    const long_t scheduledTime = blockId > 0
-        ? JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTotalTime())
-        : 0;
-
-#if WORLD_CHUNK_TICK_SCHEDULER
-    if (pcLegacyTickScheduler == nullptr)
-        pcLegacyTickScheduler = new PcLegacyTickScheduler();
-    pcLegacyTickScheduler->schedule(x, y, z, blockId, scheduledTime);
-#else
-    NextTickListEntry* entry = new NextTickListEntry(x, y, z, blockId);
-    entry->setScheduledTime(scheduledTime);
-
-    auto inserted = scheduledTickSet.insert(entry);
-    if (inserted.second)
-    {
-        scheduledTickTreeSet.insert(entry);
-        scheduledTickOrder.add(entry);
-    }
-    else
-    {
-        // Duplicate update: the HashSet equivalent kept the old entry. The new
-        // candidate must be destroyed or it leaks on every duplicate schedule.
-        delete entry;
-    }
-#endif
+    func_82740_a(x, y, z, blockId, delay, 0);
 }
 
 bool World::isBlockTickScheduled(int_t x, int_t y, int_t z, int_t blockId)
 {
-#if WORLD_CHUNK_TICK_SCHEDULER
-	return pcLegacyTickScheduler != nullptr && pcLegacyTickScheduler->contains(x, y, z, blockId);
-#else
-	NextTickListEntry entry(x, y, z, blockId);
-	return scheduledTickSet.find(&entry) != scheduledTickSet.end();
-#endif
+	NextTickListEntry probe(x, y, z, blockId);
+	for (NextTickListEntry *entry : field_94579_S)
+	{
+		if (entry != nullptr && entry->equals(&probe))
+			return true;
+	}
+	return false;
 }
 
 void World::func_82740_a(int_t x, int_t y, int_t z, int_t blockId, int_t delay, int_t priority)
 {
-	const int RANGE = 8;
-	if (scheduledUpdatesAreImmediate)
+	if (scheduledUpdatesAreImmediate && blockId > 0)
 	{
-		if (checkChunksExist(JavaArithmetic::intSub(x, RANGE), JavaArithmetic::intSub(y, RANGE), JavaArithmetic::intSub(z, RANGE),
-							 JavaArithmetic::intAdd(x, RANGE), JavaArithmetic::intAdd(y, RANGE), JavaArithmetic::intAdd(z, RANGE)))
+		if (blockId < Block::BLOCK_REGISTRY_SIZE && Block::blocksList[blockId] != nullptr && Block::blocksList[blockId]->func_82506_l())
 		{
-			int currentBlockId = getBlockId(x, y, z);
-			if (currentBlockId == blockId && currentBlockId > 0)
+			const int IMMEDIATE_RANGE = 8;
+			if (checkChunksExist(JavaArithmetic::intSub(x, IMMEDIATE_RANGE), JavaArithmetic::intSub(y, IMMEDIATE_RANGE), JavaArithmetic::intSub(z, IMMEDIATE_RANGE),
+								 JavaArithmetic::intAdd(x, IMMEDIATE_RANGE), JavaArithmetic::intAdd(y, IMMEDIATE_RANGE), JavaArithmetic::intAdd(z, IMMEDIATE_RANGE)))
 			{
-				Block::blocksList[currentBlockId]->updateTick(this, x, y, z, rand);
+				int currentBlockId = getBlockId(x, y, z);
+				if (currentBlockId == blockId && currentBlockId > 0)
+				{
+					Block::blocksList[currentBlockId]->updateTick(this, x, y, z, rand);
+				}
 			}
+			return;
 		}
-		return;
+
+		delay = 1;
 	}
 
+	const int RANGE = 0;
 	if (!checkChunksExist(JavaArithmetic::intSub(x, RANGE), JavaArithmetic::intSub(y, RANGE), JavaArithmetic::intSub(z, RANGE),
 						  JavaArithmetic::intAdd(x, RANGE), JavaArithmetic::intAdd(y, RANGE), JavaArithmetic::intAdd(z, RANGE)))
 	{
 		return;
 	}
 
+	const long_t scheduledTime = blockId > 0
+		? JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTotalTime())
+		: 0;
+	const int_t scheduledPriority = blockId > 0 ? priority : 0;
+
+#if WORLD_CHUNK_TICK_SCHEDULER
+	if (pcLegacyTickScheduler == nullptr)
+		pcLegacyTickScheduler = new PcLegacyTickScheduler();
+	pcLegacyTickScheduler->schedule(x, y, z, blockId, scheduledTime, scheduledPriority);
+#else
+	NextTickListEntry *entry = new NextTickListEntry(x, y, z, blockId);
 	if (blockId > 0)
 	{
-#if WORLD_CHUNK_TICK_SCHEDULER
-		if (pcLegacyTickScheduler == nullptr)
-			pcLegacyTickScheduler = new PcLegacyTickScheduler();
-		pcLegacyTickScheduler->schedule(x, y, z, blockId,
-			JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTotalTime()), priority);
-#else
-		NextTickListEntry *entry = new NextTickListEntry(x, y, z, blockId);
-		entry->setScheduledTime(JavaArithmetic::longAdd(static_cast<long_t>(delay), worldInfo->getWorldTotalTime()));
-		entry->func_82753_a(priority);
-
-		auto inserted = scheduledTickSet.insert(entry);
-		if (inserted.second)
-		{
-			scheduledTickTreeSet.insert(entry);
-			scheduledTickOrder.add(entry);
-		}
-		else
-		{
-			delete entry;
-		}
-#endif
+		entry->setScheduledTime(scheduledTime);
+		entry->func_82753_a(scheduledPriority);
 	}
+
+	auto inserted = scheduledTickSet.insert(entry);
+	if (inserted.second)
+	{
+		scheduledTickTreeSet.insert(entry);
+		scheduledTickOrder.add(entry);
+	}
+	else
+	{
+		delete entry;
+	}
+#endif
 }
 
 void World::scheduleBlockUpdateFromLoad(int_t x, int_t y, int_t z, int_t blockId, int_t delay)
@@ -5696,6 +5666,10 @@ bool World::TickUpdates(bool flag)
         size = 1000;
     }
 
+    for (NextTickListEntry *leftover : field_94579_S)
+        delete leftover;
+    field_94579_S.clear();
+
     for (int j = 0; j < size; j++)
     {
 #if WORLD_CHUNK_TICK_SCHEDULER
@@ -5715,26 +5689,38 @@ bool World::TickUpdates(bool flag)
         scheduledTickSet.erase(entry);
         scheduledTickOrder.remove(entry);
 #endif
+        field_94579_S.push_back(entry);
+    }
 
-        const int RANGE = 8;
-        if (!checkChunksExist(JavaArithmetic::intSub(entry->xCoord, RANGE),
-                              JavaArithmetic::intSub(entry->yCoord, RANGE),
-                              JavaArithmetic::intSub(entry->zCoord, RANGE),
-                              JavaArithmetic::intAdd(entry->xCoord, RANGE),
-                              JavaArithmetic::intAdd(entry->yCoord, RANGE),
-                              JavaArithmetic::intAdd(entry->zCoord, RANGE)))
-        {
-            delete entry;
+    for (std::size_t i = 0; i < field_94579_S.size(); ++i)
+    {
+        NextTickListEntry *entry = field_94579_S[i];
+        if (entry == nullptr)
             continue;
-        }
+        field_94579_S[i] = nullptr;
 
-        int blockId = getBlockId(entry->xCoord, entry->yCoord, entry->zCoord);
-        if (blockId == entry->blockID && blockId > 0)
+        const int RANGE = 0;
+        if (checkChunksExist(JavaArithmetic::intSub(entry->xCoord, RANGE),
+                             JavaArithmetic::intSub(entry->yCoord, RANGE),
+                             JavaArithmetic::intSub(entry->zCoord, RANGE),
+                             JavaArithmetic::intAdd(entry->xCoord, RANGE),
+                             JavaArithmetic::intAdd(entry->yCoord, RANGE),
+                             JavaArithmetic::intAdd(entry->zCoord, RANGE)))
         {
-            Block::blocksList[blockId]->updateTick(this, entry->xCoord, entry->yCoord, entry->zCoord, rand);
+            int blockId = getBlockId(entry->xCoord, entry->yCoord, entry->zCoord);
+            if (blockId > 0 && Block::isAssociatedBlockID(blockId, entry->blockID))
+            {
+                Block::blocksList[blockId]->updateTick(this, entry->xCoord, entry->yCoord, entry->zCoord, rand);
+            }
+        }
+        else
+        {
+            scheduleBlockUpdate(entry->xCoord, entry->yCoord, entry->zCoord, entry->blockID, 0);
         }
         delete entry;
     }
+
+    field_94579_S.clear();
 
 #if WORLD_CHUNK_TICK_SCHEDULER
     return pcLegacyTickScheduler != nullptr && !pcLegacyTickScheduler->empty();
