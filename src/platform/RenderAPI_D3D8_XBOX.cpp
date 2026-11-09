@@ -36,6 +36,7 @@
 #include <intrin.h>
 #include <mmintrin.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <functional>
@@ -333,6 +334,10 @@ struct Texture
     std::vector<DWORD> pixels;
     bool dynamic = false;
     bool dirty = false;         // pixels not yet in the D3D texture
+    // Image-space rectangle that changed since the last upload, when only sub-images did
+    // (animated tiles): only that part is swizzled again. False means the whole image.
+    bool dirtyPartial = false;
+    int dirtyX0 = 0, dirtyY0 = 0, dirtyX1 = 0, dirtyY1 = 0;
     bool blur = false;
     bool clamp = false;
 };
@@ -370,6 +375,16 @@ int nextPowerOfTwo(int v)
 
 std::vector<DWORD> s_resampled;
 
+// Texture uploads since the last report: time locking (waiting for the GPU) and swizzling.
+struct UploadStats
+{
+    unsigned long long lockCycles = 0;
+    unsigned long long swizzleCycles = 0;
+    long uploads = 0;
+    long partialUploads = 0;
+};
+UploadStats s_uploadStats;
+
 bool ensureD3DTexture(Texture& t)
 {
     if (t.d3d) return true;
@@ -394,9 +409,11 @@ void swizzleUpload(Texture& t)
     // pixels are kept and the D3D texture is created on the first upload or
     // bind that happens with a device.
     if (t.pixels.empty()) return;
+    const bool created = t.d3d == nullptr;
     if (!ensureD3DTexture(t))
     {
         t.dirty = true;
+        t.dirtyPartial = false;
         return;
     }
     // Swizzled textures must be power-of-two. UVs are normalized, so a
@@ -416,15 +433,39 @@ void swizzleUpload(Texture& t)
         }
         source = s_resampled.data();
     }
+    // Only changed tiles: swizzle just their rectangle, widened to the 8x4 blocks the XDK
+    // swizzler wants for 32-bit texels, and lock without waiting for the GPU. A tile the GPU
+    // is reading this frame may show half old for one frame, which an animation hides.
+    const bool partial = t.dirtyPartial && !created && source == t.pixels.data();
     D3DLOCKED_RECT locked;
-    if (FAILED(t.d3d->LockRect(0, &locked, NULL, 0))) return;
-    XGSwizzleRect(source, t.storageWidth * 4, NULL, locked.pBits, t.storageWidth, t.storageHeight, NULL, 4);
+    const unsigned long long lockStart = __rdtsc();
+    if (FAILED(t.d3d->LockRect(0, &locked, NULL, partial ? D3DLOCK_NOOVERWRITE : 0))) return;
+    const unsigned long long swizzleStart = __rdtsc();
+    s_uploadStats.lockCycles += swizzleStart - lockStart;
+    if (partial)
+    {
+        RECT rect;
+        rect.left = t.dirtyX0 & ~7;
+        rect.top = t.dirtyY0 & ~3;
+        rect.right = (std::min)((t.dirtyX1 + 7) & ~7, t.storageWidth);
+        rect.bottom = (std::min)((t.dirtyY1 + 3) & ~3, t.storageHeight);
+        POINT point = {rect.left, rect.top};
+        XGSwizzleRect(source, t.storageWidth * 4, &rect, locked.pBits, t.storageWidth, t.storageHeight, &point, 4);
+        ++s_uploadStats.partialUploads;
+    }
+    else
+    {
+        XGSwizzleRect(source, t.storageWidth * 4, NULL, locked.pBits, t.storageWidth, t.storageHeight, NULL, 4);
+    }
     // The XDK swizzler is MMX code; MMX aliases the x87 register stack, and
     // without EMMS every following x87 operation (all double math: world gen,
     // physics, pathfinding) produces NaN. Clear the MMX state unconditionally.
     _mm_empty();
     t.d3d->UnlockRect(0);
+    s_uploadStats.swizzleCycles += __rdtsc() - swizzleStart;
+    ++s_uploadStats.uploads;
     t.dirty = false;
+    t.dirtyPartial = false;
     if (!t.dynamic)
         std::vector<DWORD>().swap(t.pixels);   // the GPU copy is the only one needed
 }
@@ -478,6 +519,7 @@ void ensureStorage(Texture& t, int width, int height)
     t.storageHeight = nextPowerOfTwo(height);
     t.pixels.assign(static_cast<size_t>(width) * height, 0);
     t.dirty = false;
+    t.dirtyPartial = false;
     if (width > 0 && height > 0)
         ensureD3DTexture(t);
 }
@@ -1697,7 +1739,21 @@ void renderTextureSubImageRgba(int level, int x, int y, int width, int height, c
     }
     // Animated tiles (water, lava, fire, portal...) arrive a dozen per tick,
     // each re-swizzling and locking the whole atlas. Mark it instead: the next
-    // bind (applyTextureStage) uploads it once with every tile applied.
+    // bind (applyTextureStage) uploads it once with every tile applied, and
+    // only the rectangle that covers them.
+    const int x0 = (std::max)(x, 0), y0 = (std::max)(y, 0);
+    const int x1 = (std::min)(x + width, t.width), y1 = (std::min)(y + height, t.height);
+    if (x1 <= x0 || y1 <= y0) return;
+    if (!t.dirty)
+    {
+        t.dirtyPartial = true;
+        t.dirtyX0 = x0; t.dirtyY0 = y0; t.dirtyX1 = x1; t.dirtyY1 = y1;
+    }
+    else if (t.dirtyPartial)
+    {
+        t.dirtyX0 = (std::min)(t.dirtyX0, x0); t.dirtyY0 = (std::min)(t.dirtyY0, y0);
+        t.dirtyX1 = (std::max)(t.dirtyX1, x1); t.dirtyY1 = (std::max)(t.dirtyY1, y1);
+    }
     t.dirty = true;
 }
 
@@ -2020,6 +2076,15 @@ void xboxRenderTakeListStats(double* transformMs, double* listMs, double* stageM
     *listMs = static_cast<double>(s_drawStats.listCycles) / 733333.0;
     *stageMs = static_cast<double>(s_drawStats.stageCycles) / 733333.0;
     *listCalls = s_drawStats.listCalls;
+}
+
+void xboxRenderTakeUploadStats(double* lockMs, double* swizzleMs, long* uploads, long* partialUploads)
+{
+    *lockMs = static_cast<double>(s_uploadStats.lockCycles) / 733333.0;
+    *swizzleMs = static_cast<double>(s_uploadStats.swizzleCycles) / 733333.0;
+    *uploads = s_uploadStats.uploads;
+    *partialUploads = s_uploadStats.partialUploads;
+    s_uploadStats = UploadStats();
 }
 
 void xboxRenderTakeDrawStats(double* drawMs, long* vbDraws, long* upDraws, long* upVertices, long* viewSets)
