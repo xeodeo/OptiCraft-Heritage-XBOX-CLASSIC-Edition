@@ -1,3 +1,4 @@
+#include "net/minecraft/src/BossStatus.h"
 #include "net/minecraft/src/WorldSettings.h"
 #include "net/minecraft/src/WorldType.h"
 #include "net/minecraft/src/WorldInfo.h"
@@ -2657,6 +2658,10 @@ void Minecraft::changeWorld2(World *world, const std::string &s)
 void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *entityplayer)
 {
     World *oldWorld = theWorld;
+    // The boss bar and the Wither's darkening must not carry over to the next world.
+    BossStatus::statusBarLength = 0;
+    if (entityRenderer != nullptr)
+        entityRenderer->bossColorModifier = 0.0f;
     if (oldWorld != world && portalTeleporter != nullptr &&
         (oldWorld == nullptr || world == nullptr || oldWorld->getSaveHandler() != world->getSaveHandler()))
         portalTeleporter->clearDestinationCoordinateCache();
