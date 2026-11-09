@@ -44,6 +44,12 @@ constexpr int_t BUTTON_PREVIOUS = 7100;
 constexpr int_t BUTTON_NEXT = 7101;
 constexpr int_t BUTTON_RESET = 7102;
 constexpr int_t BUTTON_BACK = 7103;
+constexpr int_t BUTTON_TOGGLE_SNEAK = 7104;
+
+std::string toggleSneakLabel(const GameSettings *settings)
+{
+    return uiText(settings != nullptr && settings->toggleSneak ? "Sneak: Toggle" : "Sneak: Hold");
+}
 
 bool reservedCaptureKey(int_t key)
 {
@@ -100,8 +106,10 @@ void LegacyControlsScreen::initGui()
         const int_t halfWidth = (w - gap) / 2;
         controlList.push_back(new LegacyGuiButton(BUTTON_PREVIOUS, x, navY, halfWidth, h, uiText("Previous")));
         controlList.push_back(new LegacyGuiButton(BUTTON_NEXT, x + halfWidth + gap, navY, w - halfWidth - gap, h, uiText("Next")));
-        controlList.push_back(new LegacyGuiButton(BUTTON_RESET, x, legacyLayout.rowY(rowsPerPage + 1), w, h,
+        controlList.push_back(new LegacyGuiButton(BUTTON_RESET, x, legacyLayout.rowY(rowsPerPage + 1), halfWidth, h,
             uiText("Reset to Defaults")));
+        controlList.push_back(new LegacyGuiButton(BUTTON_TOGGLE_SNEAK, x + halfWidth + gap, legacyLayout.rowY(rowsPerPage + 1),
+            w - halfWidth - gap, h, toggleSneakLabel(settings)));
         controlList.push_back(new LegacyGuiButton(BUTTON_BACK, x, legacyLayout.rowY(rowsPerPage + 2), w, h, uiText("Back")));
     }
     rebuildPage();
@@ -158,8 +166,10 @@ void LegacyControlsScreen::initGui()
     const int_t halfWidth = (w - gap) / 2;
     controlList.push_back(new LegacyGuiButton(BUTTON_PREVIOUS, x, navY, halfWidth, h, uiText("Previous")));
     controlList.push_back(new LegacyGuiButton(BUTTON_NEXT, x + halfWidth + gap, navY, w - halfWidth - gap, h, uiText("Next")));
-    controlList.push_back(new LegacyGuiButton(BUTTON_RESET, x, legacyLayout.rowY(columnRows + 2), w, h,
+    controlList.push_back(new LegacyGuiButton(BUTTON_RESET, x, legacyLayout.rowY(columnRows + 2), halfWidth, h,
         uiText("Reset to Defaults")));
+    controlList.push_back(new LegacyGuiButton(BUTTON_TOGGLE_SNEAK, x + halfWidth + gap, legacyLayout.rowY(columnRows + 2),
+        w - halfWidth - gap, h, toggleSneakLabel(settings)));
     controlList.push_back(new LegacyGuiButton(BUTTON_BACK, x, legacyLayout.rowY(columnRows + 3), w, h, uiText("Back")));
 
     rebuildPage();
@@ -311,6 +321,13 @@ void LegacyControlsScreen::actionPerformed(GuiButton *button)
     {
         ++page;
         rebuildPage();
+        return;
+    }
+    if (button->id == BUTTON_TOGGLE_SNEAK)
+    {
+        settings->toggleSneak = !settings->toggleSneak;
+        settings->saveOptions();
+        button->displayString = toggleSneakLabel(settings);
         return;
     }
     if (button->id == BUTTON_RESET)

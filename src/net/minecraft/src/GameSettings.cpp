@@ -96,6 +96,7 @@ void GameSettings::setDefaults()
     soundVolume = 1.0f;
     mouseSensitivity = 0.5f;
     invertMouse = false;
+    toggleSneak = false;
     dolbyDigital = false;
     showCoordinates = false;
     fullbright = false;
