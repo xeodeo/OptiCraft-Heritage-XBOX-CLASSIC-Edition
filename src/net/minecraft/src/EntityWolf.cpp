@@ -30,6 +30,7 @@
 #include "PathNavigate.h"
 #include "World.h"
 #include "AxisAlignedBB.h"
+#include "BlockCloth.h"
 #include "DataWatcher.h"
 #include "DamageSource.h"
 #include "java/String.h"
@@ -51,6 +52,7 @@ EntityWolf::EntityWolf(World *world)
 	setSize(0.6f, 0.8f);
 	moveSpeed = 0.3f;
 	setHealth(getMaxHealth());
+	dataWatcher->updateObject(18, (int_t)getHealth());
 	if (getNavigator() != nullptr)
 		getNavigator()->setAvoidsWater(true);
 	tasks.addTask(1, new EntityAISwimming(this));
@@ -126,12 +128,20 @@ bool EntityWolf::canMateWith(EntityAnimal *mate) const
 void EntityWolf::setLooksWithInterest(bool value)
 {
 	looksWithInterest = value;
+	dataWatcher->updateObject(19, (byte_t)(value ? 1 : 0));
+}
+
+bool EntityWolf::func_70922_bv() const
+{
+	return dataWatcher->getWatchableObjectByte(19) == 1;
 }
 
 void EntityWolf::entityInit()
 {
 	EntityTameable::entityInit();
-	dataWatcher->addObject(18, (int_t)0);
+	dataWatcher->addObject(18, (int_t)getHealth());
+	dataWatcher->addObject(19, (byte_t)0);
+	dataWatcher->addObject(20, (byte_t)BlockCloth::getBlockFromDye(1));
 }
 
 bool EntityWolf::canTriggerWalking()
@@ -157,6 +167,7 @@ void EntityWolf::writeEntityToNBT(NBTTagCompound *nbttagcompound)
 	{
 		nbttagcompound->setString("Owner", getWolfOwner());
 	}
+	nbttagcompound->setByte("CollarColor", (byte_t)getCollarColor());
 }
 
 void EntityWolf::readEntityFromNBT(NBTTagCompound *nbttagcompound)
@@ -169,6 +180,10 @@ void EntityWolf::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 	{
 		setWolfOwner(s);
 		setWolfTamed(true);
+	}
+	if (nbttagcompound->hasKey("CollarColor"))
+	{
+		setCollarColor(nbttagcompound->getByte("CollarColor"));
 	}
 }
 
@@ -505,21 +520,42 @@ bool EntityWolf::interact(EntityPlayer *entityplayer)
 	}
 	else
 	{
-		ItemFood *food = itemstack != nullptr ? dynamic_cast<ItemFood *>(itemstack->getItem()) : nullptr;
-		if (food != nullptr && food->getIsWolfsFavoriteMeat() && dataWatcher->getWatchableObjectInt(18) < 20)
+		if (itemstack != nullptr)
 		{
-			if (!entityplayer->capabilities.isCreativeMode)
+			ItemFood *food = dynamic_cast<ItemFood *>(itemstack->getItem());
+			if (food != nullptr)
 			{
-				--itemstack->stackSize;
-				if (itemstack->stackSize <= 0)
+				if (food->getIsWolfsFavoriteMeat() && dataWatcher->getWatchableObjectInt(18) < 20)
 				{
-					int_t slot = entityplayer->inventory->currentItem;
-					entityplayer->inventory->setInventorySlotContents(slot, nullptr);
-					itemstack = nullptr;
+					if (!entityplayer->capabilities.isCreativeMode)
+					{
+						--itemstack->stackSize;
+						if (itemstack->stackSize <= 0)
+						{
+							int_t slot = entityplayer->inventory->currentItem;
+							entityplayer->inventory->setInventorySlotContents(slot, nullptr);
+							itemstack = nullptr;
+						}
+					}
+					heal(food->getHealAmount());
+					return true;
 				}
 			}
-			heal(food->getHealAmount());
-			return true;
+			else if (Item::dyePowder != nullptr && itemstack->itemID == Item::dyePowder->shiftedIndex)
+			{
+				int_t color = BlockCloth::getBlockFromDye(itemstack->getItemDamage());
+				if (color != getCollarColor())
+				{
+					setCollarColor(color);
+					if (!entityplayer->capabilities.isCreativeMode && --itemstack->stackSize <= 0)
+					{
+						int_t slot = entityplayer->inventory->currentItem;
+						entityplayer->inventory->setInventorySlotContents(slot, nullptr);
+						itemstack = nullptr;
+					}
+					return true;
+				}
+			}
 		}
 		if (String::equalsIgnoreCaseJava(entityplayer->username, getOwnerName()) && !worldObj->multiplayerWorld && !isWheat(itemstack))
 		{
@@ -630,4 +666,14 @@ bool EntityWolf::isWolfTamed()
 void EntityWolf::setWolfTamed(bool flag)
 {
 	setTamed(flag);
+}
+
+int_t EntityWolf::getCollarColor() const
+{
+	return dataWatcher->getWatchableObjectByte(20) & 15;
+}
+
+void EntityWolf::setCollarColor(int_t color)
+{
+	dataWatcher->updateObject(20, (byte_t)(color & 15));
 }
