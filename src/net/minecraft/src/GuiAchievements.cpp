@@ -26,10 +26,11 @@
 #include "java/Random.h"
 #include <cmath>
 
-const int_t GuiAchievements::minScrollX = AchievementList::minDisplayColumn * 24 - 112;
-const int_t GuiAchievements::minScrollY = AchievementList::minDisplayRow    * 24 - 112;
-const int_t GuiAchievements::maxScrollX = AchievementList::maxDisplayColumn * 24 - 77;
-const int_t GuiAchievements::maxScrollY = AchievementList::maxDisplayRow    * 24 - 77;
+// Computed on use: achievements set these bounds after static initialisation.
+int_t GuiAchievements::minScrollX() { return AchievementList::minDisplayColumn * 24 - 112; }
+int_t GuiAchievements::minScrollY() { return AchievementList::minDisplayRow    * 24 - 112; }
+int_t GuiAchievements::maxScrollX() { return AchievementList::maxDisplayColumn * 24 - 77; }
+int_t GuiAchievements::maxScrollY() { return AchievementList::maxDisplayRow    * 24 - 77; }
 
 GuiAchievements::GuiAchievements(StatFileWriter *statfilewriter)
 	: bgWidth(256)
@@ -109,10 +110,10 @@ void GuiAchievements::drawScreen(int_t i, int_t j, float_t f)
 		const float_t speed = 6.0f;
 		targetScrollX += pad.rightX * speed;
 		targetScrollY += pad.rightY * speed;
-		if (targetScrollX < static_cast<float_t>(minScrollX)) targetScrollX = static_cast<float_t>(minScrollX);
-		if (targetScrollY < static_cast<float_t>(minScrollY)) targetScrollY = static_cast<float_t>(minScrollY);
-		if (targetScrollX >= static_cast<float_t>(maxScrollX)) targetScrollX = static_cast<float_t>(maxScrollX - 1);
-		if (targetScrollY >= static_cast<float_t>(maxScrollY)) targetScrollY = static_cast<float_t>(maxScrollY - 1);
+		if (targetScrollX < static_cast<float_t>(minScrollX())) targetScrollX = static_cast<float_t>(minScrollX());
+		if (targetScrollY < static_cast<float_t>(minScrollY())) targetScrollY = static_cast<float_t>(minScrollY());
+		if (targetScrollX >= static_cast<float_t>(maxScrollX())) targetScrollX = static_cast<float_t>(maxScrollX() - 1);
+		if (targetScrollY >= static_cast<float_t>(maxScrollY())) targetScrollY = static_cast<float_t>(maxScrollY() - 1);
 		scrollX = lastScrollX = targetScrollX;
 		scrollY = lastScrollY = targetScrollY;
 	}
@@ -139,10 +140,10 @@ void GuiAchievements::drawScreen(int_t i, int_t j, float_t f)
 			lastMouseX = i;
 			lastMouseY = j;
 		}
-		if (targetScrollX < static_cast<float_t>(minScrollX)) targetScrollX = static_cast<float_t>(minScrollX);
-		if (targetScrollY < static_cast<float_t>(minScrollY)) targetScrollY = static_cast<float_t>(minScrollY);
-		if (targetScrollX >= static_cast<float_t>(maxScrollX)) targetScrollX = static_cast<float_t>(maxScrollX - 1);
-		if (targetScrollY >= static_cast<float_t>(maxScrollY)) targetScrollY = static_cast<float_t>(maxScrollY - 1);
+		if (targetScrollX < static_cast<float_t>(minScrollX())) targetScrollX = static_cast<float_t>(minScrollX());
+		if (targetScrollY < static_cast<float_t>(minScrollY())) targetScrollY = static_cast<float_t>(minScrollY());
+		if (targetScrollX >= static_cast<float_t>(maxScrollX())) targetScrollX = static_cast<float_t>(maxScrollX() - 1);
+		if (targetScrollY >= static_cast<float_t>(maxScrollY())) targetScrollY = static_cast<float_t>(maxScrollY() - 1);
 	}
 	else
 	{
@@ -168,10 +169,10 @@ void GuiAchievements::drawAchievementsPanel(int_t i, int_t j, float_t f)
 {
 	int_t k = MathHelper::floor_float(lastScrollX + (scrollX - lastScrollX) * f);
 	int_t l = MathHelper::floor_float(lastScrollY + (scrollY - lastScrollY) * f);
-	if (k < minScrollX) k = minScrollX;
-	if (l < minScrollY) l = minScrollY;
-	if (k >= maxScrollX) k = maxScrollX - 1;
-	if (l >= maxScrollY) l = maxScrollY - 1;
+	if (k < minScrollX()) k = minScrollX();
+	if (l < minScrollY()) l = minScrollY();
+	if (k >= maxScrollX()) k = maxScrollX() - 1;
+	if (l >= maxScrollY()) l = maxScrollY() - 1;
 
 	int_t terrainTex  = mc->renderEngine->getTexture("/terrain.png");
 	int_t achieveBgTex = mc->renderEngine->getTexture("/achievement/bg.png");
@@ -179,6 +180,12 @@ void GuiAchievements::drawAchievementsPanel(int_t i, int_t j, float_t f)
 	int_t l1 = (height - bgHeight) / 2;
 	int_t i2 = k1 + 16;
 	int_t j2 = l1 + 17;
+	// Java hides what spills out of the map with a depth-buffer trick that D3D8 does not reproduce:
+	// clip to the map area instead (pixels of the back buffer).
+	const float_t pxX = width  > 0 ? static_cast<float_t>(mc->displayWidth)  / static_cast<float_t>(width)  : 1.0f;
+	const float_t pxY = height > 0 ? static_cast<float_t>(mc->displayHeight) / static_cast<float_t>(height) : 1.0f;
+	renderScissorPixels(true, static_cast<int>(i2 * pxX), static_cast<int>(j2 * pxY),
+	                    static_cast<int>(224 * pxX), static_cast<int>(155 * pxY));
 	zLevel = 0.0f;
 	renderDepthFunc(RenderCompare::GreaterEqual);  // Java: glDepthFunc(518 / GL_GEQUAL) — draws the map "behind" the bg.png window
 	renderPushMatrix();
@@ -307,6 +314,7 @@ void GuiAchievements::drawAchievementsPanel(int_t i, int_t j, float_t f)
 		}
 	}
 
+	renderScissorPixels(false, 0, 0, 0, 0);
 	renderDisable(RenderCapability::DepthTest);
 	renderEnable(RenderCapability::Blend);
 	renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
