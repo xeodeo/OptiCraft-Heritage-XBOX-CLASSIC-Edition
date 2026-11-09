@@ -578,7 +578,14 @@ void applyMatrices()
         s_sentView = s_modelView;
         ++s_drawStats.viewSets;
         const unsigned long long start = __rdtsc();
-        d->SetTransform(D3DTS_VIEW, reinterpret_cast<const D3DMATRIX*>(s_modelView.m));
+        // Left-handed copy (eye z flipped, undone in the projection): D3D's eye-distance
+        // fog only works with a "W-friendly" projection whose (3,4) is +1, GL's is -1.
+        Mat4 view = s_modelView;
+        view.m[2] = -view.m[2];
+        view.m[6] = -view.m[6];
+        view.m[10] = -view.m[10];
+        view.m[14] = -view.m[14];
+        d->SetTransform(D3DTS_VIEW, reinterpret_cast<const D3DMATRIX*>(view.m));
         s_drawStats.transformCycles += __rdtsc() - start;
     }
     if (!s_sentValid || std::memcmp(s_sentProjection.m, s_projection.m, sizeof(s_projection.m)) != 0)
@@ -588,7 +595,12 @@ void applyMatrices()
         Mat4 zFix = identity();
         zFix.m[10] = 0.5f;
         zFix.m[14] = 0.5f;
-        const Mat4 projection = multiply(zFix, s_projection);
+        Mat4 flipped = s_projection;
+        flipped.m[8] = -flipped.m[8];
+        flipped.m[9] = -flipped.m[9];
+        flipped.m[10] = -flipped.m[10];
+        flipped.m[11] = -flipped.m[11];
+        const Mat4 projection = multiply(zFix, flipped);
         d->SetTransform(D3DTS_PROJECTION, reinterpret_cast<const D3DMATRIX*>(projection.m));
     }
     s_sentValid = true;
