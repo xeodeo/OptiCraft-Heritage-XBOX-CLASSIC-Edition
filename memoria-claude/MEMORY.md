@@ -13,7 +13,7 @@
 - [Estado actual del proyecto](estado-actual.md) — empezar por buzon-xbox/ESTADO-ACTUAL.md (09-11): 1.2.5 wt-opti30, 1.5.2 prueba wt-152-pociones
 - [Música como el original](musica-comportamiento-original.md) — en Xbox y PS2 se revierte lo que cambia OptiJuegos, con guarda por plataforma
 - [Datos del juego en worktrees](xbox-data-dir-worktrees.md) — sin -DXBOX_DATA_DIR el ISO sale vacío
-- [RE4 a Xbox](re4-xbox-port.md) — GX v2 + salas en marcha (08-10 noche); empezar por buzon/TRASPASO-08-10-noche.md
+- [RE4 a Xbox](re4-xbox-port.md) — empezar por RE4 port/buzon/COMO-VAMOS.md (pendientes) y TRASPASO-08-10-noche.md; nada commiteado
 - [Melee-X, referencia del port RE4](melee-x-referencia.md) — revisarla antes de diseñar GX/memoria/ARAM/endianness
 - [Nunca /fp:fast](no-fp-fast.md) — nada que pueda cambiar el terreno de una semilla
 - [BT3 a Xbox](bt3-xbox-port.md) — Budokai Tenkaichi 3; empezar por buzon/TRASPASO-21-10.md; rama buena xbox-memoria-pelea (bisect\wt-mem)

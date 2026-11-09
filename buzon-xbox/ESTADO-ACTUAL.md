@@ -72,14 +72,25 @@ quieto: mediana 59,8-59,9, mínimo 57-59, HUD 0,1-0,4 ms → el menú Legacy YA 
    dragón), explosión al nacer (tirón: medir en netlog), calaveras azules, escudo bajo media vida, estrella del Nether,
    guardar/cargar con el Wither vivo. Informe 82; auditado (sin cuelgues).
 
-## Build 1.5.2 del 09-11 13:33: probar también
+## Build 1.5.2 del 09-11 13:33 — CONFIRMADO: skins LCE, crear mundo, logros, «Minecraft 1.5.2». Wither en prueba.
 - Skins LCE sin rayas y pestañas sin repetir; Crear mundo (sin Legacy UI) sin botones montados; Logros recortados al
   panel y desplazamiento hasta el final; en el menú sin Legacy UI pone «Minecraft 1.5.2».
+
+## En marcha (09-11 15:30): encargo 84 (Claude, agy sin cuota)
+Agacharse con interruptor (opción en Controles, Legacy y Java) y mantener A en inventarios (coge DE UNO EN UNO, rápido, mientras se mantiene;
+creativo y cofres). En 1.5.2 (`port152-controles-84`) y 1.2.5 (`opti30-cruceta`). Informe 84.
+
+## Build del 09-11 16:26 (1.5.2 y 1.2.5, con assets.pak NUEVO en las dos): probar
+- Skins de Halo (40), Mass Effect (36) y Skyrim (40) como pestañas en el selector (Legacy y Java), J1 y J2.
+- Mantener A coge de 1 en 1 desde el principio (creativo y cofres; contar objetos: ni duplica ni pierde).
+- Agacharse con interruptor (Controles). Carpeta `skins` junto al juego para skins propias.
+- Paks anteriores en `OptiCraft_respaldo_paks_09-11`. agy: encargo 86 (entidades por portales) en marcha.
 
 ## Pendiente de probar en 1.2.5 (el usuario la deja para DESPUÉS; rama `opti30-cruceta`, build 09-11 12:10)
 Niebla, cielo, sol, luna, nubes; agachado+bloque sobre un cofre; cruceta separada del stick y configurable (Controles),
 iconos del stick, chat (B sale); texturas animadas y HUD Legacy más rápidos; ticks por chunk (sin prioridades: 1.2.5 no
-las tiene); logros (recorte y desplazamiento, build 13:33). Si va bien: avanzar `xbox-opti-30` a `opti30-cruceta`.
+las tiene); logros (recorte y desplazamiento, build 13:33); yunque/huevo de dragón cayendo; agacharse
+con interruptor y mantener A (cuando entre el 84). Si va bien: avanzar `xbox-opti-30` a `opti30-cruceta`.
 
 ## Lo siguiente
 0. **agy sin cuota hasta ~16-11** (09-11 13:00). El encargo 83 lo hizo Claude (`83-INFORME.md`): en prueba como build 13:33.
@@ -89,6 +100,9 @@ las tiene); logros (recorte y desplazamiento, build 13:33). Si va bien: avanzar 
    OptiFine (partículas, humo animado...), bien a 720p y 480p. `80-ENCARGO-agy-graficos-avanzados-legacy.md`.
 3. agy encargo 81 (EN COLA tras el 80): selector de skins al estilo LCE con legacyUI (`81-ENCARGO-agy-skins-estilo-lce.md`).
 4. Merge a `port152-claude`: HECHO 09-11 (`91b5f42`). Lo nuevo de agy se prueba en `port152-aldeanos` y luego se avanza.
+3. **Entidades por portales** (mobs, objetos, vagonetas): `Entity::setInPortal` está VACÍO; el port solo tiene cargado
+   un mundo. Hacerlo: posición destino ×/÷8 + Teleporter (buscar/crear portal) + guardar la entidad en el chunk de la otra
+   dimensión sin cargarla. Pedido por el usuario (aldeano no cruza), 09-11.
 3. Plan 69: comandos + reglas + modo aventura → Wither → fuegos artificiales → dispensador → ...
 4. **Pantalla partida: el jugador 2 tiene la cruceta fija. El usuario dice dejarlo para después (anotado 09-11).**
    Mando: Y = mover rápido (si el usuario lo quiere).
