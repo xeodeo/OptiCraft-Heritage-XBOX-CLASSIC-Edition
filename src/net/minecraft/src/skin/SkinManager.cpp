@@ -262,6 +262,10 @@ void SkinManager::scanCustomSkins()
     if (primaryDir != "mc0:/OPTCRAFT/skins")
         searchDirs.push_back("mc0:/OPTCRAFT/skins");
 #endif
+#ifdef XBOX_PLATFORM
+    // A "skins" folder next to the game XBE (D: is that folder), easy to fill over FTP.
+    searchDirs.push_back("D:\\skins");
+#endif
     if (primaryDir != "skins" && primaryDir != "./skins")
         searchDirs.push_back("skins");
 
