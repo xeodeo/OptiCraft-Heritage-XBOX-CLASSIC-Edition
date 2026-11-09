@@ -33,6 +33,20 @@ Copia `memoria-claude\*` a
 - agy (`agy --dangerously-skip-permissions`) y Orca (terminales); ver `claude\COMO-USAR-AGY.md`.
 - PS2: `psdevwindows/` (ver `docs/XBOX_PORT.md`, fase 11).
 
+### Dónde está explicado cada cosa
+- **XDK (cómo se usa sin instalar, qué versión, cómo se compila con VS2022 contra él):**
+  `memoria-claude\xdk-sin-instalar.md` (extraer `XDKSetup5849.exe` con 7z), `docs/XBOX_PORT.md` de cualquier rama de
+  código (secciones 2 «What you need», 3 «Building» y 5 «How the toolchain works»: compilador, headers, enlazado,
+  `patch_pe_for_imagebld.ps1`, problema SSE2 de la consola real), y `buzon-xbox\00-CONTEXTO.md`.
+  El XDK en sí (los .exe/.7z) NO está en GitHub: guárdalo tú.
+- **Cómo hablar con los agentes (agy, Orca, escuchador):** `claude\COMO-USAR-AGY.md` (guía larga),
+  `claude\skills\agy\SKILL.md` + `escuchador.py` (lanzar agy sin permisos, mandar encargos por fichero, vigilarlo con
+  Monitor), `claude\skills\orca-cli\` (terminales), memorias `skill-agy.md`, `agy-sin-permisos.md`,
+  `usar-agy-no-subagentes.md`, `una-compilacion-a-la-vez.md` (candado `BUILD.lock`).
+- **Log de la consola por red:** `xbox-spike\escuchar_log.py` en el repo de código (UDP 9999 → `netlog.txt`); la IP del PC
+  se fija al compilar con `-DXBOX_NETLOG_HOST=...` (memoria `xbox-consola-real-sse2.md`).
+- **Lanzador y carpetas de la Xbox:** memorias `xbox-loader-copy.md`, `xbox-builds-prueba-publica.md`, `xbox-720p-xbe.md`.
+
 ## 4. MCP (Java descompilado con nombres)
 Guía completa: `buzon-xbox\55-GUIA-mcp-descompilar-y-revisar.md`. Resumen:
 - `mcp-diff\rehacer.sh` vuelve a crear `src125\` y `src152\` desde los jars originales de Mojang
