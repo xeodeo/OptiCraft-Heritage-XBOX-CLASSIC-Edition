@@ -23,10 +23,10 @@ private:
 	void drawTitle();
 	void drawAchievementsPanel(int_t mouseX, int_t mouseY, float_t partialTick);
 
-	static const int_t minScrollX;
-	static const int_t minScrollY;
-	static const int_t maxScrollX;
-	static const int_t maxScrollY;
+	static int_t minScrollX();
+	static int_t minScrollY();
+	static int_t maxScrollX();
+	static int_t maxScrollY();
 
 protected:
 	int_t bgWidth;
