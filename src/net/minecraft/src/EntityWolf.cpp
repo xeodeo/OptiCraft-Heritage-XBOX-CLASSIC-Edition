@@ -493,12 +493,10 @@ bool EntityWolf::interact(EntityPlayer *entityplayer)
 						aiSit->setSitting(true);
 					setHealth(20);
 					setOwner(entityplayer->username);
-					showHeartsOrSmokeFX(true);
 					worldObj->setEntityState(this, (byte_t)7);
 				}
 				else
 				{
-					showHeartsOrSmokeFX(false);
 					worldObj->setEntityState(this, (byte_t)6);
 				}
 			}

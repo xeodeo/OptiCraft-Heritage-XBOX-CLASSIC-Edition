@@ -209,14 +209,12 @@ bool EntityOcelot::interact(EntityPlayer *player)
 					setTamed(true);
 					setCatType(1 + worldObj->rand.nextInt(3));
 					setOwner(player->username);
-					showHeartsOrSmokeFX(true);
 					if (aiSit != nullptr)
 						aiSit->setSitting(true);
 					worldObj->setEntityState(this, (byte_t)7);
 				}
 				else
 				{
-					showHeartsOrSmokeFX(false);
 					worldObj->setEntityState(this, (byte_t)6);
 				}
 			}

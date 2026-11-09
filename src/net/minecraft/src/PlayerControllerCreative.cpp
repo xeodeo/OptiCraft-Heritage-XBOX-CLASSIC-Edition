@@ -37,14 +37,8 @@ void PlayerControllerCreative::disableAbilities(EntityPlayer *player)
 
 void PlayerControllerCreative::initializePlayer(EntityPlayer *player)
 {
+    // Java 1.5.2 gives no blocks when switching to creative (the 1.2.5 test kit filled the hotbar).
     enableAbilities(player);
-    if (player == nullptr || player->inventory == nullptr)
-        return;
-    for (int_t slot = 0; slot < 9 && slot < (int_t)Session::registeredBlocksList.size(); ++slot)
-    {
-        if (player->inventory->mainInventory[slot] == nullptr && Session::registeredBlocksList[(std::size_t)slot] != nullptr)
-            player->inventory->mainInventory[slot] = new ItemStack(Session::registeredBlocksList[(std::size_t)slot]);
-    }
 }
 
 void PlayerControllerCreative::clickBlockCreative(Minecraft *minecraft, PlayerController *controller, int_t x, int_t y, int_t z, int_t side)
