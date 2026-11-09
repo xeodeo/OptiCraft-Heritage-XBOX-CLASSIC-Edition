@@ -22,7 +22,7 @@ int_t BlockRedstoneTorch::getBlockTextureFromSideAndMetadata(int_t i, int_t j)
 bool BlockRedstoneTorch::checkForBurnout(World *world, int_t i, int_t j, int_t k, bool flag)
 {
     if (flag)
-        torchUpdates.push_back(RedstoneUpdateInfo(i, j, k, world->getWorldTime()));
+        torchUpdates.push_back(RedstoneUpdateInfo(i, j, k, world->getTotalWorldTime()));
     int_t l = 0;
     for (int_t i1 = 0; i1 < (int_t)torchUpdates.size(); i1++)
     {
@@ -88,7 +88,7 @@ void BlockRedstoneTorch::updateTick(World *world, int_t i, int_t j, int_t k, Ran
 {
     bool flag = getFlowDecay(world, i, j, k);
     while (!torchUpdates.empty() &&
-           JavaArithmetic::longSub(world->getWorldTime(), torchUpdates.front().updateTime) > 60LL)
+           JavaArithmetic::longSub(world->getTotalWorldTime(), torchUpdates.front().updateTime) > 60LL)
         torchUpdates.erase(torchUpdates.begin());
     if (torchActive)
     {

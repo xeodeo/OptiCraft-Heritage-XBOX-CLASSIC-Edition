@@ -1522,10 +1522,10 @@ bool Chunk::needsSaving(bool flag)
 		return false;
 	if (flag)
 	{
-		if (hasEntities && worldObj != nullptr && worldObj->getWorldTime() != lastSaveTime)
+		if (hasEntities && worldObj != nullptr && worldObj->getTotalWorldTime() != lastSaveTime)
 			return true;
 	}
-	else if (hasEntities && worldObj != nullptr && worldObj->getWorldTime() >= lastSaveTime + 600LL)
+	else if (hasEntities && worldObj != nullptr && worldObj->getTotalWorldTime() >= lastSaveTime + 600LL)
 	{
 		return true;
 	}

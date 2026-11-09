@@ -4,7 +4,7 @@
 
 void TileEntityDaylightDetector::updateEntity()
 {
-	if (worldObj != nullptr && !worldObj->multiplayerWorld && (worldObj->getWorldTime() % 20LL == 0LL))
+	if (worldObj != nullptr && !worldObj->multiplayerWorld && (worldObj->getTotalWorldTime() % 20LL == 0LL))
 	{
 		blockType = getBlockType();
 		if (blockType != nullptr && dynamic_cast<BlockDaylightDetector *>(blockType) != nullptr)

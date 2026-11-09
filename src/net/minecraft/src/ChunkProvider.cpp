@@ -344,7 +344,7 @@ bool ChunkProvider::canChunkExist(int_t i, int_t j) const
 
 long_t ChunkProvider::currentWorldTime() const
 {
-	return worldObj != nullptr ? worldObj->getWorldTime() : 0LL;
+	return worldObj != nullptr ? worldObj->getTotalWorldTime() : 0LL;
 }
 
 bool ChunkProvider::isOutsideUnloadRadius(int_t i, int_t j) const
@@ -1056,7 +1056,7 @@ Chunk *ChunkProvider::loadChunkFromFile(int_t i, int_t j, bool &readFailed)
 		readFailed = status == ChunkLoadStatus::ReadError;
 		if (chunk != nullptr)
 		{
-			chunk->lastSaveTime = worldObj->getWorldTime();
+			chunk->lastSaveTime = worldObj->getTotalWorldTime();
 			if (chunkProvider != nullptr)
 				chunkProvider->recreateStructures(i, j);
 		}
@@ -1088,7 +1088,7 @@ void ChunkProvider::saveChunkToFile(Chunk *chunk)
 	if (chunkLoader == nullptr || chunk == nullptr || chunk == blankChunk) return;
 	try
 	{
-		chunk->lastSaveTime = worldObj->getWorldTime();
+		chunk->lastSaveTime = worldObj->getTotalWorldTime();
 		chunkLoader->saveChunk(worldObj, chunk);
 	}
 	catch (...)

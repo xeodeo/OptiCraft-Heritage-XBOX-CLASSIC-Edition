@@ -444,6 +444,9 @@ public:
 	virtual void sendQuittingDisconnectingPacket();
 	void setMapStorage(MapStorage *storage);
 	void checkSessionLock();
+	void func_82738_a(long_t l);
+	long_t getTotalWorldTime();
+	long_t getWorldTotalTime();
 	void setWorldTime(long_t l);
 	long_t getRandomSeed();
 	Random &setRandomSeed(int_t x, int_t z, int_t salt);
