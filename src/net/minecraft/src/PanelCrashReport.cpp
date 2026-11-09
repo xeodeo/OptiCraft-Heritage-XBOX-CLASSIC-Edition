@@ -38,7 +38,7 @@ PanelCrashReport::PanelCrashReport(UnexpectedThrowable *unexpectedthrowable)
         s2 << "Generated " << timeBuf << "\n\n";
     }
 
-    s2 << "Minecraft: Minecraft 1.2.5\n";
+    s2 << "Minecraft: Minecraft 1.5.2\n";
 
 #if defined(_WIN32)
     s2 << "OS: Windows\n";

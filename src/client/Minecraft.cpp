@@ -580,7 +580,7 @@ void Minecraft::startGame()
         lwjgl::Display::setDisplayMode(lwjgl::DisplayMode(displayWidth, displayHeight));
     }
 
-    lwjgl::Display::setTitle("Minecraft Minecraft 1.2.5");
+    lwjgl::Display::setTitle("Minecraft Minecraft 1.5.2");
     lwjgl::Display::create();
     MC_LOG_DEBUG("client.display", "Display created %dx%d\n", displayWidth, displayHeight);
 

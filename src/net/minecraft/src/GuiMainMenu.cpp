@@ -613,7 +613,7 @@ void GuiMainMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 
     if (!legacyUi)
     {
-        drawString(fontRenderer, "Minecraft 1.2.5", 2, height - 10, 0xffffff);
+        drawString(fontRenderer, "Minecraft 1.5.2", 2, height - 10, 0xffffff);
         const std::string copyright = "Copyright Mojang AB. Do not distribute!";
         drawString(fontRenderer, copyright, width - fontRenderer->getStringWidth(copyright) - 2, height - 10, 0xffffff);
     }

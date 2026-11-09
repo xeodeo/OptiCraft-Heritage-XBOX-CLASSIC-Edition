@@ -76,7 +76,7 @@ void GuiAchievement::updateAchievementWindow()
 		renderDepthMask(false);
 		RenderHelper::disableStandardItemLighting();
 		updateAchievementWindowScale();
-		std::string s  = "Minecraft 1.2.5   Unlicensed Copy :(";
+		std::string s  = "Minecraft 1.5.2   Unlicensed Copy :(";
 		std::string s1 = "(Or logged in from another location)";
 		std::string s2 = uiText("Purchase at minecraft.net");
 		theGame->fontRenderer->drawStringWithShadow(s,  2,  2, 0xffffff);
