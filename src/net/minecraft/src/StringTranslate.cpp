@@ -239,6 +239,8 @@ std::string StringTranslate::translateUi(const std::string &english)
         if (english == "Vertical") return "Vertical";
         if (english == "Toggle") return "Alternar";
         if (english == "Delete") return "Eliminar";
+        if (english == "Sneak: Hold") return "Agacharse: mantener";
+        if (english == "Sneak: Toggle") return "Agacharse: alternar";
     }
     return english;
 }

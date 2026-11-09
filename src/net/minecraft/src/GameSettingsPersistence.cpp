@@ -141,6 +141,8 @@ void GameSettings::loadOptions()
 					fovSetting = parseFloat(value);
 				if (key == "invertYMouse")
 					invertMouse = value == "true";
+				if (key == "toggleSneak")
+					toggleSneak = value == "true";
 				if (key == "dolbyDigital")
 					dolbyDigital = value == "true";
 				if (key == "showCoordinates")
@@ -471,6 +473,7 @@ void GameSettings::saveOptions()
 	printwriter << "music:" << musicVolume << "\n";
 	printwriter << "sound:" << soundVolume << "\n";
 	printwriter << "invertYMouse:" << (invertMouse ? "true" : "false") << "\n";
+	printwriter << "toggleSneak:" << (toggleSneak ? "true" : "false") << "\n";
 	printwriter << "dolbyDigital:" << (dolbyDigital ? "true" : "false") << "\n";
 	printwriter << "showCoordinates:" << (showCoordinates ? "true" : "false") << "\n";
 	printwriter << "fullbright:" << (fullbright ? "true" : "false") << "\n";
