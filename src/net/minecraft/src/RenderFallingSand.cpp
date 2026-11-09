@@ -25,11 +25,11 @@ void RenderFallingSand::doRenderFallingSand(EntityFallingSand* entityfallingsand
         renderBlocks->blockAccess = world;
         Tessellator* tessellator = &Tessellator::instance;
         tessellator->startDrawingQuads();
-        tessellator->setTranslationF(static_cast<float>(JavaArithmetic::intSub(0, blockX)) - 0.5f,
+        tessellator->setTranslation(static_cast<float>(JavaArithmetic::intSub(0, blockX)) - 0.5f,
                                      static_cast<float>(JavaArithmetic::intSub(0, blockY)) - 0.5f,
                                      static_cast<float>(JavaArithmetic::intSub(0, blockZ)) - 0.5f);
         renderBlocks->renderBlockByRenderType(block, blockX, blockY, blockZ);
-        tessellator->setTranslationF(0.0f, 0.0f, 0.0f);
+        tessellator->setTranslation(0.0, 0.0, 0.0);
         tessellator->draw();
     }
     else
