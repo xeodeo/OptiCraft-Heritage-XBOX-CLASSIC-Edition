@@ -3473,6 +3473,30 @@ void RenderGlobal::playAuxSFX(EntityPlayer *entityplayer, int_t i, int_t j, int_
 		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.zombie.woodbreak", 2.0f, random.nextFloatDifference() * 0.2f + 1.0f);
 		break;
 
+	case 1013:
+	{
+		// Java broadcasts the spawn roar to everyone: heard from the boss's direction, 2 blocks away.
+		EntityLiving *viewer = mc->renderViewEntity;
+		if (viewer != nullptr)
+		{
+			const double dx = (double)j - viewer->posX;
+			const double dy = (double)k - viewer->posY;
+			const double dz = (double)l - viewer->posZ;
+			const double dist = MathHelper::sqrt_double(dx * dx + dy * dy + dz * dz);
+			double sx = viewer->posX, sy = viewer->posY, sz = viewer->posZ;
+			if (dist > 0.0)
+			{
+				sx += dx / dist * 2.0;
+				sy += dy / dist * 2.0;
+				sz += dz / dist * 2.0;
+			}
+			worldObj->playSoundEffect(sx, sy, sz, "mob.wither.spawn", 1.0f, 1.0f);
+		}
+		break;
+	}
+	case 1014:
+		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.wither.shoot", 2.0f, (random.nextFloat() - random.nextFloat()) * 0.2f + 1.0f);
+		break;
 	case 1015:
 		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.bat.takeoff", 0.05f, (random.nextFloat() - random.nextFloat()) * 0.2f + 1.0f);
 		break;

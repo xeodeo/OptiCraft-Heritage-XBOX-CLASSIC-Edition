@@ -21,6 +21,7 @@ public:
 protected:
 	void entityInit() override;
 	virtual void onImpact(MovingObjectPosition *hit);
+	virtual float getMotionFactor();
 
 public:
 	void onUpdate() override;

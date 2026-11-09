@@ -1,4 +1,5 @@
 #include "EntityRenderer.h"
+#include "BossStatus.h"
 #if PLATFORM_PS2
 #include "ps2/minecraft/Ps2WeatherMath.h"
 #include "ps2/diagnostics/Ps2OptimizationValidation.h"
@@ -460,6 +461,12 @@ void EntityRenderer::updateLightmap()
         red = red * 0.96f + 0.03f;
         green = green * 0.96f + 0.03f;
         blue = blue * 0.96f + 0.03f;
+        if (bossColorModifier > 0.0f)
+        {
+            red = red * (1.0f - bossColorModifier) + red * 0.7f * bossColorModifier;
+            green = green * (1.0f - bossColorModifier) + green * 0.6f * bossColorModifier;
+            blue = blue * (1.0f - bossColorModifier) + blue * 0.6f * bossColorModifier;
+        }
 
         if (world->worldProvider->worldType == 1)
         {
@@ -655,6 +662,20 @@ void EntityRenderer::updateRenderer()
     
     itemRenderer->updateEquippedItem();
     addRainParticles();
+
+    if (BossStatus::field_82825_d)
+    {
+        bossColorModifier += 0.05f;
+        if (bossColorModifier > 1.0f)
+            bossColorModifier = 1.0f;
+        BossStatus::field_82825_d = false;
+        lightmapUpdateNeeded = true;
+    }
+    else if (bossColorModifier > 0.0f)
+    {
+        bossColorModifier -= 0.0125f;
+        lightmapUpdateNeeded = true;
+    }
 }
 
 void EntityRenderer::getMouseOver(float partialTicks)

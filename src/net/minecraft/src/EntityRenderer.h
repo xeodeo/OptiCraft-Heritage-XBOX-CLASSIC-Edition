@@ -162,6 +162,7 @@ private:
     float torchFlickerDX;
     float torchFlickerY;
     float torchFlickerDY;
+    float bossColorModifier = 0.0f;   // field_82831_U: Wither darkens the light
     float fovModifierHandPrev[2];
     
     // Contador de actualizaciones del renderer

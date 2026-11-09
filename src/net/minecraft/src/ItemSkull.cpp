@@ -2,6 +2,7 @@
 #include "Texture152Atlas.h"
 
 #include "Block.h"
+#include "BlockSkull.h"
 #include "EntityPlayer.h"
 #include "ItemStack.h"
 #include "Material.h"
@@ -85,6 +86,8 @@ bool ItemSkull::onItemUse(ItemStack *itemstack, EntityPlayer *entityplayer, Worl
 	{
 		skull->setSkullType(itemstack->getItemDamage());
 		skull->setSkullRotation(rot);
+		if (BlockSkull *skullBlock = dynamic_cast<BlockSkull *>(Block::skull))
+			skullBlock->makeWither(world, i, j, k, skull);
 	}
 
 	--itemstack->stackSize;

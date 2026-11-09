@@ -56,6 +56,8 @@
 #include "EntityZombie.h"
 #include "EntityBat.h"
 #include "EntityWitch.h"
+#include "EntityWither.h"
+#include "EntityWitherSkull.h"
 #include "NBTTagCompound.h"
 #include "World.h"
 
@@ -237,6 +239,8 @@ static struct EntityListInit
         // 1.5.2 Mobs: Bat, Witch
         EntityList::addMapping<EntityBat>("Bat", 65, 4996656, 986895);
         EntityList::addMapping<EntityWitch>("Witch", 66, 3407872, 5349438);
+        EntityList::addMapping<EntityWither>("WitherBoss", 64);
+        EntityList::addMapping<EntityWitherSkull>("WitherSkull", 19);
 
         // Register EntityLiving subclasses with SpawnerAnimals so performSpawning can instantiate them.
         // Java used reflection (Class.getConstructor().newInstance()); here we register lambdas.

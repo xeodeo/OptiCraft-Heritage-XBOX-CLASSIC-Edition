@@ -41,6 +41,10 @@
 #include "RenderCreeper.h"
 #include "EntityBat.h"
 #include "EntityWitch.h"
+#include "EntityWither.h"
+#include "EntityWitherSkull.h"
+#include "RenderWither.h"
+#include "RenderWitherSkull.h"
 #include "EntityAmbientCreature.h"
 #include "RenderBat.h"
 #include "RenderWitch.h"
@@ -188,6 +192,8 @@ void RenderManager::registerRenderers() {
     entityRenderMap[std::type_index(typeid(EntityPigZombie))] = zombieRenderer;
     entityRenderMap[std::type_index(typeid(EntityBat))] = new RenderBat();
     entityRenderMap[std::type_index(typeid(EntityWitch))] = new RenderWitch();
+    entityRenderMap[std::type_index(typeid(EntityWither))] = new RenderWither();
+    entityRenderMap[std::type_index(typeid(EntityWitherSkull))] = new RenderWitherSkull();
     entityRenderMap[std::type_index(typeid(EntitySlime))] = new RenderSlime(new ModelSlime(16), new ModelSlime(0), 0.25f);
     entityRenderMap[std::type_index(typeid(EntityMagmaCube))] = new RenderMagmaCube();
     entityRenderMap[std::type_index(typeid(EntityBlaze))] = new RenderBlaze();
@@ -255,6 +261,8 @@ std::type_index parentEntityType(std::type_index type)
     PARENT_OF(EntityBat, EntityAmbientCreature);
     PARENT_OF(EntityAmbientCreature, EntityLiving);
     PARENT_OF(EntityWitch, EntityMob);
+    PARENT_OF(EntityWither, EntityMob);
+    PARENT_OF(EntityWitherSkull, EntityFireball);
     PARENT_OF(EntityGiantZombie, EntityMob);
     PARENT_OF(EntityMob, EntityCreature);
     PARENT_OF(EntityAnimal, EntityCreature);

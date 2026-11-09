@@ -66,6 +66,11 @@ void EntityFireball::entityInit()
 {
 }
 
+float EntityFireball::getMotionFactor()
+{
+	return 0.95f;
+}
+
 void EntityFireball::setShootingEntity(EntityLiving *shooter)
 {
 	shootingEntity = shooter;
@@ -187,7 +192,7 @@ void EntityFireball::onUpdate()
 	rotationPitch = prevRotationPitch + (rotationPitch - prevRotationPitch) * 0.2f;
 	rotationYaw = prevRotationYaw + (rotationYaw - prevRotationYaw) * 0.2f;
 
-	float drag = 0.95f;
+	float drag = getMotionFactor();
 	if (isInWater())
 	{
 		for (int_t i = 0; i < 4; ++i)

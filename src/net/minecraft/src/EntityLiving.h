@@ -91,7 +91,7 @@ public:
 	bool isEntityUndead() const;
 	bool isPotionActive(Potion *potion) const;
 	PotionEffect *getActivePotionEffect(Potion *potion) const;
-	void addPotionEffect(PotionEffect *effect);
+	virtual void addPotionEffect(PotionEffect *effect);
 	virtual bool isPotionApplicable(PotionEffect *effect) const;
 	void removePotionEffect(int_t potionId);
 	void clearActivePotions();

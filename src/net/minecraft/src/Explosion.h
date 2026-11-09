@@ -22,6 +22,8 @@ struct ChunkPosTupleHash
     std::size_t operator()(const ChunkPosTuple &p) const;
 };
 
+class Block;
+
 // net.minecraft.src.Explosion
 class Explosion
 {
@@ -40,6 +42,7 @@ public:
     JavaHashSet<ChunkPosTuple, ChunkPosTupleHash, std::equal_to<ChunkPosTuple>> destroyedBlockPositions;
 
 private:
+    float blockExplosionResistance(Block *block, int_t x, int_t y, int_t z);
     Random explosionRNG;
     World *worldObj;
 };

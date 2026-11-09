@@ -1781,3 +1781,9 @@ bool Entity::pushOutOfBlocks(double d, double d1, double d2)
 	}
 	return false;
 }
+
+float Entity::func_82146_a(Explosion *explosion, World *world, int_t x, int_t y, int_t z, Block *block)
+{
+	(void)explosion; (void)world; (void)x; (void)y; (void)z;
+	return block->getExplosionResistance(this);
+}

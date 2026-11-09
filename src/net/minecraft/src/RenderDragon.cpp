@@ -1,4 +1,6 @@
 #include "RenderDragon.h"
+#include "BossStatus.h"
+#include "StatCollector.h"
 #include "java/Math.h"
 
 #include <cmath>
@@ -19,7 +21,6 @@ constexpr float kPi = 3.14159265358979323846f;
 }
 
 
-EntityDragon* RenderDragon::entityDragon = nullptr;
 
 RenderDragon::RenderDragon() : RenderLiving(new ModelDragon(0.0f), 0.5f)
 {
@@ -222,7 +223,8 @@ void RenderDragon::renderEquippedItems(EntityLiving* entity, float partialTick)
 
 void RenderDragon::renderDragon(EntityDragon* dragon, double x, double y, double z, float yaw, float partialTick)
 {
-    entityDragon = dragon;
+    BossStatus::func_82824_a(dragon->func_41010_ax(), dragon->getMaxHealth(),
+        StatCollector::translateToLocal("entity.EnderDragon.name"), false);
     RenderLiving::doRenderLiving(dragon, x, y, z, yaw, partialTick);
     renderHealingBeam(dragon, x, y, z, partialTick);
 }
