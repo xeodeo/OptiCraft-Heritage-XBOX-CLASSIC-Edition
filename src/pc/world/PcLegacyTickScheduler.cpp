@@ -10,10 +10,11 @@ PcLegacyTickScheduler::~PcLegacyTickScheduler()
 	clear();
 }
 
-bool PcLegacyTickScheduler::schedule(int_t x, int_t y, int_t z, int_t blockId, long_t scheduledTime)
+bool PcLegacyTickScheduler::schedule(int_t x, int_t y, int_t z, int_t blockId, long_t scheduledTime, int_t priority)
 {
 	NextTickListEntry *entry = new NextTickListEntry(x, y, z, blockId);
 	entry->setScheduledTime(scheduledTime);
+	entry->func_82753_a(priority);
 
 	if (!uniqueEntries.add(entry))
 	{
@@ -24,6 +25,12 @@ bool PcLegacyTickScheduler::schedule(int_t x, int_t y, int_t z, int_t blockId, l
 	orderedEntries.insert(entry);
 	attachToChunk(entry);
 	return true;
+}
+
+bool PcLegacyTickScheduler::contains(int_t x, int_t y, int_t z, int_t blockId) const
+{
+	NextTickListEntry probe(x, y, z, blockId);
+	return uniqueEntries.contains(&probe);
 }
 
 NextTickListEntry *PcLegacyTickScheduler::popNext(long_t currentTime, bool force)
