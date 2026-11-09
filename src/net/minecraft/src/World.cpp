@@ -3500,8 +3500,7 @@ void World::rebuildLoadedEntityPointerSet() const
     if (!s_reportedDuplicates && loadedEntityPointerSet.size() != loadedEntityList.size())
     {
         s_reportedDuplicates = true;
-        MC_LOG_ERROR("world", "loadedEntityList holds %u entries for %u distinct entities
-",
+        MC_LOG_ERROR("world", "loadedEntityList holds %u entries for %u distinct entities\n",
             (unsigned)loadedEntityList.size(), (unsigned)loadedEntityPointerSet.size());
     }
 #elif PLATFORM_PS2
