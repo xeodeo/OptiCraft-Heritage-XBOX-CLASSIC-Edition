@@ -41,6 +41,7 @@ Remotos: `xbox` y `fork` son del usuario; **`origin` es OptiJuegos: nunca push a
   cambian / solo el rectángulo / sin esperar a la GPU, fila de botones Legacy en un draw. Auditado.
 
 ## Decisiones del usuario (cumplirlas)
+- El Wither se llama «Eustaquio» en español (traducción oficial de Java 1.5.2): se DEJA así (09-11).
 - **Los ~60 fps estables con niebla, nubes, sol y luna (build 1.5.2 del 09-11) NO se pueden perder.** Todo cambio nuevo
   se mide en el netlog (`xbox.perf`, `xbox.spike`) contra esa referencia: mediana 59,9 fps, mínimo 55, HUD 0,2-0,4 ms.
 - Toda pantalla nueva en dos interfaces (Java y Legacy por `legacyUI`); **el creativo NO se toca** (está perfecto).
@@ -65,13 +66,24 @@ Prueba quieta hecha con la build 11:43 (ver abajo).
 (Confirmado 09-11 con la build 11:43: reloj, collar del lobo, agachado+bloque sobre cofre, comercio. Fps con Legacy UI
 quieto: mediana 59,8-59,9, mínimo 57-59, HUD 0,1-0,4 ms → el menú Legacy YA NO quita fps. Moviéndose 56-59 por chunks.)
 1. Corazones de aldeanos al aparearse (el usuario lo prueba después).
+2. **Botón «Avanzado»** en Gráficos (menú Legacy): secciones, páginas, cambiar opciones y que se guarden; 480p y 720p.
+3. **Skins estilo LCE** (con Legacy UI): carrusel 3D, cambiar paquete, elegir, jugador 2; sin Legacy UI la pantalla de antes.
+4. **Wither** (build 12:3x): invocar con T de arena de almas + 3 calaveras de esqueleto wither; barra de jefe (y la del
+   dragón), explosión al nacer (tirón: medir en netlog), calaveras azules, escudo bajo media vida, estrella del Nether,
+   guardar/cargar con el Wither vivo. Informe 82; auditado (sin cuelgues).
+
+## Build 1.5.2 del 09-11 13:33: probar también
+- Skins LCE sin rayas y pestañas sin repetir; Crear mundo (sin Legacy UI) sin botones montados; Logros recortados al
+  panel y desplazamiento hasta el final; en el menú sin Legacy UI pone «Minecraft 1.5.2».
 
 ## Pendiente de probar en 1.2.5 (el usuario la deja para DESPUÉS; rama `opti30-cruceta`, build 09-11 12:10)
 Niebla, cielo, sol, luna, nubes; agachado+bloque sobre un cofre; cruceta separada del stick y configurable (Controles),
 iconos del stick, chat (B sale); texturas animadas y HUD Legacy más rápidos; ticks por chunk (sin prioridades: 1.2.5 no
-las tiene). Si va bien: avanzar `xbox-opti-30` a `opti30-cruceta`.
+las tiene); logros (recorte y desplazamiento, build 13:33). Si va bien: avanzar `xbox-opti-30` a `opti30-cruceta`.
 
 ## Lo siguiente
+0. **agy sin cuota hasta ~16-11** (09-11 13:00). El encargo 83 lo hizo Claude (`83-INFORME.md`): en prueba como build 13:33.
+   Wither: propuestas en el informe 83 (limitar búsquedas de camino por tick, luz de explosión una vez, asedio ≤20 zombis).
 1. agy encargo 79 ACEPTADO (`42c1148`, en prueba como `91b5f42`).
 2. agy encargo 80 EN MARCHA (`wt-152-rend`, rama `port152-graficos-legacy`): botón «Avanzado» en Gráficos del menú Legacy con todas las opciones tipo
    OptiFine (partículas, humo animado...), bien a 720p y 480p. `80-ENCARGO-agy-graficos-avanzados-legacy.md`.
