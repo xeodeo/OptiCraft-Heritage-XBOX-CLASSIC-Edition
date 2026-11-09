@@ -61,7 +61,7 @@ class WorldChunkManager;
 class VillageCollection;
 class VillageSiege;
 class SpawnListEntry;
-#if PLATFORM_PC_LEGACY
+#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
 class PcLegacyTickScheduler;
 #endif
 
