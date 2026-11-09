@@ -37,6 +37,7 @@
 #include <mmintrin.h>
 
 #include <algorithm>
+#include <climits>
 #include <cmath>
 #include <cstring>
 #include <functional>
@@ -334,10 +335,16 @@ struct Texture
     std::vector<DWORD> pixels;
     bool dynamic = false;
     bool dirty = false;         // pixels not yet in the D3D texture
-    // Image-space rectangle that changed since the last upload, when only sub-images did
-    // (animated tiles): only that part is swizzled again. False means the whole image.
+    // Image-space rectangles that changed since the last upload, when only sub-images did
+    // (animated tiles): only those parts are swizzled again. False means the whole image.
+    struct DirtyRect
+    {
+        int x0, y0, x1, y1;
+    };
+    enum { MAX_DIRTY_RECTS = 4 };
     bool dirtyPartial = false;
-    int dirtyX0 = 0, dirtyY0 = 0, dirtyX1 = 0, dirtyY1 = 0;
+    int dirtyRectCount = 0;
+    DirtyRect dirtyRects[MAX_DIRTY_RECTS] = {};
     bool blur = false;
     bool clamp = false;
 };
@@ -414,6 +421,7 @@ void swizzleUpload(Texture& t)
     {
         t.dirty = true;
         t.dirtyPartial = false;
+        t.dirtyRectCount = 0;
         return;
     }
     // Swizzled textures must be power-of-two. UVs are normalized, so a
@@ -436,7 +444,7 @@ void swizzleUpload(Texture& t)
     // Only changed tiles: swizzle just their rectangle, widened to the 8x4 blocks the XDK
     // swizzler wants for 32-bit texels, and lock without waiting for the GPU. A tile the GPU
     // is reading this frame may show half old for one frame, which an animation hides.
-    const bool partial = t.dirtyPartial && !created && source == t.pixels.data();
+    const bool partial = t.dirtyPartial && t.dirtyRectCount > 0 && !created && source == t.pixels.data();
     D3DLOCKED_RECT locked;
     const unsigned long long lockStart = __rdtsc();
     if (FAILED(t.d3d->LockRect(0, &locked, NULL, partial ? D3DLOCK_NOOVERWRITE : 0))) return;
@@ -444,13 +452,19 @@ void swizzleUpload(Texture& t)
     s_uploadStats.lockCycles += swizzleStart - lockStart;
     if (partial)
     {
-        RECT rect;
-        rect.left = t.dirtyX0 & ~7;
-        rect.top = t.dirtyY0 & ~3;
-        rect.right = (std::min)((t.dirtyX1 + 7) & ~7, t.storageWidth);
-        rect.bottom = (std::min)((t.dirtyY1 + 3) & ~3, t.storageHeight);
-        POINT point = {rect.left, rect.top};
-        XGSwizzleRect(source, t.storageWidth * 4, &rect, locked.pBits, t.storageWidth, t.storageHeight, &point, 4);
+        for (int i = 0; i < t.dirtyRectCount; ++i)
+        {
+            const Texture::DirtyRect& dr = t.dirtyRects[i];
+            RECT rect;
+            rect.left = dr.x0 & ~7;
+            rect.top = dr.y0 & ~3;
+            rect.right = (std::min)((dr.x1 + 7) & ~7, t.storageWidth);
+            rect.bottom = (std::min)((dr.y1 + 3) & ~3, t.storageHeight);
+            if (rect.right <= rect.left || rect.bottom <= rect.top)
+                continue;
+            POINT point = {rect.left, rect.top};
+            XGSwizzleRect(source, t.storageWidth * 4, &rect, locked.pBits, t.storageWidth, t.storageHeight, &point, 4);
+        }
         ++s_uploadStats.partialUploads;
     }
     else
@@ -466,6 +480,7 @@ void swizzleUpload(Texture& t)
     ++s_uploadStats.uploads;
     t.dirty = false;
     t.dirtyPartial = false;
+    t.dirtyRectCount = 0;
     if (!t.dynamic)
         std::vector<DWORD>().swap(t.pixels);   // the GPU copy is the only one needed
 }
@@ -520,6 +535,7 @@ void ensureStorage(Texture& t, int width, int height)
     t.pixels.assign(static_cast<size_t>(width) * height, 0);
     t.dirty = false;
     t.dirtyPartial = false;
+    t.dirtyRectCount = 0;
     if (width > 0 && height > 0)
         ensureD3DTexture(t);
 }
@@ -1715,6 +1731,7 @@ void renderTextureImageRgba(int level, int width, int height, const void* pixels
     if (pixels)
         convertRgba(static_cast<const unsigned char*>(pixels), t.pixels.data(), width * height);
     t.dirtyPartial = false;   // a whole-image upload must not be cut down to a pending animation rect
+    t.dirtyRectCount = 0;
     swizzleUpload(t);
 }
 
@@ -1748,12 +1765,53 @@ void renderTextureSubImageRgba(int level, int x, int y, int width, int height, c
     if (!t.dirty)
     {
         t.dirtyPartial = true;
-        t.dirtyX0 = x0; t.dirtyY0 = y0; t.dirtyX1 = x1; t.dirtyY1 = y1;
+        t.dirtyRectCount = 1;
+        t.dirtyRects[0] = {x0, y0, x1, y1};
     }
     else if (t.dirtyPartial)
     {
-        t.dirtyX0 = (std::min)(t.dirtyX0, x0); t.dirtyY0 = (std::min)(t.dirtyY0, y0);
-        t.dirtyX1 = (std::max)(t.dirtyX1, x1); t.dirtyY1 = (std::max)(t.dirtyY1, y1);
+        // Merge with an overlapping/touching rect if possible; otherwise keep up to
+        // MAX_DIRTY_RECTS separate rectangles so distant tiles (e.g. portal at row 0
+        // and lava at row 14) do not union into the whole atlas.
+        bool merged = false;
+        for (int i = 0; i < t.dirtyRectCount; ++i)
+        {
+            Texture::DirtyRect& r = t.dirtyRects[i];
+            if (x0 <= r.x1 && x1 >= r.x0 && y0 <= r.y1 && y1 >= r.y0)
+            {
+                r.x0 = (std::min)(r.x0, x0); r.y0 = (std::min)(r.y0, y0);
+                r.x1 = (std::max)(r.x1, x1); r.y1 = (std::max)(r.y1, y1);
+                merged = true;
+                break;
+            }
+        }
+        if (!merged)
+        {
+            if (t.dirtyRectCount < Texture::MAX_DIRTY_RECTS)
+            {
+                t.dirtyRects[t.dirtyRectCount++] = {x0, y0, x1, y1};
+            }
+            else
+            {
+                int bestIdx = 0;
+                int bestExtraArea = INT_MAX;
+                for (int i = 0; i < t.dirtyRectCount; ++i)
+                {
+                    const Texture::DirtyRect& r = t.dirtyRects[i];
+                    const int ux0 = (std::min)(r.x0, x0), uy0 = (std::min)(r.y0, y0);
+                    const int ux1 = (std::max)(r.x1, x1), uy1 = (std::max)(r.y1, y1);
+                    const int extraArea = (ux1 - ux0) * (uy1 - uy0) - (r.x1 - r.x0) * (r.y1 - r.y0);
+                    if (extraArea < bestExtraArea)
+                    {
+                        bestExtraArea = extraArea;
+                        bestIdx = i;
+                    }
+                }
+                Texture::DirtyRect& r = t.dirtyRects[bestIdx];
+                r.x0 = (std::min)(r.x0, x0); r.y0 = (std::min)(r.y0, y0);
+                r.x1 = (std::max)(r.x1, x1); r.y1 = (std::max)(r.y1, y1);
+            }
+        }
     }
     t.dirty = true;
 }
