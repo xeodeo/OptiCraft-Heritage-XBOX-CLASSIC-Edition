@@ -68,31 +68,26 @@ def round_button(src, fill, rim):
 
 
 def stick_dir(src, direction):
-    im = Image.open(os.path.join(src, 'ButtonLeftStick_Navigate.png')).convert('RGBA')
-    px = im.load()
-    w, h = im.size
-    if direction != 'U':
-        for y in range(12):
-            for x in range(w):
-                px[x, y] = (0, 0, 0, 0)
-    if direction != 'L':
-        for y in range(h):
-            for x in range(13):
-                px[x, y] = (0, 0, 0, 0)
-    if direction != 'R':
-        for y in range(h):
-            for x in range(45, w):
-                px[x, y] = (0, 0, 0, 0)
-    if direction != 'D':
-        for y in range(40, h):
-            for x in range(w):
-                px[x, y] = (0, 0, 0, 0)
-        for y in range(34, 40):
-            for x in range(24, 34):
-                c = px[x, y]
-                if c[0] > 150:
-                    px[x, y] = (55, 59, 60, 255) if y >= 38 else (96, 101, 102, 255)
-    return im.crop(im.getbbox())
+    # The Legacy left stick with one big arrow beside it (the arrow is the left
+    # one of ButtonLeftStick_sides, enlarged x1.5 and turned to each direction).
+    sides = Image.open(os.path.join(src, 'ButtonLeftStick_sides.png')).convert('RGBA')
+    arrow = sides.crop((0, 0, 24, sides.height))
+    arrow = arrow.crop(arrow.getbbox())
+    arrow = arrow.resize((round(arrow.width * 1.5), round(arrow.height * 1.5)), Image.Resampling.NEAREST)
+    arrow = {'L': arrow, 'R': arrow.transpose(Image.Transpose.FLIP_LEFT_RIGHT),
+             'U': arrow.rotate(-90, expand=True), 'D': arrow.rotate(90, expand=True)}[direction]
+    stick = load(src, 'ButtonLeftStick.png')
+    sw, sh = stick.size
+    aw, ah = arrow.size
+    if direction in 'LR':
+        canvas = Image.new('RGBA', (sw + aw - 1, max(sh, ah)))
+        canvas.alpha_composite(stick, (aw - 1 if direction == 'L' else 0, (canvas.height - sh) // 2))
+        canvas.alpha_composite(arrow, (0 if direction == 'L' else sw - 1, (canvas.height - ah) // 2 - 4))
+    else:
+        canvas = Image.new('RGBA', (max(sw, aw), sh + ah - 1))
+        canvas.alpha_composite(stick, ((canvas.width - sw) // 2, ah - 1 if direction == 'U' else 0))
+        canvas.alpha_composite(arrow, ((canvas.width - aw) // 2, 0 if direction == 'U' else sh - 1))
+    return canvas.crop(canvas.getbbox())
 
 
 def build(src):
