@@ -14,6 +14,7 @@ struct ControlIcon
 };
 ControlIcon controlIconTexture(Minecraft *mc, const std::string &label);
 void drawControlIcon(Minecraft *mc, ControlIcon icon, int_t x, int_t y);
+void drawControlIcons(Minecraft *mc, const ControlIcon *icons, const int_t *xs, int_t count, int_t y);
 void drawControlHintRow(Minecraft *mc, int_t width, int_t y,
     const std::string *buttons, const std::string *actions, int_t count);
 

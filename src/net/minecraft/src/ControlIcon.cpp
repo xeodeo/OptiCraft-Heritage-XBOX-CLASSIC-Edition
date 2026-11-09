@@ -102,36 +102,77 @@ ControlIcon controlIconTexture(Minecraft *mc, const std::string &label)
 #endif
 }
 
-void drawControlIcon(Minecraft *mc, ControlIcon icon, int_t x, int_t y)
+namespace
 {
-    if (!mc || !mc->renderEngine || icon.texture < 0) return;
-    float u0 = 0, v0 = 0, u1 = 1, v1 = 1;
+bool controlIconUv(Minecraft *mc, ControlIcon icon, float &u0, float &v0, float &u1, float &v1)
+{
+    u0 = 0; v0 = 0; u1 = 1; v1 = 1;
 #if PLATFORM_XBOX
     const Ps2ButtonPromptInfo &info = LegacyButtonPrompt::getIconInfo(static_cast<Ps2ButtonIcon>(icon.cell));
     u0 = info.u0; v0 = info.v0; u1 = info.u1; v1 = info.v1;
 #elif PLATFORM_PS2 || PLATFORM_WII
     int_t w = 0, h = 0;
-    if (!mc->renderEngine->getTextureDimensions(icon.texture, &w, &h) || w <= 0 || h <= 0) return;
+    if (!mc->renderEngine->getTextureDimensions(icon.texture, &w, &h) || w <= 0 || h <= 0) return false;
     // Sample inside the cell edges so filtering cannot bleed into its neighbors.
     u0 = (icon.cell % 4) * 0.25f + 0.5f / w;
     v0 = (icon.cell / 4) * 0.25f + 0.5f / h;
     u1 = (icon.cell % 4 + 1) * 0.25f - 0.5f / w;
     v1 = (icon.cell / 4 + 1) * 0.25f - 0.5f / h;
 #endif
-    mc->renderEngine->bindTexture(icon.texture);
+    (void)mc;
+    return true;
+}
+
+void beginControlIcons(Minecraft *mc, int_t texture)
+{
+    mc->renderEngine->bindTexture(texture);
     renderDisable(RenderCapability::DepthTest);
     renderEnable(RenderCapability::Texture2D);
     renderEnable(RenderCapability::Blend);
     renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
     renderColor4f(1, 1, 1, 1);
+    Tessellator::instance.startDrawingQuads();
+    Tessellator::instance.setColorRGBA_F(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+void addControlIconQuad(int_t x, int_t y, float u0, float v0, float u1, float v1)
+{
     Tessellator &t = Tessellator::instance;
-    t.startDrawingQuads();
-    t.setColorRGBA_F(1.0f, 1.0f, 1.0f, 1.0f);
     t.addVertexWithUV(x, y + 12, 0, u0, v1);
     t.addVertexWithUV(x + 12, y + 12, 0, u1, v1);
     t.addVertexWithUV(x + 12, y, 0, u1, v0);
     t.addVertexWithUV(x, y, 0, u0, v0);
-    t.draw();
+}
+}
+
+void drawControlIcon(Minecraft *mc, ControlIcon icon, int_t x, int_t y)
+{
+    if (!mc || !mc->renderEngine || icon.texture < 0) return;
+    float u0, v0, u1, v1;
+    if (!controlIconUv(mc, icon, u0, v0, u1, v1)) return;
+    beginControlIcons(mc, icon.texture);
+    addControlIconQuad(x, y, u0, v0, u1, v1);
+    Tessellator::instance.draw();
+}
+
+void drawControlIcons(Minecraft *mc, const ControlIcon *icons, const int_t *xs, int_t count, int_t y)
+{
+    if (!mc || !mc->renderEngine) return;
+    // Consecutive icons from the same atlas go out as one draw instead of one each.
+    int_t batchTexture = -1;
+    for (int_t i = 0; i < count; ++i)
+    {
+        float u0, v0, u1, v1;
+        if (icons[i].texture < 0 || !controlIconUv(mc, icons[i], u0, v0, u1, v1)) continue;
+        if (icons[i].texture != batchTexture)
+        {
+            if (batchTexture >= 0) Tessellator::instance.draw();
+            batchTexture = icons[i].texture;
+            beginControlIcons(mc, batchTexture);
+        }
+        addControlIconQuad(xs[i], y, u0, v0, u1, v1);
+    }
+    if (batchTexture >= 0) Tessellator::instance.draw();
 }
 
 void drawControlHintRow(Minecraft *mc, int_t width, int_t y,

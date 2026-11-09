@@ -14,6 +14,13 @@
 
 #include <algorithm>
 
+// The hint row is the same text every frame: tessellate it once and replay the mesh.
+#if (PLATFORM_PS2 && PS2_CACHE_LEGACY_HINT_TEXT) || PLATFORM_XBOX
+#define LEGACY_CACHE_HINT_TEXT 1
+#else
+#define LEGACY_CACHE_HINT_TEXT 0
+#endif
+
 namespace
 {
 constexpr int_t PROMPT_COUNT = 5;
@@ -196,7 +203,7 @@ void emitRow(FontRenderer *font, const PromptRow &row)
 
 bool captureRow(FontRenderer *font, PromptRow &row)
 {
-#if PLATFORM_PS2 && PS2_CACHE_LEGACY_HINT_TEXT
+#if LEGACY_CACHE_HINT_TEXT
     if (font == nullptr || visiblePromptCount(row.texts, PROMPT_COUNT) <= 0)
         return false;
 
@@ -228,7 +235,7 @@ void drawRow(FontRenderer *font, PromptRow &row)
     renderDisable(RenderCapability::DepthTest);
     renderEnable(RenderCapability::Texture2D);
 
-#if PLATFORM_PS2 && PS2_CACHE_LEGACY_HINT_TEXT
+#if LEGACY_CACHE_HINT_TEXT
     if (!row.capturedValid)
         (void)captureRow(font, row);
     if (row.capturedValid && font->drawCapturedText(row.captured))
@@ -257,12 +264,21 @@ void LegacyControlTooltipHud::render(Minecraft *mc, int_t screenWidth, int_t scr
     if (!refreshRowKey(mc, settings, font, s_row, screenWidth, screenHeight))
     {
         rebuildRow(settings, font, s_row, screenWidth, screenHeight);
-#if PLATFORM_PS2 && PS2_CACHE_LEGACY_HINT_TEXT
+#if LEGACY_CACHE_HINT_TEXT
         (void)captureRow(font, s_row);
 #endif
     }
 
+    ControlIcon icons[PROMPT_COUNT];
+    int_t iconX[PROMPT_COUNT];
+    int_t iconCount = 0;
     for (int_t i = 0; i < PROMPT_COUNT; ++i)
-        if (!s_row.texts[i].empty() && s_row.icons[i].texture >= 0) drawControlIcon(mc, s_row.icons[i], s_row.x[i], s_row.y - 2);
+    {
+        if (s_row.texts[i].empty() || s_row.icons[i].texture < 0) continue;
+        icons[iconCount] = s_row.icons[i];
+        iconX[iconCount] = s_row.x[i];
+        ++iconCount;
+    }
+    drawControlIcons(mc, icons, iconX, iconCount, s_row.y - 2);
     drawRow(font, s_row);
 }
