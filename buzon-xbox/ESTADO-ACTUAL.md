@@ -109,3 +109,13 @@ con interruptor y mantener A (cuando entre el 84). Si va bien: avanzar `xbox-opt
 3. Plan 69: comandos + reglas + modo aventura → Wither → fuegos artificiales → dispensador → ...
 4. **Pantalla partida: el jugador 2 tiene la cruceta fija. El usuario dice dejarlo para después (anotado 09-11).**
    Mando: Y = mover rápido (si el usuario lo quiere).
+
+## Limpieza y respaldo (18-11)
+- Carpetas quitadas (ramas en GitHub; builds viejas a la Papelera): OptiCraft-prueba-opti, pr-arreglos, pr-menu-ps2,
+  wt-async, wt-ltcg, wt-pr, wt-prev, wt-152-idiomas, wt-152-agy, wt-152-wither, «OptiCraft crafteo consola v1»,
+  «OptiCraft jugable estable», «OptiCraft prueba opti», pak-prueba.
+- Quedan: OptiCraftHeritageEdition, wt-opti30 (1.2.5), wt-152-codex (1.5.2 buena + datos port152-data),
+  wt-152-pociones (1.5.2 prueba), wt-152-rend (agy), buzon-xbox, mcp-diff, contexto-respaldo, xbox-spike, xbox-tools,
+  servidor-1.2.5, xdk, xbox-sdks, minecraft-legacy original, y lo de PS3.
+- README de `main` en GitHub con los enlaces de archive.org (LCE: https://archive.org/details/minecraft_20260301,
+  XDK: https://archive.org/download/xbox-sdks). Herramientas sueltas en la rama `contexto` (`herramientas/`).

@@ -4,6 +4,13 @@ Esta rama (`contexto`, en `github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edi
 buzón de trabajo, memorias de Claude, guías de agy, scripts del MCP. El código está en las otras ramas del mismo repo.
 Se actualiza con `sh actualizar-contexto.sh` (desde `Desktop\Minecraft en xboox clasico\contexto-respaldo\`).
 
+## 0. Descargas que NO están en GitHub (bájalas de archive.org)
+- **Fuente de la LCE (Legacy Console Edition)**, referencia de interfaz y recursos:
+  https://archive.org/details/minecraft_20260301 → extraer en `Desktop\Minecraft en xboox clasico\minecraft-legacy original\`.
+- **XDK de la Xbox (las 24 versiones)**: https://archive.org/download/xbox-sdks → guardar los `.7z` en
+  `Desktop\Minecraft en xboox clasico\xbox-sdks\` y extraer la 5849 sin instalar: `7z x XDKSetup5849.exe` a `xdk\5849\`
+  (detalle en `memoria-claude\xdk-sin-instalar.md`).
+
 ## 1. Carpetas (todo cuelga de `C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\`)
 ```
 git clone https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition.git OptiCraftHeritageEdition
@@ -60,9 +67,14 @@ Guía completa: `buzon-xbox\55-GUIA-mcp-descompilar-y-revisar.md`. Resumen:
   (pasos en `buzon-xbox\74-INVESTIGACION-optifine-152.md`; clases tocadas en `mcp-diff\optifine152\clases-tocadas.txt`).
 
 ## 5. Lo que NO está en GitHub (guárdalo aparte antes de formatear)
-- `minecraft-legacy original\` (fuente de la LCE, se usa como referencia de interfaz).
-- `xdk\` y `xbox-sdks\` (XDK de Microsoft).
+- `minecraft-legacy original\`, `xdk\` y `xbox-sdks\`: se bajan de archive.org (sección 0).
 - Datos del juego: `Downloads\data` y `wt-152-codex\build\xbox-release\port152-data` (o regenerarlos con
   `scripts/port152/build_textures_152.py`, que parte de los jars de Mojang).
 - `Downloads\ClassicXboxLoader\downloads\OptiCraft_extracted\` (las builds del lanzador; se rehacen compilando).
 - Otros proyectos: `Desktop\RE4 port`, `Desktop\port bodokaii 3`, `ps3\`, `lce-ps3-build\`.
+
+## 6. Herramientas guardadas aquí
+- `herramientas\xbox-spike\`: scripts de xemu, gdb, autotest, capturas y compilación (los del repo están en `xbox-spike\`).
+- `herramientas\xbox-tools\`: extract-xiso (sacar y meter ISOs de Xbox).
+- `herramientas\servidor-1.2.5\`: arranque y config del servidor Java 1.2.5 de prueba (el jar y el JRE se bajan aparte).
+- `guardados\verify_pak.py`: comprueba un `assets.pak`.

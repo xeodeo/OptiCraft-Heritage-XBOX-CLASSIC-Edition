@@ -88,3 +88,14 @@ agy con Gemini 3.8 Flash acierta a menudo el QUE, pero exagera o inventa cifras 
 - No lances dos encargos grandes a la vez a agy: se quedan sin cuota los dos juntos.
 - agy rinde bien en inventarios, rastreo de llamadas y codigo ya especificado. Lo delicado reviselo Claude linea a linea.
 - Cierra cada turno tu: al aceptar una entrega, manda ya el siguiente encargo.
+- **Al recibir `LISTO` (16-11, fallo real)**: en el MISMO turno, (1) revisar/integrar, (2) mandarle el siguiente
+  encargo y (3) armar su escuchador nuevo. El 16-11 integré lo de Codex y lo dejé parado sin encargo ni escuchador;
+  el usuario lo vio antes que yo.
+- **Codex: el texto mandado puede abrir su menú de modelo** (pasó el 16-11): cerrar con ESC dos veces y comprobar
+  que sigue en `gpt-6-luna`. Si `orca terminal send` responde `agent_prompt_blocked`, mandar el `--text` y luego
+  un `--enter` aparte. Leer siempre su pantalla 20 s después de mandarle algo.
+- **Codex se escucha igual**: `escuchador.py --agente codex --handle <term_...>` (por defecto busca `antigravity`).
+- **Tras hibernar el PC las terminales de Orca mueren**: relanzar con
+  `orca terminal create --shell cmd.exe --title "<nombre>" --command 'cd /d "<arbol>" && agy --dangerously-skip-permissions --effort high'`
+  y para Codex `--command 'codex -s workspace-write -a never -C "C:\Users\xeodeo\Desktop\RE4 port"'`
+  (con `export MSYS_NO_PATHCONV=1` desde Git Bash). Los handle son nuevos: volver a listar.

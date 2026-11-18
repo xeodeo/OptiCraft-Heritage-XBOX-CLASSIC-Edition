@@ -14,5 +14,8 @@ copies buzon-xbox, these memories, COMO-USAR-AGY.md, global CLAUDE.md, skills ag
 pushes. `RESTAURAR.md` there explains rebuilding everything after a format (worktrees, XDK, MCP via rehacer.sh, OptiFine mirror).
 Code: all branches pushed to `xbox` (`git push xbox --all`); remote `fork` answers 403 from this PC. Never push to `origin`.
 
-**How to apply:** when the user asks to "subir todo", push branches to `xbox` and rerun the script. Not uploaded (tell the
-user to keep them on a disk): LCE source, XDK/xbox-sdks, game data dirs, OptiFine jars, other ports.
+Since 18-11 it also holds `herramientas/` (loose xbox-spike scripts, extract-xiso, test server config) and
+`guardados/verify_pak.py`; README of `main` and of `contexto` link the archive.org downloads: LCE source
+https://archive.org/details/minecraft_20260301 and XDKs https://archive.org/download/xbox-sdks.
+
+**How to apply:** when the user asks to "subir todo", push branches to `xbox` and rerun the script. Not uploaded: game data dirs, OptiFine jars, other ports (LCE and XDK come from archive.org).

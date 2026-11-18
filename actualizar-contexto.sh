@@ -23,6 +23,17 @@ for f in clases-tocadas.txt dec.log remap.log; do
   [ -e "$RAIZ/mcp-diff/optifine152/$f" ] && cp "$RAIZ/mcp-diff/optifine152/$f" "$AQUI/mcp-diff/optifine152/"
 done
 
+# Herramientas sueltas de la carpeta del proyecto (scripts de xemu/gdb/autotest, extract-xiso, servidor de prueba)
+rm -rf "$AQUI/herramientas"
+mkdir -p "$AQUI/herramientas/xbox-spike" "$AQUI/herramientas/xbox-tools" "$AQUI/herramientas/servidor-1.2.5"
+for f in "$RAIZ"/xbox-spike/*.ps1 "$RAIZ"/xbox-spike/*.py "$RAIZ"/xbox-spike/*.sh "$RAIZ"/xbox-spike/autopilot*.txt; do
+  [ -f "$f" ] && cp "$f" "$AQUI/herramientas/xbox-spike/"
+done
+[ -f "$RAIZ/xbox-tools/extract-xiso-Win64_Release.zip" ] && cp "$RAIZ/xbox-tools/extract-xiso-Win64_Release.zip" "$AQUI/herramientas/xbox-tools/"
+for f in iniciar.bat server.properties; do
+  [ -f "$RAIZ/servidor-1.2.5/$f" ] && cp "$RAIZ/servidor-1.2.5/$f" "$AQUI/herramientas/servidor-1.2.5/"
+done
+
 # Guías y skills de Claude/agy
 cp /c/Users/xeodeo/Desktop/COMO-USAR-AGY.md "$AQUI/claude/" 2>/dev/null || true
 cp /c/Users/xeodeo/.claude/CLAUDE.md "$AQUI/claude/CLAUDE-global.md" 2>/dev/null || true
