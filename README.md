@@ -1,5 +1,15 @@
 # OptiCraft Heritage
 
+## Xbox clásica (este fork)
+El port a la Xbox original (versiones 1.2.5 y 1.5.2) está en las ramas `xbox-opti-30`/`opti30-cruceta` y
+`port152-claude`/`port152-aldeanos`. El contexto del trabajo (buzón, guías, herramientas y cómo restaurarlo todo) está
+en la rama [`contexto`](../../tree/contexto) (ver `RESTAURAR.md`).
+
+Recursos que se usan y no están en este repositorio:
+- Fuente de la LCE (Legacy Console Edition), referencia de interfaz: https://archive.org/details/minecraft_20260301
+- XDK de la Xbox: https://archive.org/download/xbox-sdks
+
+
 OptiCraft Heritage is a heavily modified, clean-room C++ implementation of classic Minecraft-era gameplay designed around portability, low-end hardware, and console-specific optimization.
 
 This repository is not intended to be a line-for-line source translation. The runtime, platform layers, rendering paths, input backends, storage systems, user interface, asset loading, memory policies, and console support have been extensively reworked for the needs of this project.
