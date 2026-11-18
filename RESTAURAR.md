@@ -30,7 +30,11 @@ Luego copia `contexto-respaldo\buzon-xbox` a `..\buzon-xbox` y `contexto-respald
 Copia `memoria-claude\*` a
 `C:\Users\xeodeo\.claude\projects\C--Users-xeodeo-Desktop-Minecraft-en-xboox-clasico-OptiCraftHeritageEdition\memory\`.
 `claude\CLAUDE-global.md` → `C:\Users\xeodeo\.claude\CLAUDE.md`. `claude\skills\*` → `C:\Users\xeodeo\.claude\skills\`.
-`claude\COMO-USAR-AGY.md` → Escritorio. Para empezar un chat: «lee buzon-xbox\ESTADO-ACTUAL.md».
+`claude\COMO-USAR-AGY.md` → Escritorio. `claude\settings.json` → `C:\Users\xeodeo\.claude\settings.json`.
+`memoria-otros\<carpeta>` → `C:\Users\xeodeo\.claude\projects\<carpeta>\memory\` (memorias de PS3, RE4 y Classic Xbox
+Loader; la carpeta tiene el nombre que Claude Code da a cada proyecto según su ruta, así que los proyectos deben volver a
+estar en la MISMA ruta del Escritorio). Skills incluidas: agy, orca-cli, orchestration, orca-computer-use, re4-xbox, ps3,
+graphify. Para empezar un chat: «lee buzon-xbox\ESTADO-ACTUAL.md».
 
 ## 3. Herramientas
 - Visual Studio 2022 Community (C++), CMake de VS, Python 3 (con Pillow), Git, 7-Zip, Java 21.

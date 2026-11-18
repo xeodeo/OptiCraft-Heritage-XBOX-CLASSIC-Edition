@@ -1,0 +1,1 @@
+- [Classic Xbox Store](classic-xbox-store.md) — tienda nativa para Xbox (XDK), carpeta aparte, plan de descarga directa

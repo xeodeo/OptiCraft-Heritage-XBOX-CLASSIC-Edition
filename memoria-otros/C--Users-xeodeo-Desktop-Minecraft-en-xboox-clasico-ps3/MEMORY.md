@@ -1,0 +1,28 @@
+- [Respuestas cortas en español](respuestas-cortas-espanol.md) — breve, sin inglés ni tablas largas
+- [No preguntar, decidir](no-preguntar-decidir.md) — en bypass no cerrar con '¿empiezo X?', hacerlo
+- [PS3: estado del port](ps3-sdk.md) — HEN+scetool funcionando; gcc13+PSL1GHT (+sce-cgc Sony); plan en ps3\buzon\01-PLAN-port-ps3.md; PS3 en 192.168.0.21
+- [Nunca /fp:fast](no-fp-fast.md) — nada que pueda cambiar el terreno de una semilla (en PS3: nada de -ffast-math)
+- [Versión: Java 1.2.5](version-java-125.md) — no Beta 1.7.3; de LCE solo cosas puntuales
+- [Port a 1.5.2](port152-estado.md) — rama port152-claude; base posible para PS3
+- [Estado actual del proyecto](estado-actual.md) — buzon-xbox/ESTADO-ACTUAL.md; rama buena xbox-opti-30 en wt-opti30
+- [Legacy LCE permitido](legacy-lce-permitido.md) — se puede copiar código LCE tal cual (también SPU_Tasks de PS3); carpeta original solo lectura
+- [Música como el original](musica-comportamiento-original.md) — en Xbox y PS2 se revierte lo de OptiJuegos
+- [Una compilación a la vez](una-compilacion-a-la-vez.md) — candado buzon-xbox/BUILD.lock
+- [Anotar en buzon](anotar-en-buzon.md) — en tareas largas dejar hallazgos en el buzón (en PS3: ps3\buzon\)
+- [Traspaso para otras IAs](traspaso-contexto-ia.md) — buzon-xbox/00-CONTEXTO.md
+- [agy y OpenCode sin permisos](agy-sin-permisos.md) — agy --dangerously-skip-permissions
+- [Skill agy y su escuchador](skill-agy.md) — ~/.claude/skills/agy
+- [Consola real: SSE2 y log por red](xbox-consola-real-sse2.md) — xemu engaña; log por UDP a la PC (192.168.0.18)
+- [Builds de prueba vs pública](xbox-builds-prueba-publica.md) — presets, lanzador, releases
+- [Datos del juego en worktrees](xbox-data-dir-worktrees.md) — data\ no está en git, solo en la carpeta principal
+- [No decoración diferida](xbox-no-deferred-populate.md) — árboles/mobs tarde = rechazado; probar en consola real
+- [Copiar XBE al loader](xbox-loader-copy.md) — carpetas por versión 1.2.5 / 1.5.2
+- [Siempre dos XBE: 480 y 720p](xbox-720p-xbe.md) — el usuario juega en 720p
+- [Plan de optimización Xbox](xbox-plan-optimizacion.md) — tirones que quedan
+- [Barra de progreso siempre](barra-progreso.md) — en compilaciones/subidas largas mostrar [####....] % con Monitor
+- [No subir con el juego abierto](ps3-subidas-juego-abierto.md) — PS3: nada de FTP ni ordenes webMAN con juego/app abiertos (colgo 2 veces)
+- [SDK Sony filtrado permitido](ps3-sdk-sony-filtrado.md) — al usuario no le importa usarlo si da fps; ojo ABI/C++11
+- [Plugin mando Xbox PS3](ps3-mando-xbox-plugin.md) — Mamba OK, MK9 OK, carga por autoexec.bat, XEODEO en HEN+coldboot; ver buzon 50
+- [PS3 estado 31-10](ps3-estado-31oct.md) — detectar consola, escuchador log, versión subida, qué falta p/60fps, LCE/MCP, formateo+IDPS
+- [XeoStore PS3](xeostore-ps3.md) — tienda PS3 estilo PKGi en de kevin\Classic PS3 Store; XEOS00001, cola, apagado
+- [Skill ps3](ps3-estado-31oct.md) — ~/.claude/skills/ps3: estado (tools/estado_ps3.py), subir, log, compilar, formateo

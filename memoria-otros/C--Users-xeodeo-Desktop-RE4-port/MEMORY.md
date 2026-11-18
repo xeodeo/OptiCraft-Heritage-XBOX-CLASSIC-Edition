@@ -1,0 +1,12 @@
+- [Port de RE4 via NWiiRecomp](re4-port-via-nwiirecomp.md) — recompilación estática del .dol; la vía de la descompilación quedó descartada
+- [Fuentes y herramientas de RE4](re4-fuentes-y-herramientas.md) — qué ISO sirve, dónde está el toolchain, los .sym y el log por EXI
+- [Los RELs de RE4 van por el interprete](re4-rels-por-interprete.md) — camara, luz, jugador, armas y enemigos no estan recompilados
+- [Estado de RE4 y flujo de pruebas](re4-estado-y-flujo.md) — Xbox real con dos versiones (final y Debug); el usuario prueba en consola, Claude compila y sube
+- [Ports de referencia de RE4](re4-ports-de-referencia.md) — CubeEvil4-Android (218 parches little-endian sobre nuestro mismo commit) y re4dc (Dreamcast, 16 MB)
+- [Insertar codigo sin heredoc](insertar-codigo-sin-heredoc.md) — trazas en C: Write + insertar.py, y comprobar que compila antes de xemu
+- [Trampas de diagnostico RE4 Xbox](re4-xbox-trampas-de-diagnostico.md) — recompilar_juego va por contenido, cull FRONT=CW, bisecar en imagen antes de teorizar
+- [Sesiones cortas y vigilantes](sesiones-cortas-y-sin-vigilantes.md) — cupo justo: relevo escrito y sesión nueva por bloque; vigilantes de agentes solo si él los pide
+- [Codex en Orca](codex-en-orca.md) — tercer agente: cómo lanzarlo, sus árboles y sus límites (sin WSL, revisar que compile)
+- [Fps sin perder calidad](re4-fps-sin-perder-calidad.md) — nada de recorte tipo PS2; optimiza Claude, no agy; dos builds (depuración y final)
+- [Anotar doc y skill siempre](anotar-doc-y-skill-siempre.md) — tras cada bloque: COMO-VAMOS.md y la skill re4-xbox, sin que lo pida
+- [Responder en español](responder-en-espanol.md) — todo lo que lee el usuario va en español, nunca en inglés

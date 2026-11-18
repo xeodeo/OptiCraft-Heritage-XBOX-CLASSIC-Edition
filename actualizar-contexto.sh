@@ -37,8 +37,17 @@ done
 # Guías y skills de Claude/agy
 cp /c/Users/xeodeo/Desktop/COMO-USAR-AGY.md "$AQUI/claude/" 2>/dev/null || true
 cp /c/Users/xeodeo/.claude/CLAUDE.md "$AQUI/claude/CLAUDE-global.md" 2>/dev/null || true
-for s in agy orca-cli; do
-  [ -d "/c/Users/xeodeo/.claude/skills/$s" ] && cp -r "/c/Users/xeodeo/.claude/skills/$s" "$AQUI/claude/skills/"
+cp /c/Users/xeodeo/.claude/settings.json "$AQUI/claude/settings.json" 2>/dev/null || true
+for s in agy orca-cli orchestration orca-computer-use re4-xbox ps3 graphify; do
+  [ -e "/c/Users/xeodeo/.claude/skills/$s" ] && cp -rL "/c/Users/xeodeo/.claude/skills/$s" "$AQUI/claude/skills/"
+done
+
+# Memorias de los otros proyectos de Xbox/consolas (los del trabajo NO se suben)
+rm -rf "$AQUI/memoria-otros"
+mkdir -p "$AQUI/memoria-otros"
+for p in C--Users-xeodeo-Desktop-Minecraft-en-xboox-clasico-ps3 C--Users-xeodeo-Desktop-RE4-port \
+         C--Users-xeodeo-Downloads-Desktop-de-kevin-Classic-Xbox-Loader; do
+  [ -d "/c/Users/xeodeo/.claude/projects/$p/memory" ] && cp -r "/c/Users/xeodeo/.claude/projects/$p/memory" "$AQUI/memoria-otros/$p"
 done
 find "$AQUI/claude" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
