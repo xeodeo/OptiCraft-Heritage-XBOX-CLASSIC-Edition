@@ -2,6 +2,7 @@
 #include "Particle.h"
 #include "RenderEngine.h"
 #include "Minecraft.h"
+#include "PocketOptimizations.h"
 #include "platform/RenderAPI.h"
 
 GuiParticle::GuiParticle(Minecraft *minecraft)
@@ -11,6 +12,8 @@ GuiParticle::GuiParticle(Minecraft *minecraft)
 
 void GuiParticle::updateParticles()
 {
+	if (PocketOptimizations::enabled())
+		return;
 	for (int_t i = 0; i < (int_t)particles.size(); i++)
 	{
 		Particle *p = particles[i];
@@ -32,6 +35,8 @@ void GuiParticle::updateAndRender(float_t partialTick)
 
 void GuiParticle::renderParticles(float_t partialTick)
 {
+	if (PocketOptimizations::enabled())
+		return;
 	mc->renderEngine->bindTexture(mc->renderEngine->getTexture("/gui/particles.png"));
 	for (int_t i = 0; i < (int_t)particles.size(); i++)
 	{

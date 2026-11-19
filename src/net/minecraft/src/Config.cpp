@@ -1,5 +1,6 @@
 #include "platform/Log.h"
 #include "Config.h"
+#include "PocketOptimizations.h"
 
 #include <iostream>
 #include "GameSettings.h"
@@ -200,9 +201,16 @@ int_t Config::getMaxRenderDistanceFine()
 
 int_t Config::getRenderDistanceFine()
 {
-	return gameSettings != nullptr
+	int_t dist = gameSettings != nullptr
 		? limit(gameSettings->ofRenderDistanceFine, 32, getMaxRenderDistanceFine())
 		: 128;
+	if (PocketOptimizations::enabled())
+	{
+		const int_t pocketCap = PocketOptimizations::maxRenderDistanceFine();
+		if (dist > pocketCap)
+			dist = pocketCap;
+	}
+	return dist;
 }
 
 int_t Config::getRendererGridRadiusChunks()
@@ -511,6 +519,11 @@ bool Config::isBetterSnow()
 bool Config::isOpaqueIce()
 {
 	return gameSettings != nullptr && gameSettings->ofOpaqueIce;
+}
+
+bool Config::isPocketOptimizations()
+{
+	return gameSettings != nullptr && gameSettings->ofPocketOptimizations;
 }
 
 bool Config::isSwampColors()

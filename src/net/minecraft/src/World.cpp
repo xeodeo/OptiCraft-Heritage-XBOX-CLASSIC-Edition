@@ -8,6 +8,7 @@
 #include "platform/WorldLoadTrace.h"
 #include "platform/Diagnostics.h"
 #include "platform/PlatformTuning.h"
+#include "PocketOptimizations.h"
 #if PLATFORM_PS2
 #include "ps2/diagnostics/Ps2OptimizationValidation.h"
 #endif
@@ -5849,7 +5850,10 @@ void World::randomDisplayUpdates(int x, int y, int z)
     bool nearbyChunkCached[3][3] = {};
 #endif
 
-    for (int l = 0; l < PLATFORM_RANDOM_DISPLAY_PROBES; l++)
+    const int_t displayProbes = PocketOptimizations::enabled()
+        ? PocketOptimizations::randomDisplayProbeCount(PLATFORM_RANDOM_DISPLAY_PROBES)
+        : PLATFORM_RANDOM_DISPLAY_PROBES;
+    for (int l = 0; l < displayProbes; l++)
     {
         int randX = rand.nextIntOffset(x, RANGE);
         int randY = rand.nextIntOffset(y, RANGE);

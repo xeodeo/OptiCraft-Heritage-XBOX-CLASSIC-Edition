@@ -63,6 +63,7 @@ bool isBooleanCheckboxOption(const EnumOptions *option)
            option == EnumOptions::RANDOM_MOBS ||
            option == EnumOptions::BETTER_SNOW ||
            option == EnumOptions::OPAQUE_ICE ||
+           option == EnumOptions::POCKET_OPTIMIZATIONS ||
            option == EnumOptions::CUSTOM_FONTS ||
            option == EnumOptions::CUSTOM_COLORS ||
            option == EnumOptions::SWAMP_COLORS ||
@@ -105,6 +106,7 @@ bool getBooleanOptionValue(const GameSettings *settings, const EnumOptions *opti
     if (option == EnumOptions::RANDOM_MOBS) return settings->ofRandomMobs;
     if (option == EnumOptions::BETTER_SNOW) return settings->ofBetterSnow;
     if (option == EnumOptions::OPAQUE_ICE) return settings->ofOpaqueIce;
+    if (option == EnumOptions::POCKET_OPTIMIZATIONS) return settings->ofPocketOptimizations;
     if (option == EnumOptions::CUSTOM_FONTS) return settings->ofCustomFonts;
     if (option == EnumOptions::CUSTOM_COLORS) return settings->ofCustomColors;
     if (option == EnumOptions::SWAMP_COLORS) return settings->ofSwampColors;
@@ -435,6 +437,7 @@ void LegacyAdvancedVideoOptions::buildCategoryItems()
         addOption(EnumOptions::CHUNK_UPDATES);
         addOption(EnumOptions::CHUNK_UPDATES_DYNAMIC);
         addOption(EnumOptions::OPAQUE_ICE);
+        addOption(EnumOptions::POCKET_OPTIMIZATIONS);
         addOption(EnumOptions::FAR_VIEW);
         if (Config::isOcclusionAvailable())
             addOption(EnumOptions::ADVANCED_OPENGL);

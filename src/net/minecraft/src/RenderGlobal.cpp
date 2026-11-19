@@ -30,6 +30,7 @@
 #include "platform/RenderTerrainStaging.h"
 #include "client/Minecraft.h"
 #include "Config.h"
+#include "PocketOptimizations.h"
 #include "ActiveRenderInfo.h"
 #include "CustomColorizer.h"
 #include "Block.h"
@@ -717,22 +718,31 @@ void RenderGlobal::renderEntities(Vec3D *vec3d, ICamera *icamera, float f)
 		if (entity1->ignoreFrustumCheck)
 			platformProfileEntitySpecialBypass();
 #endif
-#if PLATFORM_LIMIT_ENTITY_RENDER_DISTANCE
-		if (entity1 != mc->renderViewEntity && !entity1->ignoreFrustumCheck && dynamic_cast<EntityLiving *>(entity1) != nullptr)
+		if ((PLATFORM_LIMIT_ENTITY_RENDER_DISTANCE || PocketOptimizations::enabled()) &&
+			entity1 != mc->renderViewEntity && !entity1->ignoreFrustumCheck &&
+			dynamic_cast<EntityLiving *>(entity1) != nullptr)
 		{
 			const float dx = static_cast<float>(entity1->posX - vec3d->xCoord);
 			const float dz = static_cast<float>(entity1->posZ - vec3d->zCoord);
-			const float radius = PLATFORM_ENTITY_RENDER_RADIUS_BLOCKS;
+			float radius = 1.0e9f;
+#if PLATFORM_LIMIT_ENTITY_RENDER_DISTANCE
+			radius = PLATFORM_ENTITY_RENDER_RADIUS_BLOCKS;
+#endif
+			if (PocketOptimizations::enabled())
+			{
+				const float pocketRadius = PocketOptimizations::entityRenderRadius(entity1->isPlayer());
+				if (pocketRadius < radius)
+					radius = pocketRadius;
+			}
 			if (dx * dx + dz * dz > radius * radius)
 			{
-	#if PLATFORM_PS2 && MC_LOG_LEVEL > 2
-			platformProfileEntityCull(PlatformEntityCullReason::Distance);
+#if PLATFORM_PS2 && MC_LOG_LEVEL > 2
+				platformProfileEntityCull(PlatformEntityCullReason::Distance);
 #endif
-			reportEntity(entity1, "distance");
+				reportEntity(entity1, "distance");
 				continue;
 			}
 		}
-#endif
 		if (!entity1->isInRangeToRenderVec3D(vec3d))
 		{
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2
@@ -852,6 +862,25 @@ void RenderGlobal::renderEntities(Vec3D *vec3d, ICamera *icamera, float f)
 		{
 			tileEntities.erase(tileEntities.begin() + k);
 			continue;
+		}
+
+		if (PocketOptimizations::enabled())
+		{
+			const int_t tileBlockId = worldObj->getBlockId(
+				tileEntity->xCoord, tileEntity->yCoord, tileEntity->zCoord);
+			const bool isBeacon = Block::beacon != nullptr && tileBlockId == Block::beacon->blockID;
+			if (!isBeacon)
+			{
+				const float dx = static_cast<float>((double)tileEntity->xCoord + 0.5 - vec3d->xCoord);
+				const float dy = static_cast<float>((double)tileEntity->yCoord + 0.5 - vec3d->yCoord);
+				const float dz = static_cast<float>((double)tileEntity->zCoord + 0.5 - vec3d->zCoord);
+				const float radius = PocketOptimizations::tileEntityRenderRadius();
+				if (dx * dx + dy * dy + dz * dz > radius * radius)
+				{
+					++k;
+					continue;
+				}
+			}
 		}
 
 #if PLATFORM_ENTITY_OCCLUSION_CULLING

@@ -120,6 +120,7 @@ public:
 	static bool isProfilerEnabled();
 	static bool isBetterSnow();
 	static bool isOpaqueIce();
+	static bool isPocketOptimizations();
 	static bool isSwampColors();
 	static bool isSmoothBiomes();
 	static bool isRandomMobs();

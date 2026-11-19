@@ -22,7 +22,7 @@ void GuiPerformanceSettingsOF::initGui()
 	EnumOptions *enumOptions[] = {
 		EnumOptions::SMOOTH_FPS, EnumOptions::SMOOTH_INPUT, EnumOptions::LOAD_FAR,
 		EnumOptions::PRELOADED_CHUNKS, EnumOptions::CHUNK_UPDATES, EnumOptions::CHUNK_UPDATES_DYNAMIC,
-		EnumOptions::OPAQUE_ICE
+		EnumOptions::OPAQUE_ICE, EnumOptions::POCKET_OPTIMIZATIONS
 	};
 
 	StringTranslate *tr = StringTranslate::getInstance();
