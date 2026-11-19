@@ -23,7 +23,7 @@ void GuiSlider::mouseDragged(Minecraft *mc, int_t mouseX, int_t mouseY)
 {
 	if (!enabled2) return;
 
-	if (dragging)
+	if (dragging && mouseX > -1000)
 	{
 		sliderValue = (float_t)(mouseX - (xPosition + 4)) / (float_t)(width - 8);
 		if (sliderValue < 0.0f) sliderValue = 0.0f;
