@@ -106,8 +106,9 @@ void LegacyOptionSlider::mouseReleased(int_t, int_t)
 
 void LegacyOptionSlider::mouseDragged(Minecraft *mc, int_t mouseX, int_t)
 {
-    if (dragging)
-        updateFromMouse(mc, mouseX);
+    if (!dragging || mouseX < -1000)
+        return;
+    updateFromMouse(mc, mouseX);
 }
 
 void LegacyOptionSlider::drawButton(Minecraft *mc, int_t mouseX, int_t mouseY)
