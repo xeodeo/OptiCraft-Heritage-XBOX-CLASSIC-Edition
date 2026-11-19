@@ -364,7 +364,7 @@ void LegacyControlsScreen::keyTyped(char_t c, int_t key)
 
 void LegacyControlsScreen::mouseClicked(int_t x, int_t y, int_t button)
 {
-#if !PLATFORM_PS2 && !PLATFORM_WII
+#if !PLATFORM_PS2 && !PLATFORM_WII && !PLATFORM_XBOX
     if (captureRow >= 0)
     {
         applyCapturedKey(-100 + button);
