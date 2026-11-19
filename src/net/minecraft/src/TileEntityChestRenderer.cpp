@@ -80,6 +80,9 @@ bool TileEntityChestRenderer::renderTileEntityChestParts(TileEntityChest *chest,
     renderRotate(rotation, 0.0f, 1.0f, 0.0f);
     renderTranslate(-0.5f, -0.5f, -0.5f);
 
+    if (renderStaticPart)
+        model->renderStaticPart();
+
     if (renderDynamicPart)
     {
         float lid = chest->prevLidAngle + (chest->lidAngle - chest->prevLidAngle) * partialTick;
@@ -103,9 +106,6 @@ bool TileEntityChestRenderer::renderTileEntityChestParts(TileEntityChest *chest,
         model->chestLid->rotateAngleX = -(lid * 3.14159265358979323846f / 2.0f);
         model->renderDynamicPart();
     }
-
-    if (renderStaticPart)
-        model->renderStaticPart();
 
     renderDisable(RenderCapability::RescaleNormal);
     renderPopMatrix();

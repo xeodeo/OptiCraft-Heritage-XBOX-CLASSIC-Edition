@@ -85,11 +85,9 @@ void RenderMinecart::renderMinecart(EntityMinecart* entityMinecart, double d, do
         const float blockScale = 12.0f / 16.0f;
         renderScale(blockScale, blockScale, blockScale);
         if (entityMinecart->getMinecartType() == 1) {
-            renderTranslate(-0.5f, 0.0f, 0.5f);
-            renderRotate(90.0f, 0.0f, 1.0f, 0.0f);
+            renderTranslate(0.0f, 8.0f / 16.0f, 0.0f);
             renderBlocks->renderBlockAsItem(Block::chest, 0, entityMinecart->getEntityBrightness(f1));
-            renderRotate(-90.0f, 0.0f, 1.0f, 0.0f);
-            renderTranslate(0.5f, 0.0f, -0.5f);
+            renderTranslate(0.0f, -(8.0f / 16.0f), 0.0f);
             renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         } else if (entityMinecart->getMinecartType() == 2) {
             renderTranslate(0.0f, 5.0f / 16.0f, 0.0f);
