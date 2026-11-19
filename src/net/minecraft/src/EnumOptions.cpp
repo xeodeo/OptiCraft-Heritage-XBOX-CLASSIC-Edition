@@ -42,6 +42,7 @@ EnumOptions *EnumOptions::AF_LEVEL = new EnumOptions(71, "Anisotropic Filtering"
 EnumOptions *EnumOptions::RENDER_DISTANCE_FINE = new EnumOptions(72, "Render Distance", true, false);
 EnumOptions *EnumOptions::RENDER_BACKEND = new EnumOptions(73, "Render", false, false);
 EnumOptions *EnumOptions::SPLITSCREEN_LAYOUT = new EnumOptions(74, "options.splitscreen", false, false);
+EnumOptions *EnumOptions::OPAQUE_ICE = new EnumOptions(75, "Opaque Ice", false, false);
 
 // --- OptiFine ---
 // Ordinales secuenciales por orden de declaracion (ht::c() == ordinal()).
@@ -105,7 +106,7 @@ static EnumOptions *s_allOptions[] = {
 	EnumOptions::RANDOM_MOBS, EnumOptions::CUSTOM_COLORS, EnumOptions::CONNECTED_TEXTURES, EnumOptions::NATURAL_TEXTURES,
 	EnumOptions::MIPMAP_LEVEL, EnumOptions::MIPMAP_TYPE, EnumOptions::CUSTOM_FONTS,
 	EnumOptions::AA_LEVEL, EnumOptions::AF_LEVEL, EnumOptions::RENDER_DISTANCE_FINE, EnumOptions::RENDER_BACKEND,
-	EnumOptions::SPLITSCREEN_LAYOUT
+	EnumOptions::SPLITSCREEN_LAYOUT, EnumOptions::OPAQUE_ICE
 };
 
 EnumOptions *EnumOptions::getEnumOptions(int_t i)

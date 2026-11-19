@@ -5,6 +5,7 @@
 #include "EntityPlayer.h"
 #include "EnumSkyBlock.h"
 #include "IBlockAccess.h"
+#include "Config.h"
 
 BlockIce::BlockIce(int_t i, int_t j) : BlockBreakable(i, j, Material::ice, false)
 {
@@ -12,7 +13,12 @@ BlockIce::BlockIce(int_t i, int_t j) : BlockBreakable(i, j, Material::ice, false
 	setTickOnLoad(true);
 }
 
-int_t BlockIce::getRenderBlockPass() { return 1; }
+int_t BlockIce::getRenderBlockPass() { return Config::isOpaqueIce() ? 0 : 1; }
+
+bool BlockIce::isOpaqueCube()
+{
+	return Config::isOpaqueIce();
+}
 
 bool BlockIce::shouldSideBeRendered(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l)
 {

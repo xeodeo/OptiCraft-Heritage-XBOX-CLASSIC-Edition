@@ -21,7 +21,8 @@ void GuiPerformanceSettingsOF::initGui()
     title = uiText("Performance Settings");
 	EnumOptions *enumOptions[] = {
 		EnumOptions::SMOOTH_FPS, EnumOptions::SMOOTH_INPUT, EnumOptions::LOAD_FAR,
-		EnumOptions::PRELOADED_CHUNKS, EnumOptions::CHUNK_UPDATES, EnumOptions::CHUNK_UPDATES_DYNAMIC
+		EnumOptions::PRELOADED_CHUNKS, EnumOptions::CHUNK_UPDATES, EnumOptions::CHUNK_UPDATES_DYNAMIC,
+		EnumOptions::OPAQUE_ICE
 	};
 
 	StringTranslate *tr = StringTranslate::getInstance();

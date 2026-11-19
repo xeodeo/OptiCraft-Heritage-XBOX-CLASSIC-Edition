@@ -85,6 +85,7 @@ public:
 	static EnumOptions *RENDER_DISTANCE_FINE;
 	static EnumOptions *RENDER_BACKEND;
 	static EnumOptions *SPLITSCREEN_LAYOUT;
+	static EnumOptions *OPAQUE_ICE;
 
 	static EnumOptions *getEnumOptions(int_t i);
 

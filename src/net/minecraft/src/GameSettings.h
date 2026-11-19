@@ -192,6 +192,7 @@ public:
 	bool ofDepthFog;
 	bool ofProfiler;
 	bool ofBetterSnow;
+	bool ofOpaqueIce;
 	bool ofSwampColors;
 	bool ofSmoothBiomes;
 	bool ofRandomMobs;

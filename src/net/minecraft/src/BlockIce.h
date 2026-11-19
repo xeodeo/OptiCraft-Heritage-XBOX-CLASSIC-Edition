@@ -11,6 +11,8 @@ class BlockIce : public BlockBreakable
 public:
 	BlockIce(int_t i, int_t j);
 	int_t getRenderBlockPass() override;
+	bool isOpaqueCube() override;
+	bool usesStaticOpaqueCubeLookup() const override { return false; }
 	bool shouldSideBeRendered(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l) override;
 	bool usesDefaultFaceCulling() const override { return false; }
 	void harvestBlock(World *world, EntityPlayer *entityplayer, int_t i, int_t j, int_t k, int_t l) override;

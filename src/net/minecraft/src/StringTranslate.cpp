@@ -505,6 +505,7 @@ std::string StringTranslate::translateUi(const std::string &english)
         if (english == "Random Mobs") return "Criaturas aleatorias";
         if (english == "Better Grass") return "Hierba mejorada";
         if (english == "Better Snow") return "Nieve mejorada";
+        if (english == "Opaque Ice") return "Hielo opaco";
         if (english == "Custom Fonts") return "Fuentes personalizadas";
         if (english == "Custom Colors") return "Colores personalizados";
         if (english == "Swamp Colors") return "Colores de pantano";
