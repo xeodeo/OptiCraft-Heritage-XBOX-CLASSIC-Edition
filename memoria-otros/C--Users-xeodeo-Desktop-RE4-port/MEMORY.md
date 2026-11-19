@@ -10,3 +10,4 @@
 - [Fps sin perder calidad](re4-fps-sin-perder-calidad.md) — nada de recorte tipo PS2; optimiza Claude, no agy; dos builds (depuración y final)
 - [Anotar doc y skill siempre](anotar-doc-y-skill-siempre.md) — tras cada bloque: COMO-VAMOS.md y la skill re4-xbox, sin que lo pida
 - [Responder en español](responder-en-espanol.md) — todo lo que lee el usuario va en español, nunca en inglés
+- [Ports hermanos en referencias](re4-melee-x-referencia.md) — Prime-X, Melee-X y PuebloCTR (RE4 en 3DS): mirarlos antes de inventar; el coste es la traducción por dibujo

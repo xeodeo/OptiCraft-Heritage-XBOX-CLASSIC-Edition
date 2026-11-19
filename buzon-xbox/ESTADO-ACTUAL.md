@@ -92,6 +92,13 @@ iconos del stick, chat (B sale); texturas animadas y HUD Legacy más rápidos; t
 las tiene); logros (recorte y desplazamiento, build 13:33); yunque/huevo de dragón cayendo; agacharse
 con interruptor y mantener A (cuando entre el 84). Si va bien: avanzar `xbox-opti-30` a `opti30-cruceta`.
 
+## Bugs detectados por el usuario, pendientes
+- **(19-11) Faro (beacon) 1.5.2:** activa el efecto SIN cobrar el objeto de pago (lingote/esmeralda/diamante). En Java,
+  al pulsar «Hecho» con un efecto elegido, `GuiBeacon`/`ContainerBeacon` manda el efecto y el objeto de la casilla de pago
+  (`SlotBeacon`) se consume (`decrStackSize(0, 1)` en el servidor, `Packet250 MC|Beacon` en Java). Mirar
+  `GuiBeacon.cpp`, `ContainerBeacon.cpp`, `SlotBeacon.cpp`, `TileEntityBeacon.cpp` contra `mcp-diff/src152`
+  (`GuiBeacon.actionPerformed`, `NetServerHandler` "MC|Beacon"). Comprobar también que sin objeto no se pueda activar.
+
 ## Lo siguiente
 0. **agy sin cuota hasta ~16-11** (09-11 13:00). El encargo 83 lo hizo Claude (`83-INFORME.md`): en prueba como build 13:33.
    Wither: propuestas en el informe 83 (limitar búsquedas de camino por tick, luz de explosión una vez, asedio ≤20 zombis).

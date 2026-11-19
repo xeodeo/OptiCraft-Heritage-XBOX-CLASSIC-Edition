@@ -199,6 +199,10 @@ El mando automático entra en la sala pero no se mueve ni gira: para ver algo co
   con MSVC falla (`LNK2019`). Pasar por `double`. Comprobar con `i686-w64-mingw32-nm <obj> | grep " U "`.
 - En el perfil, `_main` +0x5a7/+0x5e7 (`game_main.o`) es el bucle que espera al refresco (tope de 30 fps): no es
   trabajo; descontarlo al repartir la CPU.
+- **Los fps van a saltos 30/20/15 y el juego es de paso fijo** (`re4\docs\ritmo-fotogramas.md`): 30 fps exige
+  `cuadro` <= ~23 unidades; bajar de 38 a 31 no se nota (las dos cosas son 20 fps). Medir contra ese objetivo.
+- **La barra amarilla del medidor del juego** (Debug) es el tramo hasta `RENDER SETUP` (`main.cpp:311`): incluye
+  `Render()`, que dibuja el OT del fotograma anterior por nuestra capa. Si se llena, el coste es de dibujo.
 - **Umbrales de memoria: xemu tiene varios MB MÁS libres que la consola** (xemu 7-10 MB donde la consola da 2-4 MB).
   Un umbral fijo de "libres" que nunca salta en xemu puede saltar siempre en la consola (16-11: presupuesto de
   texturas a 5,5 MB -> 70-120 texturas recreadas por fotograma). Probar esos cambios en la consola o relativos.
@@ -207,8 +211,62 @@ El mando automático entra en la sala pero no se mueve ni gira: para ver algo co
   Si cambias un fuente a mitad de un `probar_salas` de varias salas, las siguientes salas pueden salir vacías.
 - Para esperar en segundo plano a que acabe otro `probar_salas`, no buscar 'probar_salas' en las líneas de comando
   con un `powershell -c` (se encuentra a sí mismo y espera para siempre): esperar al candado y a que no haya xemu.
+- **r101 en xemu (18-11, el usuario)**: al entrar sale el "Playing Manual" (varias páginas) y hay que pulsar B varias
+  veces. Antes del 18-11 el mando automático solo lo cerraba si pasaba por r100: las pruebas de r101 se quedaban en el
+  manual (`vtx` ~29.000) y nunca vimos su carga real (~360.000). Desde `eb54cf0` pulsa B cada segundo 40 s en cada
+  sala (`g_autopad_sala`). Si la foto de `probar_salas` sale con un menú o un manual, el dato no vale.
+- **En la consola el límite de r101 era la MEMORIA, no la CPU del juego** (18-11): el perfil daba 77 % decodificando
+  listas que no cabían en la caché y < 3 % de lógica del juego. xemu tiene más memoria libre y no lo ve (r101 `dl` 1-4
+  en xemu, 30-54 en la consola). Antes de optimizar código, mirar `libres`, `aram=`, `kb=` y `[DLCPRIME-TEX] cache=`
+  (si está en el tope, hay recreación de texturas: esperas en `XPhysicalAlloc` en el perfil).
+- **ARAM al disco** (`ar_stub.c`, `[ARAMSWP]`, `RE4_SIN_ARAM_SWAP`): bloques no usados van a `Z:\re4_aram.swp` al cambiar
+  de sala y 3 s después. El MEZCLADOR también lee la ARAM (`ax_dsound.cpp` `AramRead`) y en zonas no esperadas: cualquier
+  cambio aquí tiene que mantener "marcar `g_aram_mezclador`, LUEGO mirar `g_aram_pag`" y el estado 3 (saliendo).
+- **Caché de programas de vértices** (`gx_vs.inl`): vive en `D:\re4_vs.bin` (carpeta del juego) desde `9c36021`; tope
+  `VS_INDEX_MAX` 4096 (con 1024 estaba LLENA en la consola y nada nuevo se guardaba: tirones de 39 ms por programa en
+  cada evento, siempre). Tras una sesión larga del usuario: `python scripts\vs_juntar.py` (consola en el dashboard)
+  junta las de las tres carpetas y las reparte. Mirar `[VS] cache en disco: N programas` al arrancar.
+- **clang** (`RE4_CLANG=1 RE4_PGO=re4.profdata`, objetos en `build\game_objs_pgo`, `scripts\recompilar_juego_clang.py`):
+  usar **sin LTO** (`RE4_LTO=0`). Con ThinLTO el pueblo da una excepción reproducible (`DrawOTag`) que no aparece con
+  ninguna mitad de objetos por separado. Si se cambia código del juego, recompilar también con clang.
+- **Antes de copiar `bin\iso\default.xbe` a `consola_*.xbe`, comprobar que la compilación dijo `xbe ok`** (18-11: un
+  error de compilación dejó el XBE viejo y se copió tres veces sin darme cuenta; las tres con el mismo md5).
 - `probar_salas.ps1` NO repite la escena entre dos ejecuciones (el mando automático no es determinista): sirve para
   ver que nada se rompe, no para comparar antes/después pixel a pixel.
+
+### Lo que se aprendió el 18-11 (rendimiento: dónde está el coste de verdad)
+- **El juego cuesta < 3 % de la CPU; el coste es nuestra TRADUCCIÓN GX -> D3D por dibujo.** En GameCube la GPU lee
+  las listas directamente; aquí cada dibujo pasa por la CPU (preparar plantillas, MandarPixel, MandarConstantes,
+  LazySetStateVB, ShadowVertexShaderState, FastCopyToWC de índices). Hay ~1.200 dibujos por fotograma
+  (`[MED] draw=t(N)`: N = dibujos) y Melee-X mide ~31 µs por dibujo en la Xbox: el objetivo es BAJAR N (Prime-X
+  4.000 -> 400) y el coste por dibujo, no micro-optimizar el juego.
+- **Orden de diagnóstico**: (1) memoria (`libres`, `aram=`, `kb=`, `[DLCPRIME-TEX] cache=` en el tope = recreación de
+  texturas), (2) perfil por bloques en la Debug quieto 2-3 min, (3) contar en xemu (cuentas exactas).
+- **Contadores nuevos**: `[ARAMSWP]` (ARAM al disco), `[ANILLOVB]` (anillo: dibujos, vueltas, esperas),
+  `[DLCMEM] expulsiones= reintentos= aplazadas=`, `[DLCPRIME-TEX] creadas= pool= reusos=`, `[HGPU-POR]` (por qué una
+  plantilla no va por huesos en GPU; `GPU=` las que sí). `[HMED2] plantillas=0` NO significa que no haya huesos en GPU.
+- **Interruptores nuevos** (`compilar_plataforma.ps1`): `RE4_SIN_ARAM_SWAP`, `RE4_SIN_TEX_POOL`, `RE4_TEX_MAX=N`,
+  `RE4_SIN_DLC_PRIME`, `RE4_SIN_ANILLO_VB`, `RE4_TEX_FIRMA_CADA_CUADRO`.
+- **Referencias** en `RE4 port\referencias\`: `Prime-X` (Metroid Prime en Xbox: `docs\performance.md`), `Melee-X`
+  (`docs\fps-plan.md`, `renderer.md`), `PuebloCTR` (RE4 en New 3DS, MISMA descompilación: 37 parches de juego en
+  `overlay\port\whole\patches\03*.patch`, casi todos "mismos resultados"). Antes de inventar, mirar si ya lo resolvieron.
+- **Subir con la consola en el dashboard** y, tras cada sesión larga del usuario, `python scripts\vs_juntar.py`.
+  Tras hibernar el PC, el escuchador UDP muere: comprobar `escuchar_log` en los procesos y relanzarlo.
+- **Esperas en `XPhysicalAlloc` sin texturas nuevas = VB recreados**: mirar `[DLCMEM] expulsiones=` y los KB de
+  `plantilla stat= dyn= push=` (deben ser ~0 en una sala estable). `[VALPLT]` da el motivo del fallo de validación
+  (1 muestra de la lista, 2 descriptor, 3-5 arrays de color/uv, 6 sin array, 7 otro paso de posición). 19-11: el
+  motivo 7 (mismo modelo con paso 6 y 8) ya no expulsa (`771d346`, contador `paso=`).
+- Compilar desde **Bash** (`RE4_NETLOG=1 RE4_SIN_TRACE=1 powershell -ExecutionPolicy Bypass -File scripts/compilar_plataforma.ps1`):
+  un bloque de varias líneas en la herramienta PowerShell se ejecutó dos veces en paralelo y chocó con su propio candado.
+- **Quién llama a una función caliente** (desde `e734b81`): `python scripts\perfil_llamadores.py <log> <bloques> <mapa>
+  [fun1,fun2] [--top N]`. Fiable para funciones hoja (FastCopyToWC, memmove, memset); en funciones grandes sale basura
+  (direcciones viejas en sus variables locales). Así se vio que FastCopyToWC venía de `RunPushBuffer` (pushbuffers con
+  malloc que D3D copia en cada dibujo): un pushbuffer tiene que estar en memoria contigua para ejecutarse en su sitio.
+- objdump no desensambla bien los `.obj` de MSVC (`$LN` cortan las funciones): usar `dumpbin /disasm`.
+- **El usuario quiere ver los fps primero**: no meterse en otra cosa (bordes, etc.) mientras el lag no esté resuelto,
+  aunque lo pida de paso; si una tarea secundaria se complica, aparcarla y avisar.
+- **No hacer** (el usuario): bajar calidad (distancia de dibujo, assets de PS2, recortes). Ni que una sala vaya mal al
+  entrar y bien después: lo que libere memoria tiene que hacerse durante la carga.
 
 ### Trampas vistas el 12-11
 - **xemu no sirve para medir tiempos** (el mismo codigo da `fill` 119 o 364). Sirve para: que no pete, la imagen,

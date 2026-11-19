@@ -99,3 +99,18 @@ agy con Gemini 3.8 Flash acierta a menudo el QUE, pero exagera o inventa cifras 
   `orca terminal create --shell cmd.exe --title "<nombre>" --command 'cd /d "<arbol>" && agy --dangerously-skip-permissions --effort high'`
   y para Codex `--command 'codex -s workspace-write -a never -C "C:\Users\xeodeo\Desktop\RE4 port"'`
   (con `export MSYS_NO_PATHCONV=1` desde Git Bash). Los handle son nuevos: volver a listar.
+
+### Aprendido el 18-11
+- **Falsas alarmas del vigilante**: (1) si la señal de fin está en MI propio mensaje, el escuchador la ve en pantalla
+  y da `LISTO` al instante: no escribir la señal literal en el mensaje (apuntar al fichero del encargo) o vigilar por
+  `--informe <fichero>` con una `--hecho` imposible; (2) "sin cuota" puede ser un aviso VIEJO que sigue en la pantalla:
+  leer las últimas líneas antes de creérselo.
+- **agy abierto SIN la bandera pide permiso para cada comando** ("Run this command?"): 3 Ctrl+C, copiar el
+  `--conversation=<id>` que imprime y relanzar en su árbol con `agy --dangerously-skip-permissions --effort high
+  --conversation=<id>`; luego "te reinicié con permisos automáticos, sigue con el encargo X".
+- **Modelos y cupos (18-11)**: Gemini 4 Argon: agotado ~165 h. Claude Opus 5.5 dentro de agy: cupo corto (se agota en
+  una tanda; vuelve en ~5 h). Codex `gpt-6-luna`/`gpt-5.6-terra`: cupo MENSUAL (agotado hasta el 18-12; `/usage` gasta un
+  reinicio). Con cupos tan cortos, a cada agente UN encargo grande bien especificado, no varios.
+- **Revisar lo que entregan aunque compile**: Codex dijo que `D3DLOCK_NOOVERWRITE` no existe en el XDK (sí existe,
+  `d3d8types.h:1950`) y gastaba un tramo de anillo por lote (CPU esperando a la GPU cada 4 dibujos); también olvidó un
+  `#include <stdio.h>` (no compilaba). Comprobar sus afirmaciones sobre el XDK en las cabeceras.
