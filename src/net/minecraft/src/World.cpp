@@ -61,6 +61,7 @@
 #include "ISaveHandler.h"
 #include "ChunkProvider.h"
 #include "EntityPlayer.h"
+#include "InventoryPlayer.h"
 #include "ChunkProviderLoadOrGenerate.h"
 #include "MathHelper.h"
 #include "IChunkProvider.h"
@@ -806,7 +807,21 @@ void World::spawnPlayerWithLoadedChunks(EntityPlayer* entityPlayer)
         NBTTagCompound* nbt = worldInfo->getPlayerNBTTagCompound();
         if (nbt != nullptr)
         {
-            entityPlayer->readFromNBT(nbt);
+            if (worldProvider != nullptr && nbt->hasKey("Dimension") && nbt->getInteger("Dimension") != worldProvider->worldType)
+            {
+                NBTTagList *nbttaglist = nbt->getTagList("Inventory");
+                if (nbttaglist != nullptr && entityPlayer->inventory != nullptr)
+                    entityPlayer->inventory->readFromNBT(nbttaglist);
+                if (nbt->hasKey("XpP")) entityPlayer->experience = nbt->getFloat("XpP");
+                if (nbt->hasKey("XpLevel")) entityPlayer->experienceLevel = nbt->getInteger("XpLevel");
+                if (nbt->hasKey("XpTotal")) entityPlayer->experienceTotal = nbt->getInteger("XpTotal");
+                entityPlayer->foodStats.readNBT(nbt);
+                entityPlayer->capabilities.readCapabilitiesFromNBT(nbt);
+            }
+            else
+            {
+                entityPlayer->readFromNBT(nbt);
+            }
             worldInfo->setPlayerNBTTagCompound(nullptr);
         }
         
