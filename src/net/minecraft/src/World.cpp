@@ -1001,7 +1001,8 @@ int World::getBlockId(int x, int y, int z)
     if (populationFastPathActive)
         platformProfilePopulationAccess(PlatformPopulationAccessKind::BlockRead, false);
 
-    return getChunkFromChunkCoords(JavaArithmetic::intShr(x, 4), JavaArithmetic::intShr(z, 4))->getBlockID(x & 0xf, y, z & 0xf);
+    Chunk *chunk = getChunkFromChunkCoords(JavaArithmetic::intShr(x, 4), JavaArithmetic::intShr(z, 4));
+    return chunk != nullptr ? chunk->getBlockID(x & 0xf, y, z & 0xf) : 0;
 }
 
 int_t World::getBlockLightOpacity(int_t x, int_t y, int_t z)
