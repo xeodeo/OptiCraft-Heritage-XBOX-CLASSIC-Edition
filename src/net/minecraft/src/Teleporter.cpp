@@ -26,9 +26,9 @@ void Teleporter::placeInPortal(World *world, Entity *entity)
 		return;
 	}
 
-	const int_t baseX = MathHelper::floor_double(entity->posX);
-	const int_t baseY = MathHelper::floor_double(entity->posY) - 1;
-	const int_t baseZ = MathHelper::floor_double(entity->posZ);
+	const int_t baseX = 100;
+	const int_t baseY = 50;
+	const int_t baseZ = 0;
 	const int_t axisX = 1;
 	const int_t axisZ = 0;
 
@@ -46,8 +46,9 @@ void Teleporter::placeInPortal(World *world, Entity *entity)
 		}
 	}
 
-	entity->setLocationAndAngles((double)baseX, (double)baseY, (double)baseZ, entity->rotationYaw, 0.0f);
+	entity->setLocationAndAngles((double)baseX + 0.5, (double)baseY + (double)entity->yOffset, (double)baseZ + 0.5, entity->rotationYaw, 0.0f);
 	entity->motionX = entity->motionY = entity->motionZ = 0.0;
+	entity->fallDistance = 0.0f;
 }
 
 bool Teleporter::placeInExistingPortal(World *world, Entity *entity)
