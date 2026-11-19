@@ -2538,6 +2538,19 @@ void Minecraft::usePortal(int_t targetDimension)
     if (thePlayer == nullptr || theWorld == nullptr)
         return;
 
+    for (int pIdx = 0; pIdx < 2; ++pIdx)
+    {
+        if (playerScreens[pIdx] != nullptr)
+        {
+            playerScreens[pIdx]->onGuiClosed();
+            scheduleGuiScreenDeletion(playerScreens[pIdx]);
+            playerScreens[pIdx] = nullptr;
+        }
+    }
+    if (currentScreen != nullptr)
+        displayGuiScreen(nullptr);
+    screenOwnedByPlayer2 = false;
+
     const int_t previousDimension = thePlayer->dimension;
     WorldProvider *destinationProvider = WorldProvider::getProviderForDimension(targetDimension);
     if (destinationProvider == nullptr)
@@ -2577,15 +2590,26 @@ void Minecraft::usePortal(int_t targetDimension)
     }
     else if (targetDimension == 0)
     {
-        if (thePlayer->isEntityAlive())
-        {
-            thePlayer->setLocationAndAngles(targetX, thePlayer->posY, targetZ,
-                                            thePlayer->rotationYaw, thePlayer->rotationPitch);
-            oldWorld->updateEntityWithOptionalForce(thePlayer, false);
-        }
-
         destinationWorld = new World(oldWorld, destinationProvider);
-        transitionMessage = previousDimension == -1 ? "Leaving the Nether" : "Leaving the End";
+        if (previousDimension == -1)
+        {
+            if (thePlayer->isEntityAlive())
+            {
+                thePlayer->setLocationAndAngles(targetX, thePlayer->posY, targetZ,
+                                                thePlayer->rotationYaw, thePlayer->rotationPitch);
+                oldWorld->updateEntityWithOptionalForce(thePlayer, false);
+            }
+            transitionMessage = "Leaving the Nether";
+        }
+        else
+        {
+            ChunkCoordinates spawn = destinationWorld->getSpawnPoint();
+            targetX = (double)spawn.x + 0.5;
+            targetZ = (double)spawn.z + 0.5;
+            thePlayer->setLocationAndAngles(targetX, (double)spawn.y + (double)thePlayer->yOffset, targetZ,
+                                            thePlayer->rotationYaw, 0.0f);
+            transitionMessage = "Leaving the End";
+        }
     }
     else
     {
@@ -2593,9 +2617,15 @@ void Minecraft::usePortal(int_t targetDimension)
         std::unique_ptr<ChunkCoordinates> entrance(destinationWorld->getEntrancePortalLocation());
         if (entrance != nullptr)
         {
-            targetX = (double)entrance->x;
-            thePlayer->posY = (double)entrance->y;
-            targetZ = (double)entrance->z;
+            targetX = (double)entrance->x + 0.5;
+            thePlayer->posY = (double)entrance->y + (double)thePlayer->yOffset;
+            targetZ = (double)entrance->z + 0.5;
+        }
+        else
+        {
+            targetX = 100.5;
+            thePlayer->posY = 50.0 + (double)thePlayer->yOffset;
+            targetZ = 0.5;
         }
 
         thePlayer->setLocationAndAngles(targetX, thePlayer->posY, targetZ, 90.0f, 0.0f);
@@ -2603,6 +2633,10 @@ void Minecraft::usePortal(int_t targetDimension)
             destinationWorld->updateEntityWithOptionalForce(thePlayer, false);
         transitionMessage = "Entering the End";
     }
+
+    // Clear playerTag so destinationWorld does not restore stale coordinates/dimension.
+    if (destinationWorld != nullptr && destinationWorld->getWorldInfo() != nullptr)
+        destinationWorld->getWorldInfo()->setPlayerNBTTagCompound(nullptr);
 
 #if PLATFORM_RELEASE_OLD_WORLD_BEFORE_PORTAL
     for (int pIdx = 0; pIdx < 2; ++pIdx)
@@ -2651,6 +2685,10 @@ void Minecraft::usePortal(int_t targetDimension)
                 portalTeleporter = std::make_unique<Teleporter>();
             portalTeleporter->placeInPortal(theWorld, thePlayer);
         }
+        else if (targetDimension == 0)
+        {
+            thePlayer->preparePlayerToSpawn();
+        }
 
         thePlayer->prevPosX = thePlayer->lastTickPosX = thePlayer->posX;
         thePlayer->prevPosY = thePlayer->lastTickPosY = thePlayer->posY;
@@ -2665,6 +2703,9 @@ void Minecraft::usePortal(int_t targetDimension)
         thePlayer->motionX = thePlayer->motionY = thePlayer->motionZ = 0.0;
         thePlayer->fallDistance = 0.0f;
     }
+
+    thePlayerOne = thePlayer;
+    renderViewEntity = thePlayer;
 }
 
 void Minecraft::flushDeferredPlayers()
