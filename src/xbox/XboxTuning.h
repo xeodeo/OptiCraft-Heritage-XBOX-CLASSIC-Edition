@@ -179,4 +179,15 @@
 // unloading a chunk no longer walks every pending tick in the world.
 #define XBOX_CHUNK_TICK_SCHEDULER                1
 
+// Budgeted voxel occlusion culling for entities and tile entities behind opaque terrain,
+// plus interior leaf-against-leaf culling for Fancy leaves (de erluza 10bccb6).
+#undef  PLATFORM_ENTITY_OCCLUSION_CULLING
+#define PLATFORM_ENTITY_OCCLUSION_CULLING        1
+#undef  PLATFORM_ENTITY_OCCLUSION_RAYCASTS_PER_FRAME
+#define PLATFORM_ENTITY_OCCLUSION_RAYCASTS_PER_FRAME 8
+#undef  PLATFORM_ENTITY_OCCLUSION_RECHECK_FRAMES
+#define PLATFORM_ENTITY_OCCLUSION_RECHECK_FRAMES 15
+#undef  PLATFORM_FANCY_LEAVES_FACE_CULLING
+#define PLATFORM_FANCY_LEAVES_FACE_CULLING       1
+
 #endif // PLATFORM_XBOX

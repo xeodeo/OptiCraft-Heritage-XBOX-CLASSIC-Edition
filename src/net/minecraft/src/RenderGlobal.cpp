@@ -34,6 +34,9 @@
 #include "CustomColorizer.h"
 #include "Block.h"
 #include "BlockLeaves.h"
+#include "BlockPistonExtension.h"
+#include "BlockPistonMoving.h"
+#include "BlockBeacon.h"
 #include "Entity.h"
 #include "EntityLiving.h"
 #include "EntityPlayer.h"
@@ -624,6 +627,10 @@ void RenderGlobal::renderEntities(Vec3D *vec3d, ICamera *icamera, float f)
 		return;
 	}
 
+#if PLATFORM_ENTITY_OCCLUSION_CULLING
+	entityOcclusionCache.beginFrame();
+#endif
+
 	TileEntityRenderer::instance.cacheActiveRenderInfo(worldObj, renderEngine, mc->fontRenderer, mc->renderViewEntity, f);
 	RenderManager::instance->cacheActiveRenderInfo(worldObj, renderEngine, mc->fontRenderer, mc->renderViewEntity, mc->gameSettings, f);
 
@@ -764,6 +771,15 @@ void RenderGlobal::renderEntities(Vec3D *vec3d, ICamera *icamera, float f)
 			}
 		}
 #endif
+#if PLATFORM_ENTITY_OCCLUSION_CULLING
+		if (entity1 != mc->renderViewEntity && !entity1->ignoreFrustumCheck &&
+			entityOcclusionCache.isEntityOccluded(worldObj, entity1,
+				vec3d->xCoord, vec3d->yCoord, vec3d->zCoord))
+		{
+			reportEntity(entity1, "occluded");
+			continue;
+		}
+#endif
 		if (entity1 == mc->renderViewEntity && !mc->gameSettings->thirdPersonView && !mc->renderViewEntity->isPlayerSleeping())
 		{
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2
@@ -838,6 +854,25 @@ void RenderGlobal::renderEntities(Vec3D *vec3d, ICamera *icamera, float f)
 			continue;
 		}
 
+#if PLATFORM_ENTITY_OCCLUSION_CULLING
+		{
+			const int_t tileBlockId = worldObj->getBlockId(
+				tileEntity->xCoord, tileEntity->yCoord, tileEntity->zCoord);
+			const bool exemptTile =
+				(Block::pistonBase != nullptr && tileBlockId == Block::pistonBase->blockID)
+				|| (Block::pistonStickyBase != nullptr && tileBlockId == Block::pistonStickyBase->blockID)
+				|| (Block::pistonExtension != nullptr && tileBlockId == Block::pistonExtension->blockID)
+				|| (Block::pistonMoving != nullptr && tileBlockId == Block::pistonMoving->blockID)
+				|| (Block::beacon != nullptr && tileBlockId == Block::beacon->blockID);
+			if (!exemptTile && entityOcclusionCache.isTileEntityOccluded(worldObj,
+					tileEntity->xCoord, tileEntity->yCoord, tileEntity->zCoord,
+					vec3d->xCoord, vec3d->yCoord, vec3d->zCoord))
+			{
+				++k;
+				continue;
+			}
+		}
+#endif
 		TileEntityRenderer::instance.renderTileEntity(tileEntity, f);
 		++k;
 	}
@@ -3753,6 +3788,9 @@ void RenderGlobal::clearWorldRenderers() // func_28137_f
 #endif
 	std::vector<TileEntity *>().swap(tileEntities);
 	std::vector<WorldRenderer *>().swap(renderBatchRenderers);
+#if PLATFORM_ENTITY_OCCLUSION_CULLING
+	entityOcclusionCache.clear();
+#endif
 	renderChunksWide = 0;
 	renderChunksTall = 0;
 	renderChunksDeep = 0;

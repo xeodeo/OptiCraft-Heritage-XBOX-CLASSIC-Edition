@@ -10,6 +10,7 @@
 #include "platform/PlatformConfig.h" // PLATFORM_PS2, for the RAM reporter below
 #include "platform/PlatformTuning.h"
 #include "platform/RenderTerrainAPI.h" // RenderTerrainMeshRam, likewise
+#include "platform/world/EntityOcclusionCache.h"
 #include "java/Type.h"
 #include "java/String.h"
 #include "java/Random.h"
@@ -169,6 +170,9 @@ private:
 #endif
 	Minecraft *mc = nullptr;
 	RenderBlocks *globalRenderBlocks = nullptr;
+#if PLATFORM_ENTITY_OCCLUSION_CULLING
+	EntityOcclusionCache entityOcclusionCache;
+#endif
 #if PLATFORM_PC || defined(XBOX_PLATFORM)
 	std::vector<int_t> glOcclusionQueryBase;
 	bool occlusionEnabled = false;
