@@ -33,5 +33,6 @@ private:
     LegacyOptionCheckbox *coordinatesCheckbox;
     LegacyOptionCheckbox *fullbrightCheckbox;
     LegacyOptionCheckbox *opaqueIceCheckbox;
+    LegacyOptionCheckbox *pocketOptimizationsCheckbox;
     int_t page;
 };

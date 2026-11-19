@@ -208,6 +208,7 @@ void GameSettings::setDefaults()
     ofProfiler = false;
     ofBetterSnow = false;
     ofOpaqueIce = false;
+    ofPocketOptimizations = false;
     ofSwampColors = true;
     ofSmoothBiomes = true;
     ofRandomMobs = PLATFORM_OPTIFINE_RANDOM_MOBS != 0;
@@ -812,6 +813,11 @@ void GameSettings::setOptionValue(const EnumOptions *enumoptions, int_t i)
         ofOpaqueIce = !ofOpaqueIce;
         invalidateChunkMeshes();
     }
+    if (enumoptions == EnumOptions::POCKET_OPTIMIZATIONS)
+    {
+        ofPocketOptimizations = !ofPocketOptimizations;
+        reloadChunkRenderers();
+    }
     if (enumoptions == EnumOptions::SWAMP_COLORS)
     {
         ofSwampColors = !ofSwampColors;
@@ -1178,6 +1184,8 @@ std::string GameSettings::getKeyBinding(const EnumOptions *enumoptions)
         return s + (ofBetterSnow ? uiText("ON") : uiText("OFF"));
     if (enumoptions == EnumOptions::OPAQUE_ICE)
         return s + (ofOpaqueIce ? uiText("ON") : uiText("OFF"));
+    if (enumoptions == EnumOptions::POCKET_OPTIMIZATIONS)
+        return s + (ofPocketOptimizations ? uiText("ON") : uiText("OFF"));
     if (enumoptions == EnumOptions::SWAMP_COLORS)
         return s + (ofSwampColors ? uiText("ON") : uiText("OFF"));
     if (enumoptions == EnumOptions::SMOOTH_BIOMES)

@@ -32,6 +32,7 @@ enum LegacyVideoButtonId
     BUTTON_COORDINATES = 309,
     BUTTON_FULLBRIGHT = 310,
     BUTTON_OPAQUE_ICE = 311,
+    BUTTON_POCKET_OPTIMIZATIONS = 312,
     BUTTON_PREV_PAGE = 397,
     BUTTON_NEXT_PAGE = 398,
     BUTTON_DONE = 399
@@ -44,7 +45,7 @@ LegacyVideoOptions::LegacyVideoOptions(GuiScreen *parent, GameSettings *settings
     : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), graphicsCheckbox(nullptr), smoothLightingCheckbox(nullptr),
       viewBobbingCheckbox(nullptr), cloudsCheckbox(nullptr), fogCheckbox(nullptr), deflickerCheckbox(nullptr),
       frameCapCheckbox(nullptr), coordinatesCheckbox(nullptr), fullbrightCheckbox(nullptr),
-      opaqueIceCheckbox(nullptr), page(0)
+      opaqueIceCheckbox(nullptr), pocketOptimizationsCheckbox(nullptr), page(0)
 {
 }
 
@@ -66,6 +67,7 @@ void LegacyVideoOptions::rebuildControls()
     coordinatesCheckbox = nullptr;
     fullbrightCheckbox = nullptr;
     opaqueIceCheckbox = nullptr;
+    pocketOptimizationsCheckbox = nullptr;
 
     std::vector<int_t> items;
     items.push_back(BUTTON_GRAPHICS);
@@ -85,6 +87,7 @@ void LegacyVideoOptions::rebuildControls()
 #endif
 #if !(PLATFORM_PS2 || PLATFORM_WII)
     items.push_back(BUTTON_OPAQUE_ICE);
+    items.push_back(BUTTON_POCKET_OPTIMIZATIONS);
 #endif
     items.push_back(BUTTON_RENDER_DISTANCE);
     items.push_back(BUTTON_BRIGHTNESS);
@@ -165,6 +168,11 @@ void LegacyVideoOptions::rebuildControls()
                 uiText("Opaque Ice"), settings->ofOpaqueIce);
             controlList.push_back(opaqueIceCheckbox);
             break;
+        case BUTTON_POCKET_OPTIMIZATIONS:
+            pocketOptimizationsCheckbox = new LegacyOptionCheckbox(BUTTON_POCKET_OPTIMIZATIONS, x, y, w, h,
+                uiText("Pocket Optimizations"), settings->ofPocketOptimizations);
+            controlList.push_back(pocketOptimizationsCheckbox);
+            break;
         case BUTTON_RENDER_DISTANCE:
             controlList.push_back(new LegacyOptionSlider(BUTTON_RENDER_DISTANCE, x, y, w, h,
                 settings, EnumOptions::RENDER_DISTANCE_FINE));
@@ -217,6 +225,8 @@ void LegacyVideoOptions::syncCheckboxes()
         fullbrightCheckbox->setChecked(settings->fullbright);
     if (opaqueIceCheckbox != nullptr)
         opaqueIceCheckbox->setChecked(settings->ofOpaqueIce);
+    if (pocketOptimizationsCheckbox != nullptr)
+        pocketOptimizationsCheckbox->setChecked(settings->ofPocketOptimizations);
 }
 
 void LegacyVideoOptions::actionPerformed(GuiButton *button)
@@ -272,6 +282,10 @@ void LegacyVideoOptions::actionPerformed(GuiButton *button)
         return;
     case BUTTON_OPAQUE_ICE:
         settings->setOptionValue(EnumOptions::OPAQUE_ICE, 1);
+        syncCheckboxes();
+        return;
+    case BUTTON_POCKET_OPTIMIZATIONS:
+        settings->setOptionValue(EnumOptions::POCKET_OPTIMIZATIONS, 1);
         syncCheckboxes();
         return;
     case BUTTON_PREV_PAGE:

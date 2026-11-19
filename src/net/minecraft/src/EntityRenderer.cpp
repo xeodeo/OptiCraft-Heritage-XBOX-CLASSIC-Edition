@@ -25,6 +25,7 @@
 #include "legacy/LegacyColorGradePass.h"
 #include "KeyBinding.h"
 #include "Config.h"
+#include "PocketOptimizations.h"
 #include "PlayerController.h"
 #include "MovingObjectPosition.h"
 #include "Vec3D.h"
@@ -1232,20 +1233,27 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
 
     if (lightmapUpdateNeeded)
     {
-#if PLATFORM_PC_LEGACY && PC_LEGACY_LIGHTMAP_CACHE
-        World *lightmapWorld = mc->theWorld;
-        if (lightmapWorld != nullptr && lightmapWorld->worldProvider != nullptr &&
-            pcLegacyLightmapCache != nullptr &&
-            pcLegacyLightmapCache->shouldUpdate(
-                rendererUpdateCount, lightmapWorld->worldProvider,
-                mc->gameSettings->ofBrightness, lightmapWorld->field_27172_i > 0,
-                mc->gameSettings->legacyLook, true))
+        static int_t pocketLightmapPhase = 0;
+        const int_t pocketLightmapInterval = PocketOptimizations::lightmapUpdateIntervalFrames();
+        const bool pocketLightmapDue = !PocketOptimizations::enabled() ||
+            ((pocketLightmapPhase++ % pocketLightmapInterval) == 0);
+        if (pocketLightmapDue)
         {
-            updateLightmap();
-        }
+#if PLATFORM_PC_LEGACY && PC_LEGACY_LIGHTMAP_CACHE
+            World *lightmapWorld = mc->theWorld;
+            if (lightmapWorld != nullptr && lightmapWorld->worldProvider != nullptr &&
+                pcLegacyLightmapCache != nullptr &&
+                pcLegacyLightmapCache->shouldUpdate(
+                    rendererUpdateCount, lightmapWorld->worldProvider,
+                    mc->gameSettings->ofBrightness, lightmapWorld->field_27172_i > 0,
+                    mc->gameSettings->legacyLook, true))
+            {
+                updateLightmap();
+            }
 #else
-        updateLightmap();
+            updateLightmap();
 #endif
+        }
     }
 
     // OptiFine: si cambio el worldProvider (p.ej. al entrar a un mundo o cambiar de
@@ -2235,7 +2243,9 @@ void EntityRenderer::addRainParticles()
     const int_t centerX = MathHelper::floor_double(entity->posX);
     const int_t centerY = MathHelper::floor_double(entity->posY);
     const int_t centerZ = MathHelper::floor_double(entity->posZ);
-    const int_t range = 10;
+    int_t range = 10;
+    if (PocketOptimizations::enabled())
+        range = PocketOptimizations::rainSplashRange(range);
     double soundX = 0.0;
     double soundY = 0.0;
     double soundZ = 0.0;
@@ -2252,6 +2262,9 @@ void EntityRenderer::addRainParticles()
         particleCount >>= 1;
     else if (mc->gameSettings->particleSetting == 2)
         particleCount = 0;
+
+    if (PocketOptimizations::enabled())
+        particleCount = PocketOptimizations::rainSplashParticleCount(particleCount);
 
 #if PLATFORM_PS2
     if (!Config::isRainSplash())
@@ -2438,10 +2451,12 @@ void EntityRenderer::renderRainSnow(float partialTicks)
 #endif
     const int_t interpolatedY = MathHelper::floor_double(renderPosY);
 #if PLATFORM_PS2
-    const int_t range = PS2_RAIN_SNOW_RENDER_RANGE;
+    int_t range = PS2_RAIN_SNOW_RENDER_RANGE;
 #else
-    const int_t range = Config::isRainFancy() ? 10 : 5;
+    int_t range = Config::isRainFancy() ? 10 : 5;
 #endif
+    if (PocketOptimizations::enabled())
+        range = PocketOptimizations::weatherRenderRange(range);
     int_t activeWeatherTexture = -1;
 #ifdef PS2_OPTIMIZATION_VALIDATION
     const auto validationDrawWeatherBatch = [&]()
@@ -2497,8 +2512,13 @@ void EntityRenderer::renderRainSnow(float partialTicks)
                                                        JavaArithmetic::intMul(z, 13761));
 #if PLATFORM_PS2 || PLATFORM_XBOX
             const unsigned int weatherSeed = ps2WeatherHash(static_cast<unsigned int>(xSeed ^ zSeed));
-            const float dx = static_cast<float>(static_cast<double>(x) + 0.5 - static_cast<double>(renderPosX));
-            const float dz = static_cast<float>(static_cast<double>(z) + 0.5 - static_cast<double>(renderPosZ));
+#if PLATFORM_FLOAT_VERTEX_MATH
+            const float dx = static_cast<float>(x) + 0.5f - renderPosX;
+            const float dz = static_cast<float>(z) + 0.5f - renderPosZ;
+#else
+            const float dx = static_cast<float>(static_cast<double>(x) + 0.5 - renderPosX);
+            const float dz = static_cast<float>(static_cast<double>(z) + 0.5 - renderPosZ);
+#endif
             const float distanceSquared = (dx * dx + dz * dz) / static_cast<float>(range * range);
 #else
             random.setSeed(static_cast<long_t>(xSeed ^ zSeed));

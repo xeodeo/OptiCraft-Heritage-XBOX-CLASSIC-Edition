@@ -1,4 +1,5 @@
 #include "ChunkProviderLoadOrGenerate.h"
+#include "PocketOptimizations.h"
 #include "Config.h"
 
 #include "platform/Log.h"
@@ -146,6 +147,7 @@ void ChunkProviderLoadOrGenerate::setChunkLoadRadius(int_t radius)
 
 void ChunkProviderLoadOrGenerate::setChunkLoadRadiusFromRenderDistance(int_t renderDistance)
 {
+	renderDistance = PocketOptimizations::chunkCacheRenderDistance(renderDistance);
 #if PLATFORM_BOUNDED_WORLD || PLATFORM_PC_LEGACY
 	(void)renderDistance;
 	setChunkLoadRadius(0);

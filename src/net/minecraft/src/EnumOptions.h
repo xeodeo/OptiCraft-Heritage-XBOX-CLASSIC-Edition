@@ -86,6 +86,7 @@ public:
 	static EnumOptions *RENDER_BACKEND;
 	static EnumOptions *SPLITSCREEN_LAYOUT;
 	static EnumOptions *OPAQUE_ICE;
+	static EnumOptions *POCKET_OPTIMIZATIONS;
 
 	static EnumOptions *getEnumOptions(int_t i);
 

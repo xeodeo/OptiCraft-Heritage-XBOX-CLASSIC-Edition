@@ -13,6 +13,7 @@
 #include "Tessellator.h"
 #include "World.h"
 #include "platform/PlatformTuning.h"
+#include "PocketOptimizations.h"
 #if PLATFORM_PS2
 #include "ps2/diagnostics/Ps2OptimizationValidation.h"
 #endif
@@ -38,18 +39,24 @@ void EffectRenderer::addEffect(EntityFX *entityfx)
 	if (entityfx == nullptr)
 		return;
     int_t i = entityfx->getFXLayer();
-    if ((int_t)fxLayers[i].size() >= PLATFORM_MAX_PARTICLES_PER_LAYER)
+    const int_t particleCap = PocketOptimizations::enabled()
+        ? PocketOptimizations::maxParticlesPerLayer(PLATFORM_MAX_PARTICLES_PER_LAYER)
+        : PLATFORM_MAX_PARTICLES_PER_LAYER;
+    if ((int_t)fxLayers[i].size() >= particleCap)
     {
 #ifdef PS2_OPTIMIZATION_VALIDATION
         Ps2OptimizationValidation::particleLayerCapEviction();
 #endif
-        const int_t cap = PLATFORM_MAX_PARTICLES_PER_LAYER;
-        int_t &cursor = fxEvictCursor[i];
-        if (cursor < 0 || cursor >= cap)
-            cursor = 0;
-        fxLayers[i][cursor].reset(entityfx);
-        cursor = (cursor + 1) % cap;
-        return;
+        const int_t count = static_cast<int_t>(fxLayers[i].size());
+        if (count > 0)
+        {
+            int_t &cursor = fxEvictCursor[i];
+            if (cursor < 0 || cursor >= count)
+                cursor = 0;
+            fxLayers[i][cursor].reset(entityfx);
+            cursor = (cursor + 1) % count;
+            return;
+        }
     }
 	fxLayers[i].emplace_back(entityfx);
 }
@@ -99,6 +106,10 @@ void EffectRenderer::renderParticles(Entity *entity, float_t f)
     EntityFX::interpPosY = entity->lastTickPosY + (entity->posY - entity->lastTickPosY) * (double)f;
     EntityFX::interpPosZ = entity->lastTickPosZ + (entity->posZ - entity->lastTickPosZ) * (double)f;
 
+    const bool pocketCull = PocketOptimizations::enabled();
+    const float pocketDistance = PocketOptimizations::particleRenderDistance();
+    const double pocketDistanceSq = static_cast<double>(pocketDistance * pocketDistance);
+
     for (int i = 0; i < 3; i++)
     {
         if (fxLayers[i].empty())
@@ -118,6 +129,14 @@ void EffectRenderer::renderParticles(Entity *entity, float_t f)
         for (int k = 0; k < (int)fxLayers[i].size(); k++)
         {
 			EntityFX *entityfx = fxLayers[i][k].get();
+            if (pocketCull)
+            {
+                const double dx = entityfx->posX - entity->posX;
+                const double dy = entityfx->posY - entity->posY;
+                const double dz = entityfx->posZ - entity->posZ;
+                if (dx * dx + dy * dy + dz * dz > pocketDistanceSq)
+                    continue;
+            }
             tessellator->setBrightness(entityfx->getBrightnessForRender(f));
             entityfx->renderParticle(tessellator, f, f1, f5, f2, f3, f4);
         }
@@ -137,10 +156,22 @@ void EffectRenderer::renderLitParticles(Entity *entity, float_t f)
     if (fxLayers[layer].empty())
         return;
 
+    const bool pocketCull = PocketOptimizations::enabled();
+    const float pocketDistance = PocketOptimizations::particleRenderDistance();
+    const double pocketDistanceSq = static_cast<double>(pocketDistance * pocketDistance);
+
     Tessellator *tessellator = &Tessellator::instance;
     for (int i = 0; i < (int)fxLayers[layer].size(); i++)
     {
 		EntityFX *entityfx = fxLayers[layer][i].get();
+        if (pocketCull)
+        {
+            const double dx = entityfx->posX - entity->posX;
+            const double dy = entityfx->posY - entity->posY;
+            const double dz = entityfx->posZ - entity->posZ;
+            if (dx * dx + dy * dy + dz * dz > pocketDistanceSq)
+                continue;
+        }
         tessellator->setBrightness(entityfx->getBrightnessForRender(f));
         entityfx->renderParticle(tessellator, f, f1, f5, f2, f3, f4);
     }
@@ -165,7 +196,9 @@ void EffectRenderer::addBlockDestroyEffects(int_t i, int_t j, int_t k, int_t l, 
     if (block == nullptr)
         return;
 
-    int_t j1 = PLATFORM_BLOCK_DESTROY_PARTICLE_GRID;
+    int_t j1 = PocketOptimizations::enabled()
+        ? PocketOptimizations::blockDestroyParticleGrid(PLATFORM_BLOCK_DESTROY_PARTICLE_GRID)
+        : PLATFORM_BLOCK_DESTROY_PARTICLE_GRID;
 
     for (int k1 = 0; k1 < j1; k1++)
     {

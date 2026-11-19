@@ -242,6 +242,7 @@ std::string StringTranslate::translateUi(const std::string &english)
         if (english == "Sneak: Hold") return "Agacharse: mantener";
         if (english == "Sneak: Toggle") return "Agacharse: alternar";
         if (english == "Opaque Ice") return "Hielo opaco";
+        if (english == "Pocket Optimizations") return "Optimizaciones Pocket";
     }
     return english;
 }
