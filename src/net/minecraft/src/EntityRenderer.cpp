@@ -1598,6 +1598,7 @@ void EntityRenderer::updateCameraAndRender(float partialTicks)
 void EntityRenderer::renderSplitScreen(float partialTicks, int64_t renderTimeLimitNano)
 {
     EntityPlayerSP *entryPlayer = mc->thePlayer;
+    EntityLiving *entryViewEntity = mc->renderViewEntity;
     EntityPlayerSP *p1 = mc->thePlayerOne ? mc->thePlayerOne : mc->thePlayer;
     EntityPlayerSP *p2 = mc->thePlayer2;
     if (p1 == nullptr || p2 == nullptr)
@@ -1709,7 +1710,7 @@ void EntityRenderer::renderSplitScreen(float partialTicks, int64_t renderTimeLim
     mc->displayWidth = fullW;
     mc->displayHeight = fullH;
     mc->thePlayer = entryPlayer;
-    mc->renderViewEntity = p1;
+    mc->renderViewEntity = entryViewEntity;
     mc->objectMouseOver = hr1;
 
     renderViewport(0, 0, fullW, fullH);

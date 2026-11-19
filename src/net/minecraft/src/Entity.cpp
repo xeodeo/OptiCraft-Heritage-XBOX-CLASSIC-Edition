@@ -46,6 +46,7 @@ namespace
 #endif
 	}
 
+#if !PLATFORM_PS2 && !PLATFORM_XBOX
 	inline bool chunkMissingForStreaming(World *world, int_t chunkX, int_t chunkZ)
 	{
 		if (world != nullptr && world->isLimitedWorld() &&
@@ -60,6 +61,7 @@ namespace
 		Chunk *chunk = world != nullptr ? world->getChunkIfExists(chunkX, chunkZ) : nullptr;
 		return chunk == nullptr || chunk->isEmptyChunk();
 	}
+#endif
 
 #if PLATFORM_FLOAT_COLLISION_SWEEP
 	// Float mirror of the entity's bounding box in the sweep's local frame.
@@ -658,6 +660,7 @@ void Entity::moveEntity(double d, double d1, double d2)
 				motionY = 0.0;
 			}
 		}
+#if !PLATFORM_PS2 && !PLATFORM_XBOX
 		else
 		{
 			const int_t nextChunkX = MathHelper::floor_double(posX + d) >> 4;
@@ -678,6 +681,7 @@ void Entity::moveEntity(double d, double d1, double d2)
 				}
 			}
 		}
+#endif
 	}
 	AxisAlignedBB *axisalignedbb = boundingBox->copy();
 	bool flag = onGround && isSneaking() && isPlayer();
