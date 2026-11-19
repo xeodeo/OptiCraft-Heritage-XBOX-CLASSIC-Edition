@@ -2992,17 +2992,39 @@ void EntityRenderer::setupFog(int fogMode, float partialTicks)
 
         if (mc->theWorld->worldProvider->func_48218_b((int_t)entityliving->posX, (int_t)entityliving->posZ))
         {
-            fogStart = effectiveFar * 0.05f;
 #if PLATFORM_XBOX
-            // OptiFine: the Nether fog reaches the whole render distance. Vanilla stops at half of it,
-            // which with the console distances put a thick red wall right in front of the player.
-            fogEnd = effectiveFar;
+            // On Xbox, render distance is 32..128 (default Short = 64). Vanilla's 0.05*far
+            // started fog 1.6..6.4 blocks from the camera (a red wall right in front of the
+            // player's face). Scale fogStart from OptiFine's Fog Start (0.2..0.8, default 0.8)
+            // with a clear near floor so Short (64) gives ~23..64 blocks and Normal (128)
+            // gives ~46..128 blocks, matching Java Far's mid-distance density while smoothly
+            // hiding chunk edges.
+            if (fogMode >= 0)
+            {
+                fogEnd = effectiveFar;
+                const float fogStartOpt = Config::getFogStart();
+                const float minClear = 12.0f * (fogStartOpt / 0.8f);
+                const float scaledStart = fogEnd * (0.45f * fogStartOpt);
+                fogStart = std::max(minClear, scaledStart);
+                if (fogStart > fogEnd * 0.65f)
+                    fogStart = fogEnd * 0.65f;
+            }
+            else
+            {
+                fogStart = 0.0f;
+                fogEnd = effectiveFar * 0.8f;
+            }
 #else
+            fogStart = effectiveFar * 0.05f;
             fogEnd = std::min(effectiveFar, 192.0f) * 0.5f;
 #endif
         }
 
+#if PLATFORM_XBOX
+        if (Config::isFogOff() && fogMode >= 0)
+#else
         if (Config::isFogOff() && fogMode >= 0 && !mc->theWorld->worldProvider->isNether)
+#endif
         {
             fogStart = effectiveFar * 4.0f;
             fogEnd = effectiveFar * 8.0f;
