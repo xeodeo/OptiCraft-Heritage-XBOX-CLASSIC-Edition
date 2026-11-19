@@ -56,7 +56,11 @@ apps/OptiCraft/
 
 ### Original Xbox
 
-<p align="center"><img src="scripts/xbox/media/cover.png" alt="OptiCraft by xeodeo — Xbox" width="256"></p>
+<p align="center">
+  <img src="scripts/xbox/media/xbox-cover-front.png" alt="Xbox cover, front" width="360">
+  <img src="scripts/xbox/media/xbox-cover-back.png" alt="Xbox cover, back" width="360">
+</p>
+<p align="center"><sub>Cover art (front and back) made by <a href="https://www.reddit.com/user/SuperNitro58/">u/SuperNitro58</a> on Reddit. Thank you!</sub></p>
 
 The Xbox build targets the retail console (733 MHz Pentium III, 64 MB, NV2A) and runs both on hardware and in [xemu](https://xemu.app). It is compiled with Visual Studio 2022 (C++17, `/arch:SSE`) and linked against the Xbox Development Kit (XDK 5849).
 
