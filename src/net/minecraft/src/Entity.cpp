@@ -603,7 +603,8 @@ void Entity::moveEntity(double d, double d1, double d2)
 		posX = (boundingBox->minX + boundingBox->maxX) / 2.0;
 		posY = (boundingBox->minY + (double)yOffset) - (double)ySize;
 		posZ = (boundingBox->minZ + boundingBox->maxZ) / 2.0;
-		if (worldObj != nullptr && worldObj->isLimitedWorld())
+		if (worldObj != nullptr && worldObj->isLimitedWorld() &&
+		    (worldObj->worldProvider == nullptr || worldObj->worldProvider->worldType == 0))
 		{
 			const double boundary = worldObj->getWorldInfo() != nullptr ? worldObj->getWorldInfo()->getLimitedWorldBoundary() : 127.5;
 			double clampedX = posX;
@@ -870,7 +871,8 @@ void Entity::moveEntity(double d, double d1, double d2)
 	posX = (boundingBox->minX + boundingBox->maxX) / 2.0;
 	posY = (boundingBox->minY + (double)yOffset) - (double)ySize;
 	posZ = (boundingBox->minZ + boundingBox->maxZ) / 2.0;
-	if (worldObj != nullptr && worldObj->isLimitedWorld())
+	if (worldObj != nullptr && worldObj->isLimitedWorld() &&
+	    (worldObj->worldProvider == nullptr || worldObj->worldProvider->worldType == 0))
 	{
 		const double boundary = worldObj->getWorldInfo() != nullptr ? worldObj->getWorldInfo()->getLimitedWorldBoundary() : 127.5;
 		double clampedX = posX;
