@@ -3118,7 +3118,8 @@ void RenderGlobal::markRenderersInRange(int_t i, int_t j, int_t k, int_t l, int_
 				// light-only mark always coalesces.
 				enqueueRendererUpdatePriority(worldrenderer);
 				const bool playerEdit = worldObj != nullptr && worldObj->isMarkingFromPlayerEdit();
-				if (worldObj != nullptr && (worldObj->isMarkingFromLighting() || !playerEdit))
+				const bool pistonCascade = worldObj != nullptr && worldObj->isMarkingFromPiston();
+				if (worldObj != nullptr && (worldObj->isMarkingFromLighting() || pistonCascade || !playerEdit))
 				{
 					// Lighting and server/world-driven mutations may arrive repeatedly while
 					// a section is already being built (flowing water is the common case).
