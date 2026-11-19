@@ -876,6 +876,10 @@ void WorldClient::applyNetworkPosition(Entity *entity, double x, double y, doubl
 
 bool WorldClient::entityJoinedWorld(Entity *entity)
 {
+	// False means "this world adopted nothing" (same as Java), so spawn-or-free
+	// callers (fireballs, arrows, item drops) can safely delete the entity when
+	// its column is missing. Only pre-registered network spawns (added to
+	// knownEntities by addEntityToWorld before calling here) park for retry.
 #if PLATFORM_PS2
 	if (entity == nullptr || entity->isDead)
 		return false;
@@ -884,15 +888,21 @@ bool WorldClient::entityJoinedWorld(Entity *entity)
 	if (!isActiveClientEntity(entity) && !chunkExists(
 		MathHelper::floor_double(entity->posX / 16.0), MathHelper::floor_double(entity->posZ / 16.0)))
 	{
-		knownEntities.add(entity);
+		if (!knownEntities.contains(entity))
+			return false; // client-side spawn-or-free: unowned, caller frees
 		entitySpawnQueue.add(entity);
-		return false;
+		return true;      // network spawn: adopted, parked until the column arrives
 	}
 #endif
-	bool added = World::entityJoinedWorld(entity);
-	knownEntities.add(entity);
-	if (!added) entitySpawnQueue.add(entity);
-	return added;
+	if (entity == nullptr)
+		return false;
+	const bool preRegistered = knownEntities.contains(entity);
+	const bool added = World::entityJoinedWorld(entity);
+	if (added)
+		knownEntities.add(entity);
+	else if (preRegistered)
+		entitySpawnQueue.add(entity);
+	return added || preRegistered;
 }
 
 void WorldClient::setEntityDead(Entity *entity)
