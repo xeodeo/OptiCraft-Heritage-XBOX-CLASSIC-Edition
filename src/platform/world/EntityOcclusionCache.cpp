@@ -16,6 +16,9 @@ namespace
 {
 constexpr double kMinCullDistanceSq = 6.25;
 constexpr double kMaxCullAabbSize = 4.0;
+// Only hide things well below the camera (mobs and chests in caves while the
+// player is on the surface): hiding a cow behind a hill made it pop in and out.
+constexpr double kMinBelowCameraBlocks = 6.0;
 constexpr std::size_t kMinEntriesBeforePurge = 128;
 constexpr std::uint32_t kPurgeInterval = 600;
 
@@ -211,6 +214,8 @@ bool EntityOcclusionCache::isEntityOccluded(World *world, Entity *entity,
 	const double distanceSq = dx * dx + dy * dy + dz * dz;
 	if (distanceSq < kMinCullDistanceSq)
 		return false;
+	if (dy > -kMinBelowCameraBlocks)
+		return false;
 
 	return occludedWithCache(world, static_cast<std::uint64_t>(
 		static_cast<std::int64_t>(entity->entityId)),
@@ -231,6 +236,8 @@ bool EntityOcclusionCache::isTileEntityOccluded(World *world, int_t blockX, int_
 	const double dz = centerZ - cameraZ;
 	const double distanceSq = dx * dx + dy * dy + dz * dz;
 	if (distanceSq < kMinCullDistanceSq)
+		return false;
+	if (dy > -kMinBelowCameraBlocks)
 		return false;
 
 	return occludedWithCache(world, tileEntityKey(blockX, blockY, blockZ),
