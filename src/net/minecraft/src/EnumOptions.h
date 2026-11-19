@@ -88,6 +88,8 @@ public:
 	static EnumOptions *OPAQUE_ICE;
 	static EnumOptions *POCKET_OPTIMIZATIONS;
 	static EnumOptions *HUD_SAFE_AREA;
+	static EnumOptions *SHOW_COORDINATES;
+	static EnumOptions *FULLBRIGHT;
 
 	static EnumOptions *getEnumOptions(int_t i);
 

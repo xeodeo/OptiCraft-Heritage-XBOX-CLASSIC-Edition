@@ -60,14 +60,14 @@ void GuiVideoSettings::initGui()
 	}
 	// --- OptiFine: sub-screen buttons, continuing the same 21px grid (nj.java) ---
 	int_t y = height / 6 + 21 * ((i + 1) / 2) - 10;
-	controlList.push_back(new GuiSmallButton(100, width / 2 - 155,       y, "Animations..."));
-	controlList.push_back(new GuiSmallButton(101, width / 2 - 155 + 160, y, "Details..."));
+	controlList.push_back(new GuiSmallButton(100, width / 2 - 155,       y, uiText("Animations...")));
+	controlList.push_back(new GuiSmallButton(101, width / 2 - 155 + 160, y, uiText("Details...")));
 	y += 21;
-	controlList.push_back(new GuiSmallButton(105, width / 2 - 155,       y, "Quality..."));
-	controlList.push_back(new GuiSmallButton(104, width / 2 - 155 + 160, y, "Performance..."));
+	controlList.push_back(new GuiSmallButton(105, width / 2 - 155,       y, uiText("Quality...")));
+	controlList.push_back(new GuiSmallButton(104, width / 2 - 155 + 160, y, uiText("Performance...")));
 	y += 21;
 	controlList.push_back(new GuiSmallButton(102, width / 2 - 155,       y, uiText("Texture Packs...")));
-	controlList.push_back(new GuiSmallButton(103, width / 2 - 155 + 160, y, "Other..."));
+	controlList.push_back(new GuiSmallButton(103, width / 2 - 155 + 160, y, uiText("Other...")));
 	controlList.push_back(new GuiButton(200, width / 2 - 100, height / 6 + 168 + 11, tr->translateKey("gui.done")));
 }
 

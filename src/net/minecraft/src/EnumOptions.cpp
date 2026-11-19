@@ -45,6 +45,8 @@ EnumOptions *EnumOptions::SPLITSCREEN_LAYOUT = new EnumOptions(74, "options.spli
 EnumOptions *EnumOptions::OPAQUE_ICE = new EnumOptions(75, "Opaque Ice", false, false);
 EnumOptions *EnumOptions::POCKET_OPTIMIZATIONS = new EnumOptions(76, "Pocket Optimizations", false, false);
 EnumOptions *EnumOptions::HUD_SAFE_AREA = new EnumOptions(77, "Safe Area", true, false);
+EnumOptions *EnumOptions::SHOW_COORDINATES = new EnumOptions(78, "Show Coordinates", false, false);
+EnumOptions *EnumOptions::FULLBRIGHT = new EnumOptions(79, "Fullbright", false, false);
 
 // --- OptiFine ---
 // Ordinales secuenciales por orden de declaracion (ht::c() == ordinal()).
@@ -109,7 +111,7 @@ static EnumOptions *s_allOptions[] = {
 	EnumOptions::MIPMAP_LEVEL, EnumOptions::MIPMAP_TYPE, EnumOptions::CUSTOM_FONTS,
 	EnumOptions::AA_LEVEL, EnumOptions::AF_LEVEL, EnumOptions::RENDER_DISTANCE_FINE, EnumOptions::RENDER_BACKEND,
 	EnumOptions::SPLITSCREEN_LAYOUT, EnumOptions::OPAQUE_ICE, EnumOptions::POCKET_OPTIMIZATIONS,
-	EnumOptions::HUD_SAFE_AREA
+	EnumOptions::HUD_SAFE_AREA, EnumOptions::SHOW_COORDINATES, EnumOptions::FULLBRIGHT
 };
 
 EnumOptions *EnumOptions::getEnumOptions(int_t i)

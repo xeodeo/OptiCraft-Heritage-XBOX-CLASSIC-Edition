@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "LegacyAdvancedVideoOptions.h"
 #include "LegacyGuiButton.h"
 #include "LegacyOptionCheckbox.h"
 #include "LegacyOptionSlider.h"
@@ -32,9 +33,10 @@ enum LegacyVideoButtonId
     BUTTON_FRAME_CAP = 308,
     BUTTON_COORDINATES = 309,
     BUTTON_FULLBRIGHT = 310,
-    BUTTON_OPAQUE_ICE = 311,
-    BUTTON_POCKET_OPTIMIZATIONS = 312,
-    BUTTON_SAFE_AREA = 313,
+    BUTTON_ADVANCED = 311,
+    BUTTON_SAFE_AREA = 312,
+    BUTTON_OPAQUE_ICE = 313,
+    BUTTON_POCKET_OPTIMIZATIONS = 314,
     BUTTON_PREV_PAGE = 397,
     BUTTON_NEXT_PAGE = 398,
     BUTTON_DONE = 399
@@ -73,8 +75,17 @@ void LegacyVideoOptions::rebuildControls()
     safeAreaSlider = nullptr;
 
     std::vector<int_t> items;
+    // Page 1 keeps the primary display/performance options easy to reach in both 480p and 720p.
     items.push_back(BUTTON_GRAPHICS);
     items.push_back(BUTTON_SMOOTH_LIGHTING);
+    items.push_back(BUTTON_RENDER_DISTANCE);
+    items.push_back(BUTTON_BRIGHTNESS);
+#if !(PLATFORM_PS2 || PLATFORM_WII)
+    items.push_back(BUTTON_SAFE_AREA);
+    items.push_back(BUTTON_POCKET_OPTIMIZATIONS);
+    items.push_back(BUTTON_OPAQUE_ICE);
+#endif
+    items.push_back(BUTTON_ADVANCED);
     items.push_back(BUTTON_VIEW_BOBBING);
 #if !(PLATFORM_PS2 || PLATFORM_WII)
     items.push_back(BUTTON_CLOUDS);
@@ -87,15 +98,6 @@ void LegacyVideoOptions::rebuildControls()
     items.push_back(BUTTON_FRAME_CAP);
     items.push_back(BUTTON_COORDINATES);
     items.push_back(BUTTON_FULLBRIGHT);
-#endif
-#if !(PLATFORM_PS2 || PLATFORM_WII)
-    items.push_back(BUTTON_OPAQUE_ICE);
-    items.push_back(BUTTON_POCKET_OPTIMIZATIONS);
-#endif
-    items.push_back(BUTTON_RENDER_DISTANCE);
-    items.push_back(BUTTON_BRIGHTNESS);
-#if !(PLATFORM_PS2 || PLATFORM_WII)
-    items.push_back(BUTTON_SAFE_AREA);
 #endif
 
     const int_t totalItems = static_cast<int_t>(items.size());
@@ -191,6 +193,9 @@ void LegacyVideoOptions::rebuildControls()
             safeAreaSlider = new LegacyOptionSlider(BUTTON_SAFE_AREA, x, y, w, h,
                 settings, EnumOptions::HUD_SAFE_AREA);
             controlList.push_back(safeAreaSlider);
+            break;
+        case BUTTON_ADVANCED:
+            controlList.push_back(new LegacyGuiButton(BUTTON_ADVANCED, x, y, w, h, uiText("Advanced...")));
             break;
         default:
             break;
@@ -298,6 +303,9 @@ void LegacyVideoOptions::actionPerformed(GuiButton *button)
     case BUTTON_POCKET_OPTIMIZATIONS:
         settings->setOptionValue(EnumOptions::POCKET_OPTIMIZATIONS, 1);
         syncCheckboxes();
+        return;
+    case BUTTON_ADVANCED:
+        mc->displayGuiScreen(new LegacyAdvancedVideoOptions(this, settings, backgroundMode));
         return;
     case BUTTON_PREV_PAGE:
         if (page > 0)
