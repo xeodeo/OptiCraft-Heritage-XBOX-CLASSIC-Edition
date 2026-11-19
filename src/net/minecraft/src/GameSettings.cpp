@@ -28,6 +28,10 @@
 #include "ExtendedBlockStorage.h"
 #include "platform/ConsoleAspectRatio.h"
 #include "platform/GameDefaults.h"
+#include "platform/PlatformConfig.h"
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
+#include "pc/render/PcLegacyBlockRenderInfo.h"
+#endif
 #include "platform/GameSettingsBackend.h"
 #include "platform/PlatformKeyBindings.h"
 #include "platform/PlatformTuning.h"
@@ -203,6 +207,7 @@ void GameSettings::setDefaults()
     ofDepthFog = true;
     ofProfiler = false;
     ofBetterSnow = false;
+    ofOpaqueIce = false;
     ofSwampColors = true;
     ofSmoothBiomes = true;
     ofRandomMobs = PLATFORM_OPTIFINE_RANDOM_MOBS != 0;
@@ -328,6 +333,9 @@ void GameSettings::reloadChunkRenderers()
 
 void GameSettings::invalidateChunkMeshes()
 {
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
+    pcLegacyInvalidateBlockRenderInfo();
+#endif
     if (mc == nullptr || mc->renderGlobal == nullptr)
         return;
     Block::leaves->setGraphicsLevel(Config::isTreesFancy());
@@ -799,6 +807,11 @@ void GameSettings::setOptionValue(const EnumOptions *enumoptions, int_t i)
         ofBetterSnow = !ofBetterSnow;
         invalidateChunkMeshes();
     }
+    if (enumoptions == EnumOptions::OPAQUE_ICE)
+    {
+        ofOpaqueIce = !ofOpaqueIce;
+        invalidateChunkMeshes();
+    }
     if (enumoptions == EnumOptions::SWAMP_COLORS)
     {
         ofSwampColors = !ofSwampColors;
@@ -1163,6 +1176,8 @@ std::string GameSettings::getKeyBinding(const EnumOptions *enumoptions)
         return s + (ofProfiler ? uiText("ON") : uiText("OFF"));
     if (enumoptions == EnumOptions::BETTER_SNOW)
         return s + (ofBetterSnow ? uiText("ON") : uiText("OFF"));
+    if (enumoptions == EnumOptions::OPAQUE_ICE)
+        return s + (ofOpaqueIce ? uiText("ON") : uiText("OFF"));
     if (enumoptions == EnumOptions::SWAMP_COLORS)
         return s + (ofSwampColors ? uiText("ON") : uiText("OFF"));
     if (enumoptions == EnumOptions::SMOOTH_BIOMES)

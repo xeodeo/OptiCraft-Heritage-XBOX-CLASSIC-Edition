@@ -119,6 +119,7 @@ public:
 	static bool isDepthFog();
 	static bool isProfilerEnabled();
 	static bool isBetterSnow();
+	static bool isOpaqueIce();
 	static bool isSwampColors();
 	static bool isSmoothBiomes();
 	static bool isRandomMobs();

@@ -41,7 +41,9 @@ namespace
                 const int_t renderPass = block->getRenderBlockPass();
                 info.renderType = static_cast<std::int8_t>(renderType);
                 info.renderPass = static_cast<std::uint8_t>(renderPass > 0 ? 1 : 0);
-                info.opaqueCube = Block::opaqueCubeLookup[id];
+                info.opaqueCube = Block::staticOpaqueCubeLookupSafe[id]
+                    ? Block::opaqueCubeLookup[id]
+                    : block->isOpaqueCube();
                 info.normalCube = block->blockMaterial != nullptr &&
                     block->blockMaterial->getIsSolid() && block->renderAsNormalBlock();
                 info.simpleOpaqueCube = renderType == 0 && renderPass == 0 &&
@@ -74,6 +76,11 @@ const PcLegacyBlockRenderInfo &pcLegacyGetBlockRenderInfo(int_t blockId)
         return emptyInfo;
     buildRenderInfo();
     return s_renderInfo[static_cast<std::size_t>(blockId)];
+}
+
+void pcLegacyInvalidateBlockRenderInfo()
+{
+    s_renderInfoReady = false;
 }
 
 #endif

@@ -508,6 +508,11 @@ bool Config::isBetterSnow()
 	return gameSettings != nullptr && gameSettings->ofBetterSnow;
 }
 
+bool Config::isOpaqueIce()
+{
+	return gameSettings != nullptr && gameSettings->ofOpaqueIce;
+}
+
 bool Config::isSwampColors()
 {
 	return gameSettings == nullptr || gameSettings->ofSwampColors;

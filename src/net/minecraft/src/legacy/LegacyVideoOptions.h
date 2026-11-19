@@ -18,6 +18,7 @@ protected:
     void actionPerformed(GuiButton *button) override;
 
 private:
+    void rebuildControls();
     void syncCheckboxes();
 
     LegacyOptionCheckbox *graphicsCheckbox;
@@ -31,4 +32,6 @@ private:
     LegacyOptionCheckbox *frameCapCheckbox;
     LegacyOptionCheckbox *coordinatesCheckbox;
     LegacyOptionCheckbox *fullbrightCheckbox;
+    LegacyOptionCheckbox *opaqueIceCheckbox;
+    int_t page;
 };

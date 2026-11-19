@@ -21,5 +21,6 @@ struct PcLegacyBlockRenderInfo
 };
 
 const PcLegacyBlockRenderInfo &pcLegacyGetBlockRenderInfo(int_t blockId);
+void pcLegacyInvalidateBlockRenderInfo();
 
 #endif

@@ -1,6 +1,9 @@
 #include "net/minecraft/src/UiStrings.h"
 #include "LegacyVideoOptions.h"
 
+#include <algorithm>
+#include <vector>
+
 #include "LegacyGuiButton.h"
 #include "LegacyOptionCheckbox.h"
 #include "LegacyOptionSlider.h"
@@ -28,6 +31,9 @@ enum LegacyVideoButtonId
     BUTTON_FRAME_CAP = 308,
     BUTTON_COORDINATES = 309,
     BUTTON_FULLBRIGHT = 310,
+    BUTTON_OPAQUE_ICE = 311,
+    BUTTON_PREV_PAGE = 397,
+    BUTTON_NEXT_PAGE = 398,
     BUTTON_DONE = 399
 };
 
@@ -37,91 +43,166 @@ LegacyVideoOptions::LegacyVideoOptions(GuiScreen *parent, GameSettings *settings
     LegacyOptionsBackgroundMode backgroundModeValue)
     : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), graphicsCheckbox(nullptr), smoothLightingCheckbox(nullptr),
       viewBobbingCheckbox(nullptr), cloudsCheckbox(nullptr), fogCheckbox(nullptr), deflickerCheckbox(nullptr),
-      frameCapCheckbox(nullptr), coordinatesCheckbox(nullptr), fullbrightCheckbox(nullptr)
+      frameCapCheckbox(nullptr), coordinatesCheckbox(nullptr), fullbrightCheckbox(nullptr),
+      opaqueIceCheckbox(nullptr), page(0)
 {
 }
 
 void LegacyVideoOptions::initGui()
 {
-#if PLATFORM_WII
-    const int_t rowCount = 7;
-#elif PLATFORM_PS2
-    const int_t rowCount = 6;
-#elif PLATFORM_XBOX
-    const int_t rowCount = 11;
-#else
-    const int_t rowCount = 8;
+    rebuildControls();
+}
+
+void LegacyVideoOptions::rebuildControls()
+{
+    clearControlList();
+    graphicsCheckbox = nullptr;
+    smoothLightingCheckbox = nullptr;
+    viewBobbingCheckbox = nullptr;
+    cloudsCheckbox = nullptr;
+    fogCheckbox = nullptr;
+    deflickerCheckbox = nullptr;
+    frameCapCheckbox = nullptr;
+    coordinatesCheckbox = nullptr;
+    fullbrightCheckbox = nullptr;
+    opaqueIceCheckbox = nullptr;
+
+    std::vector<int_t> items;
+    items.push_back(BUTTON_GRAPHICS);
+    items.push_back(BUTTON_SMOOTH_LIGHTING);
+    items.push_back(BUTTON_VIEW_BOBBING);
+#if !(PLATFORM_PS2 || PLATFORM_WII)
+    items.push_back(BUTTON_CLOUDS);
+    items.push_back(BUTTON_FOG);
 #endif
+#if PLATFORM_WII
+    items.push_back(BUTTON_DEFLICKER);
+#endif
+#if PLATFORM_XBOX
+    items.push_back(BUTTON_FRAME_CAP);
+    items.push_back(BUTTON_COORDINATES);
+    items.push_back(BUTTON_FULLBRIGHT);
+#endif
+#if !(PLATFORM_PS2 || PLATFORM_WII)
+    items.push_back(BUTTON_OPAQUE_ICE);
+#endif
+    items.push_back(BUTTON_RENDER_DISTANCE);
+    items.push_back(BUTTON_BRIGHTNESS);
+
+    const int_t totalItems = static_cast<int_t>(items.size());
+    const int_t maxRows = legacyOptionsMaxRows(width, height, LegacyOptionsLayoutPreset::Compact);
+    const bool paginated = totalItems + 1 > maxRows;
+    const int_t rowsPerPage = paginated ? std::max<int_t>(1, maxRows - 2) : totalItems;
+    const int_t pageCount = std::max<int_t>(1, (totalItems + rowsPerPage - 1) / rowsPerPage);
+    if (page < 0)
+        page = 0;
+    if (page >= pageCount)
+        page = pageCount - 1;
+
+    const int_t startIndex = page * rowsPerPage;
+    const int_t endIndex = std::min<int_t>(totalItems, startIndex + rowsPerPage);
+    const int_t visibleItems = endIndex - startIndex;
+    const int_t rowCount = paginated ? (visibleItems + 2) : (visibleItems + 1);
+
     configureLegacyLayout(rowCount, true, LegacyOptionsLayoutPreset::Compact);
     const int_t x = legacyLayout.contentX;
     const int_t w = legacyLayout.contentWidth;
     const int_t h = legacyLayout.rowHeight;
     int_t row = 0;
 
-    graphicsCheckbox = new LegacyOptionCheckbox(BUTTON_GRAPHICS, x, legacyLayout.rowY(row++), w, h,
-        uiText("Fancy Graphics"), settings->fancyGraphics);
-    smoothLightingCheckbox = new LegacyOptionCheckbox(BUTTON_SMOOTH_LIGHTING, x, legacyLayout.rowY(row++), w, h,
-        uiText("Smooth Lighting"), legacySmoothLightingChecked(settings->ofAoLevel));
-    viewBobbingCheckbox = new LegacyOptionCheckbox(BUTTON_VIEW_BOBBING, x, legacyLayout.rowY(row++), w, h,
-        uiText("View Bobbing"), settings->viewBobbing);
+    for (int_t i = startIndex; i < endIndex; ++i)
+    {
+        const int_t y = legacyLayout.rowY(row++);
+        switch (items[static_cast<std::size_t>(i)])
+        {
+        case BUTTON_GRAPHICS:
+            graphicsCheckbox = new LegacyOptionCheckbox(BUTTON_GRAPHICS, x, y, w, h,
+                uiText("Fancy Graphics"), settings->fancyGraphics);
+            controlList.push_back(graphicsCheckbox);
+            break;
+        case BUTTON_SMOOTH_LIGHTING:
+            smoothLightingCheckbox = new LegacyOptionCheckbox(BUTTON_SMOOTH_LIGHTING, x, y, w, h,
+                uiText("Smooth Lighting"), legacySmoothLightingChecked(settings->ofAoLevel));
+            controlList.push_back(smoothLightingCheckbox);
+            break;
+        case BUTTON_VIEW_BOBBING:
+            viewBobbingCheckbox = new LegacyOptionCheckbox(BUTTON_VIEW_BOBBING, x, y, w, h,
+                uiText("View Bobbing"), settings->viewBobbing);
+            controlList.push_back(viewBobbingCheckbox);
+            break;
+        case BUTTON_CLOUDS:
+            cloudsCheckbox = new LegacyOptionCheckbox(BUTTON_CLOUDS, x, y, w, h,
+                uiText("Render Clouds"), legacyCloudsChecked(settings->ofClouds));
+            controlList.push_back(cloudsCheckbox);
+            break;
+        case BUTTON_FOG:
+            fogCheckbox = new LegacyOptionCheckbox(BUTTON_FOG, x, y, w, h,
+                uiText("Fog"), legacyFogChecked(settings->ofFogOff));
+            controlList.push_back(fogCheckbox);
+            break;
+        case BUTTON_DEFLICKER:
+            deflickerCheckbox = new LegacyOptionCheckbox(BUTTON_DEFLICKER, x, y, w, h,
+                uiText("Deflicker Filter"), settings->wiiDeflicker);
+            controlList.push_back(deflickerCheckbox);
+            break;
+        case BUTTON_FRAME_CAP:
+            frameCapCheckbox = new LegacyOptionCheckbox(BUTTON_FRAME_CAP, x, y, w, h,
+                uiText("30 FPS Limit"), settings->limitFramerate == 2);
+            controlList.push_back(frameCapCheckbox);
+            break;
+        case BUTTON_COORDINATES:
+            coordinatesCheckbox = new LegacyOptionCheckbox(BUTTON_COORDINATES, x, y, w, h,
+                uiText("Show Coordinates"), settings->showCoordinates);
+            controlList.push_back(coordinatesCheckbox);
+            break;
+        case BUTTON_FULLBRIGHT:
+            fullbrightCheckbox = new LegacyOptionCheckbox(BUTTON_FULLBRIGHT, x, y, w, h,
+                uiText("Fullbright"), settings->fullbright);
+            controlList.push_back(fullbrightCheckbox);
+            break;
+        case BUTTON_OPAQUE_ICE:
+            opaqueIceCheckbox = new LegacyOptionCheckbox(BUTTON_OPAQUE_ICE, x, y, w, h,
+                uiText("Opaque Ice"), settings->ofOpaqueIce);
+            controlList.push_back(opaqueIceCheckbox);
+            break;
+        case BUTTON_RENDER_DISTANCE:
+            controlList.push_back(new LegacyOptionSlider(BUTTON_RENDER_DISTANCE, x, y, w, h,
+                settings, EnumOptions::RENDER_DISTANCE_FINE));
+            break;
+        case BUTTON_BRIGHTNESS:
+            controlList.push_back(new LegacyOptionSlider(BUTTON_BRIGHTNESS, x, y, w, h,
+                settings, EnumOptions::BRIGHTNESS));
+            break;
+        default:
+            break;
+        }
+    }
 
-    controlList.push_back(graphicsCheckbox);
-    controlList.push_back(smoothLightingCheckbox);
-    controlList.push_back(viewBobbingCheckbox);
+    if (paginated)
+    {
+        const int_t navY = legacyLayout.rowY(row++);
+        const int_t gap = 2;
+        const int_t halfW = (w - gap) / 2;
+        LegacyGuiButton *prevBtn = new LegacyGuiButton(BUTTON_PREV_PAGE, x, navY, halfW, h, uiText("Previous"));
+        LegacyGuiButton *nextBtn = new LegacyGuiButton(BUTTON_NEXT_PAGE, x + halfW + gap, navY, w - halfW - gap, h, uiText("Next"));
+        prevBtn->enabled = page > 0;
+        nextBtn->enabled = page + 1 < pageCount;
+        controlList.push_back(prevBtn);
+        controlList.push_back(nextBtn);
+    }
 
-#if !(PLATFORM_PS2 || PLATFORM_WII)
-    cloudsCheckbox = new LegacyOptionCheckbox(BUTTON_CLOUDS, x, legacyLayout.rowY(row++), w, h,
-        uiText("Render Clouds"), legacyCloudsChecked(settings->ofClouds));
-    controlList.push_back(cloudsCheckbox);
-#else
-    cloudsCheckbox = nullptr;
-#endif
-
-#if !(PLATFORM_PS2 || PLATFORM_WII)
-    fogCheckbox = new LegacyOptionCheckbox(BUTTON_FOG, x, legacyLayout.rowY(row++), w, h,
-        uiText("Fog"), legacyFogChecked(settings->ofFogOff));
-    controlList.push_back(fogCheckbox);
-#else
-    fogCheckbox = nullptr;
-#endif
-
-#if PLATFORM_WII
-    // The vertical copy filter is what reads as "anti-aliasing" on the Wii:
-    // it steadies a 480i picture at the cost of a vertical blur.
-    deflickerCheckbox = new LegacyOptionCheckbox(BUTTON_DEFLICKER, x, legacyLayout.rowY(row++), w, h,
-        uiText("Deflicker Filter"), settings->wiiDeflicker);
-    controlList.push_back(deflickerCheckbox);
-#else
-    deflickerCheckbox = nullptr;
-#endif
-
-#if PLATFORM_XBOX
-    // Steady 30 FPS (every other vblank); the spare frame time goes to chunk
-    // rebuilding instead of a stutter when new terrain appears.
-    frameCapCheckbox = new LegacyOptionCheckbox(BUTTON_FRAME_CAP, x, legacyLayout.rowY(row++), w, h,
-        uiText("30 FPS Limit"), settings->limitFramerate == 2);
-    coordinatesCheckbox = new LegacyOptionCheckbox(BUTTON_COORDINATES, x, legacyLayout.rowY(row++), w, h,
-        uiText("Show Coordinates"), settings->showCoordinates);
-    // Without Minecraft's light: no night or cave darkness, as before 1.3.
-    fullbrightCheckbox = new LegacyOptionCheckbox(BUTTON_FULLBRIGHT, x, legacyLayout.rowY(row++), w, h,
-        uiText("Fullbright"), settings->fullbright);
-    controlList.push_back(frameCapCheckbox);
-    controlList.push_back(coordinatesCheckbox);
-    controlList.push_back(fullbrightCheckbox);
-#endif
-
-    controlList.push_back(new LegacyOptionSlider(BUTTON_RENDER_DISTANCE, x, legacyLayout.rowY(row++), w, h,
-        settings, EnumOptions::RENDER_DISTANCE_FINE));
-    controlList.push_back(new LegacyOptionSlider(BUTTON_BRIGHTNESS, x, legacyLayout.rowY(row++), w, h,
-        settings, EnumOptions::BRIGHTNESS));
     controlList.push_back(new LegacyGuiButton(BUTTON_DONE, x, legacyLayout.rowY(row), w, h, uiText("Done")));
+    syncLegacySelection();
 }
 
 void LegacyVideoOptions::syncCheckboxes()
 {
-    graphicsCheckbox->setChecked(settings->fancyGraphics);
-    smoothLightingCheckbox->setChecked(legacySmoothLightingChecked(settings->ofAoLevel));
-    viewBobbingCheckbox->setChecked(settings->viewBobbing);
+    if (graphicsCheckbox != nullptr)
+        graphicsCheckbox->setChecked(settings->fancyGraphics);
+    if (smoothLightingCheckbox != nullptr)
+        smoothLightingCheckbox->setChecked(legacySmoothLightingChecked(settings->ofAoLevel));
+    if (viewBobbingCheckbox != nullptr)
+        viewBobbingCheckbox->setChecked(settings->viewBobbing);
     if (cloudsCheckbox != nullptr)
         cloudsCheckbox->setChecked(legacyCloudsChecked(settings->ofClouds));
     if (fogCheckbox != nullptr)
@@ -134,6 +215,8 @@ void LegacyVideoOptions::syncCheckboxes()
         coordinatesCheckbox->setChecked(settings->showCoordinates);
     if (fullbrightCheckbox != nullptr)
         fullbrightCheckbox->setChecked(settings->fullbright);
+    if (opaqueIceCheckbox != nullptr)
+        opaqueIceCheckbox->setChecked(settings->ofOpaqueIce);
 }
 
 void LegacyVideoOptions::actionPerformed(GuiButton *button)
@@ -186,6 +269,23 @@ void LegacyVideoOptions::actionPerformed(GuiButton *button)
         settings->fullbright = !settings->fullbright;
         settings->saveOptions();
         syncCheckboxes();
+        return;
+    case BUTTON_OPAQUE_ICE:
+        settings->setOptionValue(EnumOptions::OPAQUE_ICE, 1);
+        syncCheckboxes();
+        return;
+    case BUTTON_PREV_PAGE:
+        if (page > 0)
+        {
+            --page;
+            selectedControlIndex = 0;
+            rebuildControls();
+        }
+        return;
+    case BUTTON_NEXT_PAGE:
+        ++page;
+        selectedControlIndex = 0;
+        rebuildControls();
         return;
     case BUTTON_DONE:
         returnToParent();

@@ -315,6 +315,8 @@ void GameSettings::loadOptions()
 					ofProfiler = value == "true";
 				if (key == "ofBetterSnow")
 					ofBetterSnow = value == "true";
+				if (key == "ofOpaqueIce")
+					ofOpaqueIce = value == "true";
 				if (key == "ofSwampColors")
 					ofSwampColors = value == "true";
 				if (key == "ofSmoothBiomes")
@@ -425,7 +427,7 @@ void GameSettings::saveOptions()
 		"ofAnimatedSmoke", "ofFastDebugInfo", "ofAutoSaveTicks", "ofBetterGrass",
 		"ofWeather", "ofSky", "ofStars", "ofChunkUpdates", "ofChunkUpdatesDynamic",
 		"ofFarView", "ofTime", "ofClearWater", "ofSunMoon", "ofDepthFog",
-		"ofProfiler", "ofBetterSnow", "ofSwampColors", "ofSmoothBiomes", "ofRandomMobs", "ofCustomColors", "ofConnectedTextures", "ofNaturalTextures",
+		"ofProfiler", "ofBetterSnow", "ofOpaqueIce", "ofSwampColors", "ofSmoothBiomes", "ofRandomMobs", "ofCustomColors", "ofConnectedTextures", "ofNaturalTextures",
 		"ofMipmapLevel", "ofMipmapLinear", "ofAaLevel", "ofAfLevel", "ofCustomFonts", "ofRenderDistanceFine",
 		"ofVoidParticles", "ofWaterParticles", "ofRainSplash", "ofPortalParticles",
 		"ofDrippingWaterLava", "ofAnimatedTerrain", "ofAnimatedItems", "ofAnimatedTextures"
@@ -553,6 +555,7 @@ void GameSettings::saveOptions()
 	printwriter << "ofDepthFog:" << (ofDepthFog ? "true" : "false") << "\n";
 	printwriter << "ofProfiler:" << (ofProfiler ? "true" : "false") << "\n";
 	printwriter << "ofBetterSnow:" << (ofBetterSnow ? "true" : "false") << "\n";
+	printwriter << "ofOpaqueIce:" << (ofOpaqueIce ? "true" : "false") << "\n";
 	printwriter << "ofSwampColors:" << (ofSwampColors ? "true" : "false") << "\n";
 	printwriter << "ofSmoothBiomes:" << (ofSmoothBiomes ? "true" : "false") << "\n";
 	printwriter << "ofRandomMobs:" << (ofRandomMobs ? "true" : "false") << "\n";
