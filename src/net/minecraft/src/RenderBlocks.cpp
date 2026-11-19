@@ -9,6 +9,7 @@
 #include "BlockFence.h"
 #include "BlockFluid.h"
 #include "BlockGrass.h"
+#include "BlockLeaves.h"
 #include "BlockPistonBase.h"
 #include "BlockPistonExtension.h"
 #include "BlockRail.h"
@@ -318,6 +319,16 @@ bool RenderBlocks::shouldRenderFace(Block *block, int_t i, int_t j, int_t k, int
 	// reduction for the console terrain hot path, not a gameplay rule change.
 	if (side == 1 && block->maxY >= 1.0 && Block::snow != nullptr &&
 		accessGetBlockId(i, j, k) == Block::snow->blockID)
+	{
+		return false;
+	}
+#endif
+#if PLATFORM_FANCY_LEAVES_FACE_CULLING
+	// Sodium/moreculling-style leaves culling: skip interior leaf-against-leaf
+	// faces even on Fancy graphics (placed before usesDefaultFaceCullingLookup
+	// because BlockLeavesBase overrides usesDefaultFaceCulling() to false).
+	if (Block::leaves != nullptr && block->blockID == Block::leaves->blockID &&
+		accessGetBlockId(i, j, k) == Block::leaves->blockID)
 	{
 		return false;
 	}
