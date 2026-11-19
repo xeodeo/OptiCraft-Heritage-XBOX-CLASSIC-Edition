@@ -409,7 +409,7 @@ void ChunkProviderLoadOrGenerate::unloadChunk(std::uint64_t key, Chunk *chunk)
 		return;
 
 #if PLATFORM_SAVE_RUNTIME_CHUNK_EDITS_ON_UNLOAD
-	if (!chunk->neverSave && chunk->isRuntimeSaveRequired())
+	if (!chunk->neverSave && (chunk->isRuntimeSaveRequired() || (chunk->hasEntities && chunk->isModified)))
 	{
 		saveChunkToFile(chunk);
 		chunk->isModified = false;

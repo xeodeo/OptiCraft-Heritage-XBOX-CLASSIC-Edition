@@ -1268,6 +1268,11 @@ void Chunk::setChunkBlockTileEntity(int_t i, int_t j, int_t k, TileEntity *tilee
 	tileentity->validate();
 	chunkTileEntityOrder.add(chunkposition);
 	chunkTileEntityMap[chunkposition] = tileentity;
+	isModified = true;
+#if PLATFORM_SAVE_RUNTIME_CHUNK_EDITS_ON_UNLOAD
+	if (worldObj == nullptr || !worldObj->isPopulationFastPathChunk(this))
+		runtimeSaveRequired = true;
+#endif
 }
 
 void Chunk::removeChunkBlockTileEntityIfSame(int_t i, int_t j, int_t k, TileEntity *tileentity)
@@ -1298,6 +1303,11 @@ void Chunk::removeChunkBlockTileEntity(int_t i, int_t j, int_t k)
 			worldObj->notifyTileEntityRenderersRemoved(tileentity);
 		tileentity->invalidate();
 	}
+	isModified = true;
+#if PLATFORM_SAVE_RUNTIME_CHUNK_EDITS_ON_UNLOAD
+	if (worldObj == nullptr || !worldObj->isPopulationFastPathChunk(this))
+		runtimeSaveRequired = true;
+#endif
 }
 
 void Chunk::onChunkLoad()
@@ -1355,6 +1365,10 @@ void Chunk::onChunkUnload()
 void Chunk::setChunkModified()
 {
 	isModified = true;
+#if PLATFORM_SAVE_RUNTIME_CHUNK_EDITS_ON_UNLOAD
+	if (worldObj == nullptr || !worldObj->isPopulationFastPathChunk(this))
+		runtimeSaveRequired = true;
+#endif
 }
 
 void Chunk::markRuntimeSaveRequired()

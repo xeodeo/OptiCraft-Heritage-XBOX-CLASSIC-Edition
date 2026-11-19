@@ -1124,7 +1124,7 @@ void ChunkProvider::unloadChunk(std::uint64_t key, Chunk *chunk)
 #if PLATFORM_SAVE_RUNTIME_CHUNK_EDITS_ON_UNLOAD
 	// PS2 serializes only gameplay-edited chunks here. Generated/lighting-only
 	// dirtiness stays memory-only so walking does not create continuous writes.
-	if (!chunk->neverSave && chunk->isRuntimeSaveRequired())
+	if (!chunk->neverSave && (chunk->isRuntimeSaveRequired() || (chunk->hasEntities && chunk->isModified)))
 	{
 #if PLATFORM_PROFILE_STREAMING
 		const long_t unloadSaveStartNs = System::nanoTime();
