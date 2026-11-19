@@ -44,6 +44,7 @@ EnumOptions *EnumOptions::RENDER_BACKEND = new EnumOptions(73, "Render", false, 
 EnumOptions *EnumOptions::SPLITSCREEN_LAYOUT = new EnumOptions(74, "options.splitscreen", false, false);
 EnumOptions *EnumOptions::OPAQUE_ICE = new EnumOptions(75, "Opaque Ice", false, false);
 EnumOptions *EnumOptions::POCKET_OPTIMIZATIONS = new EnumOptions(76, "Pocket Optimizations", false, false);
+EnumOptions *EnumOptions::HUD_SAFE_AREA = new EnumOptions(77, "Safe Area", true, false);
 
 // --- OptiFine ---
 // Ordinales secuenciales por orden de declaracion (ht::c() == ordinal()).
@@ -107,7 +108,8 @@ static EnumOptions *s_allOptions[] = {
 	EnumOptions::RANDOM_MOBS, EnumOptions::CUSTOM_COLORS, EnumOptions::CONNECTED_TEXTURES, EnumOptions::NATURAL_TEXTURES,
 	EnumOptions::MIPMAP_LEVEL, EnumOptions::MIPMAP_TYPE, EnumOptions::CUSTOM_FONTS,
 	EnumOptions::AA_LEVEL, EnumOptions::AF_LEVEL, EnumOptions::RENDER_DISTANCE_FINE, EnumOptions::RENDER_BACKEND,
-	EnumOptions::SPLITSCREEN_LAYOUT, EnumOptions::OPAQUE_ICE, EnumOptions::POCKET_OPTIMIZATIONS
+	EnumOptions::SPLITSCREEN_LAYOUT, EnumOptions::OPAQUE_ICE, EnumOptions::POCKET_OPTIMIZATIONS,
+	EnumOptions::HUD_SAFE_AREA
 };
 
 EnumOptions *EnumOptions::getEnumOptions(int_t i)

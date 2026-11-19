@@ -7,6 +7,7 @@
 
 #include "net/minecraft/src/FontRenderer.h"
 #include "net/minecraft/src/GameSettings.h"
+#include "net/minecraft/src/HudSafeArea.h"
 #include "net/minecraft/src/Minecraft.h"
 #include "platform/LegacyControlPromptBackend.h"
 #include "platform/PlatformTuning.h"
@@ -111,14 +112,17 @@ struct PromptRow
     int_t y;
     int_t screenWidth;
     int_t screenHeight;
+    int_t safeLeft;
+    int_t safeRight;
+    int_t safeBottom;
     FontRenderer *fontOwner;
     unsigned int fontRevision;
     RenderCapturedMesh captured;
     bool capturedValid;
     bool valid;
 
-    PromptRow() : y(0), screenWidth(-1), screenHeight(-1), fontOwner(nullptr),
-                  fontRevision(0), capturedValid(false), valid(false)
+    PromptRow() : y(0), screenWidth(-1), screenHeight(-1), safeLeft(0), safeRight(0), safeBottom(0),
+                  fontOwner(nullptr), fontRevision(0), capturedValid(false), valid(false)
     {
         for (int_t i = 0; i < PROMPT_COUNT; ++i)
             x[i] = 0;
@@ -133,7 +137,9 @@ bool refreshRowKey(Minecraft *mc, const GameSettings &settings, FontRenderer *fo
                    int_t screenWidth, int_t screenHeight)
 {
     const unsigned int fontRevision = font != nullptr ? font->getTextCacheRevision() : 0u;
+    const HudSafeInsets safe = computeHudSafeInsets(mc, screenWidth, screenHeight, true);
     bool hit = row.valid && row.screenWidth == screenWidth && row.screenHeight == screenHeight &&
+        row.safeLeft == safe.left && row.safeRight == safe.right && row.safeBottom == safe.bottom &&
         row.fontOwner == font && row.fontRevision == fontRevision && row.language == settings.language;
     row.language = settings.language;
     for (int_t i = 0; i < PROMPT_COUNT; ++i)
@@ -160,9 +166,13 @@ void rebuildRow(const GameSettings &settings, FontRenderer *font, PromptRow &row
 
     Minecraft *mc = Minecraft::getMinecraft();
     const bool isSplit = (mc != nullptr && mc->isSplitScreenActive());
+    const HudSafeInsets safe = computeHudSafeInsets(mc, screenWidth, screenHeight, true);
     row.y = legacyHintRowY(screenHeight, isSplit);
     row.screenWidth = screenWidth;
     row.screenHeight = screenHeight;
+    row.safeLeft = safe.left;
+    row.safeRight = safe.right;
+    row.safeBottom = safe.bottom;
     row.fontOwner = font;
     row.fontRevision = font != nullptr ? font->getTextCacheRevision() : 0u;
     row.captured.clear();
@@ -175,13 +185,15 @@ void rebuildRow(const GameSettings &settings, FontRenderer *font, PromptRow &row
 
     int_t textWidth = contentWidth(font, row.texts, PROMPT_COUNT);
     for (int_t i = 0; i < PROMPT_COUNT; ++i) if (!row.texts[i].empty() && row.icons[i].texture >= 0) textWidth += 15;
-    const int_t availableWidth = std::max<int_t>(0, screenWidth - LEGACY_HINT_MARGIN * 2);
+    const int_t leftMargin = std::max<int_t>(LEGACY_HINT_MARGIN, safe.left);
+    const int_t rightMargin = std::max<int_t>(LEGACY_HINT_MARGIN, safe.right);
+    const int_t availableWidth = std::max<int_t>(0, screenWidth - leftMargin - rightMargin);
     int_t gap = LEGACY_HINT_GAP;
     if (visible > 1 && textWidth + gap * (visible - 1) > availableWidth)
         gap = std::max<int_t>(1, (availableWidth - textWidth) / (visible - 1));
 
     const int_t rowWidth = textWidth + gap * std::max<int_t>(0, visible - 1);
-    int_t x = std::max<int_t>(LEGACY_HINT_MARGIN, (screenWidth - rowWidth) / 2);
+    int_t x = std::max<int_t>(leftMargin, leftMargin + (availableWidth - rowWidth) / 2);
     for (int_t i = 0; i < PROMPT_COUNT; ++i)
     {
         if (row.texts[i].empty())

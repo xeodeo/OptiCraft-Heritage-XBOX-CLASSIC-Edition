@@ -63,12 +63,15 @@ bool GuiSlider::adjustKeyboard(Minecraft *mc, int_t direction)
 		return false;
 
 	const float_t previous = sliderValue;
-	const float_t step = direction < 0 ? -0.05f : 0.05f;
+	const float_t stepMagnitude = (idFloat == EnumOptions::HUD_SAFE_AREA) ? 0.1f : 0.05f;
+	const float_t step = direction < 0 ? -stepMagnitude : stepMagnitude;
 	sliderValue = std::max<float_t>(0.0f, std::min<float_t>(1.0f, sliderValue + step));
 	if (sliderValue == previous)
 		return false;
 
 	mc->gameSettings->setOptionFloatValue(idFloat, sliderValue);
+	if (idFloat == EnumOptions::HUD_SAFE_AREA)
+		sliderValue = mc->gameSettings->getOptionFloatValue(idFloat);
 	displayString = mc->gameSettings->getKeyBinding(idFloat);
 	return true;
 }

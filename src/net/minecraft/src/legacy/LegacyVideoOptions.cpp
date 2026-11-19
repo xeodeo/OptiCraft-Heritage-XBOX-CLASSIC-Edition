@@ -10,6 +10,7 @@
 #include "net/minecraft/src/EnumOptions.h"
 #include "net/minecraft/src/GameSettings.h"
 #include "net/minecraft/src/GuiButton.h"
+#include "net/minecraft/src/HudSafeArea.h"
 #include "net/minecraft/src/Minecraft.h"
 #include "platform/PlatformConfig.h"
 #include "platform/PlatformUserSettings.h"
@@ -30,6 +31,7 @@ enum LegacyVideoButtonId
     BUTTON_COORDINATES = 309,
     BUTTON_FULLBRIGHT = 310,
     BUTTON_ADVANCED = 311,
+    BUTTON_SAFE_AREA = 312,
     BUTTON_DONE = 399
 };
 
@@ -39,20 +41,20 @@ LegacyVideoOptions::LegacyVideoOptions(GuiScreen *parent, GameSettings *settings
     LegacyOptionsBackgroundMode backgroundModeValue)
     : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), graphicsCheckbox(nullptr), smoothLightingCheckbox(nullptr),
       viewBobbingCheckbox(nullptr), cloudsCheckbox(nullptr), fogCheckbox(nullptr), deflickerCheckbox(nullptr),
-      frameCapCheckbox(nullptr), coordinatesCheckbox(nullptr), fullbrightCheckbox(nullptr)
+      frameCapCheckbox(nullptr), coordinatesCheckbox(nullptr), fullbrightCheckbox(nullptr), safeAreaSlider(nullptr)
 {
 }
 
 void LegacyVideoOptions::initGui()
 {
 #if PLATFORM_WII
-    const int_t rowCount = 8;
-#elif PLATFORM_PS2
-    const int_t rowCount = 7;
-#elif PLATFORM_XBOX
-    const int_t rowCount = 12;
-#else
     const int_t rowCount = 9;
+#elif PLATFORM_PS2
+    const int_t rowCount = 8;
+#elif PLATFORM_XBOX
+    const int_t rowCount = 13;
+#else
+    const int_t rowCount = 10;
 #endif
     configureLegacyLayout(rowCount, true, LegacyOptionsLayoutPreset::Compact);
     const int_t x = legacyLayout.contentX;
@@ -116,6 +118,9 @@ void LegacyVideoOptions::initGui()
         settings, EnumOptions::RENDER_DISTANCE_FINE));
     controlList.push_back(new LegacyOptionSlider(BUTTON_BRIGHTNESS, x, legacyLayout.rowY(row++), w, h,
         settings, EnumOptions::BRIGHTNESS));
+    safeAreaSlider = new LegacyOptionSlider(BUTTON_SAFE_AREA, x, legacyLayout.rowY(row++), w, h,
+        settings, EnumOptions::HUD_SAFE_AREA);
+    controlList.push_back(safeAreaSlider);
     controlList.push_back(new LegacyGuiButton(BUTTON_ADVANCED, x, legacyLayout.rowY(row++), w, h, uiText("Advanced...")));
     controlList.push_back(new LegacyGuiButton(BUTTON_DONE, x, legacyLayout.rowY(row), w, h, uiText("Done")));
 }
@@ -206,4 +211,15 @@ void LegacyVideoOptions::drawScreen(int_t mouseX, int_t mouseY, float_t partialT
     drawLegacyBackground(partialTick);
     updateLegacyPointerHover(mouseX, mouseY);
     GuiScreen::drawScreen(mouseX, mouseY, partialTick);
+    if (safeAreaSlider != nullptr && settings != nullptr)
+    {
+        const bool selected = (selectedControlIndex >= 0 &&
+            selectedControlIndex < static_cast<int_t>(controlList.size()) &&
+            controlList[static_cast<std::size_t>(selectedControlIndex)] == safeAreaSlider);
+        const bool hovered = mouseX >= safeAreaSlider->xPosition && mouseY >= safeAreaSlider->yPosition &&
+            mouseX < safeAreaSlider->xPosition + safeAreaSlider->getButtonWidth() &&
+            mouseY < safeAreaSlider->yPosition + safeAreaSlider->getButtonHeight();
+        if (selected || hovered)
+            drawHudSafeAreaPreview(width, height, settings->hudSafeArea);
+    }
 }

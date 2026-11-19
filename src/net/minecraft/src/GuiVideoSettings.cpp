@@ -14,6 +14,7 @@
 #include "GuiTexturePacks.h"
 #include "GuiPerformanceSettingsOF.h"
 #include "GuiQualitySettingsOF.h"
+#include "HudSafeArea.h"
 
 GuiVideoSettings::GuiVideoSettings(GuiScreen *parent, GameSettings *settings)
 	: screenTitle(uiText("Video Settings"))
@@ -40,7 +41,8 @@ void GuiVideoSettings::initGui()
 		EnumOptions::ADVANCED_OPENGL, // h
 		EnumOptions::FOG_FANCY,
 		EnumOptions::FOG_START,
-		EnumOptions::BRIGHTNESS
+		EnumOptions::BRIGHTNESS,
+		EnumOptions::HUD_SAFE_AREA
 	};
 
 	StringTranslate *tr = StringTranslate::getInstance();
@@ -122,9 +124,10 @@ void GuiVideoSettings::actionPerformed(GuiButton *button)
 		mc->displayGuiScreen(new GuiQualitySettingsOF(this, guiGameSettings));
 		return;
 	}
-	// Brightness and AO Level sliders must NOT rebuild the resolution (nj.java).
+	// Brightness, AO Level and Safe Area sliders must NOT rebuild the resolution (nj.java).
 	if (button->id == EnumOptions::BRIGHTNESS->returnEnumOrdinal() ||
-	    button->id == EnumOptions::AO_LEVEL->returnEnumOrdinal())
+	    button->id == EnumOptions::AO_LEVEL->returnEnumOrdinal() ||
+	    button->id == EnumOptions::HUD_SAFE_AREA->returnEnumOrdinal())
 		return;
 	if (guiGameSettings->guiScale != previousGuiScale)
 	{
@@ -138,4 +141,21 @@ void GuiVideoSettings::drawScreen(int_t mouseX, int_t mouseY, float_t partialTic
 	drawDefaultBackground();
 	drawCenteredString(fontRenderer, screenTitle, width / 2, 20, 0xffffff);
 	GuiScreen::drawScreen(mouseX, mouseY, partialTick);
+
+	const int_t safeAreaId = EnumOptions::HUD_SAFE_AREA->returnEnumOrdinal();
+	bool showSafePreview = false;
+	for (GuiButton *btn : controlList)
+	{
+		if (btn == nullptr || btn->id != safeAreaId)
+			continue;
+		GuiSlider *slider = dynamic_cast<GuiSlider *>(btn);
+		const bool hovered = mouseX >= btn->xPosition && mouseY >= btn->yPosition &&
+			mouseX < btn->xPosition + btn->getButtonWidth() &&
+			mouseY < btn->yPosition + btn->getButtonHeight();
+		if (hovered || btn->isKeyboardSelected() || (slider != nullptr && slider->dragging))
+			showSafePreview = true;
+		break;
+	}
+	if (showSafePreview && guiGameSettings != nullptr)
+		drawHudSafeAreaPreview(width, height, guiGameSettings->hudSafeArea);
 }

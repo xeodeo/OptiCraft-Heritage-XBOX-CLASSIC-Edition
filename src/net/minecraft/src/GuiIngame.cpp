@@ -40,6 +40,7 @@
 #include "Tessellator.h"
 #include "StringTranslate.h"
 #include "Minecraft.h"
+#include "HudSafeArea.h"
 #include "legacy/LegacyControlTooltipHud.h"
 #include "legacy/LegacyTipHud.h"
 #include "legacy/LegacyHudLayout.h"
@@ -257,21 +258,18 @@ GuiIngame::~GuiIngame()
 
 namespace
 {
-// Corner HUD text position. A CRT TV crops the picture edges (overscan), so
-// the Xbox keeps it inside the title-safe area instead of at the very corner.
-#if PLATFORM_XBOX
-constexpr int_t kHudCornerX = 10;
-constexpr int_t kHudCornerY = 10;
-#elif defined(WII_PLATFORM) || defined(PS2_PLATFORM)
-constexpr int_t kHudCornerX = 12;   // same TV-safe margin upstream gives Wii/PS2
-constexpr int_t kHudCornerY = 12;
+// Base corner HUD text margin. Wii/PS2 keep their upstream 12 px TV-safe floor;
+// Xbox uses the configurable HudSafeArea option (default 4%) on top of 2 px.
+#if defined(WII_PLATFORM) || defined(PS2_PLATFORM)
+constexpr int_t kHudCornerBaseX = 12;
+constexpr int_t kHudCornerBaseY = 12;
 #else
-constexpr int_t kHudCornerX = 2;
-constexpr int_t kHudCornerY = 2;
+constexpr int_t kHudCornerBaseX = 2;
+constexpr int_t kHudCornerBaseY = 2;
 #endif
 }
 
-void GuiIngame::renderFpsOverlay(FontRenderer *fontRenderer)
+void GuiIngame::renderFpsOverlay(FontRenderer *fontRenderer, int_t x, int_t y)
 {
 	if (fontRenderer == nullptr || mc == nullptr)
 		return;
@@ -284,13 +282,13 @@ void GuiIngame::renderFpsOverlay(FontRenderer *fontRenderer)
 		fpsLine = "0 fps";
 
 #ifdef PS2_PLATFORM
-	fontRenderer->drawString(fpsLine, kHudCornerX, kHudCornerY, 0xe0e0e0);
+	fontRenderer->drawString(fpsLine, x, y, 0xe0e0e0);
 #else
-	fontRenderer->drawStringWithShadow(fpsLine, kHudCornerX, kHudCornerY, 0xffffff);
+	fontRenderer->drawStringWithShadow(fpsLine, x, y, 0xffffff);
 #endif
 }
 
-void GuiIngame::renderCoordinatesOverlay(FontRenderer *fontRenderer, int_t y)
+void GuiIngame::renderCoordinatesOverlay(FontRenderer *fontRenderer, int_t x, int_t y)
 {
 	if (fontRenderer == nullptr || mc == nullptr || mc->thePlayer == nullptr)
 		return;
@@ -304,13 +302,13 @@ void GuiIngame::renderCoordinatesOverlay(FontRenderer *fontRenderer, int_t y)
 	              (int)MathHelper::floor_double(player->boundingBox->minY),
 	              (int)MathHelper::floor_double(player->posZ), kFacing[facing]);
 #ifdef PS2_PLATFORM
-	fontRenderer->drawString(line, kHudCornerX, y, 0xe0e0e0);
+	fontRenderer->drawString(line, x, y, 0xe0e0e0);
 #else
-	fontRenderer->drawStringWithShadow(line, kHudCornerX, y, 0xffffff);
+	fontRenderer->drawStringWithShadow(line, x, y, 0xffffff);
 #endif
 }
 
-void GuiIngame::renderDebugOverlay(FontRenderer *fontRenderer, int_t screenWidth)
+void GuiIngame::renderDebugOverlay(FontRenderer *fontRenderer, int_t screenWidth, int_t screenHeight)
 {
 	renderPushMatrix();
 	if (Minecraft::hasPaidCheckTime > 0LL)
@@ -318,6 +316,7 @@ void GuiIngame::renderDebugOverlay(FontRenderer *fontRenderer, int_t screenWidth
 
 #ifdef PS2_PLATFORM
 	(void)screenWidth;
+	(void)screenHeight;
 	const int_t color = 0xe0e0e0;
 	fontRenderer->beginTextBatch();
 	fontRenderer->drawString("OptiCraft (" + mc->debug + ")", 2, 2, color);
@@ -345,16 +344,17 @@ void GuiIngame::renderDebugOverlay(FontRenderer *fontRenderer, int_t screenWidth
 	fontRenderer->drawString(positionLine, 2, 52, color);
 	fontRenderer->endTextBatch();
 #else
-	// [FIX WII / ISSUE #9] Margen de seguridad contra Overscan en el menú F3 para Nintendo Wii.
-	// Se desplaza la columna izquierda a 12px y el margen derecho a 12px para evitar recortes en la TV.
-#if defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
-	constexpr int_t safeLeft = 12;
-	constexpr int_t safeTop = 10;
-	constexpr int_t safeRightMargin = 12;
+	// [FIX WII / ISSUE #9] Margen de seguridad contra Overscan en el menú F3.
+	// En Wii se mantiene el piso de 12 px; en Xbox/otros se combina con Zona segura.
+	const HudSafeInsets debugSafe = computeHudSafeInsets(mc, screenWidth, screenHeight, true);
+#if defined(WII_PLATFORM)
+	const int_t safeLeft = std::max<int_t>(12, debugSafe.left);
+	const int_t safeTop = std::max<int_t>(10, debugSafe.top);
+	const int_t safeRightMargin = std::max<int_t>(12, debugSafe.right);
 #else
-	constexpr int_t safeLeft = 2;
-	constexpr int_t safeTop = 2;
-	constexpr int_t safeRightMargin = 2;
+	const int_t safeLeft = std::max<int_t>(2, debugSafe.left);
+	const int_t safeTop = std::max<int_t>(2, debugSafe.top);
+	const int_t safeRightMargin = std::max<int_t>(2, debugSafe.right);
 #endif
 
 	fontRenderer->drawStringWithShadow("OptiCraft (" + mc->debug + ")", safeLeft, safeTop, 0xffffff);
@@ -442,10 +442,12 @@ void GuiIngame::renderBossHealth()
 	FontRenderer* fontRenderer = mc->fontRenderer;
 	ScaledResolution resolution(mc->gameSettings, mc->displayWidth, mc->displayHeight);
 	const int_t screenWidth = resolution.getScaledWidth();
+	const int_t screenHeight = resolution.getScaledHeight();
+	const HudSafeInsets bossSafe = computeHudSafeInsets(mc, screenWidth, screenHeight, true);
 	constexpr int_t barWidth = 182;
 	const int_t x = screenWidth / 2 - barWidth / 2;
 	const int_t filled = static_cast<int_t>(BossStatus::healthScale * static_cast<float>(barWidth + 1));
-	constexpr int_t y = 12;
+	const int_t y = 12 + bossSafe.top;
 
 	drawTexturedModalRect(x, y, 0, 74, barWidth, 5);
 	if (filled > 0)
@@ -840,8 +842,9 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 	renderBindTexture(mc->renderEngine->getTexture("/gui/gui.png"));
 	InventoryPlayer *inv = mc->thePlayer->inventory;
 	const bool isSplit = mc->isSplitScreenActive();
+	const HudSafeInsets hudSafe = computeHudSafeInsets(mc, sw, sh, true);
 	const int_t hudBottomInset = mc->gameSettings->legacyUI ? legacyHudBottomInset(isSplit) : 0;
-	const int_t hudHeight = sh - hudBottomInset;
+	const int_t hudHeight = sh - hudSafe.bottom - hudBottomInset;
 #if PLATFORM_PC_LEGACY
 	pcLegacyRenderHotbarFrame(sw, hudHeight, inv->currentItem);
 #elif defined(PS2_PLATFORM)
@@ -928,12 +931,14 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 		fr->drawString(level, x, y, color);
 	}
 
+	const int_t cornerX = std::max<int_t>(kHudCornerBaseX, hudSafe.left);
+	const int_t cornerY = std::max<int_t>(kHudCornerBaseY, hudSafe.top);
 	if (mc->gameSettings->showFps && !mc->gameSettings->showDebugInfo)
-		renderFpsOverlay(fr);
+		renderFpsOverlay(fr, cornerX, cornerY);
 	if (mc->gameSettings->showCoordinates && !mc->gameSettings->showDebugInfo)
-		renderCoordinatesOverlay(fr, mc->gameSettings->showFps ? kHudCornerY + 10 : kHudCornerY);
+		renderCoordinatesOverlay(fr, cornerX, mc->gameSettings->showFps ? cornerY + 10 : cornerY);
 	if (mc->gameSettings->showDebugInfo)
-		renderDebugOverlay(fr, sw);
+		renderDebugOverlay(fr, sw, sh);
 
 	if (recordPlayingUpFor > 0)
 	{
@@ -943,7 +948,7 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 		if (alpha > 0)
 		{
 			renderPushMatrix();
-			renderTranslate((float_t)(sw / 2), (float_t)(sh - 48), 0.0f);
+			renderTranslate((float_t)(sw / 2), (float_t)(hudHeight - 48), 0.0f);
 			renderEnable(RenderCapability::Blend);
 			renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
 			int_t color = 0xffffff;
@@ -988,9 +993,10 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 		if (chatOpen) msgAlpha = 255;
 		if (msgAlpha > 0)
 		{
-			int_t cx = 2;
+			int_t cx = std::max<int_t>(2, hudSafe.left);
+			int_t chatW = std::min<int_t>(320, std::max<int_t>(60, sw - cx - hudSafe.right));
 			int_t cy = -i5 * 9;
-			drawRect(cx, cy - 1, cx + 320, cy + 8, JavaArithmetic::intShl(msgAlpha / 2, 24));
+			drawRect(cx, cy - 1, cx + chatW, cy + 8, JavaArithmetic::intShl(msgAlpha / 2, 24));
 			renderEnable(RenderCapability::Blend);
 			fr->drawStringWithShadow(line->message, cx, cy, JavaArithmetic::intAdd(0xffffff, JavaArithmetic::intShl(msgAlpha, 24)));
 		}
@@ -1016,7 +1022,7 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 		if (columnWidth > 150)
 			columnWidth = 150;
 		const int_t left = (sw - columns * columnWidth) / 2;
-		const int_t top = 10;
+		const int_t top = 10 + hudSafe.top;
 		drawRect(left - 1, top - 1, left + columnWidth * columns, top + 9 * rows, 0x80000000);
 
 		for (int_t index = 0; index < maxPlayers; ++index)

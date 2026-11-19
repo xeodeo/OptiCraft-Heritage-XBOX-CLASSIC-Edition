@@ -166,6 +166,8 @@ void LegacyOptionSlider::setKeyboardSelected(bool selectedValue)
 
 float_t LegacyOptionSlider::keyboardStep() const
 {
+    if (option == EnumOptions::HUD_SAFE_AREA)
+        return 0.1f;
     if (option == EnumOptions::RENDER_DISTANCE_FINE)
     {
         // GameSettings truncates the fine distance down to a 16-block stop, so a

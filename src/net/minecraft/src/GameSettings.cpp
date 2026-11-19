@@ -104,6 +104,11 @@ void GameSettings::setDefaults()
     dolbyDigital = false;
     showCoordinates = false;
     fullbright = false;
+#if PLATFORM_XBOX
+    hudSafeArea = 4;
+#else
+    hudSafeArea = 0;
+#endif
     renderDistance = 0;
     particleSetting = 0;
     fovSetting = 0.0f;
@@ -533,6 +538,10 @@ void GameSettings::setOptionFloatValue(const EnumOptions *enumoptions, float f)
             reloadChunkRenderers();
         }
     }
+    if (enumoptions == EnumOptions::HUD_SAFE_AREA)
+    {
+        hudSafeArea = Config::limit((int_t)(f * 10.0f + 0.5f), 0, 10);
+    }
     saveOptions();
 }
 
@@ -926,6 +935,8 @@ float GameSettings::getOptionFloatValue(const EnumOptions *enumoptions)
     if (enumoptions == EnumOptions::RENDER_DISTANCE_FINE)
         return (float)(ofRenderDistanceFine - 32) /
                (float)(Config::getMaxRenderDistanceFine() - 32);
+    if (enumoptions == EnumOptions::HUD_SAFE_AREA)
+        return (float)Config::limit(hudSafeArea, 0, 10) / 10.0f;
     return 0.0f;
 }
 
@@ -984,6 +995,8 @@ std::string GameSettings::getKeyBinding(const EnumOptions *enumoptions)
             const int_t difference = ofRenderDistanceFine - baseDistance;
             return difference == 0 ? s + label : s + label + " +" + std::to_string(difference);
         }
+        if (enumoptions == EnumOptions::HUD_SAFE_AREA)
+            return s + std::to_string(Config::limit(hudSafeArea, 0, 10)) + "%";
         if (f == 0.0f)
             return s + translateKey("options.off");
         return s + std::to_string((int_t)(f * 100.0f)) + "%";

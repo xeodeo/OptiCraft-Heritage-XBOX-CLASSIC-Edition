@@ -149,6 +149,8 @@ void GameSettings::loadOptions()
 					showCoordinates = value == "true";
 				if (key == "fullbright")
 					fullbright = value == "true";
+				if (key == "hudSafeArea")
+					hudSafeArea = Config::limit((int_t)parseIntJava(value), 0, 10);
 				if (key == "viewDistance")
 				{
 					renderDistance = platformGameSettingsClampRenderDistance(parseIntJava(value));
@@ -419,7 +421,7 @@ void GameSettings::saveOptions()
 		"guiScale", "particles", "bobView", "anaglyph3d", "advancedOpengl", "fpsLimit",
 		"difficulty", "fancyGraphics", "ao", "skin", "lastServer", "lang", "playerName", "playerName2", "selectedSkin", "selectedSkinP2", "legacyUI",
 		"legacyLook", "legacyCrafting", "legacyCreative", "xboxStyleCrafting", "legacyGuiScaleRestore",
-		"showCoordinates", "fullbright",
+		"showCoordinates", "fullbright", "hudSafeArea",
 		"alternativeControllerLayout", "wiiAlternativeControls", "controllerDeadzone", "wiiStickDeadzone",
 		"ofFogFancy", "ofFogOff", "ofFogStart", "ofLoadFar", "ofPreloadedChunks", "ofOcclusionFancy",
 		"ofSmoothFps", "ofSmoothInput", "ofBrightness", "ofAoLevel", "ofClouds",
@@ -481,6 +483,7 @@ void GameSettings::saveOptions()
 	printwriter << "dolbyDigital:" << (dolbyDigital ? "true" : "false") << "\n";
 	printwriter << "showCoordinates:" << (showCoordinates ? "true" : "false") << "\n";
 	printwriter << "fullbright:" << (fullbright ? "true" : "false") << "\n";
+	printwriter << "hudSafeArea:" << Config::limit(hudSafeArea, 0, 10) << "\n";
 	printwriter << "mouseSensitivity:" << mouseSensitivity << "\n";
 	printwriter << "fov:" << fovSetting << "\n";
 	printwriter << "viewDistance:" << renderDistance << "\n";

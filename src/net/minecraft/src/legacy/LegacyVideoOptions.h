@@ -31,4 +31,5 @@ private:
     LegacyOptionCheckbox *frameCapCheckbox;
     LegacyOptionCheckbox *coordinatesCheckbox;
     LegacyOptionCheckbox *fullbrightCheckbox;
+    LegacyOptionSlider *safeAreaSlider;
 };

@@ -9,9 +9,6 @@ class Minecraft;
 constexpr int_t LEGACY_HINT_MARGIN = 8;
 constexpr int_t LEGACY_HINT_GAP = 6;
 
-inline int_t legacyHintRowY(int_t screenHeight, bool splitScreen = false)
-{
-    return splitScreen ? (screenHeight - 12) : (screenHeight - 15);
-}
+int_t legacyHintRowY(int_t screenHeight, bool splitScreen = false);
 
 void drawLegacyMenuHints(Minecraft *mc, int_t screenWidth, int_t screenHeight, bool showBack);
