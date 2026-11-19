@@ -1139,6 +1139,12 @@ void ChunkProvider::unloadChunk(std::uint64_t key, Chunk *chunk)
 #endif
 
 	chunk->onChunkUnload();
+	// Invalidating tile entities can query neighbouring blocks and repopulate
+	// the one-entry cache with this chunk after the pre-unload clear above.
+	// Drop it again before freeing the chunk so the next lookup cannot reuse
+	// the now-dangling pointer.
+	if (lastChunk == chunk)
+		lastChunk = nullptr;
 	delete chunk;
 }
 
