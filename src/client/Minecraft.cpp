@@ -2931,21 +2931,23 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
     if (effectRenderer != nullptr)
         effectRenderer->clearEffects(world);
 
-#if PLATFORM_LOAD_TERRAIN_WARMUP_MS > 0 || PLATFORM_LOAD_TERRAIN_MIN_MS > 0
     // RenderGlobal has just queued every section in the new renderer grid.
     // Build nearby meshes while the loading screen is still visible so the
     // first gameplay frames do not inherit the full renderer backlog. Normal
     // local world entry also keeps a short minimum presentation time, measured
     // from the start of changeWorld(); portal transfers are never delayed just
     // to satisfy that minimum.
+    const long_t preloadedChunkWarmupMs =
+        static_cast<long_t>(Config::getPreloadedChunks()) * 250L;
+    const long_t warmupBudgetMs = PLATFORM_LOAD_TERRAIN_WARMUP_MS + preloadedChunkWarmupMs;
     if (world != nullptr && !world->multiplayerWorld && thePlayer != nullptr &&
-        renderGlobal != nullptr)
+        renderGlobal != nullptr && (warmupBudgetMs > 0 || PLATFORM_LOAD_TERRAIN_MIN_MS > 0))
     {
         loadingScreen->displayLoadingString("Preparing terrain");
         const bool enforceMinimumLoadTime = entityplayer == nullptr;
         const long_t warmupStart = System::currentTimeMillis();
         const long_t minimumEnd = loadScreenStart + PLATFORM_LOAD_TERRAIN_MIN_MS;
-        const long_t warmupEnd = warmupStart + PLATFORM_LOAD_TERRAIN_WARMUP_MS;
+        const long_t warmupEnd = warmupStart + warmupBudgetMs;
         const int_t warmupQueuedAtStart = renderGlobal->pendingRendererUpdateCount();
         bool meshesReady = warmupQueuedAtStart == 0;
 #if PLATFORM_WII && PLATFORM_ASYNC_CHUNK_GENERATION
@@ -2975,8 +2977,8 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
                 PlatformCompat::delay(1);
 
             const long_t elapsed = now - warmupStart;
-            const int_t progress = PLATFORM_LOAD_TERRAIN_WARMUP_MS > 0
-                ? (int_t)((elapsed * 100L) / PLATFORM_LOAD_TERRAIN_WARMUP_MS)
+            const int_t progress = warmupBudgetMs > 0
+                ? (int_t)((elapsed * 100L) / warmupBudgetMs)
                 : 100;
             loadingScreen->setLoadingProgress(progress > 100 ? 100 : progress);
         }
@@ -2994,11 +2996,10 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
             const int_t built = warmupQueuedAtStart - stillQueued;
             MC_LOG_INFO("client.load", "warmup capped: built %d/%d sections in %dms\n",
                    (int)built, (int)warmupQueuedAtStart,
-                   (int)PLATFORM_LOAD_TERRAIN_WARMUP_MS);
+                   (int)warmupBudgetMs);
             platformMemoryCheckpoint("changeWorld warmup capped");
         }
     }
-#endif
 
     // El borrado del mundo viejo se DIFIERE al inicio del proximo runTick. Motivo:
     // en multiplayer, changeWorld puede ejecutarse en medio del tick del mundo viejo
