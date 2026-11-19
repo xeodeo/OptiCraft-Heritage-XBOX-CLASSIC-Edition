@@ -29,6 +29,7 @@
 #include "Vec3D.h"
 #include "World.h"
 #include "WorldInfo.h"
+#include "WorldProvider.h"
 #include "Chunk.h"
 
 int_t Entity::nextEntityID = 0;
@@ -42,6 +43,21 @@ namespace
 #else
 		return !world->getCollidingBoundingBoxes(entity, bounds).empty();
 #endif
+	}
+
+	inline bool chunkMissingForStreaming(World *world, int_t chunkX, int_t chunkZ)
+	{
+		if (world != nullptr && world->isLimitedWorld() &&
+		    (world->worldProvider == nullptr || world->worldProvider->worldType == 0))
+		{
+			const WorldInfo *info = world->getWorldInfo();
+			const int_t minChunk = info != nullptr ? info->getLimitedWorldMinChunk() : -8;
+			const int_t maxChunk = info != nullptr ? info->getLimitedWorldMaxChunk() : 7;
+			if (chunkX < minChunk || chunkX > maxChunk || chunkZ < minChunk || chunkZ > maxChunk)
+				return false;
+		}
+		Chunk *chunk = world != nullptr ? world->getChunkIfExists(chunkX, chunkZ) : nullptr;
+		return chunk == nullptr || chunk->isEmptyChunk();
 	}
 
 #if PLATFORM_FLOAT_COLLISION_SWEEP
@@ -645,12 +661,9 @@ void Entity::moveEntity(double d, double d1, double d2)
 			const int_t nextChunkZ = MathHelper::floor_double(posZ + d2) >> 4;
 			if (nextChunkX != curChunkX || nextChunkZ != curChunkZ)
 			{
-				Chunk *targetChunk = worldObj->getChunkIfExists(nextChunkX, nextChunkZ);
-				Chunk *targetChunkX = (nextChunkX != curChunkX) ? worldObj->getChunkIfExists(nextChunkX, curChunkZ) : targetChunk;
-				Chunk *targetChunkZ = (nextChunkZ != curChunkZ) ? worldObj->getChunkIfExists(curChunkX, nextChunkZ) : targetChunk;
-				if ((targetChunk == nullptr || targetChunk->isEmptyChunk()) ||
-				    (targetChunkX == nullptr || targetChunkX->isEmptyChunk()) ||
-				    (targetChunkZ == nullptr || targetChunkZ->isEmptyChunk()))
+				if (chunkMissingForStreaming(worldObj, nextChunkX, nextChunkZ) ||
+				    ((nextChunkX != curChunkX) && chunkMissingForStreaming(worldObj, nextChunkX, curChunkZ)) ||
+				    ((nextChunkZ != curChunkZ) && chunkMissingForStreaming(worldObj, curChunkX, nextChunkZ)))
 				{
 					d = 0.0;
 					d2 = 0.0;
@@ -858,15 +871,24 @@ void Entity::moveEntity(double d, double d1, double d2)
 		const double boundary = worldObj->getWorldInfo() != nullptr ? worldObj->getWorldInfo()->getLimitedWorldBoundary() : 127.5;
 		double clampedX = posX;
 		double clampedZ = posZ;
-		if (clampedX < -boundary) { clampedX = -boundary; motionX = 0.0; isCollidedHorizontally = true; }
-		else if (clampedX > boundary) { clampedX = boundary; motionX = 0.0; isCollidedHorizontally = true; }
-		if (clampedZ < -boundary) { clampedZ = -boundary; motionZ = 0.0; isCollidedHorizontally = true; }
-		else if (clampedZ > boundary) { clampedZ = boundary; motionZ = 0.0; isCollidedHorizontally = true; }
-		if (clampedX != posX || clampedZ != posZ)
+		double bounceX = 0.0;
+		double bounceZ = 0.0;
+		bool hitX = false;
+		bool hitZ = false;
+		if (clampedX < -boundary) { clampedX = -boundary; bounceX = 0.3; hitX = true; }
+		else if (clampedX > boundary) { clampedX = boundary; bounceX = -0.3; hitX = true; }
+		if (clampedZ < -boundary) { clampedZ = -boundary; bounceZ = 0.3; hitZ = true; }
+		else if (clampedZ > boundary) { clampedZ = boundary; bounceZ = -0.3; hitZ = true; }
+		if (hitX || hitZ)
 		{
 			boundingBox->offset(clampedX - posX, 0.0, clampedZ - posZ);
 			posX = clampedX;
 			posZ = clampedZ;
+			isCollidedHorizontally = true;
+			if (hitX)
+				motionX = isPlayer() ? bounceX : 0.0;
+			if (hitZ)
+				motionZ = isPlayer() ? bounceZ : 0.0;
 		}
 	}
 	isCollidedHorizontally = d5 != d || d7 != d2;

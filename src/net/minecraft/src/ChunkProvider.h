@@ -98,6 +98,7 @@ private:
 	long_t currentWorldTime() const;
 	bool   isOutsideUnloadRadius(int_t i, int_t j) const;
 	void   markChunkTopologyChanged();
+	bool   chunkExistsForPopulate(int_t i, int_t j);
 
 #if PLATFORM_DEFERRED_POPULATE
 	// Deferred decoration queue (see PLATFORM_POPULATE_CHUNKS_PER_TICK). prepareChunk
