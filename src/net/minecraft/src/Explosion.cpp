@@ -180,8 +180,6 @@ void Explosion::doExplosionA()
     }
 
     explosionSize = f;
-
-    std::vector<ChunkPosTuple> blockList = destroyedBlockPositions.valuesInIterationOrder();
 }
 
 void Explosion::doExplosionB(bool flag)
