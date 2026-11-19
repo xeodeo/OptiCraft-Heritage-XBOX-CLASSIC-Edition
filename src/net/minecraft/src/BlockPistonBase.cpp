@@ -137,6 +137,7 @@ bool BlockPistonBase::isIndirectlyPowered(World *world, int_t i, int_t j, int_t 
 
 void BlockPistonBase::playBlock(World *world, int_t i, int_t j, int_t k, int_t l, int_t i1)
 {
+	const World::PistonMarkScope pistonMarkScope(world);
 	isMoving = true;
 	int_t j1 = i1;
 	if (l == 0)

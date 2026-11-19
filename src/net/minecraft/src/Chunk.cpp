@@ -874,8 +874,11 @@ bool Chunk::setBlockIDWithMetadata(int_t i, int_t j, int_t k, int_t l, int_t i1)
 	if (worldObj != nullptr)
 	{
 		worldObj->scheduleLightingUpdate(EnumSkyBlock::Block, worldX, j, worldZ, worldX, j, worldZ);
-		if (!worldObj->worldProvider->hasNoSky)
+		if (!worldObj->worldProvider->hasNoSky &&
+		    (!validBlockId(oldId) || Block::lightOpacity[oldId] != Block::lightOpacity[l]))
+		{
 			worldObj->scheduleLightingUpdate(EnumSkyBlock::Sky, worldX, j, worldZ, worldX, j, worldZ);
+		}
 	}
 
 	if (l != 0 && Block::blocksList[l] != nullptr)

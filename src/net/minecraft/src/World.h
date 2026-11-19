@@ -198,6 +198,27 @@ public:
 	// falling gravel, the neighbour's populate -- is streaming work however
 	// close to the viewer it lands.
 	bool isMarkingFromPlayerEdit() const { return markingFromPlayerEdit; }
+	bool isMarkingFromPiston() const { return markingFromPiston; }
+	class PistonMarkScope
+	{
+	public:
+		explicit PistonMarkScope(World *w) : world(w), previous(w != nullptr && w->markingFromPiston)
+		{
+			if (world != nullptr)
+				world->markingFromPiston = true;
+		}
+		~PistonMarkScope()
+		{
+			if (world != nullptr)
+				world->markingFromPiston = previous;
+		}
+		PistonMarkScope(const PistonMarkScope &) = delete;
+		PistonMarkScope &operator=(const PistonMarkScope &) = delete;
+
+	private:
+		World *world;
+		bool previous;
+	};
 	class PlayerEditMarkScope
 	{
 	public:
@@ -668,6 +689,7 @@ private:
 	ChunkLocalDecorationTarget chunkLocalDecoration;
 	bool markingFromLighting = false;
 	bool markingFromPlayerEdit = false;
+	bool markingFromPiston = false;
 	struct PopulationLightingBatch
 	{
 		bool valid = false;
