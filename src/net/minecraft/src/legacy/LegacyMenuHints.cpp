@@ -1,7 +1,15 @@
 #include "LegacyMenuHints.h"
 #include "net/minecraft/src/ControlIcon.h"
+#include "net/minecraft/src/HudSafeArea.h"
 #include "net/minecraft/src/UiStrings.h"
 #include "platform/PlatformConfig.h"
+
+int_t legacyHintRowY(int_t screenHeight, bool splitScreen)
+{
+    const HudSafeInsets safe = computeHudSafeInsets(Minecraft::getMinecraft(), 0, screenHeight, splitScreen);
+    const int_t baseOffset = splitScreen ? 12 : 15;
+    return screenHeight - baseOffset - safe.bottom;
+}
 
 void drawLegacyMenuHints(Minecraft *mc, int_t screenWidth, int_t screenHeight, bool showBack)
 {

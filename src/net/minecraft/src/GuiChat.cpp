@@ -9,6 +9,7 @@
 #include "GuiIngame.h"
 #include "GuiPlayerInfo.h"
 #include "GuiTextField.h"
+#include "HudSafeArea.h"
 #include "Minecraft.h"
 #include "NetClientHandler.h"
 #include "java/String.h"
@@ -50,12 +51,15 @@ void GuiChat::initGui()
     lwjgl::Keyboard::enableRepeatEvents(true);
     sentHistoryCursor = (int_t)mc->ingameGUI->getSentMessages().size();
     delete messageField;
+    const HudSafeInsets safe = computeHudSafeInsets(mc, width, height, false);
 #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
-    const int_t fieldY = height - 124;
+    const int_t fieldY = height - 124 - safe.bottom;
 #else
-    const int_t fieldY = height - 12;
+    const int_t fieldY = height - 12 - safe.bottom;
 #endif
-    messageField = new GuiTextField(this, fontRenderer, 4, fieldY, width - 4, 12, "");
+    const int_t fieldX = std::max<int_t>(4, safe.left + 2);
+    const int_t fieldW = std::max<int_t>(40, width - fieldX - std::max<int_t>(2, safe.right));
+    messageField = new GuiTextField(this, fontRenderer, fieldX, fieldY, fieldW, 12, "");
     messageField->setMaxStringLength(100);
     messageField->setEnableBackgroundDrawing(false);
     messageField->setFocused(true);
@@ -245,12 +249,15 @@ void GuiChat::getSentHistory(int_t direction)
 
 void GuiChat::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 {
+    const HudSafeInsets safe = computeHudSafeInsets(mc, width, height, false);
 #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
-    const int_t fieldY = height - 124;
+    const int_t fieldY = height - 124 - safe.bottom;
 #else
-    const int_t fieldY = height - 14;
+    const int_t fieldY = height - 14 - safe.bottom;
 #endif
-    drawRect(2, fieldY, width - 2, fieldY + 12, 0x80000000);
+    const int_t left = std::max<int_t>(2, safe.left);
+    const int_t right = width - std::max<int_t>(2, safe.right);
+    drawRect(left, fieldY, right, fieldY + 12, 0x80000000);
     if (messageField != nullptr)
         messageField->drawTextBox();
     GuiScreen::drawScreen(mouseX, mouseY, partialTick);

@@ -84,6 +84,8 @@ public:
 	// Xbox: draw without Minecraft's light (no night or cave darkness), as the
 	// port did before it had the lightmap.
 	bool fullbright;
+	// HUD safe area margin percentage (0..10%, steps of 1%) for TV overscan.
+	int_t hudSafeArea;
 	int_t renderDistance;
 	bool viewBobbing;
 	bool anaglyph;

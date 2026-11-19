@@ -12,6 +12,7 @@
 #include "net/minecraft/src/EnumOptions.h"
 #include "net/minecraft/src/GameSettings.h"
 #include "net/minecraft/src/GuiButton.h"
+#include "net/minecraft/src/HudSafeArea.h"
 #include "net/minecraft/src/Minecraft.h"
 #include "platform/PlatformConfig.h"
 #include "platform/PlatformUserSettings.h"
@@ -33,6 +34,7 @@ enum LegacyVideoButtonId
     BUTTON_FULLBRIGHT = 310,
     BUTTON_OPAQUE_ICE = 311,
     BUTTON_POCKET_OPTIMIZATIONS = 312,
+    BUTTON_SAFE_AREA = 313,
     BUTTON_PREV_PAGE = 397,
     BUTTON_NEXT_PAGE = 398,
     BUTTON_DONE = 399
@@ -45,7 +47,7 @@ LegacyVideoOptions::LegacyVideoOptions(GuiScreen *parent, GameSettings *settings
     : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), graphicsCheckbox(nullptr), smoothLightingCheckbox(nullptr),
       viewBobbingCheckbox(nullptr), cloudsCheckbox(nullptr), fogCheckbox(nullptr), deflickerCheckbox(nullptr),
       frameCapCheckbox(nullptr), coordinatesCheckbox(nullptr), fullbrightCheckbox(nullptr),
-      opaqueIceCheckbox(nullptr), pocketOptimizationsCheckbox(nullptr), page(0)
+      opaqueIceCheckbox(nullptr), pocketOptimizationsCheckbox(nullptr), safeAreaSlider(nullptr), page(0)
 {
 }
 
@@ -68,6 +70,7 @@ void LegacyVideoOptions::rebuildControls()
     fullbrightCheckbox = nullptr;
     opaqueIceCheckbox = nullptr;
     pocketOptimizationsCheckbox = nullptr;
+    safeAreaSlider = nullptr;
 
     std::vector<int_t> items;
     items.push_back(BUTTON_GRAPHICS);
@@ -91,6 +94,9 @@ void LegacyVideoOptions::rebuildControls()
 #endif
     items.push_back(BUTTON_RENDER_DISTANCE);
     items.push_back(BUTTON_BRIGHTNESS);
+#if !(PLATFORM_PS2 || PLATFORM_WII)
+    items.push_back(BUTTON_SAFE_AREA);
+#endif
 
     const int_t totalItems = static_cast<int_t>(items.size());
     const int_t maxRows = legacyOptionsMaxRows(width, height, LegacyOptionsLayoutPreset::Compact);
@@ -180,6 +186,11 @@ void LegacyVideoOptions::rebuildControls()
         case BUTTON_BRIGHTNESS:
             controlList.push_back(new LegacyOptionSlider(BUTTON_BRIGHTNESS, x, y, w, h,
                 settings, EnumOptions::BRIGHTNESS));
+            break;
+        case BUTTON_SAFE_AREA:
+            safeAreaSlider = new LegacyOptionSlider(BUTTON_SAFE_AREA, x, y, w, h,
+                settings, EnumOptions::HUD_SAFE_AREA);
+            controlList.push_back(safeAreaSlider);
             break;
         default:
             break;
@@ -314,4 +325,15 @@ void LegacyVideoOptions::drawScreen(int_t mouseX, int_t mouseY, float_t partialT
     drawLegacyBackground(partialTick);
     updateLegacyPointerHover(mouseX, mouseY);
     GuiScreen::drawScreen(mouseX, mouseY, partialTick);
+    if (safeAreaSlider != nullptr && settings != nullptr)
+    {
+        const bool selected = (selectedControlIndex >= 0 &&
+            selectedControlIndex < static_cast<int_t>(controlList.size()) &&
+            controlList[static_cast<std::size_t>(selectedControlIndex)] == safeAreaSlider);
+        const bool hovered = mouseX >= safeAreaSlider->xPosition && mouseY >= safeAreaSlider->yPosition &&
+            mouseX < safeAreaSlider->xPosition + safeAreaSlider->getButtonWidth() &&
+            mouseY < safeAreaSlider->yPosition + safeAreaSlider->getButtonHeight();
+        if (selected || hovered)
+            drawHudSafeAreaPreview(width, height, settings->hudSafeArea);
+    }
 }

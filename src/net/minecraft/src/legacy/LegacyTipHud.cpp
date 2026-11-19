@@ -5,6 +5,7 @@
 
 #include "net/minecraft/src/FontRenderer.h"
 #include "net/minecraft/src/GameSettings.h"
+#include "net/minecraft/src/HudSafeArea.h"
 #include "net/minecraft/src/Minecraft.h"
 #include "net/minecraft/src/RenderEngine.h"
 #include "platform/RenderAPI.h"
@@ -168,8 +169,9 @@ void LegacyTipHud::render(Minecraft *mc, int_t screenWidth, int_t screenHeight)
     const int_t width = std::min<int_t>(maxWidth, textWidth + TIP_TEXT_INSET * 2);
     const int_t textHeight = static_cast<int_t>(tip.lines.size()) * TIP_LINE_SPACING;
     const int_t height = TIP_BASE_HEIGHT + textHeight;
-    const int_t x = std::max<int_t>(0, screenWidth - width - TIP_RIGHT_MARGIN);
-    const int_t y = TIP_TOP;
+    const HudSafeInsets safe = computeHudSafeInsets(mc, screenWidth, screenHeight, true);
+    const int_t x = std::max<int_t>(0, screenWidth - width - std::max<int_t>(TIP_RIGHT_MARGIN, safe.right));
+    const int_t y = std::max<int_t>(TIP_TOP, safe.top);
 
     const int_t panelTexture = g_pointerPanel.resolve(mc->renderEngine);
     if (panelTexture >= 0)

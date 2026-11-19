@@ -87,6 +87,7 @@ public:
 	static EnumOptions *SPLITSCREEN_LAYOUT;
 	static EnumOptions *OPAQUE_ICE;
 	static EnumOptions *POCKET_OPTIMIZATIONS;
+	static EnumOptions *HUD_SAFE_AREA;
 
 	static EnumOptions *getEnumOptions(int_t i);
 

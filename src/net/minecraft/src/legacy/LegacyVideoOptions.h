@@ -34,5 +34,6 @@ private:
     LegacyOptionCheckbox *fullbrightCheckbox;
     LegacyOptionCheckbox *opaqueIceCheckbox;
     LegacyOptionCheckbox *pocketOptimizationsCheckbox;
+    LegacyOptionSlider *safeAreaSlider;
     int_t page;
 };

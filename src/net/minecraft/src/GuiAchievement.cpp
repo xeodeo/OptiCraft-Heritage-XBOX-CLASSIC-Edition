@@ -7,6 +7,7 @@
 #include "RenderEngine.h"
 #include "ScaledResolution.h"
 #include "FontRenderer.h"
+#include "HudSafeArea.h"
 #include "StatCollector.h"
 #include "platform/RenderAPI.h"
 #include "java/Arithmetic.h"
@@ -105,8 +106,9 @@ void GuiAchievement::updateAchievementWindow()
 	if (d1 < 0.0f) d1 = 0.0f;
 	d1 *= d1;
 	d1 *= d1;
-	int_t i = achievementWindowWidth - 160;
-	int_t j = 0 - (int_t)(d1 * 36.0f);
+	const HudSafeInsets safe = computeHudSafeInsets(theGame, achievementWindowWidth, achievementWindowHeight, false);
+	int_t i = achievementWindowWidth - 160 - safe.right;
+	int_t j = safe.top - (int_t)(d1 * (36.0f + static_cast<float>(safe.top)));
 	int_t k = theGame->renderEngine->getTexture("/achievement/bg.png");
 	renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	renderEnable(RenderCapability::Texture2D);
