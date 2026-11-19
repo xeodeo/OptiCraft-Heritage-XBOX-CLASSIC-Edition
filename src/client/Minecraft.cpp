@@ -2634,12 +2634,28 @@ void Minecraft::usePortal(int_t targetDimension)
     changeWorld(destinationWorld, transitionMessage, thePlayer);
     thePlayer->worldObj = theWorld;
 
-    if (thePlayer->isEntityAlive() && previousDimension < 1)
+    if (thePlayer->isEntityAlive())
     {
-        thePlayer->setLocationAndAngles(targetX, thePlayer->posY, targetZ,
-                                        thePlayer->rotationYaw, thePlayer->rotationPitch);
-        theWorld->updateEntityWithOptionalForce(thePlayer, false);
-        Teleporter().placeInPortal(theWorld, thePlayer);
+        if (previousDimension < 1)
+        {
+            thePlayer->setLocationAndAngles(targetX, thePlayer->posY, targetZ,
+                                            thePlayer->rotationYaw, thePlayer->rotationPitch);
+            theWorld->updateEntityWithOptionalForce(thePlayer, false);
+            Teleporter().placeInPortal(theWorld, thePlayer);
+        }
+
+        thePlayer->prevPosX = thePlayer->lastTickPosX = thePlayer->posX;
+        thePlayer->prevPosY = thePlayer->lastTickPosY = thePlayer->posY;
+        thePlayer->prevPosZ = thePlayer->lastTickPosZ = thePlayer->posZ;
+        thePlayer->prevRotationYaw = thePlayer->rotationYaw;
+        thePlayer->prevRotationPitch = thePlayer->rotationPitch;
+        thePlayer->prevRenderArmPitch = thePlayer->renderArmPitch = 0.0f;
+        thePlayer->prevRenderArmYaw = thePlayer->renderArmYaw = 0.0f;
+        thePlayer->timeInPortal = 0.0f;
+        thePlayer->prevTimeInPortal = 0.0f;
+        thePlayer->timeUntilPortal = 100;
+        thePlayer->motionX = thePlayer->motionY = thePlayer->motionZ = 0.0;
+        thePlayer->fallDistance = 0.0f;
     }
 }
 
