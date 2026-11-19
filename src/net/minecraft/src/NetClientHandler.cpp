@@ -698,9 +698,22 @@ void NetClientHandler::handleMapChunk(Packet51MapChunk* packet)
 #endif
 #endif
 
+    const int_t primaryMask = packet->yChMin & 0xffff;
+    int_t yMinBlocks = 0;
+    int_t yMaxBlocks = WorldHeight::HEIGHT;
+    if (primaryMask != 0)
+    {
+        int_t lo = 0;
+        while (((primaryMask >> lo) & 1) == 0) ++lo;
+        int_t hi = 15;
+        while (((primaryMask >> hi) & 1) == 0) --hi;
+        yMinBlocks = JavaArithmetic::intShl(lo, 4);
+        yMaxBlocks = std::min<int_t>(WorldHeight::HEIGHT, JavaArithmetic::intShl(hi + 1, 4));
+    }
+
     worldClient->invalidateBlockReceiveRegion(
-        JavaArithmetic::intShl(packet->xCh, 4), 0, JavaArithmetic::intShl(packet->zCh, 4),
-        JavaArithmetic::intAdd(JavaArithmetic::intShl(packet->xCh, 4), 15), WorldHeight::HEIGHT,
+        JavaArithmetic::intShl(packet->xCh, 4), yMinBlocks, JavaArithmetic::intShl(packet->zCh, 4),
+        JavaArithmetic::intAdd(JavaArithmetic::intShl(packet->xCh, 4), 15), yMaxBlocks,
         JavaArithmetic::intAdd(JavaArithmetic::intShl(packet->zCh, 4), 15));
 
 #if !(PLATFORM_PS2 && PLATFORM_MP_DEFERRED_CHUNKS)
@@ -729,8 +742,8 @@ void NetClientHandler::handleMapChunk(Packet51MapChunk* packet)
     }
 
     worldClient->markBlocksDirty(
-        JavaArithmetic::intShl(packet->xCh, 4), 0, JavaArithmetic::intShl(packet->zCh, 4),
-        JavaArithmetic::intAdd(JavaArithmetic::intShl(packet->xCh, 4), 15), WorldHeight::HEIGHT,
+        JavaArithmetic::intShl(packet->xCh, 4), yMinBlocks, JavaArithmetic::intShl(packet->zCh, 4),
+        JavaArithmetic::intAdd(JavaArithmetic::intShl(packet->xCh, 4), 15), yMaxBlocks,
         JavaArithmetic::intAdd(JavaArithmetic::intShl(packet->zCh, 4), 15));
 
     if (!packet->includeInitialize || dynamic_cast<WorldProviderSurface *>(worldClient->worldProvider) == nullptr)
