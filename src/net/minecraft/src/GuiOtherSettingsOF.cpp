@@ -36,6 +36,10 @@ void GuiOtherSettingsOF::initGui()
 	enumOptions.push_back(EnumOptions::WEATHER);
 	enumOptions.push_back(EnumOptions::TIME);
 	enumOptions.push_back(EnumOptions::AUTOSAVE_TICKS);
+#if PLATFORM_XBOX
+	enumOptions.push_back(EnumOptions::SHOW_COORDINATES);
+	enumOptions.push_back(EnumOptions::FULLBRIGHT);
+#endif
 
 	StringTranslate *tr = StringTranslate::getInstance();
 	int_t i = 0;

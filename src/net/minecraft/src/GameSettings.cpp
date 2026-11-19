@@ -913,6 +913,14 @@ void GameSettings::setOptionValue(const EnumOptions *enumoptions, int_t i)
     {
         ofAnimatedTextures = !ofAnimatedTextures;
     }
+    if (enumoptions == EnumOptions::SHOW_COORDINATES)
+    {
+        showCoordinates = !showCoordinates;
+    }
+    if (enumoptions == EnumOptions::FULLBRIGHT)
+    {
+        fullbright = !fullbright;
+    }
     saveOptions();
 }
 
@@ -1199,6 +1207,10 @@ std::string GameSettings::getKeyBinding(const EnumOptions *enumoptions)
         return s + (ofOpaqueIce ? uiText("ON") : uiText("OFF"));
     if (enumoptions == EnumOptions::POCKET_OPTIMIZATIONS)
         return s + (ofPocketOptimizations ? uiText("ON") : uiText("OFF"));
+    if (enumoptions == EnumOptions::SHOW_COORDINATES)
+        return s + (showCoordinates ? uiText("ON") : uiText("OFF"));
+    if (enumoptions == EnumOptions::FULLBRIGHT)
+        return s + (fullbright ? uiText("ON") : uiText("OFF"));
     if (enumoptions == EnumOptions::SWAMP_COLORS)
         return s + (ofSwampColors ? uiText("ON") : uiText("OFF"));
     if (enumoptions == EnumOptions::SMOOTH_BIOMES)
