@@ -2713,7 +2713,9 @@ bool World::entityJoinedWorld(Entity* entity)
         // into a dangling pointer as soon as updateEntities() deletes the first copy.
         // changeWorld() exercises this path by joining the transferred player and then
         // calling spawnPlayerWithLoadedChunks() for that same player.
-        if (std::find(loadedEntityList.begin(), loadedEntityList.end(), entity) != loadedEntityList.end())
+        // isLoadedEntityPointer() is O(1) on PC/Xbox/PS2, avoiding quadratic
+        // scans when explosions spawn hundreds of item entities in one tick.
+        if (isLoadedEntityPointer(entity))
             return true;
 
         if (entity->isPlayer())
@@ -3285,9 +3287,12 @@ static int_t s_pathfindBudgetThisTick = 0;
 
 void World::trackLoadedEntityPointer(Entity *entity)
 {
-#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
+#if PLATFORM_PC || PLATFORM_XBOX
     if (entity != nullptr)
+    {
         loadedEntityPointerSet.insert(entity);
+        loadedEntityPointerSetListSize = loadedEntityList.size();
+    }
 #elif PLATFORM_PS2
     if (entity != nullptr && !loadedEntityPointerIndexOverflow && !loadedEntityPointerIndex.insert(entity))
         loadedEntityPointerIndexOverflow = true;
@@ -3298,9 +3303,12 @@ void World::trackLoadedEntityPointer(Entity *entity)
 
 void World::untrackLoadedEntityPointer(Entity *entity)
 {
-#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
+#if PLATFORM_PC || PLATFORM_XBOX
     if (entity != nullptr)
+    {
         loadedEntityPointerSet.erase(entity);
+        loadedEntityPointerSetListSize = loadedEntityList.size();
+    }
 #elif PLATFORM_PS2
     if (entity != nullptr && !loadedEntityPointerIndexOverflow)
         loadedEntityPointerIndex.erase(entity);
@@ -3311,7 +3319,7 @@ void World::untrackLoadedEntityPointer(Entity *entity)
 
 void World::rebuildLoadedEntityPointerSet() const
 {
-#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
+#if PLATFORM_PC || PLATFORM_XBOX
     loadedEntityPointerSet.clear();
     loadedEntityPointerSet.insert(loadedEntityList.begin(), loadedEntityList.end());
     loadedEntityPointerSetListSize = loadedEntityList.size();
@@ -3340,7 +3348,7 @@ bool World::isLoadedEntityPointer(const Entity *entity) const
 {
     if (entity == nullptr)
         return false;
-#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
+#if PLATFORM_PC || PLATFORM_XBOX
     // Rebuild only when the list changed since the last rebuild: comparing against the set size rebuilt on
     // every lookup whenever the list held a duplicate, which made each AABB query quadratic.
     if (loadedEntityList.size() != loadedEntityPointerSetListSize)
@@ -3424,7 +3432,7 @@ void World::updateEntities()
     {
         for (Entity *entity : unloadedEntityList)
             untrackLoadedEntityPointer(entity);
-#if PLATFORM_PC_LEGACY || PLATFORM_XBOX
+#if PLATFORM_PC || PLATFORM_XBOX
         loadedEntityList.erase(
             std::remove_if(loadedEntityList.begin(), loadedEntityList.end(),
                 [this](Entity* entity)
@@ -3432,6 +3440,7 @@ void World::updateEntities()
                     return loadedEntityPointerSet.find(entity) == loadedEntityPointerSet.end();
                 }),
             loadedEntityList.end());
+        loadedEntityPointerSetListSize = loadedEntityList.size();
 #else
         loadedEntityList.erase(
             std::remove_if(loadedEntityList.begin(), loadedEntityList.end(),

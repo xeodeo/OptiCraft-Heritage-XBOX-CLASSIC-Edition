@@ -25,7 +25,10 @@ EffectRenderer::EffectRenderer(World *world, RenderEngine *renderengine)
         worldObj = world;
 
     for (int i = 0; i < 4; i++)
+    {
+        fxEvictCursor[i] = 0;
         fxLayers[i].clear();
+    }
 }
 
 EffectRenderer::~EffectRenderer() = default;
@@ -40,7 +43,13 @@ void EffectRenderer::addEffect(EntityFX *entityfx)
 #ifdef PS2_OPTIMIZATION_VALIDATION
         Ps2OptimizationValidation::particleLayerCapEviction();
 #endif
-        fxLayers[i].erase(fxLayers[i].begin());
+        const int_t cap = PLATFORM_MAX_PARTICLES_PER_LAYER;
+        int_t &cursor = fxEvictCursor[i];
+        if (cursor < 0 || cursor >= cap)
+            cursor = 0;
+        fxLayers[i][cursor].reset(entityfx);
+        cursor = (cursor + 1) % cap;
+        return;
     }
 	fxLayers[i].emplace_back(entityfx);
 }
@@ -67,15 +76,11 @@ void EffectRenderer::updateEffects()
             entityfx->onUpdate();
             if (entityfx->isDead)
             {
-#if PLATFORM_FAST_PARTICLE_PHYSICS
                 // Order within a layer is not observable, so a dead particle
                 // is swapped with the last one instead of shifting the vector.
                 if (j != (int)fxLayers[i].size() - 1)
                     std::swap(fxLayers[i][j], fxLayers[i].back());
                 fxLayers[i].pop_back();
-#else
-                fxLayers[i].erase(fxLayers[i].begin() + j);
-#endif
                 j--;
             }
         }
@@ -145,7 +150,10 @@ void EffectRenderer::clearEffects(World *world)
 {
     worldObj = world;
     for (int i = 0; i < 4; i++)
+    {
+        fxEvictCursor[i] = 0;
         fxLayers[i].clear();
+    }
 }
 
 void EffectRenderer::addBlockDestroyEffects(int_t i, int_t j, int_t k, int_t l, int_t i1)
