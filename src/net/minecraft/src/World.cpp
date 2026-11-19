@@ -1070,6 +1070,14 @@ bool World::checkChunksExist(int minX, int minY, int minZ, int maxX, int maxY, i
 
 bool World::chunkExists(int chunkX, int chunkZ)
 {
+    if (isLimitedWorld() && (worldProvider == nullptr || worldProvider->worldType == 0))
+    {
+        const WorldInfo *info = getWorldInfo();
+        const int_t minChunk = info != nullptr ? info->getLimitedWorldMinChunk() : -8;
+        const int_t maxChunk = info != nullptr ? info->getLimitedWorldMaxChunk() : 7;
+        if (chunkX < minChunk || chunkX > maxChunk || chunkZ < minChunk || chunkZ > maxChunk)
+            return true;
+    }
     return chunkProvider->chunkExists(chunkX, chunkZ);
 }
 
