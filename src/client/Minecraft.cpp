@@ -414,6 +414,8 @@ Minecraft::~Minecraft()
     if (RenderManager::instance != nullptr)
         RenderManager::instance->setWorld(nullptr);
 
+    flushDeferredPlayers();
+
     std::unordered_set<World *> worlds;
     worlds.insert(worldsToDelete.begin(), worldsToDelete.end());
     if (theWorld != nullptr)
@@ -862,8 +864,9 @@ void Minecraft::shutdownMinecraftApplet()
         MC_LOG_INFO("client", "Stopping!\n");
 
         try { changeWorld1(nullptr); } catch (...) {}
-        // No habra mas runTick que vacie la cola diferida: borrar el mundo ahora
-        // (en shutdown no hay ningun World::tick() en la pila).
+        // No habra mas runTick que vacie la cola diferida: borrar el jugador y
+        // los mundos ahora (en shutdown no hay ningun World::tick() en la pila).
+        try { flushDeferredPlayers(); } catch (...) {}
         try
         {
             for (World *w : worldsToDelete)
@@ -1830,6 +1833,9 @@ void Minecraft::runTick()
         }
     }
 
+    // Safe point to free players abandoned by portal/world transitions.
+    flushDeferredPlayers();
+
     // Safe point to free worlds abandoned by changeWorld(): no World::tick() is on the
     // call stack here (the MP dimension-change path defers the delete to right here).
     if (!worldsToDelete.empty())
@@ -2637,6 +2643,27 @@ void Minecraft::usePortal(int_t targetDimension)
     }
 }
 
+void Minecraft::flushDeferredPlayers()
+{
+    if (playersToDelete.empty())
+        return;
+
+    std::vector<EntityPlayerSP *> players;
+    players.swap(playersToDelete);
+    std::unordered_set<EntityPlayerSP *> seen;
+    for (EntityPlayerSP *player : players)
+    {
+        if (player == nullptr || seen.count(player) > 0)
+            continue;
+        seen.insert(player);
+        if (player == thePlayer || player == thePlayerOne || player == thePlayer2 ||
+            player == renderViewEntity)
+            continue;
+        MC_LOG_DEBUG("heap", "Deleting deferred player ptr=%p\n", static_cast<void *>(player));
+        delete player;
+    }
+}
+
 void Minecraft::changeWorld1(World *world)
 {
     changeWorld2(world, "");
@@ -2788,7 +2815,8 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
         discardPlayer2Screen();
         if (thePlayer2 != nullptr)
         {
-            delete thePlayer2;
+            if (std::find(playersToDelete.begin(), playersToDelete.end(), thePlayer2) == playersToDelete.end())
+                playersToDelete.push_back(thePlayer2);
             thePlayer2 = nullptr;
         }
         delete objectMouseOver2;
@@ -2809,7 +2837,8 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
         discardPlayer2Screen();
         if (thePlayer2 != nullptr)
         {
-            delete thePlayer2;
+            if (std::find(playersToDelete.begin(), playersToDelete.end(), thePlayer2) == playersToDelete.end())
+                playersToDelete.push_back(thePlayer2);
             thePlayer2 = nullptr;
         }
         delete objectMouseOver2;

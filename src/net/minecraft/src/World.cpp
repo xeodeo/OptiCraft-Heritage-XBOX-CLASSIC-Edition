@@ -3529,6 +3529,14 @@ void World::updateEntities()
 #endif
         }
         
+        // updateEntity() can move this entity out of this world (portal or
+        // dimension transition) and erase it from loadedEntityList. Index l
+        // then refers to a different entity; erasing by that stale index would
+        // delete an unrelated entity from the list and leave its chunk/skin
+        // state dangling. Let the next pass handle the slot instead.
+        if (l >= loadedEntityList.size() || loadedEntityList[l] != entity)
+            continue;
+
         if (entity->isDead)
         {
             int chunkX = entity->chunkCoordX;

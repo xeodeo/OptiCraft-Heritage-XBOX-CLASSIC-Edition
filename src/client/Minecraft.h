@@ -99,6 +99,7 @@ public:
     void startWorld(ISaveFormat *saveFormat, const std::string &s, const std::string &s1, WorldSettings *settings,
                     const WorldLoadOptions &options);
     void usePortal(int_t targetDimension);
+    void flushDeferredPlayers();
     void changeWorld1(World *world);
     void changeWorld2(World *world, const std::string &s);
     void changeWorld(World *world, const std::string &s, EntityPlayerSP *entityplayer);
@@ -205,6 +206,7 @@ public:
     GuiScreen *currentScreen;
     std::vector<GuiScreen *> ownedGuiScreens;    // every screen we showed; purged when the stack is abandoned
     std::vector<GuiScreen *> guiScreensToDelete; // deferred frees; flushed at runTick start (never delete a screen mid-handler)
+    std::vector<EntityPlayerSP *> playersToDelete; // deferred player frees; portal/world change can run while player update is on the stack
     std::vector<World *> worldsToDelete;         // deferred world frees; flushed at runTick start (changeWorld can run mid-tick via MP packet handling -> never delete the world being ticked)
     LoadingScreenRenderer *loadingScreen;
     EntityRenderer *entityRenderer;
