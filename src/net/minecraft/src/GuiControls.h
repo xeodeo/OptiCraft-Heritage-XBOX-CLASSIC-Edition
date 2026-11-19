@@ -13,6 +13,7 @@ public:
 	GuiControls(GuiScreen *parent, GameSettings *settings);
 
 	void initGui() override;
+	void onGuiClosed() override;
 
 protected:
 	void actionPerformed(GuiButton *button) override;
@@ -34,5 +35,8 @@ protected:
 
 private:
 	int_t buttonId;
+	int_t listTopY;
+	int_t listRowStep;
+	int_t listButtonHeight;
 	std::vector<int_t> displayedBindings;
 };

@@ -50,6 +50,7 @@ bool s_backCombo = false;
 int s_waypointRequest = 0;
 int s_menuAnalogDirection = 0;
 float s_menuAnalogRepeat = 0.0f;
+bool s_rebindStickArmed = false;
 
 // --- menu pointer (Ps2Pointer) -----------------------------------------------
 float s_pointerX = 320.0f;   // recentred by pointerEnterMenu()
@@ -198,6 +199,18 @@ const struct { unsigned short mask; int code; } kRemappableButtons[] = {
 	{ XBOX_PAD_DPAD_LEFT, XBOX_KEY_DPAD_LEFT },     { XBOX_PAD_DPAD_RIGHT, XBOX_KEY_DPAD_RIGHT },
 };
 
+int rebindStickKeyCode(int direction)
+{
+	switch (direction)
+	{
+		case 1: return XBOX_KEY_LSTICK_UP;
+		case 2: return XBOX_KEY_LSTICK_DOWN;
+		case 3: return XBOX_KEY_LSTICK_LEFT;
+		case 4: return XBOX_KEY_LSTICK_RIGHT;
+		default: return 0;
+	}
+}
+
 void pushKeyEdge(const XboxPadSnapshot& p, unsigned short mask, int key)
 {
 	if (p.pressed & mask) lwjgl::Keyboard::detail::pushKey(key, true);
@@ -207,22 +220,61 @@ void pushKeyEdge(const XboxPadSnapshot& p, unsigned short mask, int key)
 void updateMenu(const XboxPadSnapshot& p, bool specializedMenuNavigation)
 {
 	if (platformTextInputExclusive())
+	{
+		s_rebindStickArmed = false;
 		return;
+	}
 
 	if (platformPadRebindExclusive())
 	{
-		// GuiControls is waiting for a new binding: report one pressed button.
+		// GuiControls / LegacyControlsScreen is waiting for a new binding:
+		// report one pressed button or a fresh left-stick tilt.
+		if (p.pressed & (XBOX_PAD_START | XBOX_PAD_BACK))
+		{
+			lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_ESCAPE, true);
+			lwjgl::Keyboard::detail::pushKey(lwjgl::Keyboard::KEY_ESCAPE, false);
+			s_rebindStickArmed = false;
+			return;
+		}
 		for (const auto& entry : kRemappableButtons)
 		{
 			if (p.pressed & entry.mask)
 			{
 				lwjgl::Keyboard::detail::pushKey(entry.code, true);
 				lwjgl::Keyboard::detail::pushKey(entry.code, false);
-				break;
+				s_rebindStickArmed = false;
+				return;
+			}
+		}
+		const float sx = XboxInput::applyDeadzone(p.leftX);
+		const float sy = XboxInput::applyDeadzone(p.leftY);
+		if (!s_rebindStickArmed)
+		{
+			if (absoluteValue(sx) <= MENU_NAV_RELEASE_THRESHOLD &&
+			    absoluteValue(sy) <= MENU_NAV_RELEASE_THRESHOLD)
+			{
+				s_rebindStickArmed = true;
+			}
+			return;
+		}
+		const int direction = menuAnalogDirection(sx, sy);
+		if (direction != 0)
+		{
+			const int stickCode = rebindStickKeyCode(direction);
+			if (stickCode != 0)
+			{
+				lwjgl::Keyboard::detail::pushKey(stickCode, true);
+				lwjgl::Keyboard::detail::pushKey(stickCode, false);
+				// Latch the stick direction in analog nav so holding it slightly
+				// past capture does not immediately step to an adjacent row.
+				s_menuAnalogDirection = direction;
+				s_menuAnalogRepeat = MENU_NAV_REPEAT_DELAY;
+				s_rebindStickArmed = false;
 			}
 		}
 		return;
 	}
+	s_rebindStickArmed = false;
 
 	const float dt = pointerBeginFrame();
 	const float dpadSpeed = 300.0f, analogSpeed = 420.0f;

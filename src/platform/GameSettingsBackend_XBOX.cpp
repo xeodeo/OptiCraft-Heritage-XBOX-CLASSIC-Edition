@@ -96,11 +96,11 @@ void platformGameSettingsFinalizeLoad(GameSettings& settings)
 		settings.renderDistance = PLATFORM_DEFAULT_RENDER_DISTANCE;
 	settings.ofChunkUpdates = std::max(settings.ofChunkUpdates, (int_t)PLATFORM_MAX_RENDERER_UPDATES_PER_FRAME);
 	// Saves from before the D-pad split walked with the D-pad codes (or a
-	// keyboard code): move them to the stick so the stick walks again.
-	if (settings.keyBindForward->keyCode == XBOX_KEY_DPAD_UP || settings.keyBindForward->keyCode == 17) settings.keyBindForward->keyCode = XBOX_KEY_LSTICK_UP;
-	if (settings.keyBindLeft->keyCode == XBOX_KEY_DPAD_LEFT || settings.keyBindLeft->keyCode == 30) settings.keyBindLeft->keyCode = XBOX_KEY_LSTICK_LEFT;
-	if (settings.keyBindBack->keyCode == XBOX_KEY_DPAD_DOWN || settings.keyBindBack->keyCode == 31) settings.keyBindBack->keyCode = XBOX_KEY_LSTICK_DOWN;
-	if (settings.keyBindRight->keyCode == XBOX_KEY_DPAD_RIGHT || settings.keyBindRight->keyCode == 32) settings.keyBindRight->keyCode = XBOX_KEY_LSTICK_RIGHT;
+	// keyboard/mouse code): move them to the stick so the stick walks again.
+	if (settings.keyBindForward->keyCode == XBOX_KEY_DPAD_UP || settings.keyBindForward->keyCode < lwjgl::Keyboard::KEY_MAX) settings.keyBindForward->keyCode = XBOX_KEY_LSTICK_UP;
+	if (settings.keyBindLeft->keyCode == XBOX_KEY_DPAD_LEFT || settings.keyBindLeft->keyCode < lwjgl::Keyboard::KEY_MAX) settings.keyBindLeft->keyCode = XBOX_KEY_LSTICK_LEFT;
+	if (settings.keyBindBack->keyCode == XBOX_KEY_DPAD_DOWN || settings.keyBindBack->keyCode < lwjgl::Keyboard::KEY_MAX) settings.keyBindBack->keyCode = XBOX_KEY_LSTICK_DOWN;
+	if (settings.keyBindRight->keyCode == XBOX_KEY_DPAD_RIGHT || settings.keyBindRight->keyCode < lwjgl::Keyboard::KEY_MAX) settings.keyBindRight->keyCode = XBOX_KEY_LSTICK_RIGHT;
 	migrateKey(settings.keyBindJump, XBOX_KEY_A);
 	migrateKey(settings.keyBindInventory, XBOX_KEY_Y);
 	migrateKey(settings.keyBindDrop, XBOX_KEY_B);

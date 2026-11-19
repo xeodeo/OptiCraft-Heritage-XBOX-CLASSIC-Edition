@@ -3,6 +3,11 @@
 
 #include <fstream>
 #include <algorithm>
+#ifdef XBOX_PLATFORM
+#include "legacy/XboxButtonAtlasPng.h"
+#include "legacy/LegacyCraftingIconsPng.h"
+#include <sstream>
+#endif
 #if !defined(PS2_PLATFORM) && !defined(WII_PLATFORM) && !defined(XBOX_PLATFORM)
 #include <filesystem>
 #endif
@@ -33,6 +38,15 @@ void TexturePackBase::bindThumbnailTexture(Minecraft *minecraft)
 
 std::istream* TexturePackBase::getResourceAsStream(const std::string &s)
 {
+#ifdef XBOX_PLATFORM
+	// Serve the compiled-in Xbox button atlas and crafting icons ahead of
+	// data/ and assets.pak so the texture always matches XboxButtonAtlasData.h
+	// even on consoles with an older buttons_xbox.png on disk.
+	if (s.find("buttons_xbox.png") != std::string::npos)
+		return new std::istringstream(std::string(reinterpret_cast<const char*>(s_xboxButtonAtlasPngData), XBOX_BUTTON_ATLAS_PNG_SIZE));
+	if (s.find("crafting_icons.png") != std::string::npos)
+		return new std::istringstream(std::string(reinterpret_cast<const char*>(s_legacyCraftingIconsPngData), LEGACY_CRAFTING_ICONS_PNG_SIZE));
+#endif
 	// Java getResourceAsStream fallback: resolve against the vanilla asset root.
 	auto stream = GameResources::open(s);
 	return stream.release();
