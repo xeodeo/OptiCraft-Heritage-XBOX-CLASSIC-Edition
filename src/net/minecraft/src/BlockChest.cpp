@@ -17,7 +17,10 @@
 BlockChest::BlockChest(int_t i)
 	: BlockContainer(i, Material::wood)
 {
-	blockIndexInTexture = 26;
+	// Use oak planks (tile 4, matching Java 1.5.2): LCE TU19 texture packs
+	// reuse Beta chest tiles 25/26 for Emerald/Redstone blocks, which caused
+	// green break particles in EntityDiggingFX.
+	blockIndexInTexture = 4;
 }
 
 bool BlockChest::isOpaqueCube()
@@ -145,59 +148,14 @@ void BlockChest::unifyAdjacentChests(World *world, int_t i, int_t j, int_t k)
 
 int_t BlockChest::getBlockTexture(IBlockAccess *access, int_t i, int_t j, int_t k, int_t side)
 {
-	if (side == 0 || side == 1)
-		return blockIndexInTexture - 1;
-
-	int_t north = access->getBlockId(i, j, k - 1);
-	int_t south = access->getBlockId(i, j, k + 1);
-	int_t west = access->getBlockId(i - 1, j, k);
-	int_t east = access->getBlockId(i + 1, j, k);
-
-	if (north != blockID && south != blockID)
-	{
-		if (west != blockID && east != blockID)
-		{
-			int_t front = 3;
-			if (isOpaqueBlockId(south) && !isOpaqueBlockId(north))
-				front = 2;
-			if (isOpaqueBlockId(west) && !isOpaqueBlockId(east))
-				front = 5;
-			if (isOpaqueBlockId(east) && !isOpaqueBlockId(west))
-				front = 4;
-			return side == front ? blockIndexInTexture + 1 : blockIndexInTexture;
-		}
-		if (side == 4 || side == 5)
-			return blockIndexInTexture;
-
-		int_t offset = west == blockID ? -1 : 0;
-		int_t sideNorth = access->getBlockId(west == blockID ? i - 1 : i + 1, j, k - 1);
-		int_t sideSouth = access->getBlockId(west == blockID ? i - 1 : i + 1, j, k + 1);
-		if (side == 3)
-			offset = -1 - offset;
-		int_t front = 3;
-		if ((isOpaqueBlockId(south) || isOpaqueBlockId(sideSouth)) && !isOpaqueBlockId(north) && !isOpaqueBlockId(sideNorth))
-			front = 2;
-		return (side == front ? blockIndexInTexture + 16 : blockIndexInTexture + 32) + offset;
-	}
-
-	if (side == 2 || side == 3)
-		return blockIndexInTexture;
-	int_t offset = north == blockID ? -1 : 0;
-	int_t sideWest = access->getBlockId(i - 1, j, north == blockID ? k - 1 : k + 1);
-	int_t sideEast = access->getBlockId(i + 1, j, north == blockID ? k - 1 : k + 1);
-	if (side == 4)
-		offset = -1 - offset;
-	int_t front = 5;
-	if ((isOpaqueBlockId(east) || isOpaqueBlockId(sideEast)) && !isOpaqueBlockId(west) && !isOpaqueBlockId(sideWest))
-		front = 4;
-	return (side == front ? blockIndexInTexture + 16 : blockIndexInTexture + 32) + offset;
+	(void)access; (void)i; (void)j; (void)k; (void)side;
+	return blockIndexInTexture;
 }
 
 int_t BlockChest::getBlockTextureFromSide(int_t side)
 {
-	if (side == 0 || side == 1)
-		return blockIndexInTexture - 1;
-	return side == 3 ? blockIndexInTexture + 1 : blockIndexInTexture;
+	(void)side;
+	return blockIndexInTexture;
 }
 
 bool BlockChest::canPlaceBlockAt(World *world, int_t i, int_t j, int_t k)
