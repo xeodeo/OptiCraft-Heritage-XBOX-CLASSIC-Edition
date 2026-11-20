@@ -1673,9 +1673,12 @@ bool RenderEngine::updateStaticProceduralTextureFx(TextureFX *texturefx)
 	if (hasFrame && anaglyphIt != textureFxFrameAnaglyph.end() && anaglyphIt->second == anaglyph)
 		return true;
 
-	if (fire && !hasFrame)
+	if ((fire || fluidFallback) && !hasFrame)
 	{
-		for (int_t i = 0; i < 20; ++i)
+		// The first frame of the fire/lava simulation is still empty (lava is
+		// one flat red), so run it for a while before freezing the frame.
+		const int_t warmTicks = fire ? 20 : 100;
+		for (int_t i = 0; i < warmTicks; ++i)
 			texturefx->onTick();
 	}
 	else
