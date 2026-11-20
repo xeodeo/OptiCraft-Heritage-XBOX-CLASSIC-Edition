@@ -3,17 +3,21 @@
 #include "DamageSource.h"
 
 #include "World.h"
+#include "Chunk.h"
 #include "java/Math.h"
 #include "Entity.h"
 #include "Block.h"
 #include "MathHelper.h"
 #include "AxisAlignedBB.h"
 #include "Vec3D.h"
+#include "MovingObjectPosition.h"
 #include "ChunkPosition.h"
+#include "WorldHeight.h"
 #include <cmath>
 #include <vector>
 #include <cstdint>
 #include "BlockFire.h"
+#include "platform/Diagnostics.h"
 #include "platform/PlatformTuning.h"
 
 
@@ -38,8 +42,31 @@ Explosion::Explosion(World *world, Entity *entity, double x, double y, double z,
 
 void Explosion::doExplosionA()
 {
+    if (!(explosionSize > 0.0f) || !std::isfinite(explosionSize) ||
+        !std::isfinite(explosionX) || !std::isfinite(explosionY) || !std::isfinite(explosionZ))
+    {
+        return;
+    }
+
     float f = explosionSize;
     int_t i = 16;
+
+    int_t cachedChunkX = 0x7fffffff;
+    int_t cachedChunkZ = 0x7fffffff;
+    Chunk *cachedChunk = nullptr;
+    auto fastGetBlockId = [&](int_t x, int_t y, int_t z) -> int_t {
+        if (y < 0 || y >= WorldHeight::HEIGHT)
+            return 0;
+        const int_t cx = x >> 4;
+        const int_t cz = z >> 4;
+        if (cx != cachedChunkX || cz != cachedChunkZ)
+        {
+            cachedChunkX = cx;
+            cachedChunkZ = cz;
+            cachedChunk = worldObj->getChunkIfExists(cx, cz);
+        }
+        return cachedChunk != nullptr ? cachedChunk->getBlockID(x & 15, y, z & 15) : 0;
+    };
 
 #if PLATFORM_FLOAT_EXPLOSION_MATH
     const int_t originBlockX = MathHelper::floor_double(explosionX);
@@ -75,17 +102,18 @@ void Explosion::doExplosionA()
                 float rayZ = originFractionZ;
                 const float f2 = 0.3f;
 
-                while (f1 > 0.0f)
+                int_t raySteps = 0;
+                while (f1 > 0.0f && ++raySteps <= 256)
                 {
                     const int_t j4 = JavaArithmetic::intAdd(originBlockX, MathHelper::floor_float(rayX));
                     const int_t k4 = JavaArithmetic::intAdd(originBlockY, MathHelper::floor_float(rayY));
                     const int_t l4 = JavaArithmetic::intAdd(originBlockZ, MathHelper::floor_float(rayZ));
-                    const int_t i5 = worldObj->getBlockId(j4, k4, l4);
+                    const int_t i5 = fastGetBlockId(j4, k4, l4);
 
                     if (i5 > 0)
                         f1 -= (Block::blocksList[i5]->getExplosionResistance(exploder) + 0.3f) * f2;
 
-                    if (f1 > 0.0f)
+                    if (f1 > 0.0f && (i5 > 0 || (isFlaming && k4 > 0 && fastGetBlockId(j4, k4 - 1, l4) > 0)))
                         destroyedBlockPositions.add({j4, k4, l4});
 
                     rayX += d * f2;
@@ -108,20 +136,18 @@ void Explosion::doExplosionA()
                 double d9 = explosionZ;
                 float f2 = 0.3f;
 
-                while (true)
+                int_t raySteps = 0;
+                while (f1 > 0.0f && ++raySteps <= 256)
                 {
-                    if (f1 <= 0.0f)
-                        break;
-
                     int_t j4 = MathHelper::floor_double(d5);
                     int_t k4 = MathHelper::floor_double(d7);
                     int_t l4 = MathHelper::floor_double(d9);
-                    int_t i5 = worldObj->getBlockId(j4, k4, l4);
+                    int_t i5 = fastGetBlockId(j4, k4, l4);
 
                     if (i5 > 0)
                         f1 -= (Block::blocksList[i5]->getExplosionResistance(exploder) + 0.3f) * f2;
 
-                    if (f1 > 0.0f)
+                    if (f1 > 0.0f && (i5 > 0 || (isFlaming && k4 > 0 && fastGetBlockId(j4, k4 - 1, l4) > 0)))
                         destroyedBlockPositions.add({j4, k4, l4});
 
                     d5 += d  * (double)f2;
@@ -147,9 +173,14 @@ void Explosion::doExplosionA()
     std::vector<Entity *> entities(list.begin(), list.end());
 
     Vec3D *vec3d = Vec3D::createVector(explosionX, explosionY, explosionZ);
+#if PLATFORM_XBOX
+    const bool crowdedBlast = entities.size() > 24;
+#endif
 
     for (Entity *entity : entities)
     {
+        if (entity == nullptr || entity->isDead)
+            continue;
         double d4 = entity->getDistance(explosionX, explosionY, explosionZ) / (double)explosionSize;
         if (d4 <= 1.0)
         {
@@ -157,10 +188,32 @@ void Explosion::doExplosionA()
             double d8  = entity->posY - explosionY;
             double d10 = entity->posZ - explosionZ;
             double d11 = MathHelper::sqrt_double(d6 * d6 + d8 * d8 + d10 * d10);
-            d6  /= d11;
-            d8  /= d11;
-            d10 /= d11;
-            double d12 = worldObj->getBlockDensity(vec3d, entity->boundingBox);
+            if (d11 > 0.0)
+            {
+                d6  /= d11;
+                d8  /= d11;
+                d10 /= d11;
+            }
+            else
+            {
+                d6 = d8 = d10 = 0.0;
+            }
+            double d12 = 1.0;
+#if PLATFORM_XBOX
+            if (crowdedBlast || (entity->width <= 0.3f && entity->height <= 0.3f))
+            {
+                const double cx = (entity->boundingBox->minX + entity->boundingBox->maxX) * 0.5;
+                const double cy = (entity->boundingBox->minY + entity->boundingBox->maxY) * 0.5;
+                const double cz = (entity->boundingBox->minZ + entity->boundingBox->maxZ) * 0.5;
+                MovingObjectPosition *mop = worldObj->rayTraceBlocks(Vec3D::createVector(cx, cy, cz), vec3d);
+                d12 = mop == nullptr ? 1.0 : 0.0;
+                delete mop;
+            }
+            else
+#endif
+            {
+                d12 = worldObj->getBlockDensity(vec3d, entity->boundingBox);
+            }
             double d13 = (1.0 - d4) * d12;
             entity->attackEntityFrom(DamageSource::explosion,
                 JavaArithmetic::doubleToInt(((d13 * d13 + d13) / 2.0) * 8.0 * (double)explosionSize + 1.0));
@@ -190,6 +243,14 @@ void Explosion::doExplosionB(bool flag)
     worldObj->spawnParticle("hugeexplosion", explosionX, explosionY, explosionZ, 0.0, 0.0, 0.0);
 
     std::vector<ChunkPosTuple> blockList = destroyedBlockPositions.valuesInIterationOrder();
+#if PLATFORM_XBOX
+    const long freeKb = platformHeapFreeKb();
+    const bool lowMemory = freeKb >= 0 && freeKb < 3072;
+    if (lowMemory)
+        flag = false;
+    const int_t particleStride = blockList.size() > 48 ? static_cast<int_t>(blockList.size() / 48) : 1;
+    int_t droppedItems = 0;
+#endif
 
     for (int_t i = (int_t)blockList.size() - 1; i >= 0; i--)
     {
@@ -198,7 +259,11 @@ void Explosion::doExplosionB(bool flag)
         int_t l  = blockList[i].z;
         int_t i1 = worldObj->getBlockId(j, k, l);
 
+#if PLATFORM_XBOX
+        if (flag && (i % particleStride == 0))
+#else
         if (flag)
+#endif
         {
 #if PLATFORM_FLOAT_EXPLOSION_MATH
             const float d3 = static_cast<float>(JavaArithmetic::intSub(j, originBlockX)) - originFractionX + random.nextFloat();
@@ -238,7 +303,15 @@ void Explosion::doExplosionB(bool flag)
 
         if (i1 > 0)
         {
+#if PLATFORM_XBOX
+            if (!lowMemory && droppedItems < 64)
+            {
+                Block::blocksList[i1]->dropBlockAsItemWithChance(worldObj, j, k, l, worldObj->getBlockMetadata(j, k, l), 0.3f);
+                ++droppedItems;
+            }
+#else
             Block::blocksList[i1]->dropBlockAsItemWithChance(worldObj, j, k, l, worldObj->getBlockMetadata(j, k, l), 0.3f);
+#endif
             worldObj->setBlockWithNotify(j, k, l, 0);
             Block::blocksList[i1]->onBlockDestroyedByExplosion(worldObj, j, k, l);
         }

@@ -22,6 +22,11 @@ AxisAlignedBB *AxisAlignedBB::getBoundingBox(double d, double d1, double d2, dou
 void AxisAlignedBB::clearBoundingBoxPool()
 {
 	numBoundingBoxesInUse = 0;
+	if (g_axisAlignedBBOverflowPool.size() > 256)
+	{
+		g_axisAlignedBBOverflowPool.resize(256);
+		g_axisAlignedBBOverflowPool.shrink_to_fit();
+	}
 }
 
 void AxisAlignedBB::trimBoundingBoxPool()

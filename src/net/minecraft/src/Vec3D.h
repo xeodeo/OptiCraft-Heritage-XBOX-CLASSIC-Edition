@@ -10,7 +10,7 @@ public:
 	static Vec3D *createVectorHelper(double d, double d1, double d2);
 	static void initialize();                                       // reset per-frame pool index
 	static void trimVectorPool(); // release temporary overflow heap memory
-	static void resetVectorPool() { initialize(); } // reset pool
+	static void resetVectorPool() { trimVectorPool(); } // reset & trim pool
 	static Vec3D *createVector(double d, double d1, double d2);
 
 private:

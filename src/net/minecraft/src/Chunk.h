@@ -162,6 +162,8 @@ public:
 	std::vector<Entity *> entities[SECTION_COUNT];
 #if PLATFORM_ENTITY_QUERY_CACHE
 	std::uint32_t entitySectionRevision[SECTION_COUNT];
+	std::uint32_t entitySectionValidatedGen[SECTION_COUNT] = {};
+	std::uint32_t entitySectionValidatedRev[SECTION_COUNT] = {};
 	PlatformEntityQueryCache<Entity> *entityQueryCaches[SECTION_COUNT];
 #endif
 	bool isTerrainPopulated;

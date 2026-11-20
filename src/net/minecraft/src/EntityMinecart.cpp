@@ -151,7 +151,7 @@ void EntityMinecart::setMinecartPowered(bool powered)
 
 AxisAlignedBB *EntityMinecart::getCollisionBox(Entity *entity)
 {
-	return entity->boundingBox;
+	return entity != nullptr && entity->canBePushed() ? entity->boundingBox : nullptr;
 }
 
 AxisAlignedBB *EntityMinecart::getBoundingBox()
@@ -312,6 +312,9 @@ void EntityMinecart::onUpdate()
 		return;
 	}
 
+	if (!std::isfinite(motionX)) motionX = 0.0;
+	if (!std::isfinite(motionY)) motionY = 0.0;
+	if (!std::isfinite(motionZ)) motionZ = 0.0;
 	prevPosX = posX;
 	prevPosY = posY;
 	prevPosZ = posZ;
@@ -594,10 +597,21 @@ void EntityMinecart::onUpdate()
 		this, boundingBox->expand(0.20000000298023224, 0.0, 0.20000000298023224));
 	if (!list.empty())
 	{
-		for (Entity *entity : list)
+		constexpr size_t kMaxCartCollisionsPerTick = 8;
+		const size_t count = list.size();
+		const size_t start = count > kMaxCartCollisionsPerTick
+			? static_cast<size_t>((entityId + ticksExisted) % static_cast<int_t>(count))
+			: 0;
+		size_t cartHits = 0;
+		for (size_t idx = 0; idx < count; ++idx)
 		{
-			if (entity != riddenByEntity && entity->canBePushed() && dynamic_cast<EntityMinecart*>(entity) != nullptr)
+			Entity *entity = list[(start + idx) % count];
+			if (entity != riddenByEntity && !entity->isDead && entity->canBePushed() && entity->isMinecart())
+			{
 				entity->applyEntityCollision(this);
+				if (++cartHits >= kMaxCartCollisionsPerTick)
+					break;
+			}
 		}
 	}
 
@@ -799,6 +813,8 @@ void EntityMinecart::applyEntityCollision(Entity *entity)
 	d2 = MathHelper::sqrt_double(d2);
 	d /= d2;
 	d1 /= d2;
+	const double dirToOtherX = d;
+	const double dirToOtherZ = d1;
 	double d3 = 1.0 / d2;
 	if (d3 > 1.0)
 		d3 = 1.0;
@@ -811,13 +827,17 @@ void EntityMinecart::applyEntityCollision(Entity *entity)
 	d *= 0.5;
 	d1 *= 0.5;
 
-	if (EntityMinecart *otherCart = dynamic_cast<EntityMinecart *>(entity))
+	if (entity->isMinecart())
 	{
-		Vec3D *collisionDirection = Vec3D::createVector(entity->posX - posX, 0.0, entity->posZ - posZ)->normalize();
-		Vec3D *cartDirection = Vec3D::createVector(
-			(double)MathHelper::cos(rotationYaw * 3.1415927f / 180.0f), 0.0,
-			(double)MathHelper::sin(rotationYaw * 3.1415927f / 180.0f))->normalize();
-		if (std::fabs(collisionDirection->dotProduct(cartDirection)) < (double)0.8f)
+		EntityMinecart *otherCart = static_cast<EntityMinecart *>(entity);
+		const float yawRad = rotationYaw * 3.1415927f / 180.0f;
+		const double cartDirX = static_cast<double>(MathHelper::cos(yawRad));
+		const double cartDirZ = static_cast<double>(MathHelper::sin(yawRad));
+		const double cartDirLen = MathHelper::sqrt_double(cartDirX * cartDirX + cartDirZ * cartDirZ);
+		const double dot = cartDirLen >= 0.0001
+			? (dirToOtherX * cartDirX + dirToOtherZ * cartDirZ) / cartDirLen
+			: 0.0;
+		if (std::fabs(dot) < (double)0.8f)
 			return;
 
 		double d7 = entity->motionX + motionX;

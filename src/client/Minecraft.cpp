@@ -1155,14 +1155,22 @@ void Minecraft::run()
                 // Java: catch(OutOfMemoryError)
                 platformCaptureBadAlloc();
                 freeMemoryForCrash();
+                try
+                {
 #if PLATFORM_RETURN_TO_MENU_ON_OOM
-                // The failed world has been released above; continuing it
-                // would risk saving incomplete state.  This switch only hides
-                // the verbose diagnostic page and returns safely to the menu.
-                displayGuiScreen(new GuiMainMenu());
+                    // The failed world has been released above; continuing it
+                    // would risk saving incomplete state.  This switch only hides
+                    // the verbose diagnostic page and returns safely to the menu.
+                    displayGuiScreen(new GuiMainMenu());
 #else
-                displayGuiScreen(new GuiErrorScreen());
+                    displayGuiScreen(new GuiErrorScreen());
 #endif
+                }
+                catch (...)
+                {
+                    MC_LOG_ERROR("memory", "OOM recovery screen failed; clearing screen without hanging\n");
+                    try { displayGuiScreen(nullptr); } catch (...) {}
+                }
             }
         }
     }
@@ -1198,16 +1206,78 @@ void Minecraft::freeMemoryForCrash()
     try { std::memset(field_28006_b, 0, sizeof(field_28006_b)); } catch (...) {}
     try
     {
-        renderGlobal->clearWorldRenderers();
+        if (effectRenderer != nullptr)
+            effectRenderer->clearEffects(nullptr);
     }
     catch (...) {}
     try
     {
-        AxisAlignedBB::resetBoundingBoxPool();
-        Vec3D::resetVectorPool();
+        if (renderGlobal != nullptr)
+            renderGlobal->clearWorldRenderers();
     }
     catch (...) {}
-    try { changeWorld1(nullptr); } catch (...) {}
+    try
+    {
+        if (renderEngine != nullptr)
+            renderEngine->clearDecodedTextureCache();
+    }
+    catch (...) {}
+    try
+    {
+        AxisAlignedBB::trimBoundingBoxPool();
+        Vec3D::trimVectorPool();
+    }
+    catch (...) {}
+
+    const long freeKbBeforeWorld = platformHeapFreeKb();
+    if (theWorld != nullptr && freeKbBeforeWorld >= 0 && freeKbBeforeWorld < 4096)
+    {
+        World *failedWorld = theWorld;
+        theWorld = nullptr;
+        thePlayer = nullptr;
+        thePlayerOne = nullptr;
+        renderViewEntity = nullptr;
+        try
+        {
+            if (renderGlobal != nullptr)
+                renderGlobal->changeWorld(nullptr);
+        }
+        catch (...) {}
+        try
+        {
+            if (effectRenderer != nullptr)
+                effectRenderer->clearEffects(nullptr);
+        }
+        catch (...) {}
+        try { delete failedWorld; } catch (...) {}
+    }
+    else
+    {
+        try { changeWorld1(nullptr); } catch (...) {}
+    }
+
+    try
+    {
+        std::vector<World *> worlds;
+        worlds.swap(worldsToDelete);
+        for (World *w : worlds)
+            delete w;
+    }
+    catch (...) {}
+    try
+    {
+        std::vector<EntityPlayerSP *> players;
+        players.swap(playersToDelete);
+        for (EntityPlayerSP *p : players)
+            delete p;
+    }
+    catch (...) {}
+    try
+    {
+        AxisAlignedBB::trimBoundingBoxPool();
+        Vec3D::trimVectorPool();
+    }
+    catch (...) {}
 }
 
 // ─── screenshotListener ──────────────────────────────────────────────────────
@@ -1896,6 +1966,23 @@ void Minecraft::runTick()
             }
         }
     }
+
+    #if PLATFORM_XBOX
+    if (theWorld != nullptr && (ticksRan % 20) == 0)
+    {
+        const long freeKb = platformHeapFreeKb();
+        if (freeKb >= 0 && freeKb < 4096)
+        {
+            if (effectRenderer != nullptr)
+                effectRenderer->clearEffects(theWorld);
+            if (renderEngine != nullptr)
+                renderEngine->clearDecodedTextureCache();
+            AxisAlignedBB::trimBoundingBoxPool();
+            Vec3D::trimVectorPool();
+            MC_LOG_WARN("memory", "low memory relief: free=%ldKB -> %ldKB\n", freeKb, platformHeapFreeKb());
+        }
+    }
+    #endif
 
     #if PLATFORM_CLIENT_PAID_CHECK
     if (ticksRan == 6000)

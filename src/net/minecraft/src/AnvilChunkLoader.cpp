@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "platform/Diagnostics.h"
 #include "platform/Log.h"
 #include "platform/chunks/ChunkMemoryPolicy.h"
 #include "Block.h"
@@ -255,6 +256,16 @@ void AnvilChunkLoader::saveChunk(World *world, Chunk *chunk)
 {
     if (world == nullptr || chunk == nullptr || storageDisabled || readOnly)
         return;
+
+#if PLATFORM_XBOX
+    const long freeKb = platformHeapFreeKb();
+    if (freeKb >= 0 && freeKb < 1536)
+    {
+        MC_LOG_WARN("chunk", "Skipping Anvil chunk save %d,%d under critical memory (%ldKB free)\n",
+                    chunk->xPosition, chunk->zPosition, freeKb);
+        return;
+    }
+#endif
 
     world->checkSessionLock();
 

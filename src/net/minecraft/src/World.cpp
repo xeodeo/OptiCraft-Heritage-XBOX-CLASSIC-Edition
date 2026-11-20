@@ -2882,20 +2882,30 @@ std::vector<AxisAlignedBB*> &World::getCollidingBoundingBoxes(Entity* entity, Ax
     
     double d = 0.25;
     const auto& list = getEntitiesWithinAABBExcludingEntity(entity, aabb->expand(d, d, d));
+    const bool sourceIsMinecart = entity != nullptr && entity->isMinecart();
+    size_t minecartBoxesAdded = 0;
     
     for (size_t j2 = 0; j2 < list.size(); j2++)
     {
-        AxisAlignedBB* aabb1 = list[j2]->getBoundingBox();
+        Entity *other = list[j2];
+        if (sourceIsMinecart && other->isMinecart() && minecartBoxesAdded >= 8)
+            continue;
+        bool addedForOther = false;
+        AxisAlignedBB* aabb1 = other->getBoundingBox();
         if (aabb1 != nullptr && aabb1->intersectsWith(aabb))
         {
             collidingBoundingBoxes.push_back(aabb1);
+            addedForOther = true;
         }
         
-        aabb1 = entity->getCollisionBox(list[j2]);
+        aabb1 = entity->getCollisionBox(other);
         if (aabb1 != nullptr && aabb1->intersectsWith(aabb))
         {
             collidingBoundingBoxes.push_back(aabb1);
+            addedForOther = true;
         }
+        if (addedForOther && sourceIsMinecart && other->isMinecart())
+            ++minecartBoxesAdded;
     }
     
     return collidingBoundingBoxes;
@@ -3304,6 +3314,7 @@ void World::trackLoadedEntityPointer(Entity *entity)
 
 void World::untrackLoadedEntityPointer(Entity *entity)
 {
+    ++entityUntrackGeneration;
 #if PLATFORM_PC || PLATFORM_XBOX
     if (entity != nullptr)
     {

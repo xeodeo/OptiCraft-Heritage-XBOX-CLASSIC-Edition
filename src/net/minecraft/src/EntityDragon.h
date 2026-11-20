@@ -25,6 +25,7 @@ public:
     int_t getChunkRetentionRadius() const override { return 1; }
     EntityEnderCrystal* getHealingEnderCrystal();
 
+    bool hasParts() const override { return true; }
     std::vector<Entity *> getParts() const override;
 
     double targetX;
