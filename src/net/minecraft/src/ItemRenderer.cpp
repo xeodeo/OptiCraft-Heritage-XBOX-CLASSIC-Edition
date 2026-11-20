@@ -300,7 +300,7 @@ void ItemRenderer::renderItemInFirstPerson(float partialTick) {
 
     Item* heldItem = itemstack != nullptr ? itemstack->getItem() : nullptr;
     if (heldItem != nullptr) {
-        int color = heldItem->getColorFromDamage(itemstack->getItemDamage(), 0);
+        int color = heldItem->getColorFromItemStack(itemstack, 0);
         float red = static_cast<float>(color >> 16 & 0xff) / 255.0f;
         float green = static_cast<float>(color >> 8 & 0xff) / 255.0f;
         float blue = static_cast<float>(color & 0xff) / 255.0f;
@@ -454,7 +454,7 @@ void ItemRenderer::renderItemInFirstPerson(float partialTick) {
 
         if (heldItem->func_46058_c()) {
             renderItem(player, itemstack, 0);
-            int color = heldItem->getColorFromDamage(itemstack->getItemDamage(), 1);
+            int color = heldItem->getColorFromItemStack(itemstack, 1);
             float red = static_cast<float>(color >> 16 & 0xff) / 255.0f;
             float green = static_cast<float>(color >> 8 & 0xff) / 255.0f;
             float blue = static_cast<float>(color & 0xff) / 255.0f;

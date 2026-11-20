@@ -17,6 +17,7 @@ public:
 	EntityFX *multiplyVelocity(float f);
 	EntityFX *multiplyParticleScaleBy(float f);
 	void setParticleColor(float red, float green, float blue);
+	void setAlphaF(float alpha);
 	float getParticleRed() const;
 	float getParticleGreen() const;
 	float getParticleBlue() const;
@@ -43,6 +44,7 @@ public:
 	void readEntityFromNBT(NBTTagCompound *nbttagcompound) override;
 
 protected:
+	EntityFX(World *world, double d, double d1, double d2);
 	bool canTriggerWalking() override;
 	void entityInit() override;
 	static float interpolateRenderCoordinate(double previous, double current, double camera, float partialTick);
@@ -63,6 +65,7 @@ protected:
 	float particleRed;
 	float particleGreen;
 	float particleBlue;
+	float particleAlpha;
 
 private:
 	int_t cachedBrightness;

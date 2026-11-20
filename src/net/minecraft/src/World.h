@@ -295,6 +295,7 @@ public:
 	void playSoundEffect(double d, double d1, double d2, const jstring &s, float f, float f1);
 	void playRecord(const jstring &s, int_t i, int_t j, int_t k);
 	void spawnParticle(const jstring &s, double d, double d1, double d2, double d3, double d4, double d5);
+	void makeFireworks(double x, double y, double z, double vx, double vy, double vz, NBTTagCompound *tag);
 	bool addWeatherEffect(Entity *entity);
 	virtual bool entityJoinedWorld(Entity *entity);
 	bool spawnEntityInWorld(Entity *entity) { return entityJoinedWorld(entity); }

@@ -15,6 +15,7 @@
 #include "ItemMonsterPlacer.h"
 #include "ItemPotion.h"
 #include "EntitySmallFireball.h"
+#include "EntityFireworkRocket.h"
 #include "EntityExpBottle.h"
 #include "EntityPotion.h"
 #include "EntityItem.h"
@@ -158,6 +159,15 @@ void BlockDispenser::dispenseItem(World *world, int_t i, int_t j, int_t k, Rando
             motionX, motionY, motionZ);
         if (!world->entityJoinedWorld(entity)) delete entity;
         world->isTrapdoorOpen(1009, i, j, k, 0);
+    }
+    else if (Item::firework != nullptr && stack->itemID == Item::firework->shiftedIndex)
+    {
+        const double fx = (double)i + (double)xDirection + 0.5;
+        const double fy = (double)j + 0.5;
+        const double fz = (double)k + (double)zDirection + 0.5;
+        EntityFireworkRocket *entity = new EntityFireworkRocket(world, fx, fy, fz, stack);
+        if (!world->entityJoinedWorld(entity)) delete entity;
+        world->isTrapdoorOpen(1002, i, j, k, 0);
     }
     else
     {

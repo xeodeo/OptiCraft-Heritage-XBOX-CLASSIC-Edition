@@ -66,6 +66,8 @@
 #include "EntityEnchantmentTableParticleFX.h"
 #include "EntityHugeExplodeFX.h"
 #include "EntityLargeExplodeFX.h"
+#include "EntityFireworkSparkFX.h"
+#include "EntityFireworkStarterFX.h"
 #include "EntitySpellParticleFX.h"
 #include "EntitySuspendFX.h"
 #include "EnumMovingObjectType.h"
@@ -3218,6 +3220,13 @@ void RenderGlobal::spawnParticle(const jstring &name, double x, double y, double
 	(void)spawnParticleEffect(name, x, y, z, velocityX, velocityY, velocityZ);
 }
 
+void RenderGlobal::makeFireworks(double x, double y, double z, double vx, double vy, double vz, NBTTagCompound *tag)
+{
+	if (mc == nullptr || mc->effectRenderer == nullptr || worldObj == nullptr)
+		return;
+	mc->effectRenderer->addEffect(new EntityFireworkStarterFX(worldObj, x, y, z, vx, vy, vz, mc->effectRenderer, tag));
+}
+
 EntityFX *RenderGlobal::spawnParticleEffect(const jstring &name, double x, double y, double z,
                                             double velocityX, double velocityY, double velocityZ)
 {
@@ -3238,6 +3247,14 @@ EntityFX *RenderGlobal::spawnParticleEffect(const jstring &name, double x, doubl
 	{
 		if (Config::isAnimatedExplosion())
 			effect = new EntityLargeExplodeFX(renderEngine, worldObj, x, y, z, velocityX, velocityY, velocityZ);
+	}
+	else if (name == "fireworksSpark")
+	{
+		const double dx = mc->renderViewEntity->posX - x;
+		const double dy = mc->renderViewEntity->posY - y;
+		const double dz = mc->renderViewEntity->posZ - z;
+		if (dx * dx + dy * dy + dz * dz <= 4096.0)
+			effect = new EntityFireworkSparkFX(worldObj, x, y, z, velocityX, velocityY, velocityZ, mc->effectRenderer);
 	}
 
 	if (effect != nullptr)

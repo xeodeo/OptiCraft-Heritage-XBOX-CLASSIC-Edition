@@ -2851,6 +2851,14 @@ void World::spawnParticle(const jstring& particleName, double x, double y, doubl
     }
 }
 
+void World::makeFireworks(double x, double y, double z, double vx, double vy, double vz, NBTTagCompound *tag)
+{
+    for (size_t i = 0; i < worldAccesses.size(); i++)
+    {
+        worldAccesses[i]->makeFireworks(x, y, z, vx, vy, vz, tag);
+    }
+}
+
 bool World::addWeatherEffect(Entity* entity)
 {
     weatherEffects.push_back(entity);
@@ -6629,7 +6637,7 @@ void World::setEntityState(Entity* entity, byte_t byte0) // func_9425_a
     if (entity == nullptr) return;
     switch (byte0)
     {
-        case 6: case 7: case 8: case 11: case 12: case 13: case 14: case 15: case 16:
+        case 6: case 7: case 8: case 11: case 12: case 13: case 14: case 15: case 16: case 17:
             entity->handleHealthUpdate(byte0);
             break;
         case 10:

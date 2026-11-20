@@ -17,7 +17,7 @@ public:
     void doRenderItem(EntityItem* entityitem, double d, double d1, double d2, float f, float f1);
 
     static void renderAABB(AxisAlignedBB *aabb);
-    void drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* renderengine, int i, int j, int k, int l, int i1);
+    void drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* renderengine, int i, int j, int k, int l, int i1, ItemStack* stack = nullptr);
     void renderItemIntoGUI(FontRenderer* fontrenderer, RenderEngine* renderengine, ItemStack* itemstack, int i, int j);
     void renderItemOverlayIntoGUI(FontRenderer* fontrenderer, RenderEngine* renderengine, ItemStack* itemstack, int i, int j);
     void renderTexturedQuad(int i, int j, int k, int l, int i1, int j1);

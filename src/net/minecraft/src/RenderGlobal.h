@@ -48,6 +48,7 @@ public:
 	void onChunkPublished(int_t chunkX, int_t chunkZ) override;
 	void playSound(const jstring &s, double d, double d1, double d2, float f, float f1) override;
 	void spawnParticle(const jstring &s, double d, double d1, double d2, double d3, double d4, double d5) override;
+	void makeFireworks(double x, double y, double z, double vx, double vy, double vz, NBTTagCompound *tag) override;
 	void obtainEntitySkin(Entity *entity) override;
 	void releaseEntitySkin(Entity *entity) override;
 	void updateAllRenderers() override;

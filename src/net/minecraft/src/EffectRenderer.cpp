@@ -54,9 +54,13 @@ void EffectRenderer::addEffect(EntityFX *entityfx)
 	}
 #endif
     int_t i = entityfx->getFXLayer();
-    const int_t particleCap = PocketOptimizations::enabled()
+    int_t particleCap = PocketOptimizations::enabled()
         ? PocketOptimizations::maxParticlesPerLayer(PLATFORM_MAX_PARTICLES_PER_LAYER)
         : PLATFORM_MAX_PARTICLES_PER_LAYER;
+#if PLATFORM_XBOX
+    if (particleCap > 1000)
+        particleCap = 1000;
+#endif
     if ((int_t)fxLayers[i].size() >= particleCap)
     {
 #ifdef PS2_OPTIMIZATION_VALIDATION
@@ -139,6 +143,10 @@ void EffectRenderer::renderParticles(Entity *entity, float_t f)
 
         Tessellator *tessellator = &Tessellator::instance;
         renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        renderDepthMask(false);
+        renderEnable(RenderCapability::Blend);
+        renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
+        renderAlphaFunc(RenderCompare::Greater, 0.003921569f);
         tessellator->startDrawingQuads();
 
         for (int k = 0; k < (int)fxLayers[i].size(); k++)
@@ -157,6 +165,9 @@ void EffectRenderer::renderParticles(Entity *entity, float_t f)
         }
 
         tessellator->draw();
+        renderDisable(RenderCapability::Blend);
+        renderDepthMask(true);
+        renderAlphaFunc(RenderCompare::Greater, 0.1f);
     }
 }
 
@@ -271,6 +282,13 @@ void EffectRenderer::addBlockHitEffects(int_t i, int_t j, int_t k, int_t l)
             block, l, worldObj->getBlockMetadata(i, j, k)))
             ->applyColourMultiplier(i, j, k)->multiplyVelocity(0.2f)->multiplyParticleScaleBy(0.6f)
     );
+}
+
+int_t EffectRenderer::getLayerParticleCount(int_t layer) const
+{
+    if (layer < 0 || layer >= 4)
+        return 0;
+    return static_cast<int_t>(fxLayers[layer].size());
 }
 
 std::string EffectRenderer::getStatistics()

@@ -20,8 +20,12 @@
 #include "net/minecraft/src/FontRenderer.h"
 #include "net/minecraft/src/IRecipe.h"
 #include "net/minecraft/src/InventoryPlayer.h"
+#include "net/minecraft/src/Item.h"
+#include "net/minecraft/src/ItemDye.h"
 #include "net/minecraft/src/ItemStack.h"
 #include "net/minecraft/src/Minecraft.h"
+#include "net/minecraft/src/NBTTagCompound.h"
+#include "net/minecraft/src/NBTTagList.h"
 #include "net/minecraft/src/OpenGlHelper.h"
 #include "net/minecraft/src/PlayerController.h"
 #include "net/minecraft/src/RenderEngine.h"
@@ -100,6 +104,8 @@ XboxCraftingScreen::~XboxCraftingScreen()
 {
     for (auto &icon : icons)
         delete icon.second;
+    for (ItemStack *stack : ownedOutputs)
+        delete stack;
 }
 
 ItemStack *XboxCraftingScreen::iconStack(int_t id, int_t damage)
@@ -140,6 +146,9 @@ void XboxCraftingScreen::initGui()
 void XboxCraftingScreen::buildEntries()
 {
     entries.clear();
+    for (ItemStack *stack : ownedOutputs)
+        delete stack;
+    ownedOutputs.clear();
     const std::vector<IRecipe *> &recipes = CraftingManager::getInstance()->getRecipeList();
     for (IRecipe *recipe : recipes)
     {
@@ -211,6 +220,131 @@ void XboxCraftingScreen::buildEntries()
         if (!entry.needs.empty())
             entries.push_back(entry);
     }
+
+    addDynamicFireworkEntries();
+}
+
+void XboxCraftingScreen::addDynamicFireworkEntries()
+{
+    if (Item::firework == nullptr || Item::fireworkCharge == nullptr ||
+        Item::paper == nullptr || Item::gunpowder == nullptr || Item::dyePowder == nullptr)
+        return;
+
+    auto pushPreset = [this](ItemStack *output, std::initializer_list<std::pair<int_t, int_t>> cells)
+    {
+        if (static_cast<int_t>(cells.size()) > gridSize * gridSize)
+        {
+            delete output;
+            return;
+        }
+        ownedOutputs.push_back(output);
+
+        Entry entry;
+        entry.recipe = nullptr;
+        entry.output = output;
+        entry.canMake = false;
+        entry.missingCells = 0;
+        for (int_t i = 0; i < 9; ++i)
+        {
+            entry.cellId[i] = 0;
+            entry.cellDamage[i] = -1;
+        }
+
+        int_t idx = 0;
+        for (const auto &cell : cells)
+        {
+            entry.cellId[idx] = cell.first;
+            entry.cellDamage[idx] = cell.second;
+            ++idx;
+        }
+
+        for (int_t i = 0; i < gridSize * gridSize; ++i)
+        {
+            if (entry.cellId[i] == 0)
+                continue;
+            bool merged = false;
+            for (Ingredient &need : entry.needs)
+            {
+                if (need.id == entry.cellId[i] && need.damage == entry.cellDamage[i])
+                {
+                    ++need.count;
+                    merged = true;
+                    break;
+                }
+            }
+            if (!merged)
+                entry.needs.push_back({ entry.cellId[i], entry.cellDamage[i], 1 });
+        }
+        if (!entry.needs.empty())
+            entries.push_back(entry);
+    };
+
+    auto makeRocketPreview = [](byte_t flight, bool withStar) -> ItemStack *
+    {
+        ItemStack *stack = new ItemStack(Item::firework, 1, 0);
+        NBTTagCompound *root = new NBTTagCompound();
+        NBTTagCompound *fw = new NBTTagCompound("Fireworks");
+        fw->setByte("Flight", flight);
+        if (withStar)
+        {
+            NBTTagList *list = new NBTTagList("Explosions");
+            NBTTagCompound *exp = new NBTTagCompound();
+            exp->setByte("Type", 0);
+            exp->setIntArray("Colors", { ItemDye::worldChunkManager[1] });
+            list->appendTag(exp);
+            fw->setTag("Explosions", list);
+        }
+        root->setTag("Fireworks", fw);
+        stack->setTagCompound(root);
+        return stack;
+    };
+
+    auto makeStarPreview = [](byte_t shape, int_t colorRgb, bool flicker, bool trail, int_t fadeRgb) -> ItemStack *
+    {
+        ItemStack *stack = new ItemStack(Item::fireworkCharge, 1, 0);
+        NBTTagCompound *root = new NBTTagCompound();
+        NBTTagCompound *exp = new NBTTagCompound("Explosion");
+        exp->setByte("Type", shape);
+        exp->setIntArray("Colors", { colorRgb });
+        if (fadeRgb >= 0)
+            exp->setIntArray("FadeColors", { fadeRgb });
+        if (flicker)
+            exp->setBoolean("Flicker", true);
+        if (trail)
+            exp->setBoolean("Trail", true);
+        root->setTag("Explosion", exp);
+        stack->setTagCompound(root);
+        return stack;
+    };
+
+    const int_t idPaper = Item::paper->shiftedIndex;
+    const int_t idGunpowder = Item::gunpowder->shiftedIndex;
+    const int_t idStar = Item::fireworkCharge->shiftedIndex;
+    const int_t idDye = Item::dyePowder->shiftedIndex;
+
+    // Firework Rocket presets (flight 1-3, with and without star)
+    pushPreset(makeRocketPreview(1, false), { { idPaper, 0 }, { idGunpowder, 0 } });
+    pushPreset(makeRocketPreview(2, false), { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 } });
+    pushPreset(makeRocketPreview(3, false), { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 } });
+    pushPreset(makeRocketPreview(1, true),  { { idPaper, 0 }, { idGunpowder, 0 }, { idStar, -1 } });
+    pushPreset(makeRocketPreview(2, true),  { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idStar, -1 } });
+    pushPreset(makeRocketPreview(3, true),  { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idStar, -1 } });
+
+    // Firework Star presets (all 5 shapes + twinkle + trail + fade; dye uses wildcard -1 so any dye in inventory works)
+    pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[1],  false, false, -1), { { idGunpowder, 0 }, { idDye, -1 } });
+    if (Item::fireballCharge != nullptr)
+        pushPreset(makeStarPreview(1, ItemDye::worldChunkManager[14], false, false, -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::fireballCharge->shiftedIndex, 0 } });
+    if (Item::goldNugget != nullptr)
+        pushPreset(makeStarPreview(2, ItemDye::worldChunkManager[11], false, false, -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::goldNugget->shiftedIndex, 0 } });
+    if (Item::skull != nullptr)
+        pushPreset(makeStarPreview(3, ItemDye::worldChunkManager[10], false, false, -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::skull->shiftedIndex, -1 } });
+    if (Item::feather != nullptr)
+        pushPreset(makeStarPreview(4, ItemDye::worldChunkManager[12], false, false, -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::feather->shiftedIndex, 0 } });
+    if (Item::lightStoneDust != nullptr)
+        pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[15], true,  false, -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::lightStoneDust->shiftedIndex, 0 } });
+    if (Item::diamond != nullptr)
+        pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[6],  false, true,  -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::diamond->shiftedIndex, 0 } });
+    pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[13], false, false, ItemDye::worldChunkManager[11]), { { idStar, -1 }, { idDye, -1 } });
 }
 
 void XboxCraftingScreen::buildColumns()
@@ -880,7 +1014,25 @@ void XboxCraftingScreen::drawScreen(int_t, int_t, float_t)
     if (entry != nullptr)
     {
         const std::vector<std::string> info = entry->output->getItemNameandInformation();
-        drawDarkCentred(info.empty() ? std::string() : info[0], sc.x(L.nameX + L.nameW / 2),
+        std::string title = info.empty() ? std::string() : info[0];
+        if (info.size() > 1 && Item::firework != nullptr && entry->output->itemID == Item::firework->shiftedIndex)
+        {
+            std::string detail = info[1];
+            const std::string flightPrefix = "Flight Duration: ";
+            if (detail.rfind(flightPrefix, 0) == 0)
+                detail = "Flight " + detail.substr(flightPrefix.size());
+            if (info.size() > 2)
+                detail += " + Star";
+            title = "Rocket (" + detail + ")";
+        }
+        else if (info.size() > 1 && Item::fireworkCharge != nullptr && entry->output->itemID == Item::fireworkCharge->shiftedIndex)
+        {
+            std::string detail = info[1];
+            if (info.size() > 3)
+                detail = info.back();
+            title = "Star: " + detail;
+        }
+        drawDarkCentred(title, sc.x(L.nameX + L.nameW / 2),
             sc.y(288) + (sc.s(27) - 8) / 2, sc.s(L.nameW));
     }
     drawDarkCentred(displayMode == 0 ? uiText("Inventory") : uiText("Ingredients"), sc.x(L.labelX + L.labelW / 2),

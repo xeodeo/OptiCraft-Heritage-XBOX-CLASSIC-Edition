@@ -25,6 +25,7 @@
 #include "ShapelessRecipes.h"
 #include "RecipesMapCloning.h"
 #include "RecipesMapExtending.h"
+#include "RecipeFireworks.h"
 
 CraftingManager *CraftingManager::instance = nullptr;
 
@@ -158,6 +159,7 @@ CraftingManager::CraftingManager()
 	addShapelessRecipe(new ItemStack(Item::writableBook, 1),   { Item::book, Item::feather, new ItemStack(Item::dyePowder, 1, 0) });
 	recipes.push_back(new RecipesMapCloning());
 	recipes.push_back(new RecipesMapExtending());
+	recipes.push_back(new RecipeFireworks());
 
 	std::stable_sort(recipes.begin(), recipes.end(), RecipeSorter(this));
 	MC_LOG_INFO("recipe", "%u recipes\n", static_cast<unsigned>(recipes.size()));

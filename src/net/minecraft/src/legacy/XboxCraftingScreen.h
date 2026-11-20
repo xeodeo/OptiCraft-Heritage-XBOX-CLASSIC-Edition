@@ -68,6 +68,7 @@ private:
     };
 
     void buildEntries();
+    void addDynamicFireworkEntries();
     void buildColumns();
     void refreshAvailability();
     unsigned int inventorySignature() const;
@@ -108,6 +109,7 @@ private:
     bool feedbackOk;
     int_t displayMode;   // 0 inventory, 1 ingredients (X toggles, as in Legacy)
     std::map<int_t, ItemStack *> icons;
+    std::vector<ItemStack *> ownedOutputs;
 
     static RenderItem *itemRenderer;
 };

@@ -18,6 +18,7 @@
 #include "EntityFallingSand.h"
 #include "EntityFireball.h"
 #include "EntitySmallFireball.h"
+#include "EntityFireworkRocket.h"
 #include "EntityEnderPearl.h"
 #include "EntityEnderEye.h"
 #include "EntityEnderCrystal.h"
@@ -228,6 +229,7 @@ static struct EntityListInit
         EntityList::addMapping<EntityEnderCrystal>("EnderCrystal", 200);
         EntityList::addMapping<EntityTNTPrimed>("PrimedTnt", 20);
         EntityList::addMapping<EntityFallingSand>("FallingSand", 21);
+        EntityList::addMapping<EntityFireworkRocket>("FireworksRocketEntity", 22);
         // Legacy worlds use Minecart+Type (handled in createEntityFromNBT).
         EntityList::addMapping<EntityMinecartEmpty>("MinecartRideable", 42);
         EntityList::addMapping<EntityMinecartChest>("MinecartChest", 43);

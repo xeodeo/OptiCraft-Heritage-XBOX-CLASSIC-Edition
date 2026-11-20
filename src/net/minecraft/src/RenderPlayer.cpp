@@ -309,7 +309,7 @@ void RenderPlayer::renderSpecials(EntityPlayer* entityPlayer, float f) {
 
         if (item->func_46058_c()) {
             for (int renderPass = 0; renderPass <= 1; ++renderPass) {
-                int color = item->getColorFromDamage(held->getItemDamage(), renderPass);
+                int color = item->getColorFromItemStack(held, renderPass);
                 float red = static_cast<float>(color >> 16 & 0xff) / 255.0f;
                 float green = static_cast<float>(color >> 8 & 0xff) / 255.0f;
                 float blue = static_cast<float>(color & 0xff) / 255.0f;

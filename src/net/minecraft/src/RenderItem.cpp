@@ -180,7 +180,7 @@ void RenderItem::doRenderItem(EntityItem* entityitem, double d, double d1, doubl
             }
 
             if (field_27004_a) {
-                const int color = item->getColorFromDamage(itemstack->getItemDamage(), renderPass);
+                const int color = item->getColorFromItemStack(itemstack, renderPass);
                 const float red = (float)(color >> 16 & 0xff) / 255.0f;
                 const float green = (float)(color >> 8 & 0xff) / 255.0f;
                 const float blue = (float)(color & 0xff) / 255.0f;
@@ -221,7 +221,7 @@ void RenderItem::doRenderItem(EntityItem* entityitem, double d, double d1, doubl
     renderPopMatrix();
 }
 
-void RenderItem::drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* renderengine, int i, int j, int k, int l, int i1) {
+void RenderItem::drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* renderengine, int i, int j, int k, int l, int i1, ItemStack* stack) {
     if (!ItemStack::isValidItemID(i)) {
         return;
     }
@@ -242,7 +242,7 @@ void RenderItem::drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* rende
         renderScale(1.0f, 1.0f, -1.0f);
         renderRotate(210.0f, 1.0f, 0.0f, 0.0f);
         renderRotate(45.0f, 0.0f, 1.0f, 0.0f);
-        int l1 = item->getColorFromDamage(j, 0);
+        int l1 = stack != nullptr ? item->getColorFromItemStack(stack, 0) : item->getColorFromDamage(j, 0);
         float f2 = (float)(l1 >> 16 & 0xff) / 255.0f;
         float f4 = (float)(l1 >> 8 & 0xff) / 255.0f;
         float f5 = (float)(l1 & 0xff) / 255.0f;
@@ -259,7 +259,7 @@ void RenderItem::drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* rende
         renderengine->bindTexture(renderengine->getTexture("/gui/items.png"));
         for (int renderPass = 0; renderPass <= 1; ++renderPass) {
             const int icon = item->func_46057_a(j, renderPass);
-            const int color = item->getColorFromDamage(j, renderPass);
+            const int color = stack != nullptr ? item->getColorFromItemStack(stack, renderPass) : item->getColorFromDamage(j, renderPass);
             const float red = (float)(color >> 16 & 0xff) / 255.0f;
             const float green = (float)(color >> 8 & 0xff) / 255.0f;
             const float blue = (float)(color & 0xff) / 255.0f;
@@ -267,6 +267,9 @@ void RenderItem::drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* rende
                 renderColor4f(red, green, blue, 1.0f);
             }
             renderTexturedQuad(l, i1, (icon % 16) * 16, (icon / 16) * 16, 16, 16);
+        }
+        if (field_27004_a) {
+            renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         }
         renderEnable(RenderCapability::Lighting);
     } else if (k >= 0) {
@@ -276,7 +279,7 @@ void RenderItem::drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* rende
         } else {
             renderengine->bindTexture(renderengine->getTexture("/gui/items.png"));
         }
-        int k1 = item->getColorFromDamage(j, 0);
+        int k1 = stack != nullptr ? item->getColorFromItemStack(stack, 0) : item->getColorFromDamage(j, 0);
         float f = (float)(k1 >> 16 & 0xff) / 255.0f;
         float f1 = (float)(k1 >> 8 & 0xff) / 255.0f;
         float f3 = (float)(k1 & 0xff) / 255.0f;
@@ -294,7 +297,7 @@ void RenderItem::renderItemIntoGUI(FontRenderer* fontrenderer, RenderEngine* ren
         return;
     }
 
-    drawItemIntoGui(fontrenderer, renderengine, itemstack->itemID, itemstack->getItemDamage(), itemstack->getIconIndex(), i, j);
+    drawItemIntoGui(fontrenderer, renderengine, itemstack->itemID, itemstack->getItemDamage(), itemstack->getIconIndex(), i, j, itemstack);
 #ifndef PS2_PLATFORM
     // Enchantment glint: the DstColor/SrcColor+One blend passes do not map to
     // the GS blend equation and render as garbage on PS2.

@@ -65,6 +65,7 @@ public:
     std::string getStatName();
     virtual int getColorFromDamage(int damage);
     virtual int getColorFromDamage(int damage, int renderPass);
+    virtual int getColorFromItemStack(ItemStack* itemstack, int renderPass);
     virtual void onUpdate(ItemStack* itemstack, World* world, Entity* entity, int i, bool flag);
     virtual void onCreated(ItemStack* itemstack, World* world, EntityPlayer* entityplayer);
     virtual bool hasEffect(ItemStack* itemstack);
@@ -239,6 +240,8 @@ public:
     static Item* poisonousPotato;
     static Item* goldenCarrot;
     static Item* pumpkinPie;
+    static Item* firework;
+    static Item* fireworkCharge;
     static Item* netherrackBrick;
     static Item* netherQuartz;
     static Item* flowerPot;

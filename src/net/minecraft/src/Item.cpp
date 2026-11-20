@@ -52,6 +52,8 @@
 #include "ItemMonsterPlacer.h"
 #include "ItemExpBottle.h"
 #include "ItemFireball.h"
+#include "ItemFirework.h"
+#include "ItemFireworkCharge.h"
 #include "Block.h"
 #include "EntityPlayer.h"
 #include "EntityLiving.h"
@@ -211,6 +213,8 @@ Item* Item::bakedPotato = nullptr;
 Item* Item::poisonousPotato = nullptr;
 Item* Item::goldenCarrot = nullptr;
 Item* Item::pumpkinPie = nullptr;
+Item* Item::firework = nullptr;
+Item* Item::fireworkCharge = nullptr;
 Item* Item::netherrackBrick = nullptr;
 Item* Item::netherQuartz = nullptr;
 Item* Item::flowerPot = nullptr;
@@ -431,6 +435,10 @@ int Item::getColorFromDamage(int i) {
 
 int Item::getColorFromDamage(int damage, int) {
     return getColorFromDamage(damage);
+}
+
+int Item::getColorFromItemStack(ItemStack* itemstack, int renderPass) {
+    return getColorFromDamage(itemstack != nullptr ? itemstack->getItemDamage() : 0, renderPass);
 }
 
 void Item::onUpdate(ItemStack* itemstack, World* world, Entity* entity, int i, bool flag) {
@@ -657,6 +665,8 @@ void Item::initItems() {
     poisonousPotato = (new ItemFood(138, 2, 0.3f, false))->setPotionEffect(Potion::poison->id, 5, 0, 0.6f)->setIconIndex(TEX152_ITEM_ICON("potatoPoisonous.png"))->setItemName("potatoPoisonous"); // 1.5.2 icon: potatoPoisonous.png
     goldenCarrot = (new ItemFood(140, 6, 1.2f, false))->setPotionEffect(PotionHelper::goldenCarrotEffect)->setIconIndex(TEX152_ITEM_ICON("carrotGolden.png"))->setItemName("carrotGolden"); // 1.5.2 icon: carrotGolden.png
     pumpkinPie = (new ItemFood(144, 8, 0.3f, false))->setIconIndex(TEX152_ITEM_ICON("pumpkinPie.png"))->setItemName("pumpkinPie"); // 1.5.2 icon: pumpkinPie.png
+    firework = (new ItemFirework(145))->setIconIndex(TEX152_ITEM_ICON("fireworks.png"))->setItemName("fireworks");
+    fireworkCharge = (new ItemFireworkCharge(146))->setIconIndex(TEX152_ITEM_ICON("fireworksCharge.png"))->setItemName("fireworksCharge");
     netherrackBrick = (new Item(149))->setIconIndex(TEX152_ITEM_ICON("netherbrick.png"))->setItemName("netherbrick"); // 1.5.2 icon: netherbrick.png
     netherQuartz = (new Item(150))->setIconIndex(TEX152_ITEM_ICON("netherquartz.png"))->setItemName("netherquartz"); // 1.5.2 icon: netherquartz.png
     flowerPot = (new ItemReed(134, Block::flowerPot))->setIconIndex(TEX152_ITEM_ICON("flowerPot.png"))->setItemName("flowerPot");
@@ -811,6 +821,8 @@ void Item::cleanup()
     poisonousPotato = nullptr;
     goldenCarrot = nullptr;
     pumpkinPie = nullptr;
+    firework = nullptr;
+    fireworkCharge = nullptr;
     netherrackBrick = nullptr;
     netherQuartz = nullptr;
     flowerPot = nullptr;

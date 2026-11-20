@@ -6,6 +6,7 @@
 class Entity;
 class TileEntity;
 class EntityPlayer;
+class NBTTagCompound;
 
 // net.minecraft.src.IWorldAccess
 class IWorldAccess
@@ -17,6 +18,10 @@ public:
 	virtual void onChunkPublished(int_t chunkX, int_t chunkZ) { (void)chunkX; (void)chunkZ; }
 	virtual void playSound(const jstring &s, double d, double d1, double d2, float f, float f1) = 0;
 	virtual void spawnParticle(const jstring &s, double d, double d1, double d2, double d3, double d4, double d5) = 0;
+	virtual void makeFireworks(double x, double y, double z, double vx, double vy, double vz, NBTTagCompound *tag)
+	{
+		(void)x; (void)y; (void)z; (void)vx; (void)vy; (void)vz; (void)tag;
+	}
 	virtual void obtainEntitySkin(Entity *entity) = 0;
 	virtual void releaseEntitySkin(Entity *entity) = 0;
 	virtual void updateAllRenderers() = 0;

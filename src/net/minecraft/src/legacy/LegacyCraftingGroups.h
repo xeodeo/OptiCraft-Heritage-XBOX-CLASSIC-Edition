@@ -189,6 +189,8 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 396, 0, 2, 36 }, // Item::carrotGolden (giltFruit)
     { 398, -1, 1, 35 }, // Item::carrotOnAStick (rod)
     { 400, -1, 2, 0 }, // Item::pumpkinPie
+    { 401, -1, 6, 38 }, // Item::firework (fireworks)
+    { 402, -1, 6, 39 }, // Item::fireworkCharge (fireworkCharge)
     { 404, -1, 4, 0 }, // Item::comparator
     { 407, -1, 5, 11 }, // Item::minecartTnt (minecart)
     { 408, -1, 5, 11 }, // Item::minecartHopper (minecart)

@@ -37,8 +37,7 @@ float EntityFX::interpolateRenderCoordinate(double previous, double current, dou
 #endif
 }
 
-EntityFX::EntityFX(World *world, double d, double d1, double d2,
-                   double d3, double d4, double d5)
+EntityFX::EntityFX(World *world, double d, double d1, double d2)
 	: Entity(world)
 {
 	entityInit();
@@ -47,7 +46,26 @@ EntityFX::EntityFX(World *world, double d, double d1, double d2,
 	setSize(0.2f, 0.2f);
 	yOffset = height / 2.0f;
 	setPosition(d, d1, d2);
+	lastTickPosX = d;
+	lastTickPosY = d1;
+	lastTickPosZ = d2;
 	particleRed = particleGreen = particleBlue = 1.0f;
+	particleAlpha = 1.0f;
+	particleTextureJitterX = rand.nextFloat() * 3.0f;
+	particleTextureJitterY = rand.nextFloat() * 3.0f;
+	particleScale = (rand.nextFloat() * 0.5f + 0.5f) * 2.0f;
+	particleMaxAge = (int_t)(4.0f / (rand.nextFloat() * 0.9f + 0.1f));
+	particleAge = 0;
+	particleTextureIndex = 0;
+	particleGravity = 0.0f;
+	cachedBrightness = -1;
+	cachedBrightnessAge = -1;
+}
+
+EntityFX::EntityFX(World *world, double d, double d1, double d2,
+                   double d3, double d4, double d5)
+	: EntityFX(world, d, d1, d2)
+{
 	motionX = d3 + (double)((float)(mathRandom() * 2.0 - 1.0) * 0.4f);
 	motionY = d4 + (double)((float)(mathRandom() * 2.0 - 1.0) * 0.4f);
 	motionZ = d5 + (double)((float)(mathRandom() * 2.0 - 1.0) * 0.4f);
@@ -67,15 +85,6 @@ EntityFX::EntityFX(World *world, double d, double d1, double d2,
 	motionY = (motionY / (double)f1) * (double)f * 0.40000000596046448 + 0.10000000149011612;
 	motionZ = (motionZ / (double)f1) * (double)f * 0.40000000596046448;
 #endif
-	particleTextureJitterX = rand.nextFloat() * 3.0f;
-	particleTextureJitterY = rand.nextFloat() * 3.0f;
-	particleScale = (rand.nextFloat() * 0.5f + 0.5f) * 2.0f;
-	particleMaxAge = (int_t)(4.0f / (rand.nextFloat() * 0.9f + 0.1f));
-	particleAge = 0;
-	particleTextureIndex = 0;
-	particleGravity = 0.0f;
-	cachedBrightness = -1;
-	cachedBrightnessAge = -1;
 }
 
 EntityFX *EntityFX::multiplyVelocity(float f)
@@ -278,7 +287,7 @@ void EntityFX::renderParticle(Tessellator *tessellator, float f, float f1, float
 	float f12 = interpolateRenderCoordinate(prevPosY, posY, interpPosY, f);
 	float f13 = interpolateRenderCoordinate(prevPosZ, posZ, interpPosZ, f);
 	const float brightness = 1.0f;
-	tessellator->setColorOpaque_F(particleRed * brightness, particleGreen * brightness, particleBlue * brightness);
+	tessellator->setColorRGBA_F(particleRed * brightness, particleGreen * brightness, particleBlue * brightness, particleAlpha);
 	tessellator->addVertexWithUV(f11 - f1 * f10 - f4 * f10, f12 - f2 * f10, f13 - f3 * f10 - f5 * f10, f7, f9);
 	tessellator->addVertexWithUV((f11 - f1 * f10) + f4 * f10, f12 + f2 * f10, (f13 - f3 * f10) + f5 * f10, f7, f8);
 	tessellator->addVertexWithUV(f11 + f1 * f10 + f4 * f10, f12 + f2 * f10, f13 + f3 * f10 + f5 * f10, f6, f8);
@@ -290,6 +299,11 @@ void EntityFX::setParticleColor(float red, float green, float blue)
 	particleRed = red;
 	particleGreen = green;
 	particleBlue = blue;
+}
+
+void EntityFX::setAlphaF(float alpha)
+{
+	particleAlpha = alpha;
 }
 
 float EntityFX::getParticleRed() const

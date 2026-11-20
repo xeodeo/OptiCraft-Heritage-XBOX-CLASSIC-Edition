@@ -134,6 +134,7 @@
 #include "EntityPotion.h"
 #include "EntityExpBottle.h"
 #include "EntitySmallFireball.h"
+#include "EntityFireworkRocket.h"
 #include "OpenGlHelper.h"
 #include <unordered_set>
 
@@ -224,6 +225,7 @@ void RenderManager::registerRenderers() {
     entityRenderMap[std::type_index(typeid(EntityEgg))] = new RenderSnowball(Item::egg->getIconFromDamage(0));
     entityRenderMap[std::type_index(typeid(EntityPotion))] = new RenderSnowball(154);
     entityRenderMap[std::type_index(typeid(EntityExpBottle))] = new RenderSnowball(Item::expBottle->getIconFromDamage(0));
+    entityRenderMap[std::type_index(typeid(EntityFireworkRocket))] = new RenderSnowball(Item::firework->getIconFromDamage(0));
     entityRenderMap[std::type_index(typeid(EntityFireball))] = new RenderFireball(2.0f);
     entityRenderMap[std::type_index(typeid(EntitySmallFireball))] = new RenderFireball(0.5f);
     entityRenderMap[std::type_index(typeid(EntityItem))] = new RenderItem();
@@ -298,6 +300,7 @@ std::type_index parentEntityType(std::type_index type)
     PARENT_OF(EntityEgg, Entity);
     PARENT_OF(EntityPotion, Entity);
     PARENT_OF(EntityExpBottle, Entity);
+    PARENT_OF(EntityFireworkRocket, Entity);
     PARENT_OF(EntitySmallFireball, EntityFireball);
     PARENT_OF(EntityFireball, Entity);
     PARENT_OF(EntityItem, Entity);
