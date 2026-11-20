@@ -1692,6 +1692,20 @@ bool ChunkProvider::unload100OldestChunks()
 				continue;
 			}
 
+#if PLATFORM_XBOX
+			// Under critical memory AnvilChunkLoader::saveChunk skips the save, so
+			// unloading a chunk that still needs saving would throw away the player's
+			// edits and its entities: keep it resident until it can be written.
+			if (chunk->needsSaving(true))
+			{
+				const long saveFreeKb = platformHeapFreeKb();
+				if (saveFreeKb >= 0 && saveFreeKb < 1536)
+				{
+					++it;
+					continue;
+				}
+			}
+#endif
 			unloadChunk(it->first, chunk);
 			it = chunkMap.erase(it);
 			markChunkTopologyChanged();
