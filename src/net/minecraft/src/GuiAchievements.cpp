@@ -153,7 +153,9 @@ void GuiAchievements::drawScreen(int_t i, int_t j, float_t f)
 	drawAchievementsPanel(i, j, f);
 	renderDisable(RenderCapability::Lighting);
 	renderDisable(RenderCapability::DepthTest);
+	renderDisable(RenderCapability::CullFace);
 	drawTitle();
+	drawPlatformCursor(i, j, 300.0f);
 	renderEnable(RenderCapability::Lighting);
 	renderEnable(RenderCapability::DepthTest);
 }
@@ -315,6 +317,7 @@ void GuiAchievements::drawAchievementsPanel(int_t i, int_t j, float_t f)
 	}
 
 	renderScissorPixels(false, 0, 0, 0, 0);
+	renderDisable(RenderCapability::CullFace);
 	renderDisable(RenderCapability::DepthTest);
 	renderEnable(RenderCapability::Blend);
 	renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -325,7 +328,7 @@ void GuiAchievements::drawAchievementsPanel(int_t i, int_t j, float_t f)
 	renderDepthFunc(RenderCompare::LessEqual);  // Java: glDepthFunc(515 / GL_LEQUAL)
 	renderDisable(RenderCapability::DepthTest);
 	renderEnable(RenderCapability::Texture2D);
-	GuiScreen::drawScreen(i, j, f);
+	drawScreenControls(i, j);
 
 	if (hoveredAchievement != nullptr)
 	{

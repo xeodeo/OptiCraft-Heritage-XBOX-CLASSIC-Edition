@@ -77,6 +77,8 @@ bool menuCursorSuppressed(Minecraft *mc, const GuiScreen *screen = nullptr)
 		return true;
 	// Keep the D-pad slot cursor visible until the first pointer-motion event
 	// clears its selection in GuiContainer::mouseMovedOrUp().
+	if (dynamic_cast<const GuiContainer *>(target) == nullptr)
+		return false;
 	const int pIdx = target->getOwnerPlayerIndex();
 	return ContainerSlotNavigator::instance(pIdx).controllerSelectionActive();
 #elif PLATFORM_WII
@@ -131,12 +133,11 @@ GuiScreen::~GuiScreen()
 	guiParticles = nullptr;
 }
 
-void GuiScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
+void GuiScreen::drawScreenControls(int_t mouseX, int_t mouseY)
 {
 	if (isJavaUiKeyboardNavigationEnabled())
 		syncKeyboardSelection();
 	const bool suppressPointerInput = menuPointerInputSuppressed(mc, this);
-	const bool suppressCursor = menuCursorSuppressed(mc, this);
 	const bool suppressMouseHover = keyboardSelectedControlIndex >= 0 && isJavaUiKeyboardNavigationEnabled();
 	const int_t effectiveMouseX = suppressPointerInput || suppressMouseHover ? -10000 : mouseX;
 	const int_t effectiveMouseY = suppressPointerInput || suppressMouseHover ? -10000 : mouseY;
@@ -144,19 +145,32 @@ void GuiScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 	{
 		controlList[i]->drawButton(mc, effectiveMouseX, effectiveMouseY);
 	}
+}
 
+void GuiScreen::drawPlatformCursor(int_t mouseX, int_t mouseY, float_t zOffset)
+{
 #if PLATFORM_SOFTWARE_CURSOR
-	(void)partialTick;
-	if (!suppressCursor)
+	if (!menuCursorSuppressed(mc, this))
 	{
 		// [Issue #3 Fix / Cursor Enhancement]:
 		// Instead of binding /cursor.png unconditionally (which triggered the missingTextureImage
 		// checkerboard whenever cursor.png was absent or not yet resident), use the unified
 		// legacyDrawSelectionCursorCentered helper. This safely renders the textured reticle if
 		// available, or automatically falls back to the authentic procedural vector crosshair.
-		legacyDrawSelectionCursorCentered(mc, mouseX, mouseY, PLATFORM_CURSOR_SIZE, zLevel + 100.0f);
+		legacyDrawSelectionCursorCentered(mc, mouseX, mouseY, PLATFORM_CURSOR_SIZE, zLevel + zOffset);
 	}
+#else
+	(void)mouseX;
+	(void)mouseY;
+	(void)zOffset;
 #endif
+}
+
+void GuiScreen::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
+{
+	(void)partialTick;
+	drawScreenControls(mouseX, mouseY);
+	drawPlatformCursor(mouseX, mouseY);
 }
 
 void GuiScreen::keyTyped(char_t c, int_t key)

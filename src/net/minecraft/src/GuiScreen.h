@@ -36,6 +36,8 @@ public:
 	static void func_50050_a(const std::string &text) { setClipboardString(text); }
 
 protected:
+	void drawScreenControls(int_t mouseX, int_t mouseY);
+	void drawPlatformCursor(int_t mouseX, int_t mouseY, float_t zOffset = 100.0f);
 	virtual void mouseClicked(int_t x, int_t y, int_t button);
 	virtual void mouseMovedOrUp(int_t x, int_t y, int_t button);
 	virtual void actionPerformed(GuiButton *button);
