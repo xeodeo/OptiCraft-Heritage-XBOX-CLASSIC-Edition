@@ -393,6 +393,8 @@ Fourth round (chunk streaming; the background thread only in the experimental bu
 
 `chunkUnload` in `xbox.spike` is the whole per-tick chunk-provider hook, not only unloading: adopting finished columns (with their population), dispatching requests, deferred population, the unload/save loop and the out-of-radius scan. On the console it is still the largest single source of 25-35 ms frames, together with entity ticks.
 
+- **Entity & tile-entity occlusion culling (cave-only vertical threshold):** `EntityOcclusionCache` (`src/platform/world/EntityOcclusionCache.cpp`) casts budgeted opaque-block DDA rays (`PLATFORM_ENTITY_OCCLUSION_RAYCASTS_PER_FRAME` = 8/frame, cached for `PLATFORM_ENTITY_OCCLUSION_RECHECK_FRAMES` = 15 frames in `src/xbox/XboxTuning.h`) to skip rendering entities (AABB ≤ 4 blocks, > 2.5 blocks from camera) and tile entities (excluding pistons) that sit behind solid terrain. It **only** culls targets whose center is at least **`kMinBelowCameraBlocks = 6.0`** blocks below the camera (`dy <= -6.0`, lines 21, 217 and 240 of `EntityOcclusionCache.cpp`): without this vertical floor, surface mobs (e.g. a cow behind a hill or ridge) visibly popped in and out while walking, whereas underground cave mobs/chests stay culled. Adjust the threshold via `kMinBelowCameraBlocks` (and raycast budget/recheck cadence in `src/xbox/XboxTuning.h`), or disable the feature completely by setting `#define PLATFORM_ENTITY_OCCLUSION_CULLING 0` in `src/xbox/XboxTuning.h`.
+
 ---
 
 ## 7. Changes to shared code
