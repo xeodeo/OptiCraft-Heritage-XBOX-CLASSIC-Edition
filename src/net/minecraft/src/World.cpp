@@ -149,6 +149,7 @@ static int_t platformFindTopSpawnBlockY(World *world, int_t x, int_t z)
 
 // Static initialization
 int World::lightingUpdatesScheduled = 0;
+long_t World::lastAutosaveMillis = 0;
 static constexpr int_t UPDATE_LCG_INCREMENT = 1013904223;
 
 static std::uint64_t packChunkCoordKey(int_t x, int_t z)
@@ -5005,6 +5006,7 @@ void World::tick()
     // policy while preserving the vanilla point in the world-tick sequence.
     if (time % (long)autosavePeriod == 0LL)
     {
+        lastAutosaveMillis = System::currentTimeMillis();
 #if PLATFORM_RUNTIME_AUTOSAVE_LEVEL_DATA
         saveWorld(false, nullptr);
 #else
