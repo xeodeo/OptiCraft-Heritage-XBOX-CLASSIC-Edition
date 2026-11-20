@@ -1,24 +1,31 @@
-# Estado actual del proyecto (09-11-2026, 11:00)
+# Estado actual del proyecto (20-11-2026)
 
 Resumen para empezar un chat nuevo. Contexto de fondo: `00-CONTEXTO.md`. Lo técnico del port: `docs/XBOX_PORT.md`
-(en cada rama). Plan de la 1.5.2: `69-PLAN-COMPLETO-152.md`. Historia de la última semana: `71-TRASPASO-06-11.md`.
+(en cada rama). Plan de la 1.5.2: `69-PLAN-COMPLETO-152.md`. Lo más reciente: encargos 87-90 (sección «En marcha»).
 
-## Ramas y carpetas
+## Ramas y carpetas (20-11)
 | Qué | Rama | Carpeta | Último |
 |---|---|---|---|
-| **1.2.5 buena** | `xbox-opti-30` | `wt-opti30` | `83e0ad8` (niebla + cielo) |
-| **1.5.2 en prueba** (todo lo nuevo) | `port152-aldeanos` | `wt-152-pociones` | `04c22cd` (+ ticks Java, agy 78) |
-| **1.5.2 buena** (confirmada 09-11) | `port152-claude` | `wt-152-codex` | `91b5f42` (= prueba, avance rápido) |
-| 1.5.2 rendimiento (agy, encargo 78 aceptado) | `port152-rendimiento` | `wt-152-rend` | `bf9ac4e` (ya pasado a prueba) |
-| agy (encargos viejos) | — | `wt-152-agy` | libre |
+| **1.5.2 en prueba en la consola** (87+88+89) | `port152-erluza` | `wt-152-rend` | `501b40d` (+commit/revert hojas `1c120bb`) |
+| **1.2.5 en prueba en la consola** (87+88+89) | `opti30-erluza` | `wt-opti30` | `410957a` (+commit/revert hojas `a6642bb`) |
+| 1.5.2 anterior (base de erluza) | `port152-aldeanos` | `wt-152-pociones` | `ce80a3b` |
+| 1.5.2 buena (confirmada 09-11) | `port152-claude` | `wt-152-codex` | `91b5f42` (+ datos `port152-data`) |
+| 1.2.5 buena / anterior | `xbox-opti-30` / `opti30-cruceta` | — | `a6a19ea` / `fd2d3a0` |
+| Builds sueltas de Claude | (detached) | `wt-build-152`, `wt-build-125` | script `build88.ps1` (XDK por env) |
 
-Cuando el usuario confirme la build de prueba: merge de `port152-aldeanos` a `port152-claude`, y luego lo de agy (78).
-Remotos: `xbox` y `fork` son del usuario; **`origin` es OptiJuegos: nunca push ahí**.
+agy trabaja en `wt-152-rend` y `wt-opti30` (encargo 90). Cuando el usuario confirme todo: avanzar `port152-claude` a
+`port152-erluza` y `xbox-opti-30` a `opti30-erluza`.
+Remotos: `xbox` (del usuario, push aquí), `fork` (403), **`origin` = OptiJuegos (DMCA, no existe): nunca push**,
+`erluza/main` = fork de bolha.dev descargado a mano (`git fetch https://bolha.dev/erluza/OptiCraftHeritage.git main:refs/remotes/erluza/main`).
+Consola por FTP: `192.168.0.3` `xbox:xbox`, juego en `F:\Games\OptiCraft\<versión>` (solo con el dashboard abierto).
 
 ## Builds en el lanzador (`Downloads\ClassicXboxLoader\downloads\OptiCraft_extracted\`)
-- `OptiCraft\1.5.2\`: 4 XBE del 09-11 10:55 + `assets.pak` 10:44 (sonidos de aldeano y bruja). **Log por red activado**
-  (`MC_LOG_LEVEL=1`, IP 192.168.0.18). Receptor: `python -u OptiCraftHeritageEdition\xbox-spike\escuchar_log.py`.
-- `OptiCraft\1.2.5\`: 4 XBE del 09-11 10:56; pak sin cambios. Los anteriores en `OptiCraft_respaldo_125_03-11`.
+- `OptiCraft\1.5.2\` y `OptiCraft\1.2.5\` (20-11): 4 XBE de cada una del 19-11 18:05 (87+88+89: `501b40d` /
+  `410957a`) + `assets.pak` re-empaquetado con el splash nuevo. **Log por red activado** (`MC_LOG_LEVEL=1`, IP
+  192.168.0.18). Receptor: `python -u OptiCraftHeritageEdition\xbox-spike\escuchar_log.py`. SUBIDO a la consola el 20-11.
+  Respaldo de antes de erluza: `OptiCraft_respaldo_19-11_antes_erluza`.
+- Paks: para añadir algo sin perder nada, desempaquetar el pak del lanzador (`scripts/unpack_pak.py <pak> <dir>`),
+  cambiar y re-empaquetar (`make_pak.py <dir> <pak>`); copiar también el cambio a los datos de origen.
 - `OptiCraft_actualizar\`: solo lo que cambió, con `LEEME.txt` (se copia encima de `OptiCraft\` en la Xbox).
 - Compilar 1.2.5: `powershell -File buzon-xbox\build_opti30.ps1`. 1.5.2: `cmake --build build/xbox-release` y
   `build/xbox-release-exp` en la carpeta de la rama. Siempre con `BUILD.lock`.
@@ -91,6 +98,40 @@ Niebla, cielo, sol, luna, nubes; agachado+bloque sobre un cofre; cruceta separad
 iconos del stick, chat (B sale); texturas animadas y HUD Legacy más rápidos; ticks por chunk (sin prioridades: 1.2.5 no
 las tiene); logros (recorte y desplazamiento, build 13:33); yunque/huevo de dragón cayendo; agacharse
 con interruptor y mantener A (cuando entre el 84). Si va bien: avanzar `xbox-opti-30` a `opti30-cruceta`.
+
+## En marcha (19-11): encargo 87 a agy, traer lo útil de erluza
+Fork de OptiJuegos en https://bolha.dev/erluza/OptiCraftHeritage (descargado como `erluza/main`). El usuario quiere sus
+arreglos y optimizaciones (PS2, etc.) en 1.2.5 y 1.5.2, **sin 1.8.9 de momento**. Ramas `port152-erluza` (wt-152-rend) y
+`opti30-erluza` (wt-opti30, que estaba en `opti30-cruceta`). Encargo `87-ENCARGO-agy-traer-arreglos-erluza.md`; agy
+en la terminal de Orca «agy erluza 87». **HECHO** (informe 87): 18 commits por rama, 1.5.2 `1eef258`, 1.2.5 `e728cf6`.
+Recompilado por Claude y copiado al lanzador el 19-11 13:05 (8 XBE; respaldo en `OptiCraft_respaldo_19-11_antes_erluza`).
+PROBAR en consola: vuelta del End al Overworld (antes caía en 100,50,0), hojas Fancy (ahora sin caras hoja-hoja),
+entidades tapadas que no desaparezcan mal, Hielo opaco y Pocket (OFF por defecto) en las dos interfaces, TNT en cadena.
+Si va bien: avanzar `port152-aldeanos`/`port152-claude` y `opti30-cruceta`/`xbox-opti-30`.
+Sin traer (decide el usuario): panorama nocturno Legacy, reproductor de música, coordenadas Bedrock, FPS con fondo.
+Subido a la consola por FTP 19-11 (F:\Games\OptiCraft, XBE + assets.pak). Usuario: va bien, reloj redstone OK; NO le
+gustó que desaparezcan mobs tapados → Claude: solo se ocultan 6+ bloques por debajo de la cámara (`a25a953`/`9787bb1`).
+Perla de ender no se lanza en creativo = Java (ItemEnderPearl). Encargo 88 a agy (misma terminal): niebla del Nether
+pegada a la cara, zona segura del HUD (720p se sale por abajo), mismas opciones en 1.2.5 y 1.5.2 (Avanzado en 1.2.5).
+Confirmado 19-11: TNT bien, pistones bien en las dos. Encargo 89 en cola tras el 88: stick sin icono ni reasignable
+tras «Restablecer» en Controles; cofre en la mano desplazado a la derecha. Splash «I love weed smoke everyday» añadido
+(paks del lanzador re-empaquetados desde el pak anterior + datos de origen); FALTA subirlo a la consola (FTP no
+respondía), subir con la build del 88.
+88 HECHO (1.5.2 `7b69e69`, 1.2.5 `0b46eac`, informe 88) y 89 hecho por agy pero SIN su prueba final (agy sin cuota
+~21:30): 1.5.2 `e6d2065`+`501b40d`, 1.2.5 `af2f850`+`410957a`. Claude compila en `wt-build-152`/`wt-build-125`
+(worktrees sueltos fijados al commit, script `build88.ps1` en el scratchpad) y copia al lanzador. Cofre en mano
+y vagoneta con cofre en 1.2.5: verificar en consola. README de `main` rediseñado (portadas u/SuperNitro58).
+20-11 11:2x: builds 87+88+89 (1.5.2 `501b40d`, 1.2.5 `410957a`) + paks con el splash SUBIDOS a la consola por FTP.
+agy (terminal «agy 89 cierre») terminando la batería de pruebas del 89 y su informe.
+20-11 probado en consola: zona segura perfecta, Nether bien, Wither/skins/controles/mantener A/agacharse/cruceta/
+cielo 1.2.5/agachado+cofre bien. Hojas de erluza: SE QUEDAN como están (decisión del usuario; no opción, no quitar).
+**Recordar: los mobs tapados se ocultan solo 6+ bloques por debajo (EntityOcclusionCache) — el usuario pidió
+dejarlo anotado.** Encargo 90 a agy: partículas VERDES al romper cofre, cursor invisible sobre un logro (ambas),
+niebla del Nether de 1.5.2 peor que la de 1.2.5, y documentar la ocultación en docs/XBOX_PORT.md.
+Partículas verdes del cofre y fuego mal = SOLO con el paquete de texturas LCE activado (usuario 20-11).
+Cuelgue al entrar a un mundo tras apagar la Xbox (1.2.5): NO se reprodujo con el log escuchando (entró bien varias
+veces). Si vuelve: receptor `python -u xbox-spike\escuchar_log.py` y mirar `crash:`/`watchdog` en netlog.txt.
+El otro repo (CPPEditionLegacy, 1.8.9 en C++17 con shared_ptr) NO sirve para Xbox; solo como referencia.
 
 ## Bugs detectados por el usuario, pendientes
 - **(19-11) Faro (beacon) 1.5.2:** activa el efecto SIN cobrar el objeto de pago (lingote/esmeralda/diamante). En Java,

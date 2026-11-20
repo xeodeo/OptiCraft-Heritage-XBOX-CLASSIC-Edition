@@ -146,6 +146,23 @@ día optimizando la GPU cuando el límite era la CPU.
 - `[DLC] ... fallos:` por 120 fotogramas: `no_ent` (lista sin entrada), `host` (lista en orden nativo), `mem`,
   `val` (falló la validación), `tam`. Si `miss` en `[GXD]` es grande, mirar aquí el motivo antes de culpar a la memoria.
 - `RE4_MEDIR_HOST=1` al compilar: `[HOST]` lista qué listas nativas se dibujan y si cambian.
+- `RE4_CENSO=1` al compilar (19-11): `[CENSO] <via>` por 120 f: dibujos por vía (lote, up, directo, plantilla,
+  estatica), tamaños, y si comparten generación/estado con el dibujo anterior, también por CONTENIDO (`pix=`,
+  `pix+luz=`). Una generación distinta NO es un estado distinto: el juego repite los mismos GXSet*. Úsalo antes de
+  proponer juntar dibujos. `RE4_CENSO=1 probar_salas.ps1 "1 01" 100 censo`.
+- **Constantes del VS: `a0.x` NEGATIVO no dibuja nada** (19-11: fila identidad en -40 -> HUD y textos desaparecidos, sin
+  error). Las filas indexadas por `a0.x` tienen que ser >= 0. La fila identidad de JUNTAR es la 60 (normal 90).
+- `[JUNTAR]` (19-11, `3ad9e42`): juntados / transformados / fotos / distintos / listas_peq por 120 f. Interruptores
+  `RE4_SIN_JUNTAR`, `RE4_SIN_JUNTAR_PRE`, `RE4_SIN_JUNTAR_FOTO`.
+- `[FASES]` (19-11, `7aab19e`, solo Debug): `nombre=µs por f|llamadas por f|µs×10 por llamada` de cada fase de un
+  dibujo de lista estática (`gxd_dlc_dibujar`) y de `Aplicar`. Macros `FA_INI`/`FA_SUMA` en `gx_d3d.cpp` para medir
+  otra función igual. Es lo que hay que leer antes de optimizar "el coste por dibujo".
+- **Las pruebas de xemu compiladas con `RE4_NETLOG=1` escriben en `consola_netlog.txt`** (mismo escuchador UDP): antes de
+  leer "la última sesión de la consola", comprobar que no es una de xemu (19-11 casi se confunde).
+- **`probar_salas.ps1` deja en `bin\iso\default.xbe` un XBE con el mando automático.** Tras una prueba en xemu, volver a
+  compilar SIN `RE4_AUTOPAD` antes de copiar a `consola_*.xbe` (19-11: se subió así y Leon "caminaba solo"). El guion
+  imprime `AVISO: ... mando automatico` si lo lleva. `RE4_NOMBRE="..."` cambia el nombre del dashboard (pruebas A/B en
+  la carpeta `RE4 Nativo O2`).
 - `[SINTEX]` (etapa que pide textura y no la tiene) y `[COPIAPIDE]` (copias del EFB que pide el juego).
 
 ### Probar varias salas en xemu de una vez
@@ -240,6 +257,11 @@ El mando automático entra en la sala pero no se mueve ni gira: para ver algo co
   LazySetStateVB, ShadowVertexShaderState, FastCopyToWC de índices). Hay ~1.200 dibujos por fotograma
   (`[MED] draw=t(N)`: N = dibujos) y Melee-X mide ~31 µs por dibujo en la Xbox: el objetivo es BAJAR N (Prime-X
   4.000 -> 400) y el coste por dibujo, no micro-optimizar el juego.
+- **CORRECCIÓN 19-11 (medido en la consola)**: bajar N NO bastó. `3ad9e42` quitó ~300 dibujos/f en r101 (1.200 -> 900,
+  los cuadraditos de <= 16 vértices) y `cuadro` siguió en 37-40. Los dibujos pequeños eran baratos; lo que se ahorra en
+  D3D se paga en decodificar y comparar. Antes de otra optimización "por dibujo": perfil de la Debug quieto en el sitio
+  y medir el coste de CADA vía (`dlc` = listas grandes y plantillas ~17 en r101; resto ~18 = juego + traducción).
+  Una cuenta en xemu (`[CENSO]`) dice cuántos hay, no cuánto cuestan.
 - **Orden de diagnóstico**: (1) memoria (`libres`, `aram=`, `kb=`, `[DLCPRIME-TEX] cache=` en el tope = recreación de
   texturas), (2) perfil por bloques en la Debug quieto 2-3 min, (3) contar en xemu (cuentas exactas).
 - **Contadores nuevos**: `[ARAMSWP]` (ARAM al disco), `[ANILLOVB]` (anillo: dibujos, vueltas, esperas),

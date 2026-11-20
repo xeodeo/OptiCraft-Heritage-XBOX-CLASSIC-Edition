@@ -9,6 +9,16 @@ Documento para cualquier IA o persona que continúe el trabajo: otro chat de Cla
 > Fuentes reutilizables: LCE en `minecraft-legacy original\`, OptiFine 1.5.2 en `mcp-diff\srcOF152\`.
 > Lo de abajo es el contexto de fondo de la 1.2.5 (toolchain, consola real, rendimiento) y sigue valiendo.
 
+> **20-11-2026:** el GitHub de OptiJuegos cayó por DMCA (14-10); su continuación es el fork
+> https://bolha.dev/erluza/OptiCraftHeritage (en local `erluza/main`). De ahí se trajeron arreglos y optimizaciones a las
+> dos versiones (encargo 87; ramas de prueba `port152-erluza` en `wt-152-rend` y `opti30-erluza` en `wt-opti30`).
+> Después: niebla del Nether, zona segura del HUD, mismas opciones en 1.2.5 y 1.5.2 (88), stick tras «Restablecer» y
+> cofre en la mano (89), y en marcha texturas LCE/logros/niebla (90). **Los mobs tapados solo se ocultan si están 6+
+> bloques por debajo de la cámara** (`EntityOcclusionCache.cpp`, `kMinBelowCameraBlocks`; el usuario pidió anotarlo).
+> La optimización de hojas de erluza se queda activa. Consola por FTP: `192.168.0.3` `xbox:xbox`,
+> `F:\Games\OptiCraft\<versión>`. README de `main` rediseñado (portadas de u/SuperNitro58).
+> CPPEditionLegacy (1.8.9 en C++17 con shared_ptr) NO sirve para Xbox; solo de referencia.
+
 Actualizado el 01-10-2026. **Empieza por `ESTADO-ACTUAL.md`**, que dice en qué punto está todo hoy; este archivo es el contexto de fondo, que cambia poco.
 
 La v1.1 está publicada. Desde entonces: pantalla dividida, `assets.pak`, rendimiento (async), la fusión con lo último de OptiJuegos, el crafteo de consola también en PS2, y dos versiones, normal y experimental. **La rama buena es `xbox-opti-30`, en la carpeta `wt-opti30`.** La versión anterior de este archivo es `00-CONTEXTO-antiguo-2026-09-23.md` y está obsoleta.

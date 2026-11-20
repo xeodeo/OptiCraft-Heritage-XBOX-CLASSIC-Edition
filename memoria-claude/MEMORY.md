@@ -10,7 +10,7 @@
 - [Anotar en buzon-xbox](anotar-en-buzon.md) — en tareas largas dejar hallazgos y plan en buzon-xbox/NN.md por si se corta la sesión
 - [agy y OpenCode sin permisos](agy-sin-permisos.md) — agy --dangerously-skip-permissions; OpenCode opencode.json allow; --worktree current
 - [Una compilación a la vez](una-compilacion-a-la-vez.md) — candado buzon-xbox/BUILD.lock antes de compilar o usar xemu (Claude, agy, OpenCode)
-- [Estado actual del proyecto](estado-actual.md) — empezar por buzon-xbox/ESTADO-ACTUAL.md (09-11): 1.2.5 wt-opti30, 1.5.2 prueba wt-152-pociones
+- [Estado actual del proyecto](estado-actual.md) — empezar por buzon-xbox/ESTADO-ACTUAL.md (20-11): ramas de prueba port152-erluza (wt-152-rend) y opti30-erluza (wt-opti30)
 - [Música como el original](musica-comportamiento-original.md) — en Xbox y PS2 se revierte lo que cambia OptiJuegos, con guarda por plataforma
 - [Datos del juego en worktrees](xbox-data-dir-worktrees.md) — sin -DXBOX_DATA_DIR el ISO sale vacío
 - [RE4 a Xbox](re4-xbox-port.md) — empezar por RE4 port/buzon/COMO-VAMOS.md (pendientes) y TRASPASO-08-10-noche.md; nada commiteado
@@ -29,3 +29,4 @@
 - [60 fps de referencia 1.5.2](fps-referencia-152.md) — con niebla y nubes; medir todo cambio contra eso, no perderlo
 - [Respaldo del contexto](respaldo-contexto.md) — rama `contexto` en xbox; `sh actualizar-contexto.sh`; push de ramas a xbox (fork da 403)
 - [PS3: SDK listo](ps3-sdk.md) — Minecraft en xboox clasico\ps3 (SDK 3.70 sin instalar, ruta corta MINECR~1); port en otro chat
+- [Subir a la consola por FTP](subir-a-consola-ftp.md) — 192.168.0.3 xbox:xbox, F:\Games\OptiCraft\<versión>
