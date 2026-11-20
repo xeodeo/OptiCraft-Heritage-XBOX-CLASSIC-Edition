@@ -13,7 +13,7 @@ public:
 	static AxisAlignedBB *getBoundingBox(double d, double d1, double d2, double d3, double d4, double d5);
 	static void clearBoundingBoxPool();
 	static void trimBoundingBoxPool(); // release temporary overflow heap memory
-	static void resetBoundingBoxPool() { clearBoundingBoxPool(); } // reset pool
+	static void resetBoundingBoxPool() { trimBoundingBoxPool(); } // reset & trim pool
 	static AxisAlignedBB *getBoundingBoxFromPool(double d, double d1, double d2, double d3, double d4, double d5);
 
 public:

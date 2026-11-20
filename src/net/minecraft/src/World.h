@@ -304,6 +304,7 @@ protected:
 	void trackLoadedEntityPointer(Entity *entity);
 	void untrackLoadedEntityPointer(Entity *entity);
 	void rebuildLoadedEntityPointerSet() const;
+	std::uint32_t entityUntrackGeneration = 1;
 
 public:
 	virtual void setEntityDead(Entity *entity);
@@ -319,6 +320,7 @@ public:
 	// before every `delete entity`. No-op in base World.
 	virtual void onEntityRemoved(Entity *entity);
 	bool isLoadedEntityPointer(const Entity *entity) const;
+	std::uint32_t getEntityUntrackGeneration() const { return entityUntrackGeneration; }
 	bool isLoadedTileEntityPointer(const TileEntity *tileEntity) const;
 	void detachEntityForWorldChange(Entity *entity);
 	void addWorldAccess(IWorldAccess *iworldaccess);

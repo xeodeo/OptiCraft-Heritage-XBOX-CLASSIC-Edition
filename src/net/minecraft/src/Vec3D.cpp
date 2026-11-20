@@ -20,6 +20,13 @@ Vec3D *Vec3D::createVectorHelper(double d, double d1, double d2)
 void Vec3D::initialize()
 {
 	nextVector = 0;
+	// Reclaim temporary heap spikes (e.g. dense entity collisions or explosions)
+	// at tick boundaries so overflow entries never stay resident indefinitely.
+	if (g_vec3DOverflowPool.size() > 256)
+	{
+		g_vec3DOverflowPool.resize(256);
+		g_vec3DOverflowPool.shrink_to_fit();
+	}
 }
 
 void Vec3D::trimVectorPool()

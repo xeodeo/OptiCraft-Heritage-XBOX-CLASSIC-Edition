@@ -25,6 +25,7 @@
 #include "java/System.h"
 #include "platform/PlatformTuning.h"
 #include "platform/WorldLoadTrace.h"
+#include "platform/Diagnostics.h"
 #include "platform/chunks/ChunkGenerationScheduler.h"
 #include "platform/chunks/ChunkMemoryPolicy.h"
 #include "platform/world/StreamingFrameBudget.h"
@@ -666,6 +667,14 @@ Chunk *ChunkProvider::prepareChunkInternal(int_t i, int_t j, bool deferGeneratio
 	}
 	else if (chunk == nullptr)
 	{
+#if PLATFORM_XBOX
+		if (worldObj != nullptr && !worldObj->findingSpawnPoint)
+		{
+			const long freeKb = platformHeapFreeKb();
+			if (freeKb >= 0 && freeKb < 3072)
+				return blankChunk;
+		}
+#endif
 #if PLATFORM_INCREMENTAL_CHUNK_GENERATION
 		if (deferGeneration)
 		{
@@ -1611,7 +1620,13 @@ bool ChunkProvider::unload100OldestChunks()
 			chunksOutsideRadius++;
 		}
 	}
+#if PLATFORM_XBOX
+	const long unloadFreeKb = platformHeapFreeKb();
+	const bool lowMemoryPressure = unloadFreeKb >= 0 && unloadFreeKb < 4096;
+	const bool emergency = (chunkMap.size() > maxResidentChunks || lowMemoryPressure) && chunksOutsideRadius > 0;
+#else
 	const bool emergency = chunkMap.size() > maxResidentChunks && chunksOutsideRadius > 0;
+#endif
 	const int_t unloadLimit = ChunkMemoryPolicy::unloadLimit(retentionPolicy, emergency);
 
 	const long_t now = currentWorldTime();

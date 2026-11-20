@@ -722,59 +722,65 @@ void Entity::moveEntity(double d, double d1, double d2)
 			}
 		}
 	}
+	bool flag1 = onGround;
 #if PLATFORM_FLOAT_COLLISION_SWEEP
-	// Same statement order as the double path below, including where flag1 is
-	// sampled (before the X reset can zero d1); see the sweep helpers above.
-	worldObj->collectCollisionSweep(this, boundingBox->addCoord(d, d1, d2), s_collisionSweep);
 	SweepLocalBox sweepBox;
-	sweepRebase(boundingBox, s_collisionSweep, sweepBox);
-	sweepApplyY(s_collisionSweep, boundingBox, sweepBox, d1);
-	if (!field_9293_aM && d6 != d1)
-	{
-		d = d1 = d2 = 0.0;
-	}
-	bool flag1 = onGround || (d6 != d1 && d6 < 0.0);
-	sweepApplyX(s_collisionSweep, boundingBox, sweepBox, d);
-	if (!field_9293_aM && d5 != d)
-	{
-		d = d1 = d2 = 0.0;
-	}
-	sweepApplyZ(s_collisionSweep, boundingBox, sweepBox, d2);
-	if (!field_9293_aM && d7 != d2)
-	{
-		d = d1 = d2 = 0.0;
-	}
-#else
-	const std::vector<AxisAlignedBB *> &list = worldObj->getCollidingBoundingBoxes(this, boundingBox->addCoord(d, d1, d2));
-	for (size_t i = 0; i < list.size(); i++)
-	{
-		d1 = list[i]->calculateYOffset(boundingBox, d1);
-	}
-	boundingBox->offset(0.0, d1, 0.0);
-	if (!field_9293_aM && d6 != d1)
-	{
-		d = d1 = d2 = 0.0;
-	}
-	bool flag1 = onGround || (d6 != d1 && d6 < 0.0);
-	for (size_t j = 0; j < list.size(); j++)
-	{
-		d = list[j]->calculateXOffset(boundingBox, d);
-	}
-	boundingBox->offset(d, 0.0, 0.0);
-	if (!field_9293_aM && d5 != d)
-	{
-		d = d1 = d2 = 0.0;
-	}
-	for (size_t k = 0; k < list.size(); k++)
-	{
-		d2 = list[k]->calculateZOffset(boundingBox, d2);
-	}
-	boundingBox->offset(0.0, 0.0, d2);
-	if (!field_9293_aM && d7 != d2)
-	{
-		d = d1 = d2 = 0.0;
-	}
 #endif
+	if (d != 0.0 || d1 != 0.0 || d2 != 0.0)
+	{
+#if PLATFORM_FLOAT_COLLISION_SWEEP
+		// Same statement order as the double path below, including where flag1 is
+		// sampled (before the X reset can zero d1); see the sweep helpers above.
+		worldObj->collectCollisionSweep(this, boundingBox->addCoord(d, d1, d2), s_collisionSweep);
+		sweepRebase(boundingBox, s_collisionSweep, sweepBox);
+		sweepApplyY(s_collisionSweep, boundingBox, sweepBox, d1);
+		if (!field_9293_aM && d6 != d1)
+		{
+			d = d1 = d2 = 0.0;
+		}
+		flag1 = onGround || (d6 != d1 && d6 < 0.0);
+		sweepApplyX(s_collisionSweep, boundingBox, sweepBox, d);
+		if (!field_9293_aM && d5 != d)
+		{
+			d = d1 = d2 = 0.0;
+		}
+		sweepApplyZ(s_collisionSweep, boundingBox, sweepBox, d2);
+		if (!field_9293_aM && d7 != d2)
+		{
+			d = d1 = d2 = 0.0;
+		}
+#else
+		const std::vector<AxisAlignedBB *> &list = worldObj->getCollidingBoundingBoxes(this, boundingBox->addCoord(d, d1, d2));
+		for (size_t i = 0; i < list.size(); i++)
+		{
+			d1 = list[i]->calculateYOffset(boundingBox, d1);
+		}
+		boundingBox->offset(0.0, d1, 0.0);
+		if (!field_9293_aM && d6 != d1)
+		{
+			d = d1 = d2 = 0.0;
+		}
+		flag1 = onGround || (d6 != d1 && d6 < 0.0);
+		for (size_t j = 0; j < list.size(); j++)
+		{
+			d = list[j]->calculateXOffset(boundingBox, d);
+		}
+		boundingBox->offset(d, 0.0, 0.0);
+		if (!field_9293_aM && d5 != d)
+		{
+			d = d1 = d2 = 0.0;
+		}
+		for (size_t k = 0; k < list.size(); k++)
+		{
+			d2 = list[k]->calculateZOffset(boundingBox, d2);
+		}
+		boundingBox->offset(0.0, 0.0, d2);
+		if (!field_9293_aM && d7 != d2)
+		{
+			d = d1 = d2 = 0.0;
+		}
+#endif
+	}
 	if (stepHeight > 0.0f && flag1 && (flag || ySize < 0.05f) && (d5 != d || d7 != d2))
 	{
 		double d9 = d;

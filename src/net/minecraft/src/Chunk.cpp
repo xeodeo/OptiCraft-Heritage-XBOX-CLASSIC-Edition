@@ -1391,7 +1391,7 @@ bool Chunk::isRuntimeSaveRequired() const
 
 void Chunk::getEntitiesWithinAABBForEntity(Entity *entity, AxisAlignedBB *axisalignedbb, std::vector<Entity *> &list)
 {
-	if (axisalignedbb == nullptr)
+	if (axisalignedbb == nullptr || worldObj == nullptr)
 		return;
 	int_t minSection = MathHelper::floor_double((axisalignedbb->minY - 2.0) / 16.0);
 	int_t maxSection = MathHelper::floor_double((axisalignedbb->maxY + 2.0) / 16.0);
@@ -1402,14 +1402,69 @@ void Chunk::getEntitiesWithinAABBForEntity(Entity *entity, AxisAlignedBB *axisal
 	for (int_t section = minSection; section <= maxSection; ++section)
 	{
 		auto &sectionEntities = entities[section];
+#if PLATFORM_ENTITY_QUERY_CACHE
+		const std::uint32_t untrackGen = worldObj->getEntityUntrackGeneration();
+		if (entitySectionValidatedGen[section] != untrackGen ||
+		    entitySectionValidatedRev[section] != entitySectionRevision[section])
+		{
+			for (auto it = sectionEntities.begin(); it != sectionEntities.end();)
+			{
+				Entity *candidate = *it;
+				if (candidate == nullptr || !worldObj->isLoadedEntityPointer(candidate))
+				{
+					if (candidate != nullptr)
+					{
+						MC_LOG_ERROR("chunk",
+						    "Purging stale entity pointer during AABB query chunk=%d,%d section=%d ptr=%p\n",
+						    xPosition, zPosition, section, (void *)candidate);
+					}
+					it = sectionEntities.erase(it);
+					++entitySectionRevision[section];
+					continue;
+				}
+				++it;
+			}
+			entitySectionValidatedGen[section] = untrackGen;
+			entitySectionValidatedRev[section] = entitySectionRevision[section];
+		}
+
+		for (Entity *candidate : sectionEntities)
+		{
+			if (candidate == entity || candidate->boundingBox == nullptr ||
+			    !candidate->boundingBox->intersectsWith(axisalignedbb))
+			{
+				continue;
+			}
+
+			list.push_back(candidate);
+			if (candidate->hasParts())
+			{
+				const std::vector<Entity *> parts = candidate->getParts();
+				for (Entity *part : parts)
+				{
+					if (part != nullptr && part != entity && part->boundingBox != nullptr &&
+					    part->boundingBox->intersectsWith(axisalignedbb))
+					{
+						list.push_back(part);
+					}
+				}
+			}
+		}
+#else
 		for (auto it = sectionEntities.begin(); it != sectionEntities.end();)
 		{
 			Entity *candidate = *it;
 
+			if (candidate == entity)
+			{
+				++it;
+				continue;
+			}
+
 			// Chunk buckets are non-owning. If World no longer tracks this raw
 			// address, dereferencing it can be a use-after-free during collision
 			// queries. Purge the stale index entry before touching candidate.
-			if (candidate == nullptr || worldObj == nullptr || !worldObj->isLoadedEntityPointer(candidate))
+			if (candidate == nullptr || !worldObj->isLoadedEntityPointer(candidate))
 			{
 				if (candidate != nullptr)
 				{
@@ -1422,23 +1477,27 @@ void Chunk::getEntitiesWithinAABBForEntity(Entity *entity, AxisAlignedBB *axisal
 			}
 
 			++it;
-			if (candidate == entity || candidate->boundingBox == nullptr ||
+			if (candidate->boundingBox == nullptr ||
 			    !candidate->boundingBox->intersectsWith(axisalignedbb))
 			{
 				continue;
 			}
 
 			list.push_back(candidate);
-			const std::vector<Entity *> parts = candidate->getParts();
-			for (Entity *part : parts)
+			if (candidate->hasParts())
 			{
-				if (part != nullptr && part != entity && part->boundingBox != nullptr &&
-				    part->boundingBox->intersectsWith(axisalignedbb))
+				const std::vector<Entity *> parts = candidate->getParts();
+				for (Entity *part : parts)
 				{
-					list.push_back(part);
+					if (part != nullptr && part != entity && part->boundingBox != nullptr &&
+					    part->boundingBox->intersectsWith(axisalignedbb))
+					{
+						list.push_back(part);
+					}
 				}
 			}
 		}
+#endif
 	}
 }
 

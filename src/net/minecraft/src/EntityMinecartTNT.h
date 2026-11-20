@@ -34,4 +34,5 @@ protected:
 
 private:
     int_t minecartTNTFuse;
+    bool hasExploded;
 };

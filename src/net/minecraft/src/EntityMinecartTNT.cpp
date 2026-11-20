@@ -2,19 +2,22 @@
 #include "Block.h"
 #include "DamageSource.h"
 #include "EntityArrow.h"
+#include "Explosion.h"
 #include "ItemStack.h"
 #include "NBTTagCompound.h"
 #include "World.h"
+#include <cmath>
 #include "java/Math.h"
+#include "platform/PlatformConfig.h"
 
 EntityMinecartTNT::EntityMinecartTNT(World *w)
-    : EntityMinecart(w), minecartTNTFuse(-1)
+    : EntityMinecart(w), minecartTNTFuse(-1), hasExploded(false)
 {
     minecartType = 3;
 }
 
 EntityMinecartTNT::EntityMinecartTNT(World *w, double x, double y, double z)
-    : EntityMinecart(w, x, y, z, 3), minecartTNTFuse(-1)
+    : EntityMinecart(w, x, y, z, 3), minecartTNTFuse(-1), hasExploded(false)
 {
     minecartType = 3;
 }
@@ -64,14 +67,41 @@ void EntityMinecartTNT::killMinecart(const DamageSource &source)
 
 void EntityMinecartTNT::explodeCart(double speedSq)
 {
-    if (!worldObj->multiplayerWorld)
+    if (hasExploded || worldObj == nullptr || worldObj->multiplayerWorld)
+        return;
+
+#if PLATFORM_XBOX
+    // Pace simultaneous TNT minecart blasts on 64 MB hardware so a stacked
+    // train detonates across consecutive ticks instead of spiking CPU and RAM
+    // in a single frame.
+    static long_t s_lastExplodeTick = -1;
+    static int s_explosionsThisTick = 0;
+    const long_t currentTick = worldObj->getTotalWorldTime();
+    if (currentTick != s_lastExplodeTick)
     {
-        double speed = JavaMath::sqrt(speedSq);
-        if (speed > 5.0)
-            speed = 5.0;
-        worldObj->createExplosion(this, posX, posY, posZ, (float)(4.0 + rand.nextDouble() * 1.5 * speed));
-        setEntityDead();
+        s_lastExplodeTick = currentTick;
+        s_explosionsThisTick = 0;
     }
+    if (!isDead && s_explosionsThisTick >= 2)
+    {
+        const int_t stagger = 1 + rand.nextInt(3);
+        if (minecartTNTFuse < 0 || minecartTNTFuse > stagger)
+            minecartTNTFuse = stagger;
+        return;
+    }
+    ++s_explosionsThisTick;
+#endif
+
+    hasExploded = true;
+    setEntityDead();
+    if (!std::isfinite(posX) || !std::isfinite(posY) || !std::isfinite(posZ))
+        return;
+    double speed = (speedSq > 0.0 && std::isfinite(speedSq)) ? JavaMath::sqrt(speedSq) : 0.0;
+    if (!(speed >= 0.0) || !std::isfinite(speed))
+        speed = 0.0;
+    if (speed > 5.0)
+        speed = 5.0;
+    delete worldObj->createExplosion(this, posX, posY, posZ, (float)(4.0 + rand.nextDouble() * 1.5 * speed));
 }
 
 void EntityMinecartTNT::fall(float dist)
@@ -122,6 +152,19 @@ bool EntityMinecartTNT::attackEntityFrom(const DamageSource &source, int_t damag
     if (arrow != nullptr && arrow->isBurning())
     {
         explodeCart(arrow->motionX * arrow->motionX + arrow->motionY * arrow->motionY + arrow->motionZ * arrow->motionZ);
+        return true;
+    }
+    if (source.isExplosion())
+    {
+        // Defer chain detonations to a short fuse instead of recursing inside
+        // Explosion::doExplosionA() (which stacked 100+ simultaneous Explosion
+        // objects and exhausted 64 MB RAM in one tick).
+        if (!worldObj->multiplayerWorld && !isDead && !hasExploded)
+        {
+            const int_t chainFuse = 1 + rand.nextInt(4);
+            if (minecartTNTFuse < 0 || minecartTNTFuse > chainFuse)
+                minecartTNTFuse = chainFuse;
+        }
         return true;
     }
     if (source.isFireDamage())

@@ -12,6 +12,7 @@
 #include "RenderEngine.h"
 #include "Tessellator.h"
 #include "World.h"
+#include "platform/Diagnostics.h"
 #include "platform/PlatformTuning.h"
 #include "PocketOptimizations.h"
 #if PLATFORM_PS2
@@ -38,6 +39,20 @@ void EffectRenderer::addEffect(EntityFX *entityfx)
 {
 	if (entityfx == nullptr)
 		return;
+#if PLATFORM_XBOX
+	static unsigned s_fxMemCheck = 0;
+	static bool s_fxLowMem = false;
+	if ((s_fxMemCheck++ & 31u) == 0u || s_fxLowMem)
+	{
+		const long freeKb = platformHeapFreeKb();
+		s_fxLowMem = (freeKb >= 0 && freeKb < 3072);
+	}
+	if (s_fxLowMem)
+	{
+		delete entityfx;
+		return;
+	}
+#endif
     int_t i = entityfx->getFXLayer();
     const int_t particleCap = PocketOptimizations::enabled()
         ? PocketOptimizations::maxParticlesPerLayer(PLATFORM_MAX_PARTICLES_PER_LAYER)
