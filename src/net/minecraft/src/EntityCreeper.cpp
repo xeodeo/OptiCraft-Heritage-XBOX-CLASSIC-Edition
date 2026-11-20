@@ -17,6 +17,7 @@
 #include "Item.h"
 #include "NBTTagCompound.h"
 #include "World.h"
+#include "GameRules.h"
 #include "Explosion.h"
 #include "DataWatcher.h"
 #include "java/String.h"
@@ -77,7 +78,8 @@ void EntityCreeper::onUpdate()
 			timeSinceIgnited = 30;
 			if (!worldObj->multiplayerWorld)
 			{
-				delete worldObj->createExplosion(this, posX, posY, posZ, getPowered() ? 6.0f : 3.0f);
+				const bool mobGriefing = worldObj->getGameRules().getGameRuleBooleanValue("mobGriefing");
+				delete worldObj->newExplosion(this, posX, posY, posZ, getPowered() ? 6.0f : 3.0f, false, mobGriefing);
 				setEntityDead();
 			}
 		}

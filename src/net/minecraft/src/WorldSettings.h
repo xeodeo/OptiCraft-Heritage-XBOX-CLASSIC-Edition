@@ -21,6 +21,8 @@ public:
 
 	WorldSettings *enableBonusChest();
 	bool isBonusChestEnabled() const;
+	WorldSettings *enableCommands();
+	bool areCommandsAllowed() const;
 
 private:
 	int64_t seed;
@@ -30,5 +32,6 @@ private:
 	WorldType *terrainType;
 	int_t worldSizeType;
 	bool bonusChestEnabled{false};
+	bool commandsAllowed{false};
 };
 

@@ -48,7 +48,10 @@ protected:
     GuiButton *worldTypeButton;
     GuiButton *worldSizeButton;
     GuiButton *bonusItemsButton;
+    GuiButton *allowCommandsButton;
     bool bonusItems;
+    bool commandsAllowed;
+    bool commandsToggled;
     bool limitedWorld;
     int_t worldSizeType;
     std::string gameModeDescriptionLine1;

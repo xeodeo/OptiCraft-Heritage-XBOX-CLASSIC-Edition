@@ -41,6 +41,7 @@
 #include "StepSound.h"
 #include "Vec3D.h"
 #include "World.h"
+#include "GameRules.h"
 
 
 #if PLATFORM_LIMIT_ENTITY_PUSH_COLLISIONS
@@ -750,7 +751,8 @@ void EntityLiving::onDeathUpdate()
 	++deathTime;
 	if (deathTime == 20)
 	{
-		if (worldObj != nullptr && !worldObj->multiplayerWorld && (recentlyHit > 0 || isPlayer()) && !isChild())
+		if (worldObj != nullptr && !worldObj->multiplayerWorld && (recentlyHit > 0 || isPlayer()) && !isChild() &&
+		    (isPlayer() || worldObj->getGameRules().getGameRuleBooleanValue("doMobLoot")))
 		{
 			EntityPlayer *attackingPlayer = nullptr;
 			if (attackingPlayerEntityId >= 0)
@@ -1224,7 +1226,7 @@ void EntityLiving::onDeath(Entity *entity)
 	{
 		entity->onKillEntity(this);
 	}
-	if (!worldObj->multiplayerWorld)
+	if (!worldObj->multiplayerWorld && worldObj->getGameRules().getGameRuleBooleanValue("doMobLoot"))
 	{
 		dropFewItems();
 	}
@@ -1239,7 +1241,7 @@ void EntityLiving::onDeath(const DamageSource &source)
 	if (attacker != nullptr)
 		attacker->onKillEntity(this);
 
-	if (!worldObj->multiplayerWorld)
+	if (!worldObj->multiplayerWorld && worldObj->getGameRules().getGameRuleBooleanValue("doMobLoot"))
 	{
 		int_t looting = 0;
 		if (EntityPlayer *player = dynamic_cast<EntityPlayer *>(attacker))

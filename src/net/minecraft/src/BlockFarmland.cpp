@@ -2,6 +2,8 @@
 #include "Material.h"
 #include "AxisAlignedBB.h"
 #include "World.h"
+#include "GameRules.h"
+#include "EntityPlayer.h"
 #include "Block.h"
 #include "Entity.h"
 
@@ -51,9 +53,12 @@ void BlockFarmland::updateTick(World *world, int_t i, int_t j, int_t k, Random &
 
 void BlockFarmland::onFallenUpon(World *world, int_t i, int_t j, int_t k, Entity *entity, float fallDistance)
 {
-	(void)entity;
-	if (world->rand.nextFloat() < fallDistance - 0.5f)
+	if (!world->multiplayerWorld && world->rand.nextFloat() < fallDistance - 0.5f)
+	{
+		if (dynamic_cast<EntityPlayer *>(entity) == nullptr && !world->getGameRules().getGameRuleBooleanValue("mobGriefing"))
+			return;
 		world->setBlockWithNotify(i, j, k, Block::dirt->blockID);
+	}
 }
 
 void BlockFarmland::onEntityWalking(World *world, int_t i, int_t j, int_t k, Entity *entity)

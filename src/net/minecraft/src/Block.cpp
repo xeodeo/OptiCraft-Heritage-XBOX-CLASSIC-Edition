@@ -141,6 +141,7 @@
 #include "TileEntitySign.h"
 #include "Vec3D.h"
 #include "World.h"
+#include "GameRules.h"
 #include "java/Random.h"
 #include <stdexcept>
 
@@ -651,8 +652,9 @@ void Block::dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, i
 
 void Block::dropBlockAsItem_do(World *world, int_t i, int_t j, int_t k, ItemStack *itemstack)
 {
-	if (world->multiplayerWorld)
+	if (world->multiplayerWorld || !world->getGameRules().getGameRuleBooleanValue("doTileDrops"))
 	{
+		delete itemstack;
 		return;
 	}
 	float f = 0.7f;

@@ -170,6 +170,12 @@ Material *Material::setImmovableMobility()
 	return this;
 }
 
+Material *Material::setAlwaysHarvested()
+{
+	adventureModeExempt = true;
+	return this;
+}
+
 Material *Material::air = nullptr;
 Material *Material::grassMaterial = nullptr;
 Material *Material::ground = nullptr;
@@ -223,11 +229,11 @@ void Material::initialize()
 	fire = (new MaterialTransparent(MapColor::airColor))->setNoPushMobility();
 	sand = new Material(MapColor::sandColor);
 	circuits = (new MaterialLogic(MapColor::airColor))->setNoPushMobility();
-	glass = (new Material(MapColor::airColor))->setTranslucent();
-	redstoneLight = new Material(MapColor::airColor);
+	glass = (new Material(MapColor::airColor))->setTranslucent()->setAlwaysHarvested();
+	redstoneLight = (new Material(MapColor::airColor))->setAlwaysHarvested();
 	tnt = (new Material(MapColor::tntColor))->setBurning()->setTranslucent();
 	spawnableCreatureList = (new Material(MapColor::foliageColor))->setNoPushMobility();
-	ice = (new Material(MapColor::iceColor))->setTranslucent();
+	ice = (new Material(MapColor::iceColor))->setTranslucent()->setAlwaysHarvested();
 	snow = (new MaterialLogic(MapColor::snowColor))->setIsGroundCover()->setTranslucent()->setNoHarvest()->setNoPushMobility();
 	builtSnow = (new Material(MapColor::snowColor))->setNoHarvest();
 	cactus = (new Material(MapColor::foliageColor))->setTranslucent()->setNoPushMobility();

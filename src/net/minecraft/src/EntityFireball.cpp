@@ -12,6 +12,7 @@
 #include "NBTTagCompound.h"
 #include "Vec3D.h"
 #include "World.h"
+#include "GameRules.h"
 #include "Explosion.h"
 #include "platform/PlatformTuning.h"
 
@@ -220,7 +221,8 @@ void EntityFireball::onImpact(MovingObjectPosition *hit)
 		DamageSource source = DamageSource::causeFireballDamage(this, shooter);
 		hit->entityHit->attackEntityFrom(source, 4);
 	}
-	delete worldObj->newExplosion(nullptr, posX, posY, posZ, 1.0f, true);
+	const bool mobGriefing = worldObj->getGameRules().getGameRuleBooleanValue("mobGriefing");
+	delete worldObj->newExplosion(nullptr, posX, posY, posZ, 1.0f, mobGriefing, mobGriefing);
 	setEntityDead();
 }
 

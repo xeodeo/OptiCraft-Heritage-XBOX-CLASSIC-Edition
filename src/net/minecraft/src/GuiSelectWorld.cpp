@@ -44,6 +44,7 @@ void GuiSelectWorld::initGui()
 	conversionLabel  = tr->translateKey("selectWorld.conversion");
 	gameModeLabels[0] = tr->translateKey("gameMode.survival");
 	gameModeLabels[1] = tr->translateKey("gameMode.creative");
+	gameModeLabels[2] = tr->translateKey("gameMode.adventure");
 	loadSaves();
 	delete worldSlotContainer;
 	worldSlotContainer = new GuiWorldSlot(this);
@@ -114,10 +115,10 @@ void GuiSelectWorld::selectWorld(int_t i)
 	selected = true;
 	delete mc->playerController;
 	const int_t gameType = saveList[i]->getGameType();
-	if (gameType == 0)
-		mc->playerController = new PlayerControllerSP(mc);
-	else
+	if (gameType == 1)
 		mc->playerController = new PlayerControllerCreative(mc);
+	else
+		mc->playerController = new PlayerControllerSP(mc);
 	std::string fname = getSaveFileName(i);
 	if (fname.empty()) fname = "World" + std::to_string(i);
 	mc->startWorld(fname, getSaveName(i), static_cast<WorldSettings *>(nullptr));

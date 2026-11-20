@@ -35,6 +35,9 @@ bool PlayerController::sendBlockRemoved(int_t i, int_t j, int_t k, int_t)
 	World *world = mc->theWorld;
 	if (world == nullptr)
 		return false;
+	if (mc->thePlayer != nullptr && !mc->thePlayer->capabilities.allowEdit &&
+	    !mc->thePlayer->isCurrentToolAdventureModeExempt(i, j, k))
+		return false;
 	int_t id = world->getBlockId(i, j, k);
 	if (id <= 0 || id >= Block::BLOCK_REGISTRY_SIZE)
 		return false;

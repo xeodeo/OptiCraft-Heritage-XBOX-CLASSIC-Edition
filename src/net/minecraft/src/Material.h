@@ -39,10 +39,12 @@ public:
 	bool getIsHarvestable();
 
 	int_t getMaterialMobility();
+	bool isAlwaysHarvested() const { return adventureModeExempt; }
 
 protected:
 	Material *setNoPushMobility();
 	Material *setImmovableMobility();
+	Material *setAlwaysHarvested();
 
 public:
 	static Material *air;
@@ -91,6 +93,7 @@ public:
 private:
 	bool canHarvest;
 	int_t mobilityFlag = 0;
+	bool adventureModeExempt = false;
 
 public:
 	// Constructs the static Material instances. Must be called once at startup,

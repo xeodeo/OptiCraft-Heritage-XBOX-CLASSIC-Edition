@@ -114,8 +114,15 @@
 #include "net/minecraft/src/NetClientHandler.h"
 #include "net/minecraft/src/OpenGlHelper.h"
 #include "net/minecraft/src/PlayerController.h"
+#include "net/minecraft/src/PlayerControllerCreative.h"
 #include "net/minecraft/src/PlayerControllerMP.h"
+#include "net/minecraft/src/PlayerControllerSP.h"
 #include "net/minecraft/src/PlayerControllerTest.h"
+#include "net/minecraft/src/EnumGameType.h"
+#include "net/minecraft/src/GameRules.h"
+#include "net/minecraft/src/InventoryEnderChest.h"
+#include "net/minecraft/src/commands/ICommandSender.h"
+#include "net/minecraft/src/commands/ServerCommandManager.h"
 #include "net/minecraft/src/RenderBlocks.h"
 #include "net/minecraft/src/RenderEngine.h"
 #include "net/minecraft/src/RenderGlobal.h"
@@ -2364,7 +2371,7 @@ void Minecraft::runTick()
         while (gameSettings->keyBindChat->isPressed())
             displayGuiScreen(new GuiChat());
 
-        if (isMultiplayerWorld() && currentScreen == nullptr &&
+        if (currentScreen == nullptr &&
             (lwjgl::Keyboard::isKeyDown(lwjgl::Keyboard::KEY_SLASH) ||
              lwjgl::Keyboard::isKeyDown(lwjgl::Keyboard::KEY_DIVIDE)))
         {
@@ -2950,6 +2957,13 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
         thePlayer->movementInput = new MovementInputFromOptions(gameSettings);
 
         playerController->initializePlayer(thePlayer);
+        if (!world->multiplayerWorld && world->getWorldInfo() != nullptr)
+        {
+            int_t effectiveGameType = thePlayer->getPlayerGameType();
+            if (effectiveGameType == EnumGameType::NOT_SET)
+                effectiveGameType = world->getWorldInfo()->getGameType();
+            setPlayerGameType(thePlayer, effectiveGameType);
+        }
         platformMemoryCheckpoint("changeWorld controller ready");
 
         if (entityplayer != nullptr)
@@ -3157,6 +3171,14 @@ void Minecraft::respawn(bool flag, int_t i, bool copyPlayerState)
 
     IChunkProvider *ichunkprovider = theWorld->getIChunkProvider();
 
+    bool oldSpawnForced = false;
+    int_t oldPlayerGameType = EnumGameType::NOT_SET;
+    if (thePlayer != nullptr)
+    {
+        oldSpawnForced = thePlayer->isSpawnForced();
+        oldPlayerGameType = thePlayer->getPlayerGameType();
+    }
+
     if (thePlayer != nullptr && !flag)
     {
         chunkcoordinates = thePlayer->getPlayerSpawnCoordinate();
@@ -3167,10 +3189,18 @@ void Minecraft::respawn(bool flag, int_t i, bool copyPlayerState)
             // player position return blankChunk (air), which erroneously triggers "tile.bed.notValid".
             configureChunkProviderCache(ichunkprovider, chunkcoordinates->x >> 4, chunkcoordinates->z >> 4, gameSettings->renderDistance);
 
-            chunkcoordinates1 = EntityPlayer::getNearestBedSpawnLocation(theWorld, chunkcoordinates);
-            ownsBedSpawn = chunkcoordinates1 != nullptr;
-            if (chunkcoordinates1 == nullptr)
-                thePlayer->addChatMessage("tile.bed.notValid");
+            if (oldSpawnForced)
+            {
+                chunkcoordinates1 = new ChunkCoordinates(chunkcoordinates->x, chunkcoordinates->y, chunkcoordinates->z);
+                ownsBedSpawn = true;
+            }
+            else
+            {
+                chunkcoordinates1 = EntityPlayer::getNearestBedSpawnLocation(theWorld, chunkcoordinates);
+                ownsBedSpawn = chunkcoordinates1 != nullptr;
+                if (chunkcoordinates1 == nullptr)
+                    thePlayer->addChatMessage("tile.bed.notValid");
+            }
         }
     }
 
@@ -3197,6 +3227,22 @@ void Minecraft::respawn(bool flag, int_t i, bool copyPlayerState)
     thePlayer = (EntityPlayerSP *)playerController->createPlayer(theWorld);
     if (copyPlayerState && oldPlayer != nullptr)
         thePlayer->copyPlayer(oldPlayer);
+    else if (oldPlayer != nullptr && theWorld != nullptr &&
+             theWorld->getGameRules().getGameRuleBooleanValue("keepInventory"))
+    {
+        if (thePlayer->inventory != nullptr && oldPlayer->inventory != nullptr)
+            thePlayer->inventory->copyInventory(oldPlayer->inventory);
+        thePlayer->experienceLevel = oldPlayer->experienceLevel;
+        thePlayer->experienceTotal = oldPlayer->experienceTotal;
+        thePlayer->experience = oldPlayer->experience;
+        thePlayer->score = oldPlayer->score;
+        if (oldPlayer->theInventoryEnderChest != nullptr && thePlayer->theInventoryEnderChest != nullptr)
+        {
+            NBTTagList *enderList = oldPlayer->theInventoryEnderChest->saveInventoryToNBT();
+            thePlayer->theInventoryEnderChest->loadInventoryFromNBT(enderList);
+            delete enderList;
+        }
+    }
     else if (isDebugKeepInventoryEnabled() && oldPlayer != nullptr &&
              thePlayer->inventory != nullptr && oldPlayer->inventory != nullptr)
         thePlayer->inventory->copyInventory(oldPlayer->inventory);
@@ -3206,7 +3252,7 @@ void Minecraft::respawn(bool flag, int_t i, bool copyPlayerState)
 
     if (flag1)
     {
-        thePlayer->setPlayerSpawnCoordinate(chunkcoordinates);
+        thePlayer->setSpawnChunk(chunkcoordinates, oldSpawnForced);
         thePlayer->setLocationAndAngles(
             (float)chunkcoordinates1->x + 0.5f,
             (float)chunkcoordinates1->y + 0.1f,
@@ -3223,6 +3269,13 @@ void Minecraft::respawn(bool flag, int_t i, bool copyPlayerState)
     thePlayer->entityId      = j;
     thePlayer->handleItemUseFinish();
     playerController->initializePlayer(thePlayer);
+    if (!theWorld->multiplayerWorld && theWorld->getWorldInfo() != nullptr)
+    {
+        int_t effectiveGameType = oldPlayerGameType != EnumGameType::NOT_SET
+            ? oldPlayerGameType
+            : theWorld->getWorldInfo()->getGameType();
+        setPlayerGameType(thePlayer, effectiveGameType);
+    }
     thePlayerOne = thePlayer;
     if (isPlayerScreenActive(0))
         closePlayerScreen(0);
@@ -3458,8 +3511,41 @@ bool Minecraft::isDebugInfoEnabled()
 
 bool Minecraft::lineIsCommand(const std::string &s)
 {
-    (void)s;
-    return false;
+    if (theWorld == nullptr || theWorld->multiplayerWorld)
+        return false;
+    std::string trimmed = String::trimJava(s);
+    if (trimmed.empty() || trimmed[0] != '/')
+        return false;
+
+    PlayerCommandSender sender(this, thePlayer);
+    ServerCommandManager::getInstance().executeCommand(&sender, trimmed);
+    return true;
+}
+
+void Minecraft::setPlayerGameType(EntityPlayer *player, int_t gameType)
+{
+    if (player == nullptr)
+        return;
+    const int_t normalized = EnumGameType::getByID(gameType);
+    player->setPlayerGameTypeField(normalized);
+    EnumGameType::configurePlayerCapabilities(normalized, player->capabilities);
+
+    const bool isPrimaryPlayer = (player == thePlayerOne) || (thePlayerOne == nullptr && player == thePlayer);
+    if (isPrimaryPlayer && (theWorld == nullptr || !theWorld->multiplayerWorld))
+    {
+        const bool wantCreative = EnumGameType::isCreative(normalized);
+        const bool currentlyCreative = (playerController != nullptr && playerController->isInCreativeMode());
+        if (playerController == nullptr || wantCreative != currentlyCreative)
+        {
+            PlayerController *oldCtrl = playerController;
+            playerController = wantCreative
+                ? static_cast<PlayerController *>(new PlayerControllerCreative(this))
+                : static_cast<PlayerController *>(new PlayerControllerSP(this));
+            delete oldCtrl;
+            if (theWorld != nullptr)
+                playerController->onWorldChanged(theWorld);
+        }
+    }
 }
 
 NetClientHandler *Minecraft::getSendQueue()

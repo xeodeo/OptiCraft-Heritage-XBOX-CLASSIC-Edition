@@ -34,6 +34,8 @@ private:
     void activateSelection();
     void selectControl(int_t index);
     void moveSelection(int_t direction);
+    int_t selectionCount() const;
+    void repositionControls();
     bool isSelectionAvailable(int_t index) const;
     GuiButton *buttonForSelection(int_t index) const;
     int_t selectionForButton(const GuiButton *button) const;
@@ -43,6 +45,7 @@ private:
     LegacyDifficultySlider *difficultySlider;
     LegacyGuiButton *legacyWorldSizeButton;
     LegacyGuiButton *bonusChestButton;
+    LegacyGuiButton *legacyAllowCommandsButton;
     int_t textFieldHeight;
     int_t labelOffsetY;
     int_t selectedControlIndex;

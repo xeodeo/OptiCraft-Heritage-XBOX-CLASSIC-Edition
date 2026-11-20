@@ -51,7 +51,7 @@ private:
 	GuiWorldSlot *worldSlotContainer;
 	std::string worldLabel;
 	std::string conversionLabel;
-	std::string gameModeLabels[2];
+	std::string gameModeLabels[3];
 	bool deleting;
 	GuiButton *buttonRename;
 	GuiButton *buttonSelect;

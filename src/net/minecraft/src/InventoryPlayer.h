@@ -39,6 +39,7 @@ public:
     int getTotalArmorValue();
     void damageArmor(int amount);
     void dropAllItems();
+    int clearInventory(int itemId, int metadata);
     ItemStack* armorItemInSlot(int slot);
     int getDamageVsEntity(Entity* entity);
     bool canHarvestBlock(Block* block);

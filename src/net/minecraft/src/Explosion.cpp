@@ -39,6 +39,7 @@ float Explosion::blockExplosionResistance(Block *block, int_t x, int_t y, int_t 
 
 Explosion::Explosion(World *world, Entity *entity, double x, double y, double z, float size) :
     isFlaming(false),
+    isSmoking(true),
     explosionX(x),
     explosionY(y),
     explosionZ(z),
@@ -254,9 +255,14 @@ void Explosion::doExplosionB(bool flag)
 #endif
     worldObj->playSoundEffect(explosionX, explosionY, explosionZ, "random.explode", 4.0f,
         (1.0f + random.nextFloatDifference() * 0.2f) * 0.7f);
-    worldObj->spawnParticle("hugeexplosion", explosionX, explosionY, explosionZ, 0.0, 0.0, 0.0);
+    if (explosionSize >= 2.0f && isSmoking)
+        worldObj->spawnParticle("hugeexplosion", explosionX, explosionY, explosionZ, 0.0, 0.0, 0.0);
+    else
+        worldObj->spawnParticle("largeexplode", explosionX, explosionY, explosionZ, 0.0, 0.0, 0.0);
 
-    std::vector<ChunkPosTuple> blockList = destroyedBlockPositions.valuesInIterationOrder();
+    std::vector<ChunkPosTuple> blockList;
+    if (isSmoking)
+        blockList = destroyedBlockPositions.valuesInIterationOrder();
 #if PLATFORM_XBOX
     const long freeKb = platformHeapFreeKb();
     const bool lowMemory = freeKb >= 0 && freeKb < 3072;
@@ -332,7 +338,7 @@ void Explosion::doExplosionB(bool flag)
         }
     }
 
-    if (isFlaming)
+    if (isFlaming && isSmoking)
     {
         for (int_t i = (int_t)blockList.size() - 1; i >= 0; i--)
         {

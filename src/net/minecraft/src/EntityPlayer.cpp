@@ -51,6 +51,8 @@
 #include "TileEntityFurnace.h"
 #include "TileEntitySign.h"
 #include "World.h"
+#include "GameRules.h"
+#include "EnumGameType.h"
 #include "WorldProvider.h"
 
 namespace
@@ -492,7 +494,9 @@ void EntityPlayer::onDeath(Entity *entity)
 	{
 		dropPlayerItemWithRandomChoice(new ItemStack(Item::appleRed, 1), true);
 	}
-	if (!isDebugKeepInventoryEnabled())
+	const bool keepInv = isDebugKeepInventoryEnabled() ||
+		(worldObj != nullptr && worldObj->getGameRules().getGameRuleBooleanValue("keepInventory"));
+	if (!keepInv)
 		inventory->dropAllItems();
 	if (entity != nullptr)
 	{
@@ -515,7 +519,9 @@ void EntityPlayer::onDeath(const DamageSource &source)
 	motionY = 0.10000000149011612;
 	if (username == "Notch")
 		dropPlayerItemWithRandomChoice(new ItemStack(Item::appleRed, 1), true);
-	if (!isDebugKeepInventoryEnabled())
+	const bool keepInv = isDebugKeepInventoryEnabled() ||
+		(worldObj != nullptr && worldObj->getGameRules().getGameRuleBooleanValue("keepInventory"));
+	if (!keepInv)
 		inventory->dropAllItems();
 	motionX = -MathHelper::cos(((attackedAtYaw + rotationYaw) * 3.1415927f) / 180.0f) * 0.1f;
 	motionZ = -MathHelper::sin(((attackedAtYaw + rotationYaw) * 3.1415927f) / 180.0f) * 0.1f;
@@ -645,7 +651,9 @@ void EntityPlayer::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 	{
 		delete playerSpawnCoordinate;
 		playerSpawnCoordinate = new ChunkCoordinates(nbttagcompound->getInteger("SpawnX"), nbttagcompound->getInteger("SpawnY"), nbttagcompound->getInteger("SpawnZ"));
+		spawnForced = nbttagcompound->getBoolean("SpawnForced");
 	}
+	playerGameType = nbttagcompound->hasKey("playerGameType") ? nbttagcompound->getInteger("playerGameType") : EnumGameType::NOT_SET;
 	experience = nbttagcompound->getFloat("XpP");
 	experienceLevel = nbttagcompound->getInteger("XpLevel");
 	experienceTotal = nbttagcompound->getInteger("XpTotal");
@@ -673,7 +681,10 @@ void EntityPlayer::writeEntityToNBT(NBTTagCompound *nbttagcompound)
 		nbttagcompound->setInteger("SpawnX", playerSpawnCoordinate->x);
 		nbttagcompound->setInteger("SpawnY", playerSpawnCoordinate->y);
 		nbttagcompound->setInteger("SpawnZ", playerSpawnCoordinate->z);
+		nbttagcompound->setBoolean("SpawnForced", spawnForced);
 	}
+	if (playerGameType != EnumGameType::NOT_SET)
+		nbttagcompound->setInteger("playerGameType", playerGameType);
 	nbttagcompound->setFloat("XpP", experience);
 	nbttagcompound->setInteger("XpLevel", experienceLevel);
 	nbttagcompound->setInteger("XpTotal", experienceTotal);
@@ -1228,9 +1239,10 @@ ChunkCoordinates *EntityPlayer::getSpawnChunk()
 	return getPlayerSpawnCoordinate();
 }
 
-void EntityPlayer::setSpawnChunk(ChunkCoordinates *chunkcoordinates)
+void EntityPlayer::setSpawnChunk(ChunkCoordinates *chunkcoordinates, bool forced)
 {
 	setPlayerSpawnCoordinate(chunkcoordinates);
+	spawnForced = (chunkcoordinates != nullptr) && forced;
 }
 
 void EntityPlayer::triggerAchievement(StatBase *statbase)
@@ -1366,6 +1378,8 @@ void EntityPlayer::fall(float f)
 int_t EntityPlayer::getExperiencePoints(EntityPlayer *player)
 {
 	(void)player;
+	if (worldObj != nullptr && worldObj->getGameRules().getGameRuleBooleanValue("keepInventory"))
+		return 0;
 	const int_t value = JavaArithmetic::intMul(experienceLevel, 7);
 	return value > 100 ? 100 : value;
 }
@@ -1486,14 +1500,33 @@ void EntityPlayer::setItemInUse(ItemStack *itemstack, int_t duration)
 		setEating(true);
 }
 
+bool EntityPlayer::isCurrentToolAdventureModeExempt(int_t x, int_t y, int_t z) const
+{
+	if (capabilities.allowEdit)
+		return true;
+	if (worldObj == nullptr)
+		return false;
+	const int_t blockId = worldObj->getBlockId(x, y, z);
+	if (blockId > 0 && blockId < Block::BLOCK_REGISTRY_SIZE && Block::blocksList[blockId] != nullptr)
+	{
+		Block *block = Block::blocksList[blockId];
+		if (block->blockMaterial != nullptr && block->blockMaterial->isAlwaysHarvested())
+			return true;
+		ItemStack *held = (inventory != nullptr) ? inventory->getCurrentItem() : nullptr;
+		if (held != nullptr && (held->canHarvestBlock(block) || held->getStrVsBlock(block) > 1.0f))
+			return true;
+	}
+	return false;
+}
+
 bool EntityPlayer::canPlayerEdit(int_t, int_t, int_t) const
 {
-	return true;
+	return capabilities.allowEdit;
 }
 
 bool EntityPlayer::canPlayerEdit(int_t, int_t, int_t, int_t, ItemStack *) const
 {
-	return true;
+	return capabilities.allowEdit;
 }
 
 void EntityPlayer::travelToTheEnd(int_t)

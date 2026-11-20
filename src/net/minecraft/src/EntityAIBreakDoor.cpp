@@ -3,6 +3,7 @@
 #include "BlockDoor.h"
 #include "EntityLiving.h"
 #include "World.h"
+#include "GameRules.h"
 
 EntityAIBreakDoor::EntityAIBreakDoor(EntityLiving *entity)
 	: EntityAIDoorInteract(entity), breakingTime(0)
@@ -18,7 +19,12 @@ bool EntityAIBreakDoor::isDoorOpen() const
 
 bool EntityAIBreakDoor::shouldExecute()
 {
-	return EntityAIDoorInteract::shouldExecute() && !isDoorOpen();
+	if (!EntityAIDoorInteract::shouldExecute())
+		return false;
+	if (theEntity == nullptr || theEntity->worldObj == nullptr ||
+	    !theEntity->worldObj->getGameRules().getGameRuleBooleanValue("mobGriefing"))
+		return false;
+	return !isDoorOpen();
 }
 
 void EntityAIBreakDoor::startExecuting()

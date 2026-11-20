@@ -53,5 +53,16 @@ bool WorldSettings::isBonusChestEnabled() const
 	return bonusChestEnabled;
 }
 
+WorldSettings *WorldSettings::enableCommands()
+{
+	commandsAllowed = true;
+	return this;
+}
+
+bool WorldSettings::areCommandsAllowed() const
+{
+	return commandsAllowed;
+}
+
 
 

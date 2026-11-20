@@ -19,6 +19,7 @@
 #include "NBTTagCompound.h"
 #include "Vec3D.h"
 #include "World.h"
+#include "GameRules.h"
 #include "WorldProvider.h"
 
 std::array<bool, 4096> EntityEnderman::canCarryBlocks = {};
@@ -115,7 +116,7 @@ void EntityEnderman::onLivingUpdate()
 	isAttacking = target != nullptr;
 	moveSpeed = target != nullptr ? 6.5f : 0.3f;
 
-	if (!worldObj->multiplayerWorld)
+	if (!worldObj->multiplayerWorld && worldObj->getGameRules().getGameRuleBooleanValue("mobGriefing"))
 	{
 		if (getCarried() == 0)
 		{

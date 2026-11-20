@@ -469,6 +469,29 @@ void InventoryPlayer::dropAllItems() {
     }
 }
 
+int InventoryPlayer::clearInventory(int itemId, int metadata) {
+    int removed = 0;
+    for (int i = 0; i < 36; i++) {
+        ItemStack *stack = mainInventory[i];
+        if (stack != nullptr && (itemId <= -1 || stack->itemID == itemId) && (metadata <= -1 || stack->getItemDamage() == metadata)) {
+            removed += stack->stackSize;
+            delete mainInventory[i];
+            mainInventory[i] = nullptr;
+        }
+    }
+    for (int j = 0; j < 4; j++) {
+        ItemStack *stack = armorInventory[j];
+        if (stack != nullptr && (itemId <= -1 || stack->itemID == itemId) && (metadata <= -1 || stack->getItemDamage() == metadata)) {
+            removed += stack->stackSize;
+            delete armorInventory[j];
+            armorInventory[j] = nullptr;
+        }
+    }
+    if (removed > 0)
+        inventoryChanged = true;
+    return removed;
+}
+
 void InventoryPlayer::setItemStack(ItemStack* stack) {
     itemStack = stack;
     if (player != nullptr) {

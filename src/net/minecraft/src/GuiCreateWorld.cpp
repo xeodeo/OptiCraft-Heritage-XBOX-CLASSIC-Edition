@@ -35,7 +35,10 @@ GuiCreateWorld::GuiCreateWorld(GuiScreen *parent)
     , worldTypeButton(nullptr)
     , worldSizeButton(nullptr)
     , bonusItemsButton(nullptr)
+    , allowCommandsButton(nullptr)
     , bonusItems(false)
+    , commandsAllowed(false)
+    , commandsToggled(false)
     , limitedWorld(false)
     , worldSizeType(0)
     , seed("")
@@ -69,7 +72,7 @@ void GuiCreateWorld::initGui()
         tr->translateKey("gui.cancel")));
     controlList.push_back(gameModeButton = new GuiButton(2, width / 2 - 75, 100, 150, 20,
         tr->translateKey("selectWorld.gameMode")));
-    controlList.push_back(moreWorldOptionsButton = new GuiButton(3, width / 2 - 75, 172, 150, 20,
+    controlList.push_back(moreWorldOptionsButton = new GuiButton(3, width / 2 - 75, 187, 150, 20,
         tr->translateKey("selectWorld.moreWorldOptions")));
     controlList.push_back(generateStructuresButton = new GuiButton(4, width / 2 - 155, 100, 150, 20,
         tr->translateKey("selectWorld.mapFeatures")));
@@ -77,10 +80,13 @@ void GuiCreateWorld::initGui()
     controlList.push_back(worldTypeButton = new GuiButton(5, width / 2 + 5, 100, 150, 20,
         tr->translateKey("selectWorld.mapType")));
     worldTypeButton->enabled2 = false;
-    controlList.push_back(worldSizeButton = new GuiButton(7, width / 2 - 155, 151, 150, 20, ""));
-    worldSizeButton->enabled2 = false;
-    controlList.push_back(bonusItemsButton = new GuiButton(8, width / 2 + 5, 151, 150, 20, ""));
+    controlList.push_back(allowCommandsButton = new GuiButton(6, width / 2 - 155, 134, 150, 20,
+        tr->translateKey("selectWorld.allowCommands")));
+    allowCommandsButton->enabled2 = false;
+    controlList.push_back(bonusItemsButton = new GuiButton(8, width / 2 + 5, 134, 150, 20, ""));
     bonusItemsButton->enabled2 = false;
+    controlList.push_back(worldSizeButton = new GuiButton(7, width / 2 - 155, 160, 150, 20, ""));
+    worldSizeButton->enabled2 = false;
 
     delete textboxWorldName;
     textboxWorldName = new GuiTextField(this, fontRenderer, width / 2 - 100, 60, 200, 20, "");
@@ -170,6 +176,13 @@ void GuiCreateWorld::updateButtonText()
         bonusItemsButton->enabled = !hardcore;
     }
 
+    if (allowCommandsButton != nullptr)
+    {
+        allowCommandsButton->displayString = tr->translateKey("selectWorld.allowCommands") + " " +
+            tr->translateKey((commandsAllowed && !hardcore) ? "options.on" : "options.off");
+        allowCommandsButton->enabled = !hardcore;
+    }
+
     if (worldSizeButton != nullptr)
     {
         const bool isEs = (tr != nullptr && tr->getCurrentLanguage().rfind("es_", 0) == 0);
@@ -194,7 +207,7 @@ void GuiCreateWorld::updateButtonText()
     }
     // Long translations (e.g. Spanish) must not spill over the 150 px buttons.
     constexpr int_t kOptionButtonWidth = 150;
-    for (GuiButton *b : {generateStructuresButton, worldTypeButton, bonusItemsButton, worldSizeButton, gameModeButton})
+    for (GuiButton *b : {generateStructuresButton, worldTypeButton, bonusItemsButton, allowCommandsButton, worldSizeButton, gameModeButton})
         if (b != nullptr && fontRenderer != nullptr && !(mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI) &&
             fontRenderer->getStringWidth(b->displayString) > kOptionButtonWidth - 8)
             b->displayString = fontRenderer->trimStringToWidth(b->displayString, kOptionButtonWidth - 14) + "...";
@@ -291,12 +304,20 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
         {
             settings.enableBonusChest();
         }
+        if (commandsAllowed && !hardcore)
+        {
+            settings.enableCommands();
+        }
         mc->startWorld(folderName, textboxWorldName->getText(), &settings);
         mc->displayGuiScreen(nullptr);
     }
     else if (button->id == 3)
     {
         moreOptions = !moreOptions;
+        if (textboxWorldName != nullptr)
+            textboxWorldName->setFocused(false);
+        if (textboxSeed != nullptr)
+            textboxSeed->setFocused(false);
         gameModeButton->enabled2 = !moreOptions;
         generateStructuresButton->enabled2 = moreOptions;
         worldTypeButton->enabled2 = moreOptions;
@@ -304,8 +325,16 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
             worldSizeButton->enabled2 = moreOptions;
         if (bonusItemsButton != nullptr)
             bonusItemsButton->enabled2 = moreOptions;
+        if (allowCommandsButton != nullptr)
+            allowCommandsButton->enabled2 = moreOptions;
         moreWorldOptionsButton->displayString = StringTranslate::getInstance()->translateKey(
             moreOptions ? "gui.done" : "selectWorld.moreWorldOptions");
+    }
+    else if (button->id == 6)
+    {
+        commandsToggled = true;
+        commandsAllowed = !commandsAllowed;
+        updateButtonText();
     }
     else if (button->id == 7)
     {
@@ -322,16 +351,22 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
     {
         if (gameMode == "survival")
         {
+            if (!commandsToggled)
+                commandsAllowed = false;
             gameMode = "hardcore";
             hardcore = true;
         }
         else if (gameMode == "hardcore")
         {
+            if (!commandsToggled)
+                commandsAllowed = true;
             gameMode = "creative";
             hardcore = false;
         }
         else
         {
+            if (!commandsToggled)
+                commandsAllowed = false;
             gameMode = "survival";
             hardcore = false;
         }
@@ -405,6 +440,7 @@ void GuiCreateWorld::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         drawString(fontRenderer, tr->translateKey("selectWorld.enterSeed"), width / 2 - 100, 47, 0xa0a0a0);
         drawString(fontRenderer, tr->translateKey("selectWorld.seedInfo"), width / 2 - 100, 85, 0xa0a0a0);
         drawString(fontRenderer, tr->translateKey("selectWorld.mapFeatures.info"), width / 2 - 150, 122, 0xa0a0a0);
+        drawString(fontRenderer, tr->translateKey("selectWorld.allowCommands.info"), width / 2 + 5, 165, 0xa0a0a0);
         textboxSeed->drawTextBox();
     }
 

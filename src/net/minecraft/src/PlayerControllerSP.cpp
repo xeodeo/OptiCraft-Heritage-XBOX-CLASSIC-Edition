@@ -61,7 +61,7 @@ bool PlayerControllerSP::sendBlockRemoved(int_t i, int_t j, int_t k, int_t l)
 
 void PlayerControllerSP::clickBlock(int_t i, int_t j, int_t k, int_t l)
 {
-	if (!mc->thePlayer->canPlayerEdit(i, j, k))
+	if (!mc->thePlayer->isCurrentToolAdventureModeExempt(i, j, k))
 		return;
 
 	mc->theWorld->onBlockHit(mc->thePlayer, i, j, k, l);
@@ -87,7 +87,7 @@ void PlayerControllerSP::sendBlockRemoving(int_t i, int_t j, int_t k, int_t l)
 	}
 	if (i == field_1074_c && j == field_1073_d && k == field_1072_e)
 	{
-		if (!mc->thePlayer->canPlayerEdit(i, j, k))
+		if (!mc->thePlayer->isCurrentToolAdventureModeExempt(i, j, k))
 			return;
 
 		int_t i1 = mc->theWorld->getBlockId(i, j, k);

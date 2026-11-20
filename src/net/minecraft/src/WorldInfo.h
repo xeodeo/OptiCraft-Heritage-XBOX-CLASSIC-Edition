@@ -4,6 +4,7 @@
 #include <vector>
 #include "java/Type.h"
 #include "java/String.h"
+#include "GameRules.h"
 
 class EntityPlayer;
 class NBTTagCompound;
@@ -79,6 +80,10 @@ public:
 	double getLimitedWorldBoundary() const;
 	bool isBonusChestEnabled() const { return bonusChestEnabled; }
 	void setBonusChestEnabled(bool enabled) { bonusChestEnabled = enabled; }
+	bool areCommandsAllowed() const { return allowCommands; }
+	void setAllowCommands(bool allowed) { allowCommands = allowed; }
+	GameRules &getGameRulesInstance() { return theGameRules; }
+	const GameRules &getGameRulesInstance() const { return theGameRules; }
 
 private:
 	long_t randomSeed;
@@ -98,6 +103,7 @@ private:
 	int_t gameType;
 	bool mapFeaturesEnabled;
 	bool hardcore;
+	bool allowCommands;
 	bool raining;
 	int_t rainTime;
 	bool thundering;
@@ -105,4 +111,5 @@ private:
 	bool limitedWorld;
 	int_t worldSizeType;
 	bool bonusChestEnabled;
+	GameRules theGameRules;
 };

@@ -4342,16 +4342,35 @@ bool World::isAABBInMaterial(AxisAlignedBB* aabb, Material* material)
 
 Explosion *World::createExplosion(Entity* entity, double x, double y, double z, float strength)
 {
-    return newExplosion(entity, x, y, z, strength, false);
+    return newExplosion(entity, x, y, z, strength, false, true);
 }
 
-Explosion *World::newExplosion(Entity* entity, double x, double y, double z, float strength, bool isFlaming)
+Explosion *World::newExplosion(Entity* entity, double x, double y, double z, float strength, bool isFlaming, bool isSmoking)
 {
     Explosion *explosion = new Explosion(this, entity, x, y, z, strength);
     explosion->isFlaming = isFlaming;
+    explosion->isSmoking = isSmoking;
     explosion->doExplosionA();
     explosion->doExplosionB(true);
     return explosion;
+}
+
+GameRules &World::getGameRules()
+{
+    static GameRules s_fallbackRules;
+    return worldInfo != nullptr ? worldInfo->getGameRulesInstance() : s_fallbackRules;
+}
+
+const GameRules &World::getGameRules() const
+{
+    static const GameRules s_fallbackRules;
+    return worldInfo != nullptr ? worldInfo->getGameRulesInstance() : s_fallbackRules;
+}
+
+void World::toggleRain()
+{
+    if (worldInfo != nullptr)
+        worldInfo->setRainTime(1);
 }
 
 float World::getBlockDensity(Vec3D* vec, AxisAlignedBB* aabb) // func_675_a
@@ -5154,7 +5173,7 @@ void World::tick()
     }
 
 #if !PLATFORM_SKIP_MOB_SPAWNING
-    if (naturalMobSpawningEnabled)
+    if (naturalMobSpawningEnabled && getGameRules().getGameRuleBooleanValue("doMobSpawning"))
     {
 #if PLATFORM_PROFILE_RENDER_PHASES
         platformPhaseStartNs = System::nanoTime();

@@ -120,6 +120,7 @@ public:
     static bool isDebugInfoEnabled();
 
     bool lineIsCommand(const std::string &s);
+    void setPlayerGameType(class EntityPlayer *player, int_t gameType);
 
     static File *getMinecraftDir();
 

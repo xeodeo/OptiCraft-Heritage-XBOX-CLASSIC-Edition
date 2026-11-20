@@ -34,11 +34,11 @@ enum LegacyCreateButtonId
     BUTTON_MORE_OPTIONS = 3,
     BUTTON_GENERATE_STRUCTURES = 4,
     BUTTON_WORLD_TYPE = 5,
-    BUTTON_DIFFICULTY = 6,
-    BUTTON_WORLD_SIZE = 7
+    BUTTON_ALLOW_COMMANDS = 6,
+    BUTTON_WORLD_SIZE = 7,
+    BUTTON_DIFFICULTY = 9
 };
 
-constexpr int_t CREATE_SELECTION_COUNT = 6;
 bool pointInside(int_t x, int_t y, int_t left, int_t top, int_t width, int_t height)
 {
     return x >= left && y >= top && x < left + width && y < top + height;
@@ -57,16 +57,54 @@ void drawPanelTitle(FontRenderer *font, const std::string &text, int_t centerX, 
 
 LegacyCreateWorldScreen::LegacyCreateWorldScreen(GuiScreen *parent)
     : GuiCreateWorld(parent), difficultySlider(nullptr), legacyWorldSizeButton(nullptr), bonusChestButton(nullptr),
-      textFieldHeight(0), labelOffsetY(0), selectedControlIndex(0), hoveredControlIndex(-1),
-      panoramaAvailable(false)
+      legacyAllowCommandsButton(nullptr), textFieldHeight(0), labelOffsetY(0), selectedControlIndex(0),
+      hoveredControlIndex(-1), panoramaAvailable(false)
 {
+}
+
+int_t LegacyCreateWorldScreen::selectionCount() const
+{
+    return moreOptions ? 7 : 6;
 }
 
 void LegacyCreateWorldScreen::configureLayout()
 {
-    layout = legacyOptionsLayout(width, height, CREATE_SELECTION_COUNT, LegacyOptionsLayoutPreset::Form);
+    layout = legacyOptionsLayout(width, height, selectionCount(), LegacyOptionsLayoutPreset::Form);
     textFieldHeight = layout.rowHeight;
     labelOffsetY = std::max<int_t>(1, layout.rowHeight / 2);
+}
+
+void LegacyCreateWorldScreen::repositionControls()
+{
+    configureLayout();
+    if (!controlList.empty() && controlList[0] != nullptr)
+        controlList[0]->yPosition = layout.rowY(moreOptions ? 6 : 5);
+    if (gameModeButton != nullptr)
+        gameModeButton->yPosition = layout.rowY(1);
+    if (difficultySlider != nullptr)
+        difficultySlider->yPosition = layout.rowY(2);
+    if (legacyWorldSizeButton != nullptr)
+        legacyWorldSizeButton->yPosition = layout.rowY(3);
+    if (generateStructuresButton != nullptr)
+        generateStructuresButton->yPosition = layout.rowY(1);
+    if (worldTypeButton != nullptr)
+        worldTypeButton->yPosition = layout.rowY(2);
+    if (bonusChestButton != nullptr)
+        bonusChestButton->yPosition = layout.rowY(3);
+    if (legacyAllowCommandsButton != nullptr)
+        legacyAllowCommandsButton->yPosition = layout.rowY(4);
+    if (moreWorldOptionsButton != nullptr)
+        moreWorldOptionsButton->yPosition = layout.rowY(moreOptions ? 5 : 4);
+    const bool nameFocused = textboxWorldName != nullptr && textboxWorldName->getFocused();
+    const bool seedFocused = textboxSeed != nullptr && textboxSeed->getFocused();
+    delete textboxWorldName;
+    textboxWorldName = new GuiTextField(fontRenderer, layout.contentX, layout.rowY(0), layout.contentWidth, textFieldHeight);
+    textboxWorldName->setText(localizedNewWorldText);
+    textboxWorldName->setFocused(nameFocused && !moreOptions);
+    delete textboxSeed;
+    textboxSeed = new GuiTextField(fontRenderer, layout.contentX, layout.rowY(0), layout.contentWidth, textFieldHeight);
+    textboxSeed->setText(seed);
+    textboxSeed->setFocused(seedFocused && moreOptions);
 }
 
 void LegacyCreateWorldScreen::initGui()
@@ -91,6 +129,9 @@ void LegacyCreateWorldScreen::initGui()
     controlList.push_back(bonusChestButton = new LegacyGuiButton(8, layout.contentX,
         layout.rowY(3), layout.contentWidth, layout.rowHeight, ""));
     bonusItemsButton = bonusChestButton;
+    controlList.push_back(legacyAllowCommandsButton = new LegacyGuiButton(BUTTON_ALLOW_COMMANDS, layout.contentX,
+        layout.rowY(4), layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.allowCommands")));
+    allowCommandsButton = legacyAllowCommandsButton;
     controlList.push_back(moreWorldOptionsButton = new LegacyGuiButton(BUTTON_MORE_OPTIONS, layout.contentX,
         layout.rowY(4), layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.moreWorldOptions")));
     controlList.push_back(generateStructuresButton = new LegacyGuiButton(BUTTON_GENERATE_STRUCTURES,
@@ -129,6 +170,8 @@ void LegacyCreateWorldScreen::updateControlVisibility()
         legacyWorldSizeButton->enabled2 = !moreOptions;
     if (bonusChestButton != nullptr)
         bonusChestButton->enabled2 = moreOptions;
+    if (legacyAllowCommandsButton != nullptr)
+        legacyAllowCommandsButton->enabled2 = moreOptions;
 }
 
 void LegacyCreateWorldScreen::updateDifficultyControl()
@@ -142,15 +185,30 @@ void LegacyCreateWorldScreen::updateDifficultyControl()
     difficultySlider->setHardcore(hardcore);
     if (bonusChestButton != nullptr)
         bonusChestButton->enabled = !hardcore;
+    if (legacyAllowCommandsButton != nullptr)
+        legacyAllowCommandsButton->enabled = !hardcore;
 }
 
 GuiButton *LegacyCreateWorldScreen::buttonForSelection(int_t index) const
 {
+    if (moreOptions)
+    {
+        switch (index)
+        {
+        case 1: return generateStructuresButton;
+        case 2: return worldTypeButton;
+        case 3: return static_cast<GuiButton *>(bonusChestButton);
+        case 4: return static_cast<GuiButton *>(legacyAllowCommandsButton);
+        case 5: return moreWorldOptionsButton;
+        case 6: return !controlList.empty() ? controlList[0] : nullptr;
+        default: return nullptr;
+        }
+    }
     switch (index)
     {
-    case 1: return moreOptions ? generateStructuresButton : gameModeButton;
-    case 2: return moreOptions ? worldTypeButton : static_cast<GuiButton *>(difficultySlider);
-    case 3: return moreOptions ? static_cast<GuiButton *>(bonusChestButton) : static_cast<GuiButton *>(worldSizeButton);
+    case 1: return gameModeButton;
+    case 2: return static_cast<GuiButton *>(difficultySlider);
+    case 3: return static_cast<GuiButton *>(worldSizeButton);
     case 4: return moreWorldOptionsButton;
     case 5: return !controlList.empty() ? controlList[0] : nullptr;
     default: return nullptr;
@@ -167,10 +225,12 @@ int_t LegacyCreateWorldScreen::selectionForButton(const GuiButton *button) const
         return 2;
     if (button == worldSizeButton || button == bonusChestButton)
         return 3;
-    if (button == moreWorldOptionsButton)
+    if (moreOptions && button == legacyAllowCommandsButton)
         return 4;
+    if (button == moreWorldOptionsButton)
+        return moreOptions ? 5 : 4;
     if (!controlList.empty() && button == controlList[0])
-        return 5;
+        return moreOptions ? 6 : 5;
     return -1;
 }
 
@@ -297,7 +357,7 @@ void LegacyCreateWorldScreen::activateSelection()
 
 void LegacyCreateWorldScreen::selectControl(int_t index)
 {
-    const int_t clamped = std::max<int_t>(0, std::min<int_t>(index, CREATE_SELECTION_COUNT - 1));
+    const int_t clamped = std::max<int_t>(0, std::min<int_t>(index, selectionCount() - 1));
     if (!isSelectionAvailable(clamped))
         return;
     selectedControlIndex = clamped;
@@ -310,7 +370,8 @@ void LegacyCreateWorldScreen::moveSelection(int_t direction)
         return;
     const int_t previous = selectedControlIndex;
     int_t candidate = selectedControlIndex + direction;
-    while (candidate >= 0 && candidate < CREATE_SELECTION_COUNT)
+    const int_t count = selectionCount();
+    while (candidate >= 0 && candidate < count)
     {
         if (isSelectionAvailable(candidate))
         {
@@ -396,8 +457,9 @@ void LegacyCreateWorldScreen::actionPerformed(GuiButton *button)
     GuiCreateWorld::actionPerformed(button);
     if (id == BUTTON_MORE_OPTIONS)
     {
+        repositionControls();
         updateControlVisibility();
-        selectControl(4);
+        selectControl(moreOptions ? 5 : 4);
     }
     else if (id == BUTTON_WORLD_SIZE)
     {
@@ -516,18 +578,18 @@ void LegacyCreateWorldScreen::drawScreen(int_t mouseX, int_t mouseY, float_t par
     StringTranslate *tr = StringTranslate::getInstance();
     drawLegacyScene(partialTick);
     const std::string title = tr->translateKey(moreOptions ? "selectWorld.moreWorldOptions" : "selectWorld.create");
-    drawPanelTitle(fontRenderer, title, width / 2, layout.panelY + 8);
+    drawPanelTitle(fontRenderer, title, width / 2, layout.panelY + 4);
 
     if (!moreOptions)
     {
         legacyDrawOptionLabel(fontRenderer, tr->translateKey("selectWorld.enterName"),
-            layout.contentX, layout.rowY(0) - labelOffsetY);
+            layout.contentX, layout.rowY(0) - 9);
         textboxWorldName->drawTextBox();
     }
     else
     {
         legacyDrawOptionLabel(fontRenderer, tr->translateKey("selectWorld.enterSeed"),
-            layout.contentX, layout.rowY(0) - labelOffsetY);
+            layout.contentX, layout.rowY(0) - 9);
         textboxSeed->drawTextBox();
     }
 

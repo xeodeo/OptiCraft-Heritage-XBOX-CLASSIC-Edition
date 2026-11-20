@@ -171,7 +171,10 @@ public:
 	ChunkCoordinates *getPlayerSpawnCoordinate();
 	void setPlayerSpawnCoordinate(ChunkCoordinates *chunkcoordinates);
 	ChunkCoordinates *getSpawnChunk();
-	void setSpawnChunk(ChunkCoordinates *chunkcoordinates);
+	void setSpawnChunk(ChunkCoordinates *chunkcoordinates, bool forced = false);
+	bool isSpawnForced() const { return spawnForced; }
+	int_t getPlayerGameType() const { return playerGameType; }
+	void setPlayerGameTypeField(int_t gameType) { playerGameType = gameType; }
 	void triggerAchievement(StatBase *statbase);
 	virtual void addStat(StatBase *statbase, int_t i);
 
@@ -212,6 +215,8 @@ public:
 	void setItemInUse(ItemStack *itemstack, int_t duration);
 	bool canPlayerEdit(int_t x, int_t y, int_t z) const;
 	bool canPlayerEdit(int_t x, int_t y, int_t z, int_t side, ItemStack *itemstack) const;
+	bool isCurrentToolAdventureModeExempt(int_t x, int_t y, int_t z) const;
+	bool canCurrentToolHarvestBlock(int_t x, int_t y, int_t z) const { return isCurrentToolAdventureModeExempt(x, y, z); }
 	virtual void travelToTheEnd(int_t dimension);
 	virtual void copyPlayer(EntityPlayer *player);
 	virtual void func_50009_aI();
@@ -248,6 +253,8 @@ public:
 	float   field_22061_z;
 private:
 	ChunkCoordinates *playerSpawnCoordinate;
+	bool spawnForced = false;
+	int_t playerGameType = -1;
 	ChunkCoordinates *startMinecartRidingCoordinate;
 public:
 	int_t   timeUntilPortal;

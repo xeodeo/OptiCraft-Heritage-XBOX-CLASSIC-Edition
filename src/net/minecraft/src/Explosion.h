@@ -34,6 +34,7 @@ public:
     void doExplosionB(bool flag);
 
     bool isFlaming;
+    bool isSmoking;
     double explosionX;
     double explosionY;
     double explosionZ;

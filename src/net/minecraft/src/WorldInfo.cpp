@@ -14,6 +14,13 @@ WorldInfo::WorldInfo(NBTTagCompound *nbttagcompound)
 	mapFeaturesEnabled = nbttagcompound->hasKey("MapFeatures") ? nbttagcompound->getBoolean("MapFeatures") : true;
 	bonusChestEnabled = nbttagcompound->hasKey("bonusChestEnabled") ? nbttagcompound->getBoolean("bonusChestEnabled") : false;
 	hardcore = nbttagcompound->getBoolean("hardcore");
+	// Java 1.5.2: old saves without "allowCommands" allow cheats only in Creative worlds.
+	if (nbttagcompound->hasKey("allowCommands"))
+		allowCommands = nbttagcompound->getBoolean("allowCommands");
+	else
+		allowCommands = (gameType == 1);
+	if (nbttagcompound->hasKey("GameRules"))
+		theGameRules.readGameRulesFromNBT(nbttagcompound->getCompoundTag("GameRules"));
 	terrainType = WorldType::DEFAULT;
 	if (nbttagcompound->hasKey("generatorName"))
 	{
@@ -90,6 +97,7 @@ WorldInfo::WorldInfo(long_t l, const jstring &s)
 	gameType = 0;
 	mapFeaturesEnabled = true;
 	hardcore = false;
+	allowCommands = false;
 	bonusChestEnabled = false;
 	raining = false;
 	rainTime = 0;
@@ -107,6 +115,7 @@ WorldInfo::WorldInfo(WorldSettings *settings, const jstring &s)
 	gameType = settings != nullptr ? settings->getGameType() : 0;
 	mapFeaturesEnabled = settings == nullptr || settings->isMapFeaturesEnabled();
 	hardcore = settings != nullptr && settings->getHardcoreEnabled();
+	allowCommands = settings != nullptr && settings->areCommandsAllowed();
 	bonusChestEnabled = settings != nullptr && settings->isBonusChestEnabled();
 	worldSizeType = settings != nullptr ? settings->getWorldSizeType() : 0;
 	limitedWorld = (worldSizeType != 0);
@@ -135,6 +144,8 @@ WorldInfo::WorldInfo(WorldInfo *worldinfo)
 	gameType = worldinfo->gameType;
 	mapFeaturesEnabled = worldinfo->mapFeaturesEnabled;
 	hardcore = worldinfo->hardcore;
+	allowCommands = worldinfo->allowCommands;
+	theGameRules = worldinfo->theGameRules;
 	bonusChestEnabled = worldinfo->bonusChestEnabled;
 	limitedWorld = worldinfo->limitedWorld;
 	worldSizeType = worldinfo->worldSizeType;
@@ -236,6 +247,8 @@ void WorldInfo::updateTagCompound(NBTTagCompound *nbttagcompound, NBTTagCompound
 	nbttagcompound->setInteger("thunderTime", thunderTime);
 	nbttagcompound->setBoolean("thundering", thundering);
 	nbttagcompound->setBoolean("hardcore", hardcore);
+	nbttagcompound->setBoolean("allowCommands", allowCommands);
+	nbttagcompound->setCompoundTag("GameRules", theGameRules.writeGameRulesToNBT());
 	nbttagcompound->setBoolean("limitedWorld", worldSizeType != 0);
 	nbttagcompound->setInteger("worldSizeType", worldSizeType);
 	if (nbttagcompound1 != nullptr)

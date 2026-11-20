@@ -12,6 +12,8 @@
 #include "HudSafeArea.h"
 #include "Minecraft.h"
 #include "NetClientHandler.h"
+#include "commands/ICommandSender.h"
+#include "commands/ServerCommandManager.h"
 #include "java/String.h"
 #include "java/System.h"
 #include "pc/lwjgl/Keyboard.h"
@@ -96,8 +98,17 @@ void GuiChat::keyTyped(char_t c, int_t key)
     if (key == lwjgl::Keyboard::KEY_RETURN)
     {
         std::string message = String::trimJava(messageField != nullptr ? messageField->getText() : "");
-        if (!message.empty() && !mc->lineIsCommand(message))
-            mc->thePlayer->sendChatMessage(message);
+        if (!message.empty())
+        {
+            if (mc->ingameGUI != nullptr)
+            {
+                auto &sent = mc->ingameGUI->getSentMessages();
+                if (sent.empty() || sent.back() != message)
+                    sent.push_back(message);
+            }
+            if (!mc->lineIsCommand(message))
+                mc->thePlayer->sendChatMessage(message);
+        }
         mc->displayGuiScreen(nullptr);
         return;
     }
@@ -189,17 +200,45 @@ void GuiChat::completePlayerName()
             return;
 
         autocompleteNames.clear();
-        std::string typed = String::substringUtf16(
-            messageField->getText(), wordStart, String::utf16Length(messageField->getText()));
-        std::string lower = String::toLowerCaseJava(typed);
-        EntityClientPlayerMP *player = dynamic_cast<EntityClientPlayerMP *>(mc->thePlayer);
-        if (player == nullptr || player->sendQueue == nullptr)
-            return;
+        const std::string fullText = messageField->getText();
+        const int_t cursorPos = messageField->getCursorPosition();
+        std::string typed = String::substringUtf16(fullText, wordStart, cursorPos);
 
-        for (GuiPlayerInfo *info : player->sendQueue->getPlayerNames())
+        if (mc != nullptr && !mc->isMultiplayerWorld() && !fullText.empty() && fullText[0] == '/')
         {
-            if (info != nullptr && info->nameStartsWith(lower))
-                autocompleteNames.push_back(info->name);
+            const std::string prefix = String::substringUtf16(fullText, 0, cursorPos);
+            PlayerCommandSender sender(mc, mc->thePlayer);
+            autocompleteNames = ServerCommandManager::getInstance().getPossibleCommands(&sender, prefix);
+            if (!autocompleteNames.empty() && wordStart == 0)
+            {
+                for (std::string &cand : autocompleteNames)
+                {
+                    if (cand.empty() || cand[0] != '/')
+                        cand = "/" + cand;
+                }
+            }
+        }
+        else
+        {
+            std::string lower = String::toLowerCaseJava(typed);
+            EntityClientPlayerMP *player = dynamic_cast<EntityClientPlayerMP *>(mc->thePlayer);
+            if (player != nullptr && player->sendQueue != nullptr)
+            {
+                for (GuiPlayerInfo *info : player->sendQueue->getPlayerNames())
+                {
+                    if (info != nullptr && info->nameStartsWith(lower))
+                        autocompleteNames.push_back(info->name);
+                }
+            }
+            else if (mc != nullptr && mc->thePlayer != nullptr)
+            {
+                const std::vector<std::string> names = CommandBase::getAllUsernames(mc);
+                for (const std::string &n : names)
+                {
+                    if (CommandBase::doesStringStartWith(typed, n))
+                        autocompleteNames.push_back(n);
+                }
+            }
         }
         if (autocompleteNames.empty())
             return;

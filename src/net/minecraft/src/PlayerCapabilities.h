@@ -15,4 +15,5 @@ public:
 	bool isFlying;
 	bool allowFlying;
 	bool isCreativeMode;
+	bool allowEdit;
 };

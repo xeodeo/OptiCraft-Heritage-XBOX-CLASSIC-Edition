@@ -22,6 +22,7 @@
 #include "net/minecraft/src/EntityPlayerSP.h"
 #include "net/minecraft/src/World.h"
 #include "net/minecraft/src/WorldInfo.h"
+#include "net/minecraft/src/GameRules.h"
 #include "net/minecraft/src/WorldProvider.h"
 #include "net/minecraft/src/Session.h"
 #include "net/minecraft/src/MovementInputFromOptions.h"
@@ -155,6 +156,7 @@ void joinPlayer2(Minecraft *mc)
     p2->setLocationAndAngles(mc->thePlayer->posX + 1.0, mc->thePlayer->posY, mc->thePlayer->posZ + 1.0,
                              mc->thePlayer->rotationYaw, mc->thePlayer->rotationPitch);
     p2->capabilities = mc->thePlayer->capabilities;
+    p2->setPlayerGameTypeField(mc->thePlayer->getPlayerGameType());
     mc->theWorld->spawnEntityInWorld(p2);
 
     mc->thePlayer2 = p2;
@@ -241,7 +243,20 @@ void tick(Minecraft *mc)
             p2->getFoodStats()->setFoodSaturationLevel(5.0f);
         }
         p2->clearActivePotions();
-        if (mc->thePlayerOne != nullptr && !mc->thePlayerOne->isDead)
+        const bool keepInv = mc->theWorld != nullptr &&
+                             mc->theWorld->getGameRules().getGameRuleBooleanValue("keepInventory");
+        if (!keepInv)
+        {
+            p2->experienceLevel = 0;
+            p2->experienceTotal = 0;
+            p2->experience = 0.0f;
+        }
+        if (p2->isSpawnForced() && p2->getPlayerSpawnCoordinate() != nullptr)
+        {
+            ChunkCoordinates *sp = p2->getPlayerSpawnCoordinate();
+            p2->setLocationAndAngles(sp->x + 0.5, sp->y + 0.1, sp->z + 0.5, 0.0f, 0.0f);
+        }
+        else if (mc->thePlayerOne != nullptr && !mc->thePlayerOne->isDead)
             p2->setLocationAndAngles(mc->thePlayerOne->posX + 1.0, mc->thePlayerOne->posY,
                                      mc->thePlayerOne->posZ + 1.0, 0.0f, 0.0f);
         else if (mc->theWorld != nullptr)

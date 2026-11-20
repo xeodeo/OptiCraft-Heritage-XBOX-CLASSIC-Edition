@@ -61,7 +61,7 @@ void GuiWorldSlot::drawSlot(int_t i, int_t x, int_t y, int_t h, Tessellator *tes
 	else
 	{
 		const int_t gameType = entry->getGameType();
-		if (gameType >= 0 && gameType < 2)
+		if (gameType >= 0 && gameType < 3)
 			line3 = parentWorldGui->gameModeLabels[gameType];
 		if (entry->isHardcoreModeEnabled())
 			line3 = StatCollector::translateToLocal("gameMode.hardcore");

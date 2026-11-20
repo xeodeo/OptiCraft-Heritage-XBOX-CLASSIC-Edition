@@ -555,18 +555,48 @@ std::string StringTranslate::translateKeyFormat(const std::string &s, const std:
     std::size_t searchFrom = 0;
     while (sequentialArg < args.size())
     {
-        // Java's String.format: the arguments are already strings, so %d works like %s.
-        std::size_t pos = std::min(result.find("%s", searchFrom), result.find("%d", searchFrom));
+        // Match Java String.format placeholders: %s, %d, %f, %.2f (non-indexed).
+        std::size_t pos = std::string::npos;
+        std::size_t len = 0;
+        std::size_t cur = searchFrom;
+        while ((cur = result.find('%', cur)) != std::string::npos)
+        {
+            if (cur + 1 < result.size() && result[cur + 1] == '%')
+            {
+                cur += 2;
+                continue;
+            }
+            if (cur + 1 < result.size() && (result[cur + 1] == 's' || result[cur + 1] == 'd' || result[cur + 1] == 'f'))
+            {
+                pos = cur;
+                len = 2;
+                break;
+            }
+            // Match precision specifiers like %.2f
+            if (cur + 2 < result.size() && result[cur + 1] == '.')
+            {
+                std::size_t p = cur + 2;
+                while (p < result.size() && result[p] >= '0' && result[p] <= '9')
+                    ++p;
+                if (p < result.size() && (result[p] == 'f' || result[p] == 's' || result[p] == 'd'))
+                {
+                    pos = cur;
+                    len = p - cur + 1;
+                    break;
+                }
+            }
+            ++cur;
+        }
         if (pos == std::string::npos)
             break;
-        result.replace(pos, 2, args[sequentialArg]);
+        result.replace(pos, len, args[sequentialArg]);
         searchFrom = pos + args[sequentialArg].length();
         ++sequentialArg;
     }
 
     for (std::size_t i = 0; i < args.size(); ++i)
     {
-        for (const char *suffix : {"$s", "$d"})
+        for (const char *suffix : {"$s", "$d", "$f", "$.2f"})
         {
             const std::string token = "%" + std::to_string(i + 1) + suffix;
             std::size_t pos = 0;

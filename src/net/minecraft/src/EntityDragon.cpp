@@ -18,6 +18,7 @@
 #include "java/Math.h"
 #include "Vec3D.h"
 #include "World.h"
+#include "GameRules.h"
 #include "java/System.h"
 #include "platform/Profiler.h"
 
@@ -493,7 +494,8 @@ bool EntityDragon::destroyBlocksInAABB(AxisAlignedBB *box)
                 if (blockId == 0)
                     continue;
                 if (blockId != Block::obsidian->blockID && blockId != Block::whiteStone->blockID &&
-                    blockId != Block::bedrock->blockID)
+                    blockId != Block::bedrock->blockID &&
+                    worldObj->getGameRules().getGameRuleBooleanValue("mobGriefing"))
                 {
                     destroyedBlock = true;
                     worldObj->setBlockWithNotify(x, y, z, 0);
