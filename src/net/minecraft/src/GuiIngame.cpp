@@ -41,6 +41,8 @@
 #include "StringTranslate.h"
 #include "Minecraft.h"
 #include "HudSafeArea.h"
+#include "World.h"
+#include "java/System.h"
 #include "legacy/LegacyControlTooltipHud.h"
 #include "legacy/LegacyTipHud.h"
 #include "legacy/LegacyHudLayout.h"
@@ -429,6 +431,45 @@ void GuiIngame::renderDebugOverlay(FontRenderer *fontRenderer, int_t screenWidth
 #endif
 #endif
 	renderPopMatrix();
+}
+
+// Legacy Console Edition save icon: a chest with an arrow dropping into it in
+// the top-right corner while the game autosaves. Our autosaves are short, so
+// it stays up for a moment afterwards. Nothing is drawn the rest of the time.
+void GuiIngame::renderSaveIcon(int_t screenWidth, int_t screenHeight)
+{
+	constexpr long_t kShowMs = 1600;
+	constexpr long_t kDropMs = 800;
+	if (World::lastAutosaveMillis <= 0 || mc == nullptr || mc->renderEngine == nullptr)
+		return;
+	const long_t since = System::currentTimeMillis() - World::lastAutosaveMillis;
+	if (since < 0 || since > kShowMs)
+		return;
+
+	const HudSafeInsets safe = computeHudSafeInsets(mc, screenWidth, screenHeight, true);
+	constexpr int_t size = 24;
+	const int_t x = screenWidth - safe.right - size - 4;
+	const int_t chestY = safe.top + 4 + size / 2;
+	const int_t arrowY = chestY - size / 2 + static_cast<int_t>((since % kDropMs) * (size / 2) / kDropMs);
+
+	auto drawWhole = [this](int_t qx, int_t qy) {
+		Tessellator *tess = &Tessellator::instance;
+		tess->startDrawingQuads();
+		tess->addVertexWithUV(qx, qy + size, zLevel, 0.0f, 1.0f);
+		tess->addVertexWithUV(qx + size, qy + size, zLevel, 1.0f, 1.0f);
+		tess->addVertexWithUV(qx + size, qy, zLevel, 1.0f, 0.0f);
+		tess->addVertexWithUV(qx, qy, zLevel, 0.0f, 0.0f);
+		tess->draw();
+	};
+
+	renderEnable(RenderCapability::Blend);
+	renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
+	renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	renderBindTexture(mc->renderEngine->getTexture("/gui/save_arrow.png"));
+	drawWhole(x, arrowY);
+	renderBindTexture(mc->renderEngine->getTexture("/gui/save_chest.png"));
+	drawWhole(x, chestY);
+	renderBindTexture(mc->renderEngine->getTexture("/gui/icons.png"));
 }
 
 void GuiIngame::renderBossHealth()
@@ -873,6 +914,7 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 	}
 
 	renderBossHealth();
+	renderSaveIcon(sw, sh);
 
 	// [FIX DEFENSIVO] Verificación contra nullptr en mc->playerController antes de consultar shouldDrawHUD()
 	if (mc->playerController != nullptr && mc->playerController->shouldDrawHUD())
