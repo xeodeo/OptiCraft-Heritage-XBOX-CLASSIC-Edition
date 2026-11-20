@@ -638,7 +638,9 @@ private:
 	static int_t lightingUpdatesScheduled;
 	// Wall-clock time (ms) of the last periodic autosave; the HUD shows the
 	// Legacy save icon for a moment after it.
+public:
 	static long_t lastAutosaveMillis;
+private:
 
 protected:
 	JavaHashSet<ChunkCoordIntPair, ChunkCoordIntPairValueHash, ChunkCoordIntPairValueEqual> positionsToUpdate;

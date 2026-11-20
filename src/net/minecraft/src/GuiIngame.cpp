@@ -452,7 +452,7 @@ void GuiIngame::renderSaveIcon(int_t screenWidth, int_t screenHeight)
 	const int_t chestY = safe.top + 4 + size / 2;
 	const int_t arrowY = chestY - size / 2 + static_cast<int_t>((since % kDropMs) * (size / 2) / kDropMs);
 
-	auto drawWhole = [this](int_t qx, int_t qy) {
+	auto drawWhole = [&](int_t qx, int_t qy) {
 		Tessellator *tess = &Tessellator::instance;
 		tess->startDrawingQuads();
 		tess->addVertexWithUV(qx, qy + size, zLevel, 0.0f, 1.0f);
