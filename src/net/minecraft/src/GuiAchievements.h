@@ -13,6 +13,7 @@ public:
 	void initGui() override;
 	void updateScreen() override;
 	bool doesGuiPauseGame() override;
+	bool allowsPlatformPointerInput() const override { return true; }
 	void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
 
 protected:
