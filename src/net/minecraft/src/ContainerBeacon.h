@@ -18,7 +18,9 @@ public:
     void updateProgressBar(int id, int value) override;
     bool isUsableByPlayer(EntityPlayer *player) override;
     bool canInteractWith(EntityPlayer *player) override { return isUsableByPlayer(player); }
+    void onCraftGuiClosed(EntityPlayer *player) override;
     ItemStack *transferStackInSlot(EntityPlayer *player, int slotIndex) override;
+    bool confirmSelection(int_t primaryEffectId, int_t secondaryEffectId);
 
     TileEntityBeacon *getBeacon() const { return theBeacon; }
 

@@ -16,6 +16,7 @@ public:
     GuiBeaconButton(int id, int x, int y, const std::string &texture, int iconX, int iconY);
 
     void drawButton(Minecraft *mc, int_t mouseX, int_t mouseY) override;
+    bool func_82252_a() const { return hovered; }
     bool func_82255_b() const { return field_82256_n; }
     void func_82254_b(bool flag) { field_82256_n = flag; }
     virtual void func_82251_b(int x, int y);
@@ -25,6 +26,7 @@ protected:
     int field_82257_l = 0;
     int field_82258_m = 0;
     bool field_82256_n = false;
+    bool hovered = false;
 };
 
 class GuiBeaconButtonPower : public GuiBeaconButton
@@ -73,6 +75,7 @@ public:
 
     void initGui() override;
     void updateScreen() override;
+    void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
 
     void drawCreativeTabHoveringText(const std::string &text, int x, int y);
 
@@ -82,7 +85,13 @@ protected:
     void drawGuiContainerBackgroundLayer(float_t partialTick) override;
 
 private:
+    void closeBeaconScreen();
+
     TileEntityBeacon *beacon = nullptr;
     GuiBeaconButtonConfirm *beaconConfirmButton = nullptr;
     bool buttonsNotDrawn = true;
+    int pendingPrimaryEffect = 0;
+    int pendingSecondaryEffect = 0;
+    int lastMouseX = 0;
+    int lastMouseY = 0;
 };

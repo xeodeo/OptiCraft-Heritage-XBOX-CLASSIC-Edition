@@ -2,6 +2,7 @@
 
 #include "ContainerBeacon.h"
 #include "EntityPlayer.h"
+#include "EntityPlayerSP.h"
 #include "FontRenderer.h"
 #include "Item.h"
 #include "ItemStack.h"
@@ -30,7 +31,7 @@ void GuiBeaconButton::drawButton(Minecraft *mc, int_t mouseX, int_t mouseY)
     mc->renderEngine->bindTexture(mc->renderEngine->getTexture("/gui/beacon.png"));
     renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-    bool hovered = mouseX >= xPosition && mouseY >= yPosition && mouseX < xPosition + width && mouseY < yPosition + height;
+    hovered = mouseX >= xPosition && mouseY >= yPosition && mouseX < xPosition + width && mouseY < yPosition + height;
     constexpr int textureY = 219;
     int textureX = 0;
 
@@ -118,6 +119,35 @@ GuiBeacon::GuiBeacon(InventoryPlayer *playerInv, TileEntityBeacon *beaconTile, E
 {
     xSize = 230;
     ySize = 219;
+    if (beacon != nullptr)
+    {
+        pendingPrimaryEffect = beacon->getPrimaryEffect();
+        pendingSecondaryEffect = beacon->getSecondaryEffect();
+    }
+}
+
+void GuiBeacon::closeBeaconScreen()
+{
+    EntityPlayer *p = getContainerPlayer();
+    if (p != nullptr)
+    {
+        p->closeScreen();
+    }
+    else if (mc != nullptr && mc->thePlayer != nullptr)
+    {
+        mc->thePlayer->closeScreen();
+    }
+    else if (mc != nullptr)
+    {
+        mc->displayGuiScreen(nullptr);
+    }
+}
+
+void GuiBeacon::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
+{
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
+    GuiContainer::drawScreen(mouseX, mouseY, partialTick);
 }
 
 void GuiBeacon::initGui()
@@ -168,7 +198,7 @@ void GuiBeacon::updateScreen()
                 {
                     btn->enabled = false;
                 }
-                else if (effectId == beacon->getPrimaryEffect())
+                else if (effectId == pendingPrimaryEffect)
                 {
                     btn->func_82254_b(true);
                 }
@@ -194,15 +224,15 @@ void GuiBeacon::updateScreen()
             {
                 btn->enabled = false;
             }
-            else if (effectId == beacon->getSecondaryEffect())
+            else if (effectId == pendingSecondaryEffect)
             {
                 btn->func_82254_b(true);
             }
         }
 
-        if (beacon->getPrimaryEffect() > 0)
+        if (pendingPrimaryEffect > 0)
         {
-            int effectId = beacon->getPrimaryEffect();
+            int effectId = pendingPrimaryEffect;
             int btnX = guiX + 167 + (count3 - 1) * 24 - totalW3 / 2;
             int btnY = guiY + 47;
             GuiBeaconButtonPower *btn = new GuiBeaconButtonPower(this, (tier3 << 8) | effectId, btnX, btnY, effectId, tier3);
@@ -212,7 +242,7 @@ void GuiBeacon::updateScreen()
             {
                 btn->enabled = false;
             }
-            else if (beacon->getPrimaryEffect() == beacon->getSecondaryEffect())
+            else if (pendingPrimaryEffect == pendingSecondaryEffect)
             {
                 btn->func_82254_b(true);
             }
@@ -221,7 +251,10 @@ void GuiBeacon::updateScreen()
 
     if (beaconConfirmButton != nullptr)
     {
-        beaconConfirmButton->enabled = (beacon->getStackInSlot(0) != nullptr && beacon->getPrimaryEffect() > 0);
+        ItemStack *pay = beacon->getStackInSlot(0);
+        beaconConfirmButton->enabled = (pay != nullptr && pay->stackSize > 0 &&
+                                        beacon->isStackValidForSlot(0, pay) &&
+                                        pendingPrimaryEffect > 0);
     }
 }
 
@@ -232,15 +265,15 @@ void GuiBeacon::actionPerformed(GuiButton *button)
 
     if (button->id == -2)
     {
-        mc->displayGuiScreen(nullptr);
+        closeBeaconScreen();
     }
     else if (button->id == -1)
     {
-        if (beacon->getStackInSlot(0) != nullptr && beacon->getPrimaryEffect() > 0)
+        ContainerBeacon *container = dynamic_cast<ContainerBeacon *>(inventorySlots);
+        if (container != nullptr && container->confirmSelection(pendingPrimaryEffect, pendingSecondaryEffect))
         {
-            delete beacon->decrStackSize(0, 1);
+            closeBeaconScreen();
         }
-        mc->displayGuiScreen(nullptr);
     }
     else
     {
@@ -254,11 +287,19 @@ void GuiBeacon::actionPerformed(GuiButton *button)
             int tier = button->id >> 8;
             if (tier < 3)
             {
-                beacon->setPrimaryEffect(effectId);
+                // Stage locally instead of mutating the live TileEntityBeacon;
+                // effects are committed only when Done is clicked with payment.
+                const int oldPrimary = pendingPrimaryEffect;
+                pendingPrimaryEffect = effectId;
+                if (pendingSecondaryEffect == oldPrimary &&
+                    (Potion::regeneration == nullptr || pendingSecondaryEffect != Potion::regeneration->id))
+                {
+                    pendingSecondaryEffect = 0;
+                }
             }
             else
             {
-                beacon->setSecondaryEffect(effectId);
+                pendingSecondaryEffect = effectId;
             }
 
             // Java: buttonList.clear(). This button is the one being clicked:
@@ -283,15 +324,13 @@ void GuiBeacon::drawGuiContainerForegroundLayer()
     drawCenteredString(fontRenderer, StatCollector::translateToLocal("tile.beacon.primary"), 62, 10, 0xE0E0E0);
     drawCenteredString(fontRenderer, StatCollector::translateToLocal("tile.beacon.secondary"), 169, 10, 0xE0E0E0);
 
-    int guiX = (width - xSize) / 2;
-    int guiY = (height - ySize) / 2;
-
     for (GuiButton *btn : controlList)
     {
         GuiBeaconButton *bBtn = dynamic_cast<GuiBeaconButton *>(btn);
-        if (bBtn != nullptr && bBtn->enabled2)
+        if (bBtn != nullptr && bBtn->enabled2 && bBtn->func_82252_a())
         {
-            bBtn->func_82251_b(guiX, guiY);
+            bBtn->func_82251_b(lastMouseX - guiLeft, lastMouseY - guiTop);
+            break;
         }
     }
 

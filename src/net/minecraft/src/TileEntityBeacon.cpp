@@ -43,6 +43,21 @@ void TileEntityBeacon::updateEntity()
 	}
 }
 
+bool TileEntityBeacon::isPrimaryEffectAllowed(int_t eff) const
+{
+	if (eff <= 0)
+		return false;
+	for (int tier = 0; tier < levels && tier < 3; ++tier)
+	{
+		for (int i = 0; i < effectsCount[tier]; ++i)
+		{
+			if (getEffect(tier, i) != nullptr && getEffect(tier, i)->id == eff)
+				return true;
+		}
+	}
+	return false;
+}
+
 void TileEntityBeacon::setPrimaryEffect(int_t eff)
 {
 	primaryEffect = 0;
@@ -237,7 +252,8 @@ void TileEntityBeacon::setInventorySlotContents(int_t i, ItemStack *itemstack)
 {
 	if (i == 0)
 	{
-		delete payment;
+		if (payment != itemstack)
+			delete payment;
 		payment = itemstack;
 	}
 }

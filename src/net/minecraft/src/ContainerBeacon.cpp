@@ -7,6 +7,7 @@
 #include "Slot.h"
 #include "SlotBeacon.h"
 #include "TileEntityBeacon.h"
+#include "World.h"
 
 ContainerBeacon::ContainerBeacon(InventoryPlayer *playerInv, TileEntityBeacon *beacon)
     : theBeacon(beacon)
@@ -71,6 +72,52 @@ void ContainerBeacon::updateProgressBar(int id, int value)
 bool ContainerBeacon::isUsableByPlayer(EntityPlayer *player)
 {
     return theBeacon != nullptr && theBeacon->canInteractWith(player);
+}
+
+void ContainerBeacon::onCraftGuiClosed(EntityPlayer *player)
+{
+    Container::onCraftGuiClosed(player);
+    if (theBeacon == nullptr || theBeacon->worldObj == nullptr || theBeacon->worldObj->multiplayerWorld || player == nullptr)
+        return;
+
+    ItemStack *stack = theBeacon->getStackInSlotOnClosing(0);
+    if (stack != nullptr)
+    {
+        if (player->inventory != nullptr && player->inventory->addItemStackToInventory(stack))
+        {
+            if (stack->stackSize <= 0)
+                delete stack;
+            else
+                player->dropPlayerItem(stack);
+        }
+        else
+        {
+            player->dropPlayerItem(stack);
+        }
+    }
+}
+
+bool ContainerBeacon::confirmSelection(int_t primaryEffectId, int_t secondaryEffectId)
+{
+    // Mirrors Java 1.5.2 NetServerHandler.handleCustomPayload("MC|Beacon"):
+    // verify the payment slot holds a valid payment item before consuming 1
+    // unit and committing the staged effects onto the live TileEntityBeacon.
+    if (theBeacon == nullptr || beaconSlot == nullptr || !beaconSlot->getHasStack())
+        return false;
+
+    ItemStack *payStack = beaconSlot->getStack();
+    if (payStack == nullptr || payStack->stackSize <= 0 || !beaconSlot->isItemValid(payStack))
+        return false;
+
+    if (!theBeacon->isPrimaryEffectAllowed(primaryEffectId))
+        return false;
+
+    delete beaconSlot->decrStackSize(1);
+    beaconSlot->onSlotChanged();
+    theBeacon->setPrimaryEffect(primaryEffectId);
+    theBeacon->setSecondaryEffect(secondaryEffectId);
+    theBeacon->onInventoryChanged();
+    return true;
 }
 
 ItemStack *ContainerBeacon::transferStackInSlot(EntityPlayer *player, int slotIndex)

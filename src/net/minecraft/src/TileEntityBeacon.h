@@ -19,6 +19,7 @@ public:
 	void setLevels(int_t l) { levels = l; }
 	int_t getPrimaryEffect() const { return primaryEffect; }
 	void setPrimaryEffect(int_t eff);
+	bool isPrimaryEffectAllowed(int_t eff) const;
 	int_t getSecondaryEffect() const { return secondaryEffect; }
 	void setSecondaryEffect(int_t eff);
 
@@ -32,7 +33,7 @@ public:
 	void setInventorySlotContents(int_t i, ItemStack *itemstack) override;
 	std::string getInvName() override { return "container.beacon"; }
 	int_t getInventoryStackLimit() override { return 1; }
-	void onInventoryChanged() override {}
+	void onInventoryChanged() override { TileEntity::onInventoryChanged(); }
 	bool canInteractWith(EntityPlayer *entityplayer) override;
 	bool isStackValidForSlot(int_t slot, ItemStack *stack) override;
 
