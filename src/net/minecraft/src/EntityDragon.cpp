@@ -16,6 +16,7 @@
 #include "EntityXPOrb.h"
 #include "MathHelper.h"
 #include "java/Math.h"
+#include "RenderDragon.h"
 #include "Vec3D.h"
 #include "World.h"
 #include "java/System.h"
@@ -50,6 +51,11 @@ EntityDragon::EntityDragon(World *world)
 
 EntityDragon::~EntityDragon()
 {
+    // The boss bar keeps a raw pointer to the last dragon drawn and only clears
+    // it when the HUD draws. Leaving the End frees the dragon before that, and
+    // the next HUD frame then read freed memory (crash on returning from the End).
+    if (RenderDragon::entityDragon == this)
+        RenderDragon::entityDragon = nullptr;
     delete dragonPartHead;
     delete dragonPartBody;
     delete dragonPartTail1;
