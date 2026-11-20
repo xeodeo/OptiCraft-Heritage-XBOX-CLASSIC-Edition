@@ -12,6 +12,7 @@
 BlockEnderChest::BlockEnderChest(int_t id)
 	: BlockContainer(id, Material::rock)
 {
+	blockIndexInTexture = 37; // obsidian, matching Java 1.5.2 break particles
 	setBlockBounds(0.0625f, 0.0f, 0.0625f, 0.9375f, 0.875f, 0.9375f);
 }
 

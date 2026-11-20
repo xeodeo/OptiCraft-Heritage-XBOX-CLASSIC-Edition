@@ -1508,6 +1508,21 @@ SpecialTextureFxResult RenderEngine::updateDefaultTerrainTextureFx(TextureFX *te
 	if (tile == nullptr || tile->size() != static_cast<std::size_t>(tileWidth) * static_cast<std::size_t>(tileWidth) * 4u)
 		return SpecialTextureFxResult::NotHandled;
 
+	// Some LCE DLC packs (City, Fantasy, Natural) leave water/lava tiles empty
+	// (alpha == 0) in terrain.png because the console generated them separately;
+	// fall back to procedural TextureFX instead of drawing invisible fluid.
+	bool hasOpaqueTexel = false;
+	for (std::size_t idx = 3; idx < tile->size(); idx += 4)
+	{
+		if ((*tile)[idx] > 0)
+		{
+			hasOpaqueTexel = true;
+			break;
+		}
+	}
+	if (!hasOpaqueTexel)
+		return SpecialTextureFxResult::NotHandled;
+
 	const byte_t *pixels = tile->data();
 	std::vector<byte_t> scrolled;
 	if (scrolling)
@@ -1639,13 +1654,16 @@ SpecialTextureFxResult RenderEngine::updateSpecialTextureFx(TextureFX *texturefx
 
 bool RenderEngine::updateStaticProceduralTextureFx(TextureFX *texturefx)
 {
-	if (texturefx == nullptr || texturefx->tileImage != 0 || dynamicTexturesUpdated || !isDefaultTexturePack())
+	if (texturefx == nullptr || texturefx->tileImage != 0 || dynamicTexturesUpdated)
 		return false;
 
 	const int_t icon = texturefx->iconIndex;
 	const bool portal = Block::portal != nullptr && icon == Block::portal->blockIndexInTexture;
 	const bool fire = Block::fire != nullptr && (icon == Block::fire->blockIndexInTexture || icon == Block::fire->blockIndexInTexture + 16);
-	if (!portal && !fire)
+	const bool fluidFallback = !isDefaultTexturePack() && (
+		(Block::waterMoving != nullptr && (icon == Block::waterMoving->blockIndexInTexture || icon == Block::waterMoving->blockIndexInTexture + 1)) ||
+		(Block::lavaMoving != nullptr && (icon == Block::lavaMoving->blockIndexInTexture || icon == Block::lavaMoving->blockIndexInTexture + 1)));
+	if (!portal && !fire && !fluidFallback)
 		return false;
 
 	const bool anaglyph = options != nullptr && options->anaglyph;
