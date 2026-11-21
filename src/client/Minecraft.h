@@ -147,6 +147,7 @@ public:
     // with its context); its tick counts them down here.
     void tickClickCounters();
     bool useItemReady() const { return rightClickDelayTimer == 0; }
+    void armUseItemDelay() { rightClickDelayTimer = 4; }
     // Player 2 is holding RT on a block: player 1's idle "not attacking"
     // tick must not reset the shared block-breaking progress.
     bool player2Mining = false;

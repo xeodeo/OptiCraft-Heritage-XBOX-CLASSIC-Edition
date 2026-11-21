@@ -35,6 +35,7 @@ private:
     LegacyOptionCheckbox *legacyCraftingCheckbox;
     LegacyOptionCheckbox *xboxStyleCraftingCheckbox;
     LegacyOptionCheckbox *legacyCreativeCheckbox;
+    LegacyOptionCheckbox *onScreenHintsCheckbox;
 
     LegacyOptionCheckbox *alternativeControlsCheckbox;
 };

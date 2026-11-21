@@ -562,8 +562,15 @@ void NetClientHandler::handleFlying(Packet10Flying* packet)
     
     if (packet->moving)
     {
+        // Servers disagree on wire height order: 1.2.5 sends camera-first
+        // (y=feet+1.62, stance=feet), while 1.8.9 translators send feet-first
+        // (y=feet, stance=feet+1.62). The camera is never below the feet, so
+        // the lower double is always the feet under either convention.
+        const double wireFeet = packet->yPosition < packet->stance
+            ? packet->yPosition
+            : packet->stance;
         posX = packet->xPosition;
-        posY = packet->yPosition;
+        posY = wireFeet + (double)player->yOffset;
         posZ = packet->zPosition;
     }
     
@@ -1347,24 +1354,39 @@ void NetClientHandler::handleWindowItems(Packet104WindowItems* packet)
 
 void NetClientHandler::handleSignUpdate(Packet130UpdateSign* packet)
 {
-    if (mc->theWorld->blockExists(packet->xPosition, packet->yPosition, packet->zPosition))
+    if (packet == nullptr || mc == nullptr || mc->theWorld == nullptr)
+        return;
+
+    if (!mc->theWorld->blockExists(packet->xPosition, packet->yPosition, packet->zPosition))
     {
-        TileEntity* tileEntity = mc->theWorld->getBlockTileEntity(
-            packet->xPosition,
-            packet->yPosition,
-            packet->zPosition
-        );
-        
-        TileEntitySign* sign = dynamic_cast<TileEntitySign*>(tileEntity);
-        
-        if (sign != nullptr && sign->isEditable())
+        if (worldClient != nullptr)
         {
-            for (int i = 0; i < 4; i++)
-            {
-                sign->signText[i] = packet->signLines[i];
-            }
-            
-            sign->onInventoryChanged();
+            worldClient->deferSignUpdate(packet->xPosition, packet->yPosition,
+                                         packet->zPosition, packet->signLines);
+        }
+        return;
+    }
+
+    TileEntity* tileEntity = mc->theWorld->getBlockTileEntity(
+        packet->xPosition,
+        packet->yPosition,
+        packet->zPosition
+    );
+
+    TileEntitySign* sign = dynamic_cast<TileEntitySign*>(tileEntity);
+
+    if (sign != nullptr && sign->isEditable())
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            sign->signText[i] = packet->signLines[i];
+        }
+
+        sign->onInventoryChanged();
+        if (worldClient != nullptr)
+        {
+            worldClient->dropDeferredSignUpdate(packet->xPosition, packet->yPosition,
+                                                packet->zPosition);
         }
     }
 }

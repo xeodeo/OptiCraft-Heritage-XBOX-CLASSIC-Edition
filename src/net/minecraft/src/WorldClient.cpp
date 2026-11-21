@@ -12,6 +12,8 @@
 #include "EntityArrow.h"
 #include "EntityClientPlayerMP.h"
 #include "EntityPlayer.h"
+#include "TileEntity.h"
+#include "TileEntitySign.h"
 #include "IWorldAccess.h"
 #include "MCHash.h"
 #include "Minecraft.h"
@@ -91,6 +93,7 @@ WorldClient::WorldClient(NetClientHandler *queue, long_t seed, int_t dimension)
 	// small console heap.
 	deferredChunks.reserve(PLATFORM_MP_MAX_DEFERRED_CHUNKS);
 #endif
+	deferredSignUpdates.reserve(32);
 }
 
 WorldClient::WorldClient(NetClientHandler *queue, const WorldSettings &settings, int_t dimension, int_t difficulty)
@@ -207,6 +210,9 @@ void WorldClient::tick()
 	trimClientChunkCache();
 #endif
 #endif
+	// Packet130 may have arrived before its column was imported. Resolve any
+	// queued sign text now that this tick's promotions and imports are done.
+	applyDeferredSignUpdates();
 	for (auto it = pendingBlockChanges.begin(); it != pendingBlockChanges.end();)
 	{
 		WorldBlockPositionType *change = *it;
@@ -314,9 +320,12 @@ void WorldClient::doPreChunk(int_t chunkX, int_t chunkZ, bool load)
 		// Other bounded clients keep their existing pre-chunk materialization policy.
 		if (!shouldKeepChunk(chunkX, chunkZ))
 			return;
-		clientChunkProvider->prepareChunk(chunkX, chunkZ);
+		clientChunkProvider->ensureChunk(chunkX, chunkZ);
 #else
-		clientChunkProvider->prepareChunk(chunkX, chunkZ);
+		// A server's "column loaded" announcement must not wipe a column the
+		// client already holds (CraftBukkit 1.2.5 re-announces loaded columns
+		// without re-sending Packet51 terrain payloads).
+		clientChunkProvider->ensureChunk(chunkX, chunkZ);
 #endif
 	}
 	else
@@ -385,6 +394,71 @@ void WorldClient::finishDeferredChunkPacketBatch()
     enforceDeferredChunkBudget();
 }
 #endif
+
+void WorldClient::deferSignUpdate(int_t x, int_t y, int_t z, const jstring *lines)
+{
+	if (lines == nullptr)
+		return;
+
+	constexpr std::size_t MAX_DEFERRED_SIGNS = 256;
+	for (DeferredSignUpdate &update : deferredSignUpdates)
+	{
+		if (update.x == x && update.y == y && update.z == z)
+		{
+			for (int_t i = 0; i < 4; ++i)
+				update.text[i] = lines[i];
+			return;
+		}
+	}
+
+	if (deferredSignUpdates.size() >= MAX_DEFERRED_SIGNS)
+		deferredSignUpdates.erase(deferredSignUpdates.begin());
+
+	DeferredSignUpdate update;
+	update.x = x;
+	update.y = y;
+	update.z = z;
+	for (int_t i = 0; i < 4; ++i)
+		update.text[i] = lines[i];
+	deferredSignUpdates.push_back(std::move(update));
+}
+
+void WorldClient::dropDeferredSignUpdate(int_t x, int_t y, int_t z)
+{
+	for (auto it = deferredSignUpdates.begin(); it != deferredSignUpdates.end(); ++it)
+	{
+		if (it->x == x && it->y == y && it->z == z)
+		{
+			deferredSignUpdates.erase(it);
+			return;
+		}
+	}
+}
+
+void WorldClient::applyDeferredSignUpdates()
+{
+	if (deferredSignUpdates.empty())
+		return;
+
+	for (auto it = deferredSignUpdates.begin(); it != deferredSignUpdates.end();)
+	{
+		if (!blockExists(it->x, it->y, it->z))
+		{
+			++it;
+			continue;
+		}
+
+		TileEntity *tileEntity = getBlockTileEntity(it->x, it->y, it->z);
+		TileEntitySign *sign = dynamic_cast<TileEntitySign *>(tileEntity);
+		if (sign != nullptr)
+		{
+			for (int_t i = 0; i < 4; ++i)
+				sign->signText[i] = it->text[i];
+			sign->onInventoryChanged();
+		}
+		it = deferredSignUpdates.erase(it);
+	}
+}
 
 void WorldClient::deferBlockChange(int_t x, int_t y, int_t z, int_t blockId, int_t metadata)
 {

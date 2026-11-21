@@ -247,6 +247,7 @@ std::string StringTranslate::translateUi(const std::string &english)
         if (english == "Cancel") return "Cancelar";
         if (english == "Fullbright") return "Brillo m\xc3\xa1ximo";
         if (english == "Show Coordinates") return "Mostrar coordenadas";
+        if (english == "On-Screen Hints") return "Pistas en pantalla";
         if (english == "Safe Area") return "Zona segura";
         if (english == "30 FPS Limit") return "L\xc3\xadmite de 30 FPS";
         if (english == "Deflicker Filter") return "Filtro antiparpadeo";

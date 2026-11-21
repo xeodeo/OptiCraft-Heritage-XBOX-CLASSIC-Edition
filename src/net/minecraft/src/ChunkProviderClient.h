@@ -27,6 +27,11 @@ public:
 	Chunk  *prepareChunk(int_t i, int_t j) override;
 	Chunk  *provideChunk(int_t i, int_t j) override;
 
+	// Materialize the column only when it is not resident yet; a resident one
+	// is returned untouched. prepareChunk() above replaces the column, wiping
+	// its blocks, tile entities and entities.
+	Chunk  *ensureChunk(int_t i, int_t j);
+
 	bool    saveChunks(bool flag, IProgressUpdate *iprogressupdate) override;
 	bool    unload100OldestChunks() override;
 	bool    canSave() override;
@@ -39,6 +44,7 @@ public:
 
 private:
 	void markChunkTopologyChanged();
+	Chunk *createChunk(ulong_t key, int_t i, int_t j);
 
 	Chunk *blankChunk;
 	std::unordered_map<ulong_t, Chunk *> chunkMapping;

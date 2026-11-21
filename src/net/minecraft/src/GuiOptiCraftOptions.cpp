@@ -28,6 +28,7 @@ constexpr int_t BUTTON_LEGACY_LOOK = 205;
 constexpr int_t BUTTON_EDIT_PLAYER_NAME = 206;
 constexpr int_t BUTTON_LEGACY_CRAFTING = 207;
 constexpr int_t BUTTON_LEGACY_CREATIVE = 208;
+constexpr int_t BUTTON_ON_SCREEN_HINTS = 209;
 }
 
 GuiOptiCraftOptions::GuiOptiCraftOptions(GuiScreen *parent, GameSettings *options)
@@ -101,6 +102,10 @@ void GuiOptiCraftOptions::initGui()
 	by += 24;
 #endif
 #endif
+
+	controlList.push_back(new GuiButton(BUTTON_ON_SCREEN_HINTS, width / 2 - 100, by,
+		uiText("On-Screen Hints: ") + std::string(settings->onScreenHints ? uiText("ON") : uiText("OFF"))));
+	by += 24;
 
 	controlList.push_back(new GuiButton(BUTTON_DONE, width / 2 - 100, by + 4, uiText("Done")));
 }
@@ -228,6 +233,13 @@ void GuiOptiCraftOptions::actionPerformed(GuiButton *button)
 	{
 		settings->legacyCreative = !settings->legacyCreative;
 		button->displayString = uiText("Legacy Creative: ") + std::string(settings->legacyCreative ? uiText("ON") : uiText("OFF"));
+		settings->saveOptions();
+		return;
+	}
+	if (button->id == BUTTON_ON_SCREEN_HINTS)
+	{
+		settings->onScreenHints = !settings->onScreenHints;
+		button->displayString = uiText("On-Screen Hints: ") + std::string(settings->onScreenHints ? uiText("ON") : uiText("OFF"));
 		settings->saveOptions();
 		return;
 	}

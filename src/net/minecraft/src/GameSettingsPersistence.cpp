@@ -204,6 +204,8 @@ void GameSettings::loadOptions()
 					legacyCreative = value == "true";
 				if (key == "xboxStyleCrafting")
 					xboxStyleCrafting = value == "true";
+				if (key == "onScreenHints")
+					onScreenHints = value == "true";
 				if (key == "legacyGuiScaleRestore")
 				{
 					legacyGuiScaleRestore = parseIntJava(value);
@@ -424,7 +426,7 @@ void GameSettings::saveOptions()
 		"music", "sound", "invertYMouse", "mouseSensitivity", "fov", "viewDistance",
 		"guiScale", "particles", "bobView", "anaglyph3d", "advancedOpengl", "fpsLimit",
 		"difficulty", "fancyGraphics", "ao", "skin", "lastServer", "lang", "playerName", "playerName2", "selectedSkin", "selectedSkinP2", "legacyUI",
-		"legacyLook", "legacyCrafting", "legacyCreative", "xboxStyleCrafting", "legacyGuiScaleRestore",
+		"legacyLook", "legacyCrafting", "legacyCreative", "xboxStyleCrafting", "onScreenHints", "legacyGuiScaleRestore",
 		"showCoordinates", "fullbright", "hudSafeArea",
 		"alternativeControllerLayout", "wiiAlternativeControls", "controllerDeadzone", "wiiStickDeadzone",
 		"ofFogFancy", "ofFogOff", "ofFogStart", "ofLoadFar", "ofPreloadedChunks", "ofOcclusionFancy",
@@ -509,6 +511,7 @@ void GameSettings::saveOptions()
 	printwriter << "legacyCrafting:" << (legacyCrafting ? "true" : "false") << "\n";
 	printwriter << "legacyCreative:" << (legacyCreative ? "true" : "false") << "\n";
 	printwriter << "xboxStyleCrafting:" << (xboxStyleCrafting ? "true" : "false") << "\n";
+	printwriter << "onScreenHints:" << (onScreenHints ? "true" : "false") << "\n";
 	printwriter << "legacyGuiScaleRestore:" << legacyGuiScaleRestore << "\n";
 	printwriter << "alternativeControllerLayout:" << (alternativeControllerLayout ? "true" : "false") << "\n";
 	printwriter << "controllerDeadzone:" << controllerDeadzone << "\n";

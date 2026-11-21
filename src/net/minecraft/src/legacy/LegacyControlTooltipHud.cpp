@@ -262,7 +262,8 @@ void LegacyControlTooltipHud::render(Minecraft *mc, int_t screenWidth, int_t scr
 {
     if (mc == nullptr || mc->gameSettings == nullptr || mc->fontRenderer == nullptr)
         return;
-    if (!mc->gameSettings->legacyUI || mc->gameSettings->hideGUI || mc->currentScreen != nullptr)
+    if (!mc->gameSettings->legacyUI || !mc->gameSettings->onScreenHints ||
+        mc->gameSettings->hideGUI || mc->currentScreen != nullptr)
         return;
     if (mc->theWorld == nullptr || mc->thePlayer == nullptr)
         return;

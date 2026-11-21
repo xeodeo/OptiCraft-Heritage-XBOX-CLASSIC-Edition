@@ -139,6 +139,8 @@ public:
 	bool legacyCrafting;
 	bool legacyCreative;
 	bool xboxStyleCrafting;
+	// Help and control hint rows at the bottom of menus and gameplay HUD.
+	bool onScreenHints;
 	int_t renderBackend;
 	bool alternativeControllerLayout;
 	// Platform-neutral controller settings consumed through PlatformUserSettings.

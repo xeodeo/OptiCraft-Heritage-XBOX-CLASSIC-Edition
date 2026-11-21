@@ -108,6 +108,9 @@ void EntityArrow::setShootingEntity(EntityLiving *shooter)
 
 EntityLiving *EntityArrow::getShootingEntity()
 {
+	if (owner != nullptr && owner->entityId == shootingEntityId && !owner->isDead)
+		return owner;
+
 	if (worldObj == nullptr || shootingEntityId < 0)
 	{
 		owner = nullptr;

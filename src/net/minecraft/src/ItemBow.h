@@ -6,6 +6,9 @@ class ItemBow : public Item {
 public:
     explicit ItemBow(int id);
 
+    static bool hasArrow(EntityPlayer* entityplayer);
+    static float getLaunchPower(int charge);
+
     ItemStack* onFoodEaten(ItemStack* itemstack, World* world, EntityPlayer* entityplayer) override;
     void onPlayerStoppedUsing(ItemStack* itemstack, World* world, EntityPlayer* entityplayer, int timeLeft) override;
     int getMaxItemUseDuration(ItemStack* itemstack) override;

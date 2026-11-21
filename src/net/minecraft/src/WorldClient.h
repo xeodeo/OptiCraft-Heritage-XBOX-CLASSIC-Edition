@@ -2,6 +2,8 @@
 
 #include "World.h"
 #include "java/HashSet.h"
+#include "java/String.h"
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -35,6 +37,10 @@ public:
 	void finishDeferredChunkPacketBatch();
 #endif
 	void deferBlockChange(int_t x, int_t y, int_t z, int_t blockId, int_t metadata);
+	// Packet130 can arrive before the column is resident; keep the four lines
+	// until blockExists() becomes true instead of dropping the text forever.
+	void deferSignUpdate(int_t x, int_t y, int_t z, const jstring *lines);
+	void dropDeferredSignUpdate(int_t x, int_t y, int_t z);
 	void prioritizePlayerChunk(int_t chunkX, int_t chunkZ);
 	std::size_t getDeferredChunkCount() const { return deferredChunks.size(); }
 	std::size_t getDeferredChunkBytes() const { return deferredChunkBytes; }
@@ -80,6 +86,14 @@ private:
 	bool promoteDeferredChunk(int_t chunkX, int_t chunkZ);
 	void enforceDeferredChunkBudget();
 	void forgetDeferredChunk(int_t chunkX, int_t chunkZ);
+	void applyDeferredSignUpdates();
+
+	struct DeferredSignUpdate
+	{
+		int_t x = 0, y = 0, z = 0;
+		std::string text[4];
+	};
+	std::vector<DeferredSignUpdate> deferredSignUpdates;
 
 	struct DeferredBlockChange
 	{
