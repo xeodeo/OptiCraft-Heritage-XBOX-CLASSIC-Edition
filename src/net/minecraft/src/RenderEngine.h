@@ -32,6 +32,8 @@ public:
 	~RenderEngine();
 
 	std::vector<int_t> readTextureImageData(const std::string &s);
+	bool readTextureImageDataWithSize(const std::string &s, std::vector<int_t> &pixels, int_t &width, int_t &height);
+	bool readDefaultTextureImageDataWithSize(const std::string &s, std::vector<int_t> &pixels, int_t &width, int_t &height);
 	int_t getTexture(const std::string &s);
 	int_t allocateAndSetupTexture(BufferedImage *bufferedimage, bool highPrecision = false);
 	void setupTexture(BufferedImage *bufferedimage, int_t i, bool tileAtlas = false, bool terrainAlphaFix = false, bool highPrecision = false);

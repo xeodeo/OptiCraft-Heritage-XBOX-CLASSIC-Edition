@@ -88,6 +88,8 @@ def target_path(name):
     lower = name.lower()
     if lower in ("items.png", "gui/items.png"):
         return "gui/items.png"
+    if lower in ("textures/items/clock.png", "textures/items/compass.png"):
+        return lower
     if lower in WANTED_FILES:
         return lower
     top = lower.split("/", 1)[0]

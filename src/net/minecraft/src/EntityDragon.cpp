@@ -6,6 +6,7 @@
 #include "AxisAlignedBB.h"
 #include "Block.h"
 #include "BlockEndPortal.h"
+#include "Chunk.h"
 #include "DamageSource.h"
 #include "DataWatcher.h"
 #include "EndDragonState.h"
@@ -14,7 +15,9 @@
 #include "EntityLiving.h"
 #include "EntityPlayer.h"
 #include "EntityXPOrb.h"
+#include "ExtendedBlockStorage.h"
 #include "MathHelper.h"
+#include "java/Arithmetic.h"
 #include "java/Math.h"
 #include "RenderDragon.h"
 #include "Vec3D.h"
@@ -394,13 +397,17 @@ void EntityDragon::updateDragonEnderCrystal()
     {
         const double radius = 32.0;
         AxisAlignedBB *searchBox = boundingBox->expand(radius, radius, radius);
-        const std::vector<Entity *> &entities = worldObj->getEntitiesWithinAABB(typeid(EntityEnderCrystal), searchBox);
+        // Scan loadedEntityList directly instead of querying 36 chunk columns
+        // (an 80x72x80 AABB spans ~216 chunk entity slices, whereas the End
+        // holds only a few dozen loaded entities total).
         EntityEnderCrystal *closest = nullptr;
         double closestDistance = std::numeric_limits<double>::max();
-        for (Entity *entity : entities)
+        for (Entity *entity : worldObj->loadedEntityList)
         {
+            if (entity == nullptr || entity->isDead)
+                continue;
             EntityEnderCrystal *crystal = dynamic_cast<EntityEnderCrystal *>(entity);
-            if (crystal == nullptr)
+            if (crystal == nullptr || !crystal->boundingBox->intersectsWith(searchBox))
                 continue;
             const double distance = crystal->getDistanceSqToEntity(this);
             if (distance < closestDistance)
@@ -489,24 +496,66 @@ bool EntityDragon::destroyBlocksInAABB(AxisAlignedBB *box)
     bool hitProtectedBlock = false;
     bool destroyedBlock = false;
 
-    for (int_t x = minX; x <= maxX; ++x)
+    const int_t clampedMinY = minY < 0 ? 0 : minY;
+    const int_t clampedMaxY = maxY >= WorldHeight::HEIGHT ? WorldHeight::HEIGHT - 1 : maxY;
+    if (clampedMinY <= clampedMaxY)
     {
-        for (int_t y = minY; y <= maxY; ++y)
+        const int_t minChunkX = JavaArithmetic::intShr(minX, 4);
+        const int_t maxChunkX = JavaArithmetic::intShr(maxX, 4);
+        const int_t minChunkZ = JavaArithmetic::intShr(minZ, 4);
+        const int_t maxChunkZ = JavaArithmetic::intShr(maxZ, 4);
+        const int_t minSectionY = clampedMinY >> 4;
+        const int_t maxSectionY = clampedMaxY >> 4;
+        const int_t obsidianId = Block::obsidian->blockID;
+        const int_t whiteStoneId = Block::whiteStone->blockID;
+        const int_t bedrockId = Block::bedrock->blockID;
+
+        for (int_t cx = minChunkX; cx <= maxChunkX; ++cx)
         {
-            for (int_t z = minZ; z <= maxZ; ++z)
+            const int_t chunkBaseX = cx << 4;
+            const int_t x0 = minX > chunkBaseX ? minX - chunkBaseX : 0;
+            const int_t x1 = maxX < chunkBaseX + 15 ? maxX - chunkBaseX : 15;
+            for (int_t cz = minChunkZ; cz <= maxChunkZ; ++cz)
             {
-                const int_t blockId = worldObj->getBlockId(x, y, z);
-                if (blockId == 0)
+                Chunk *chunk = worldObj->getChunkIfExists(cx, cz);
+                if (chunk == nullptr || chunk->isEmptyChunk())
                     continue;
-                if (blockId != Block::obsidian->blockID && blockId != Block::whiteStone->blockID &&
-                    blockId != Block::bedrock->blockID)
+                const int_t chunkBaseZ = cz << 4;
+                const int_t z0 = minZ > chunkBaseZ ? minZ - chunkBaseZ : 0;
+                const int_t z1 = maxZ < chunkBaseZ + 15 ? maxZ - chunkBaseZ : 15;
+
+                for (int_t sy = minSectionY; sy <= maxSectionY; ++sy)
                 {
-                    destroyedBlock = true;
-                    worldObj->setBlockWithNotify(x, y, z, 0);
-                }
-                else
-                {
-                    hitProtectedBlock = true;
+                    const ExtendedBlockStorage *ebs = chunk->getBlockStorage(sy);
+                    if (ebs == nullptr || ebs->getIsEmpty())
+                        continue;
+                    const int_t secBaseY = sy << 4;
+                    const int_t y0 = clampedMinY > secBaseY ? clampedMinY - secBaseY : 0;
+                    const int_t y1 = clampedMaxY < secBaseY + 15 ? clampedMaxY - secBaseY : 15;
+
+                    for (int_t ly = y0; ly <= y1; ++ly)
+                    {
+                        const int_t wy = secBaseY + ly;
+                        for (int_t lz = z0; lz <= z1; ++lz)
+                        {
+                            const int_t wz = chunkBaseZ + lz;
+                            for (int_t lx = x0; lx <= x1; ++lx)
+                            {
+                                const int_t blockId = ebs->getExtBlockID(lx, ly, lz);
+                                if (blockId == 0)
+                                    continue;
+                                if (blockId != obsidianId && blockId != whiteStoneId && blockId != bedrockId)
+                                {
+                                    destroyedBlock = true;
+                                    worldObj->setBlockWithNotify(chunkBaseX + lx, wy, wz, 0);
+                                }
+                                else
+                                {
+                                    hitProtectedBlock = true;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

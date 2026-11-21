@@ -41,6 +41,12 @@
 #define PLATFORM_CHUNK_CACHE_RADIUS              5
 #undef  PLATFORM_CHUNK_UNLOAD_RADIUS
 #define PLATFORM_CHUNK_UNLOAD_RADIUS             6
+// Keep the End central island and Ender Dragon patrol arena ([-60, 60] plus
+// overshoot and 1-chunk retention margin) resident in RAM while in the End.
+// Without it the dragon's 3x3 retention square constantly saves, unloads and
+// reloads End columns as it orbits, causing 100+ ms EntityDragon tick spikes.
+#undef  PLATFORM_END_RESIDENT_CHUNK_RADIUS
+#define PLATFORM_END_RESIDENT_CHUNK_RADIUS       6
 // Each unload saves the column synchronously (NBT build + write). A row of
 // columns leaving the radius together cost 60-110 ms in one tick at 8; two
 // per tick spreads them out. Memory pressure still unloads faster through

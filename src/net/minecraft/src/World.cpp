@@ -3407,8 +3407,15 @@ void World::destroyEntity(Entity *entity)
     deleteWorldOwnedEntity(entity);
 }
 
+#if PLATFORM_ENTITY_CHUNK_RETENTION
+static int_t s_retentionChunksLoadedThisTick = 0;
+#endif
+
 void World::updateEntities()
 {
+#if PLATFORM_ENTITY_CHUNK_RETENTION
+    s_retentionChunksLoadedThisTick = 0;
+#endif
 #if PLATFORM_BOUNDED_PATHFIND
     s_pathfindBudgetThisTick = PLATFORM_PATHFIND_BUDGET_PER_TICK;
 #endif
@@ -3748,6 +3755,8 @@ void World::ensureEntityChunkRetention(Entity *entity)
 
     // Load the entity's chunk and its retention neighbours (3x3 for the
     // dragon) so it can keep ticking; see isChunkRequiredByRetainedEntity.
+    // On Xbox, cap synchronous retention loads to 1 chunk per tick so crossing
+    // a chunk edge never stacks 3+ End chunk loads/generations into one tick.
     const int_t radius = entity->getChunkRetentionRadius();
     const int_t chunkX = MathHelper::floor_double(entity->posX / 16.0);
     const int_t chunkZ = MathHelper::floor_double(entity->posZ / 16.0);
@@ -3756,7 +3765,14 @@ void World::ensureEntityChunkRetention(Entity *entity)
         for (int_t dz = -radius; dz <= radius; ++dz)
         {
             if (!chunkExists(chunkX + dx, chunkZ + dz))
+            {
+#if PLATFORM_XBOX
+                if (s_retentionChunksLoadedThisTick >= 1)
+                    return;
+                ++s_retentionChunksLoadedThisTick;
+#endif
                 getChunkFromChunkCoords(chunkX + dx, chunkZ + dz);
+            }
         }
     }
 #else
@@ -3769,6 +3785,10 @@ void World::prefetchEntityChunkRetention(Entity *entity)
 #if PLATFORM_ENTITY_CHUNK_RETENTION
     if (entity == nullptr || entity->isDead || entity->getChunkRetentionRadius() < 0)
         return;
+#if PLATFORM_XBOX
+    if (s_retentionChunksLoadedThisTick >= 1)
+        return;
+#endif
 
     const double lookAheadTicks = 8.0;
     const int_t chunkX = MathHelper::floor_double((entity->posX + entity->motionX * lookAheadTicks) / 16.0);
@@ -3778,6 +3798,9 @@ void World::prefetchEntityChunkRetention(Entity *entity)
     if ((chunkX != currentChunkX || chunkZ != currentChunkZ) &&
         !chunkExists(chunkX, chunkZ) && isChunkInLoadRadius(chunkX, chunkZ))
     {
+#if PLATFORM_XBOX
+        ++s_retentionChunksLoadedThisTick;
+#endif
         getChunkFromChunkCoords(chunkX, chunkZ);
     }
 #else
@@ -4025,34 +4048,68 @@ bool World::handleMaterialAcceleration(AxisAlignedBB* aabb, Material* material, 
     
     bool flag = false;
     Vec3D* vec3d = Vec3D::createVector(0.0, 0.0, 0.0);
-    
-    for (int x = minX; x < maxX; x++)
+
+    const int clampedMinY = minY < 0 ? 0 : minY;
+    const int clampedMaxY = maxY > WorldHeight::HEIGHT ? WorldHeight::HEIGHT : maxY;
+    if (clampedMinY < clampedMaxY && minX < maxX && minZ < maxZ)
     {
-        for (int y = minY; y < maxY; y++)
+        // Iterate chunk-by-chunk and section-by-section so empty air sections
+        // are skipped in O(1) instead of issuing thousands of per-block chunk
+        // map lookups (EntityDragon's 16x8x16 AABB alone spans ~2600 cells).
+        const int minChunkX = JavaArithmetic::intShr(minX, 4);
+        const int maxChunkX = JavaArithmetic::intShr(maxX - 1, 4);
+        const int minChunkZ = JavaArithmetic::intShr(minZ, 4);
+        const int maxChunkZ = JavaArithmetic::intShr(maxZ - 1, 4);
+        const int minSecY = clampedMinY >> 4;
+        const int maxSecY = (clampedMaxY - 1) >> 4;
+
+        for (int cx = minChunkX; cx <= maxChunkX; ++cx)
         {
-            for (int z = minZ; z < maxZ; z++)
+            const int chunkBaseX = cx << 4;
+            const int x0 = minX > chunkBaseX ? minX - chunkBaseX : 0;
+            const int x1 = maxX < chunkBaseX + 16 ? maxX - chunkBaseX : 16;
+            for (int cz = minChunkZ; cz <= maxChunkZ; ++cz)
             {
-                Block* block = Block::blocksList[getBlockId(x, y, z)];
-                if (block == nullptr || block->blockMaterial != material)
-                {
+                Chunk *chunk = getChunkIfExists(cx, cz);
+                if (chunk == nullptr || chunk->isEmptyChunk())
                     continue;
-                }
-                
-                // Compare the fluid surface where it is produced, in float.
-                //
-                // Both operands of the subtraction are already float, so the
-                // value is identical either way; storing it in a double only
-                // widened it (__extendsfdf2), widened the int bound
-                // (__floatsidf) and ran the comparison in software (__gedf2).
-                // Y is a block height, so both sides stay exactly representable
-                // and the test resolves the same way it did in double. This runs
-                // once per cell of the entity's bounding volume, per entity, per
-                // tick: three EE soft-float calls per cell become none.
-                const float fluidSurface = (float)(y + 1) - BlockFluid::getPercentAir(getBlockMetadata(x, y, z));
-                if ((float)maxY >= fluidSurface)
+                const int chunkBaseZ = cz << 4;
+                const int z0 = minZ > chunkBaseZ ? minZ - chunkBaseZ : 0;
+                const int z1 = maxZ < chunkBaseZ + 16 ? maxZ - chunkBaseZ : 16;
+
+                for (int sy = minSecY; sy <= maxSecY; ++sy)
                 {
-                    flag = true;
-                    block->velocityToAddToEntity(this, x, y, z, entity, vec3d);
+                    const ExtendedBlockStorage *ebs = chunk->getBlockStorage(sy);
+                    if (ebs == nullptr || ebs->getIsEmpty())
+                        continue;
+                    const int secBaseY = sy << 4;
+                    const int y0 = clampedMinY > secBaseY ? clampedMinY - secBaseY : 0;
+                    const int y1 = clampedMaxY < secBaseY + 16 ? clampedMaxY - secBaseY : 16;
+
+                    for (int ly = y0; ly < y1; ++ly)
+                    {
+                        const int wy = secBaseY + ly;
+                        for (int lz = z0; lz < z1; ++lz)
+                        {
+                            const int wz = chunkBaseZ + lz;
+                            for (int lx = x0; lx < x1; ++lx)
+                            {
+                                const int blockId = ebs->getExtBlockID(lx, ly, lz);
+                                if (blockId == 0)
+                                    continue;
+                                Block* block = Block::blocksList[blockId];
+                                if (block == nullptr || block->blockMaterial != material)
+                                    continue;
+
+                                const float fluidSurface = (float)(wy + 1) - BlockFluid::getPercentAir(ebs->getExtBlockMetadata(lx, ly, lz));
+                                if ((float)maxY >= fluidSurface)
+                                {
+                                    flag = true;
+                                    block->velocityToAddToEntity(this, chunkBaseX + lx, wy, wz, entity, vec3d);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -4078,17 +4135,56 @@ bool World::isMaterialInBB(AxisAlignedBB* aabb, Material* material)
     int maxY = MathHelper::floor_double(aabb->maxY + 1.0);
     int minZ = MathHelper::floor_double(aabb->minZ);
     int maxZ = MathHelper::floor_double(aabb->maxZ + 1.0);
-    
-    for (int x = minX; x < maxX; x++)
+
+    const int clampedMinY = minY < 0 ? 0 : minY;
+    const int clampedMaxY = maxY > WorldHeight::HEIGHT ? WorldHeight::HEIGHT : maxY;
+    if (clampedMinY >= clampedMaxY || minX >= maxX || minZ >= maxZ)
+        return false;
+
+    const int minChunkX = JavaArithmetic::intShr(minX, 4);
+    const int maxChunkX = JavaArithmetic::intShr(maxX - 1, 4);
+    const int minChunkZ = JavaArithmetic::intShr(minZ, 4);
+    const int maxChunkZ = JavaArithmetic::intShr(maxZ - 1, 4);
+    const int minSecY = clampedMinY >> 4;
+    const int maxSecY = (clampedMaxY - 1) >> 4;
+
+    for (int cx = minChunkX; cx <= maxChunkX; ++cx)
     {
-        for (int y = minY; y < maxY; y++)
+        const int chunkBaseX = cx << 4;
+        const int x0 = minX > chunkBaseX ? minX - chunkBaseX : 0;
+        const int x1 = maxX < chunkBaseX + 16 ? maxX - chunkBaseX : 16;
+        for (int cz = minChunkZ; cz <= maxChunkZ; ++cz)
         {
-            for (int z = minZ; z < maxZ; z++)
+            Chunk *chunk = getChunkIfExists(cx, cz);
+            if (chunk == nullptr || chunk->isEmptyChunk())
+                continue;
+            const int chunkBaseZ = cz << 4;
+            const int z0 = minZ > chunkBaseZ ? minZ - chunkBaseZ : 0;
+            const int z1 = maxZ < chunkBaseZ + 16 ? maxZ - chunkBaseZ : 16;
+
+            for (int sy = minSecY; sy <= maxSecY; ++sy)
             {
-                Block* block = Block::blocksList[getBlockId(x, y, z)];
-                if (block != nullptr && block->blockMaterial == material)
+                const ExtendedBlockStorage *ebs = chunk->getBlockStorage(sy);
+                if (ebs == nullptr || ebs->getIsEmpty())
+                    continue;
+                const int secBaseY = sy << 4;
+                const int y0 = clampedMinY > secBaseY ? clampedMinY - secBaseY : 0;
+                const int y1 = clampedMaxY < secBaseY + 16 ? clampedMaxY - secBaseY : 16;
+
+                for (int ly = y0; ly < y1; ++ly)
                 {
-                    return true;
+                    for (int lz = z0; lz < z1; ++lz)
+                    {
+                        for (int lx = x0; lx < x1; ++lx)
+                        {
+                            const int blockId = ebs->getExtBlockID(lx, ly, lz);
+                            if (blockId == 0)
+                                continue;
+                            Block* block = Block::blocksList[blockId];
+                            if (block != nullptr && block->blockMaterial == material)
+                                return true;
+                        }
+                    }
                 }
             }
         }

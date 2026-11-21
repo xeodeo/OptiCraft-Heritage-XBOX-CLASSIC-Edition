@@ -22,6 +22,21 @@ void EntityDragonPart::writeEntityToNBT(NBTTagCompound *)
 {
 }
 
+void EntityDragonPart::onUpdate()
+{
+    // Hitbox sub-parts are repositioned directly by EntityDragon::updateDragon()
+    // every tick and are never added to loadedEntityList or driven by fluid/fire
+    // physics. Skipping Entity::onEntityUpdate() avoids ~928 redundant getBlockId()
+    // water/lava scans per dragon tick across the seven parts.
+    ++ticksExisted;
+    prevDistanceWalkedModified = distanceWalkedModified;
+    prevPosX = posX;
+    prevPosY = posY;
+    prevPosZ = posZ;
+    prevRotationPitch = rotationPitch;
+    prevRotationYaw = rotationYaw;
+}
+
 bool EntityDragonPart::canBeCollidedWith()
 {
     return true;

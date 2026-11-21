@@ -12,30 +12,197 @@
 #include "java/Math.h"
 #include <algorithm>
 
+namespace
+{
+bool isStaticCompassRedPixel(int_t argb)
+{
+	const int_t a = (argb >> 24) & 0xff;
+	const int_t r = (argb >> 16) & 0xff;
+	const int_t g = (argb >> 8) & 0xff;
+	const int_t b = argb & 0xff;
+	return a > 0 && r >= 170 && g <= 65 && b <= 65;
+}
+
+void sampleCompassTile16(const std::vector<int_t> &atlas, int_t atlasW, int_t atlasH, int_t iconIndex, int_t outTile[256])
+{
+	std::fill(outTile, outTile + 256, 0);
+	if (atlasW < 16 || atlasH < 16 || atlas.size() < static_cast<std::size_t>(atlasW) * static_cast<std::size_t>(atlasH))
+		return;
+	const int_t tileW = atlasW / 16;
+	const int_t tileH = atlasH / 16;
+	if (tileW <= 0 || tileH <= 0)
+		return;
+	const int_t startX = (iconIndex % 16) * tileW;
+	const int_t startY = (iconIndex / 16) * tileH;
+	for (int_t y = 0; y < 16; ++y)
+	{
+		const int_t sy = startY + y * tileH / 16;
+		for (int_t x = 0; x < 16; ++x)
+		{
+			const int_t sx = startX + x * tileW / 16;
+			outTile[y * 16 + x] = atlas[static_cast<std::size_t>(sy) * static_cast<std::size_t>(atlasW) + static_cast<std::size_t>(sx)];
+		}
+	}
+}
+} // namespace
+
 TextureCompassFX::TextureCompassFX(Minecraft *minecraft) :
 	TextureFX(Item::compass->getIconFromDamage(0)),
 	mc(minecraft),
+	stripFrameCount(0),
+	stripLastFrame(-1),
+	stripLastAnaglyph(false),
 	watchAngle(0),
 	watchFrame(0)
 {
 	tileImage = 1;
 	std::fill(compassIconImageData, compassIconImageData + 256, 0);
 	if (mc != nullptr && mc->renderEngine != nullptr)
+		reloadAssets(mc->renderEngine);
+}
+
+void TextureCompassFX::onTexturePackChanged(RenderEngine *renderengine)
+{
+	reloadAssets(renderengine);
+}
+
+void TextureCompassFX::reloadAssets(RenderEngine *renderengine)
+{
+	stripImageData.clear();
+	stripFrameCount = 0;
+	stripLastFrame = -1;
+	std::fill(compassIconImageData, compassIconImageData + 256, 0);
+
+	if (renderengine == nullptr)
+		return;
+
+	// Mode 1: 1.5 / LCE animated vertical strip (/textures/items/compass.png).
+	if (renderengine->hasResource("/textures/items/compass.png"))
 	{
-		const std::vector<int_t> items = mc->renderEngine->readTextureImageData("/gui/items.png");
-		if (items.size() >= 256u * 256u)
+		std::vector<int_t> strip;
+		int_t w = 0, h = 0;
+		if (renderengine->readTextureImageDataWithSize("/textures/items/compass.png", strip, w, h) &&
+		    w > 0 && h >= w * 2 && (h % w) == 0)
 		{
-			const int_t startX = (iconIndex % 16) * 16;
-			const int_t startY = (iconIndex / 16) * 16;
-			for (int_t y = 0; y < 16; ++y)
-				for (int_t x = 0; x < 16; ++x)
-					compassIconImageData[y * 16 + x] = items[(startY + y) * 256 + startX + x];
+			const int_t frames = h / w;
+			stripImageData.resize(static_cast<std::size_t>(frames) * 256u);
+			for (int_t f = 0; f < frames; ++f)
+			{
+				const int_t baseY = f * w;
+				for (int_t y = 0; y < 16; ++y)
+				{
+					const int_t sy = baseY + y * w / 16;
+					for (int_t x = 0; x < 16; ++x)
+					{
+						const int_t sx = x * w / 16;
+						stripImageData[static_cast<std::size_t>(f) * 256u + static_cast<std::size_t>(y * 16 + x)] =
+							strip[static_cast<std::size_t>(sy) * static_cast<std::size_t>(w) + static_cast<std::size_t>(sx)];
+					}
+				}
+			}
+			stripFrameCount = frames;
+			return;
+		}
+	}
+
+	// Mode 2: 1.2.5 /gui/items.png base face + procedural needle.
+	std::vector<int_t> items;
+	int_t itemsW = 0, itemsH = 0;
+	if (renderengine->readTextureImageDataWithSize("/gui/items.png", items, itemsW, itemsH))
+		sampleCompassTile16(items, itemsW, itemsH, iconIndex, compassIconImageData);
+
+	// LCE / 1.5-era items.png sheets bake a static red needle into the base icon.
+	// Scrub those red pixels using the clean default compass face so the moving
+	// needle does not draw on top of a frozen red needle.
+	bool hasStaticRed = false;
+	for (int_t i = 0; i < 256; ++i)
+	{
+		if (isStaticCompassRedPixel(compassIconImageData[i]))
+		{
+			hasStaticRed = true;
+			break;
+		}
+	}
+	if (hasStaticRed)
+	{
+		std::vector<int_t> defaultItems;
+		int_t defW = 0, defH = 0;
+		int_t defTile[256] = {};
+		const bool haveDefault = renderengine->readDefaultTextureImageDataWithSize("/gui/items.png", defaultItems, defW, defH);
+		if (haveDefault)
+			sampleCompassTile16(defaultItems, defW, defH, iconIndex, defTile);
+		for (int_t i = 0; i < 256; ++i)
+		{
+			if (isStaticCompassRedPixel(compassIconImageData[i]))
+				compassIconImageData[i] = (haveDefault && !isStaticCompassRedPixel(defTile[i])) ? defTile[i] : static_cast<int_t>(0xFF3A3A3A);
 		}
 	}
 }
 
 void TextureCompassFX::onTick()
 {
+	double d = 0.0;
+	if (mc != nullptr && mc->theWorld != nullptr && mc->thePlayer != nullptr)
+	{
+		ChunkCoordinates chunkcoordinates = mc->theWorld->getSpawnPoint();
+		double d2 = (double)chunkcoordinates.x - mc->thePlayer->posX;
+		double d4 = (double)chunkcoordinates.z - mc->thePlayer->posZ;
+		d = ((double)(mc->thePlayer->rotationYaw - 90.0f) * 3.1415926535897931) / 180.0 - atan2(d4, d2);
+		if (mc->theWorld->worldProvider != nullptr && !mc->theWorld->worldProvider->func_48217_e())
+		{
+			d = Math::random() * 3.1415927410125732 * 2.0;
+		}
+	}
+
+	double d1;
+	for (d1 = d - watchAngle; d1 < -3.1415926535897931; d1 += 6.2831853071795862) {}
+	for (; d1 >= 3.1415926535897931; d1 -= 6.2831853071795862) {}
+	if (d1 < -1.0) d1 = -1.0;
+	if (d1 > 1.0) d1 = 1.0;
+
+	watchFrame += d1 * 0.10000000000000001;
+	watchFrame *= 0.80000000000000004;
+	watchAngle += watchFrame;
+
+	if (stripFrameCount > 0)
+	{
+		// In 1.5 / LCE compass.png strips, frame 0 points straight down (south),
+		// frame N/4 points left (west), frame N/2 points up (north), and 3N/4 right.
+		// In 1.2.5 watchAngle convention, 0 points down and +pi/2 points right,
+		// so strip progress runs opposite to watchAngle.
+		const double turns = -watchAngle / 6.2831853071795862;
+		int_t frame = static_cast<int_t>((turns + 1.0) * static_cast<double>(stripFrameCount)) % stripFrameCount;
+		while (frame < 0)
+			frame = (frame + stripFrameCount) % stripFrameCount;
+		if (frame != stripLastFrame || anaglyphEnabled != stripLastAnaglyph)
+		{
+			stripLastFrame = frame;
+			stripLastAnaglyph = anaglyphEnabled;
+			const int_t *framePixels = &stripImageData[static_cast<std::size_t>(frame) * 256u];
+			for (int_t i = 0; i < 256; ++i)
+			{
+				int_t a = (framePixels[i] >> 24) & 0xff;
+				int_t r = (framePixels[i] >> 16) & 0xff;
+				int_t g = (framePixels[i] >> 8) & 0xff;
+				int_t b = framePixels[i] & 0xff;
+				if (anaglyphEnabled)
+				{
+					int_t nr = (r * 30 + g * 59 + b * 11) / 100;
+					int_t ng = (r * 30 + g * 70) / 100;
+					int_t nb = (r * 30 + b * 70) / 100;
+					r = nr;
+					g = ng;
+					b = nb;
+				}
+				imageData[i * 4 + 0] = static_cast<byte_t>(r);
+				imageData[i * 4 + 1] = static_cast<byte_t>(g);
+				imageData[i * 4 + 2] = static_cast<byte_t>(b);
+				imageData[i * 4 + 3] = static_cast<byte_t>(a);
+			}
+		}
+		return;
+	}
+
 	for (int_t i = 0; i < 256; i++)
 	{
 		int_t j = (compassIconImageData[i] >> 24) & 0xff;
@@ -56,29 +223,6 @@ void TextureCompassFX::onTick()
 		imageData[i * 4 + 2] = (byte_t)i1;
 		imageData[i * 4 + 3] = (byte_t)j;
 	}
-
-	double d = 0.0;
-	if (mc->theWorld != nullptr && mc->thePlayer != nullptr)
-	{
-		ChunkCoordinates chunkcoordinates = mc->theWorld->getSpawnPoint();
-		double d2 = (double)chunkcoordinates.x - mc->thePlayer->posX;
-		double d4 = (double)chunkcoordinates.z - mc->thePlayer->posZ;
-		d = ((double)(mc->thePlayer->rotationYaw - 90.0f) * 3.1415926535897931) / 180.0 - atan2(d4, d2);
-		if (mc->theWorld->worldProvider->isNether)
-		{
-			d = Math::random() * 3.1415927410125732 * 2.0;
-		}
-	}
-
-	double d1;
-	for (d1 = d - watchAngle; d1 < -3.1415926535897931; d1 += 6.2831853071795862) {}
-	for (; d1 >= 3.1415926535897931; d1 -= 6.2831853071795862) {}
-	if (d1 < -1.0) d1 = -1.0;
-	if (d1 > 1.0) d1 = 1.0;
-
-	watchFrame += d1 * 0.10000000000000001;
-	watchFrame *= 0.80000000000000004;
-	watchAngle += watchFrame;
 
 	const float d3 = sinf(static_cast<float>(watchAngle));
 	const float d5 = cosf(static_cast<float>(watchAngle));
