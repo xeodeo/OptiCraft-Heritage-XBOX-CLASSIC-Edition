@@ -184,3 +184,13 @@ El otro repo (CPPEditionLegacy, 1.8.9 en C++17 con shared_ptr) NO sirve para Xbo
   servidor-1.2.5, xdk, xbox-sdks, minecraft-legacy original, y lo de PS3.
 - README de `main` en GitHub con los enlaces de archive.org (LCE: https://archive.org/details/minecraft_20260301,
   XDK: https://archive.org/download/xbox-sdks). Herramientas sueltas en la rama `contexto` (`herramientas/`).
+
+## 21-11 13:30 (antes de hibernar)
+- Encargo 95 de agy HECHO y revisado (1.2.5 `9629741`: reloj/brújula con packs LCE + dragón <1 ms/tick, isla del End
+  residente con `PLATFORM_END_RESIDENT_CHUNK_RADIUS 6`; 1.5.2 `b933663`: reloj/brújula). El 96 (personaje animado) lo
+  hizo Claude: 1.2.5 `c027da6`→`474730f`→`f5282f6`, 1.5.2 `016fe22`→`2a668af`→`de360fd` (sin sombra y apagando el
+  lightmap después: la barra se oscurecía). Ramas pusheadas a `xbox`.
+- **PENDIENTE: subir a la consola los 8 XBE del lanzador (f5282f6 / de360fd)**: el FTP no respondía. Luego que el
+  usuario confirme que la barra ya no se oscurece. Confirmado 21-11: icono de guardado, mobs tapados, lava LCE (1.2.5),
+  vagonetas TNT (1.5.2).
+- Falta: opción «Personaje animado» en Opciones (Java y Legacy) para poder quitarlo.

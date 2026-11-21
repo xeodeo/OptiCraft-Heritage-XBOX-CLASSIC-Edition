@@ -1,1 +1,1 @@
-{"version": "1.2.5", "estado": "probado", "area": "Fallos", "nombre": "Crash al volver del End (barra de vida del dragón)", "nota": "Arreglado en dc0285e y probado. Los tirones del dragón (100-130 ms por tick) van en el encargo 95.", "ref": "Claude", "orden": 5}
+{"version": "1.2.5", "estado": "probado", "area": "Fallos", "nombre": "Crash al volver del End (barra de vida del dragón)", "nota": "Arreglado en dc0285e y probado. Tirones del dragón: encargo 95 (de 33-169 ms a <1 ms por tick; la isla del End queda cargada en memoria).", "ref": "Claude", "orden": 5}

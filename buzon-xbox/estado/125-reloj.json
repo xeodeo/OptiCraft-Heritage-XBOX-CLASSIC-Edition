@@ -1,1 +1,1 @@
-{"version": "1.2.5", "estado": "en_marcha", "area": "Fallos", "nombre": "El reloj no gira con la hora", "nota": "Encargo 95: agy lo retoma el 21-11 (cambios sin commit en wt-opti30: dial del pack LCE, TextureWatchFX/CompassFX).", "ref": "95", "orden": 4}
+{"version": "1.2.5", "estado": "por_probar", "area": "Fallos", "nombre": "El reloj no gira con la hora", "nota": "Encargo 95 (9629741): el pack LCE no tenía los píxeles del dial; ahora gira con pack por defecto, LCE y DLC, y se recarga al cambiar de pack. Brújula también. En 1.5.2 igual (b933663).", "ref": "95", "orden": 4}

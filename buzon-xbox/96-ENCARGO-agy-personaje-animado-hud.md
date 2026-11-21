@@ -1,4 +1,4 @@
-# 96. Encargo agy: personaje animado en el HUD, como la LCE (1.2.5 y 1.5.2) (20-11)
+# 96. (HECHO por Claude 21-11: c027da6 en 1.2.5, 016fe22 en 1.5.2; sin opción en menús todavía) Encargo agy: personaje animado en el HUD, como la LCE (1.2.5 y 1.5.2) (20-11)
 
 Pedido por el usuario: el muñequito del jugador arriba a la izquierda que sale al agacharse, correr o volar, como en
 la Legacy Console Edition. No existe en ninguna de las dos ramas (buscado: nada parecido en `GuiIngame`).
