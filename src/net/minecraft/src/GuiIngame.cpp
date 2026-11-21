@@ -41,6 +41,9 @@
 #include "StringTranslate.h"
 #include "Minecraft.h"
 #include "HudSafeArea.h"
+#include "RenderManager.h"
+#include "PlayerCapabilities.h"
+#include <cmath>
 #include "World.h"
 #include "java/System.h"
 #include "legacy/LegacyControlTooltipHud.h"
@@ -470,6 +473,101 @@ void GuiIngame::renderSaveIcon(int_t screenWidth, int_t screenHeight)
 	drawWhole(x, chestY);
 	renderBindTexture(mc->renderEngine->getTexture("/gui/save_arrow.png"));
 	drawWhole(x, arrowY);
+	renderBindTexture(mc->renderEngine->getTexture("/gui/icons.png"));
+}
+
+// Legacy Console Edition "animated character": a small copy of the player in
+// the top-left corner while sneaking, sprinting or flying (4J Gui.cpp). It stays
+// ~1.5 s after sneaking/sprinting stops and only briefly after flying stops.
+// Drawn like the inventory preview; nothing is drawn while it is hidden.
+void GuiIngame::renderAnimatedCharacter(int_t screenWidth, int_t screenHeight)
+{
+	EntityPlayer *player = mc != nullptr ? mc->thePlayer : nullptr;
+	if (player == nullptr || RenderManager::instance == nullptr)
+		return;
+
+	struct Slot { EntityPlayer *player; long_t visibleUntil; };
+	static Slot slots[4] = {};
+	Slot *slot = nullptr;
+	for (Slot &s : slots)
+		if (s.player == player) { slot = &s; break; }
+	if (slot == nullptr)
+	{
+		for (Slot &s : slots)
+			if (s.player == nullptr || System::currentTimeMillis() > s.visibleUntil + 60000) { slot = &s; break; }
+		if (slot == nullptr)
+			slot = &slots[0];
+		slot->player = player;
+		slot->visibleUntil = 0;
+	}
+
+	const long_t now = System::currentTimeMillis();
+	const bool flying = player->capabilities.isFlying;
+	if (player->isSneaking() || player->isSprinting())
+		slot->visibleUntil = now + 1500;
+	else if (flying)
+		slot->visibleUntil = now + 250;
+	if (now > slot->visibleUntil)
+		return;
+
+	const HudSafeInsets safe = computeHudSafeInsets(mc, screenWidth, screenHeight, true);
+	const float_t baseX = static_cast<float_t>(safe.left + 18);
+	const float_t baseY = static_cast<float_t>(safe.top + 32);
+	constexpr float_t scale = 12.0f;
+	constexpr float_t xd = -40.0f;
+	constexpr float_t yd = 10.0f;
+
+	renderClear(RenderClearMask::Depth);
+	renderEnable(RenderCapability::DepthTest);
+	renderEnable(RenderCapability::RescaleNormal);
+	renderEnable(RenderCapability::ColorMaterial);
+	renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	renderPushMatrix();
+	renderTranslate(baseX, baseY, 50.0f);
+	renderScale(-scale, scale, scale);
+	renderRotate(180.0f, 0.0f, 0.0f, 1.0f);
+
+	const float_t savedYawOffset = player->renderYawOffset;
+	const float_t savedPrevYawOffset = player->prevRenderYawOffset;
+	const float_t savedYaw = player->rotationYaw;
+	const float_t savedPrevYaw = player->prevRotationYaw;
+	const float_t savedPitch = player->rotationPitch;
+	const float_t savedPrevPitch = player->prevRotationPitch;
+	const float_t savedYawHead = player->rotationYawHead;
+	const float_t savedPrevYawHead = player->prevRotationYawHead;
+
+	renderRotate(135.0f, 0.0f, 1.0f, 0.0f);
+	RenderHelper::enableStandardItemLighting();
+	renderRotate(-135.0f, 0.0f, 1.0f, 0.0f);
+	renderRotate(-static_cast<float_t>(std::atan(yd / 40.0f)) * 20.0f, 1.0f, 0.0f, 0.0f);
+
+	// Fixed three-quarter view with the head held still, as on the consoles.
+	const float_t bodyYaw = static_cast<float_t>(std::atan(xd / 40.0f)) * 20.0f;
+	player->renderYawOffset = player->prevRenderYawOffset = bodyYaw;
+	player->rotationYaw = player->prevRotationYaw = bodyYaw;
+	player->rotationYawHead = player->prevRotationYawHead = bodyYaw;
+	player->rotationPitch = player->prevRotationPitch = -static_cast<float_t>(std::atan(yd / 40.0f)) * 20.0f;
+
+	renderTranslate(0.0f, player->yOffset, 0.0f);
+	const float_t savedViewY = RenderManager::instance->playerViewY;
+	RenderManager::instance->playerViewY = 180.0f;
+	RenderManager::instance->renderEntityWithPosYaw(player, 0.0, 0.0, 0.0, 0.0f, 1.0f);
+	RenderManager::instance->playerViewY = savedViewY;
+
+	player->renderYawOffset = savedYawOffset;
+	player->prevRenderYawOffset = savedPrevYawOffset;
+	player->rotationYaw = savedYaw;
+	player->prevRotationYaw = savedPrevYaw;
+	player->rotationPitch = savedPitch;
+	player->prevRotationPitch = savedPrevPitch;
+	player->rotationYawHead = savedYawHead;
+	player->prevRotationYawHead = savedPrevYawHead;
+
+	renderPopMatrix();
+	RenderHelper::disableStandardItemLighting();
+	renderDisable(RenderCapability::RescaleNormal);
+	renderClear(RenderClearMask::Depth);
+	renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	renderBindTexture(mc->renderEngine->getTexture("/gui/icons.png"));
 }
 
@@ -916,6 +1014,7 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 
 	renderBossHealth();
 	renderSaveIcon(sw, sh);
+	renderAnimatedCharacter(sw, sh);
 
 	// [FIX DEFENSIVO] Verificación contra nullptr en mc->playerController antes de consultar shouldDrawHUD()
 	if (mc->playerController != nullptr && mc->playerController->shouldDrawHUD())

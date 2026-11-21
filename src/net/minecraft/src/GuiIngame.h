@@ -35,6 +35,7 @@ private:
 	void renderCoordinatesOverlay(FontRenderer *fontRenderer, int_t x, int_t y);
 	void renderBossHealth();
 	void renderSaveIcon(int_t screenWidth, int_t screenHeight);
+	void renderAnimatedCharacter(int_t screenWidth, int_t screenHeight);
 	void renderPlayerStatusHudGeometry(int_t sw, int_t sh, Tessellator *captureTessellator);
 	void renderPlayerStatusHudUncached(int_t sw, int_t sh);
 #if PLATFORM_PC_LEGACY
