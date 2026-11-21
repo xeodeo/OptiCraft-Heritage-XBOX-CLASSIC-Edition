@@ -1,0 +1,1 @@
+{"version": "1.2.5", "estado": "en_marcha", "area": "Fallos", "nombre": "El reloj no gira con la hora", "nota": "Encargo 95: agy lo retoma el 21-11 (cambios sin commit en wt-opti30: dial del pack LCE, TextureWatchFX/CompassFX).", "ref": "95", "orden": 4}

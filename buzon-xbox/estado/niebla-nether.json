@@ -1,0 +1,1 @@
+{"version": "ambas", "estado": "por_probar", "area": "Gráficos", "nombre": "Niebla del Nether", "nota": "agy midió las dos versiones en el Nether y salen idénticas (mismo código, mismos valores). Si en la consola se ven distintas, mirar Niebla, Distancia e Inicio de niebla en Vídeo de cada versión.", "ref": "88/90", "orden": 10, "estado_125": "probado"}

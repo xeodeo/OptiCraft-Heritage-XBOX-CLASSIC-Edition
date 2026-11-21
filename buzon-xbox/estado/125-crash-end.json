@@ -1,0 +1,1 @@
+{"version": "1.2.5", "estado": "probado", "area": "Fallos", "nombre": "Crash al volver del End (barra de vida del dragón)", "nota": "Arreglado en dc0285e y probado. Los tirones del dragón (100-130 ms por tick) van en el encargo 95.", "ref": "Claude", "orden": 5}

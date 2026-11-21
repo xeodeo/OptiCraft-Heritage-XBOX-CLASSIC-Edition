@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Estado OptiCraft Xbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+body{margin:0}
+/* Layout: a console "dashboard" — version switch on top, one progress strip per version, then the task list grouped by state. */
+:root{
+  --bg:#f3f5f1; --panel:#ffffff; --ink:#18201a; --muted:#5d685f; --line:#dde3da;
+  --accent:#0f7b2e; --accent-soft:#e2f1e5;
+  --ok:#1b8a3c; --test:#2f6fd6; --wip:#c78400; --todo:#8a948c; --bad:#c7392f; --park:#a99b7a;
+  --ok-bg:#e3f3e7; --test-bg:#e4ecfb; --wip-bg:#fbf0d9; --todo-bg:#eceeea; --bad-bg:#fbe4e2; --park-bg:#f1ecdf;
+  --display:"Chakra Petch",ui-sans-serif,system-ui,sans-serif;
+  --body:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101511; --panel:#171e18; --ink:#e7ede6; --muted:#9aa79c; --line:#2a342c;
+  --accent:#4cc46a; --accent-soft:#1c2e20;
+  --ok:#4cc46a; --test:#6e9ff0; --wip:#e2a93a; --todo:#7d887f; --bad:#ec6a5f; --park:#b9a983;
+  --ok-bg:#1a2f1f; --test-bg:#1a2438; --wip-bg:#33280f; --todo-bg:#202721; --bad-bg:#3a1c1a; --park-bg:#2c271b;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101511; --panel:#171e18; --ink:#e7ede6; --muted:#9aa79c; --line:#2a342c;
+  --accent:#4cc46a; --accent-soft:#1c2e20;
+  --ok:#4cc46a; --test:#6e9ff0; --wip:#e2a93a; --todo:#7d887f; --bad:#ec6a5f; --park:#b9a983;
+  --ok-bg:#1a2f1f; --test-bg:#1a2438; --wip-bg:#33280f; --todo-bg:#202721; --bad-bg:#3a1c1a; --park-bg:#2c271b;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,4vw,36px);line-height:1.1;margin:0;letter-spacing:.01em;text-wrap:balance}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:4px 0 0;max-width:62ch}
+.stamp{font-family:var(--mono);font-size:12.5px;color:var(--muted);text-align:right}
+.stamp b{color:var(--ink);font-weight:500}
+.note{background:var(--accent-soft);border-radius:10px;padding:12px 16px;font-size:14.5px;display:none}
+.note.show{display:block}
+.versions{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.ver{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.ver[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ver:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ver h2{font-family:var(--display);font-size:20px;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ver h2 small{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--muted)}
+.pct{font-family:var(--display);font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.pct em{font-style:normal;font-size:14px;color:var(--muted);font-family:var(--body);font-weight:500;margin-left:6px}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--todo-bg)}
+.bar i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;background:var(--c);vertical-align:0}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filters label{font-size:13px;color:var(--muted);margin-right:4px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:5px 12px;font:500 13px var(--body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.groups{display:flex;flex-direction:column;gap:22px}
+.group h3{font-family:var(--display);font-size:16px;margin:0 0 8px;display:flex;align-items:center;gap:8px;letter-spacing:.02em;text-transform:uppercase}
+.group h3 .dot{width:10px;height:10px;border-radius:3px;background:var(--c)}
+.group h3 .n{font-family:var(--mono);font-size:12.5px;color:var(--muted);text-transform:none}
+.list{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;padding:11px 16px;border-top:1px solid var(--line);align-items:start}
+.row:first-child{border-top:0}
+.row .stripe{width:4px;align-self:stretch;border-radius:2px;background:var(--c)}
+.row .main{min-width:0}
+.row .name{font-weight:600}
+.row .desc{color:var(--muted);font-size:13.5px;margin-top:1px}
+.row .meta{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.tag{font-family:var(--mono);font-size:11.5px;padding:2px 7px;border-radius:5px;background:var(--todo-bg);color:var(--muted);white-space:nowrap}
+.tag.v{background:var(--accent-soft);color:var(--accent)}
+.empty{padding:28px 20px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--line);border-radius:12px}
+[data-s="probado"]{--c:var(--ok)} [data-s="por_probar"]{--c:var(--test)} [data-s="en_marcha"]{--c:var(--wip)}
+[data-s="falta"]{--c:var(--todo)} [data-s="fallo"]{--c:var(--bad)} [data-s="aparcado"]{--c:var(--park)}
+@media (max-width:560px){.row{grid-template-columns:auto 1fr}.row .meta{grid-column:2;justify-content:flex-start}.stamp{text-align:left}}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .4s ease}}
+.vertit{font-size:1.4rem;margin:0 0 12px}
+</style>
+
+</head>
+<body>
+<script id="datos" type="application/json">{"tareas": [{"version": "1.2.5", "estado": "probado", "area": "Fallos", "nombre": "Crash al volver del End (barra de vida del dragón)", "nota": "Arreglado en dc0285e y probado. Los tirones del dragón (100-130 ms por tick) van en el encargo 95.", "ref": "Claude", "orden": 5, "id": "125-crash-end"}, {"version": "1.2.5", "estado": "probado", "area": "1.2.5", "nombre": "Niebla, cielo, sol, luna y nubes", "nota": "", "ref": "", "orden": 64, "id": "125-ok-0"}, {"version": "1.2.5", "estado": "probado", "area": "1.2.5", "nombre": "Agachado + bloque sobre un cofre lo pone", "nota": "", "ref": "", "orden": 65, "id": "125-ok-1"}, {"version": "1.2.5", "estado": "probado", "area": "1.2.5", "nombre": "Cruceta separada del stick y configurable", "nota": "", "ref": "", "orden": 66, "id": "125-ok-2"}, {"version": "1.2.5", "estado": "probado", "area": "1.2.5", "nombre": "Logros recortados y con desplazamiento", "nota": "El cursor sobre un logro va aparte (falla).", "ref": "", "orden": 67, "id": "125-ok-3"}, {"version": "1.2.5", "estado": "probado", "area": "1.2.5", "nombre": "Iconos del stick y salir del chat con B", "nota": "", "ref": "", "orden": 68, "id": "125-probar-0"}, {"version": "1.2.5", "estado": "probado", "area": "1.2.5", "nombre": "Ticks por chunk: agua, lava y redstone siguen funcionando", "nota": "", "ref": "", "orden": 69, "id": "125-probar-1"}, {"version": "1.2.5", "estado": "por_probar", "area": "1.2.5", "nombre": "Huevo de dragón cayendo", "nota": "(El yunque no existe en la 1.2.5.)", "ref": "", "orden": 70, "id": "125-probar-2"}, {"version": "1.2.5", "estado": "falta", "area": "Ramas", "nombre": "Pasar opti30-erluza a la rama buena (xbox-opti-30)", "nota": "Cuando todo lo de arriba esté probado.", "ref": "", "orden": 71, "id": "125-rama-buena"}, {"version": "1.2.5", "estado": "en_marcha", "area": "Fallos", "nombre": "El reloj no gira con la hora", "nota": "Encargo 95: agy lo retoma el 21-11 (cambios sin commit en wt-opti30: dial del pack LCE, TextureWatchFX/CompassFX).", "ref": "95", "orden": 4, "id": "125-reloj"}, {"version": "1.5.2", "estado": "por_probar", "area": "Aldeanos", "nombre": "Aldeanos: corazones al aparearse, gólem que defiende, asedio, zombi curado", "nota": "", "ref": "", "orden": 41, "id": "152-aldeanos-resto"}, {"version": "1.5.2", "estado": "por_probar", "area": "Plan 69", "nombre": "Comandos, reglas del juego y modo aventura", "nota": "Hecho (encargo 93): 19 comandos (/gamemode, /gamerule, /time, /weather, /give, /tp, /xp, /enchant, /clear, /spawnpoint, /kill, /help...), @p @a @r, «Permitir trucos» al crear mundo (Java y Legacy), 7 reglas del juego y modo aventura. Todo se guarda al recargar.", "ref": "93", "orden": 49, "id": "152-falta-0"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Marcador (scoreboard)", "nota": "Se dejó para su propio encargo (no entró en el 93).", "ref": "", "orden": 50, "id": "152-falta-1"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Bloques: puertas, cama en el Nether, troncos tumbados, nieve en capas, vallas, cacao", "nota": "", "ref": "", "orden": 59, "id": "152-falta-10"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Mobs: oveja mezcla colores, Enderman, slime del pantano, gatitos, crías", "nota": "", "ref": "", "orden": 60, "id": "152-falta-11"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Inventario: Mayús+clic a armadura y horno, repartir pila, XP del horno", "nota": "", "ref": "", "orden": 61, "id": "152-falta-12"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Nether: cuevas como la semilla de la 1.5.2", "nota": "", "ref": "", "orden": 62, "id": "152-falta-13"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Pantalla: nombre del objeto al cambiar de casilla, calaveras en la cabeza, colores §", "nota": "", "ref": "", "orden": 63, "id": "152-falta-14"}, {"version": "1.5.2", "estado": "por_probar", "area": "Plan 69", "nombre": "Fuegos artificiales: cohete y estrella (5 formas, colores, desvanecido, parpadeo, estela)", "nota": "Crafteo Java y de consola (Decoración). Dispensador lanza en horizontal. 10 cohetes: ~48-55 fps en xemu.", "ref": 94, "orden": 51, "id": "152-falta-2"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Dispensador 1.5.2 y bloque de comandos", "nota": "14 comportamientos.", "ref": "", "orden": 52, "id": "152-falta-3"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Generador de mobs nuevo y vagoneta con generador", "nota": "", "ref": "", "orden": 53, "id": "152-falta-4"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Cuero teñido y caldero con lava", "nota": "", "ref": "", "orden": 54, "id": "152-falta-5"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Encantamientos: Espinas y libros en la mesa", "nota": "", "ref": "", "orden": 55, "id": "152-falta-6"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Mapas: zoom, escala y marcadores en marcos", "nota": "", "ref": "", "orden": 56, "id": "152-falta-7"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Superplano personalizable", "nota": "", "ref": "", "orden": 57, "id": "152-falta-8"}, {"version": "1.5.2", "estado": "falta", "area": "Plan 69", "nombre": "Combate: mensajes de muerte, flechas de fuego, explosiones", "nota": "", "ref": "", "orden": 58, "id": "152-falta-9"}, {"version": "1.5.2", "estado": "por_probar", "area": "Faro", "nombre": "Faro: cobra el pago como en Java", "nota": "Arreglado (encargo 92): solo confirma con lingote/esmeralda/diamante y lo gasta; cancelar devuelve el objeto; cambiar de efecto vuelve a cobrar; se guarda al recargar; el jugador 2 cierra solo su pantalla.", "ref": "92", "orden": 45, "id": "152-faro"}, {"version": "1.5.2", "estado": "aparcado", "area": "Pantalla partida", "nombre": "Jugador 2: cruceta fija", "nota": "Para después.", "ref": "", "orden": 47, "id": "152-j2-cruceta"}, {"version": "1.5.2", "estado": "por_probar", "area": "1.5.2", "nombre": "Libros encantados y libros escritos «Página 1 de 5»", "nota": "Del plan 69.", "ref": "", "orden": 43, "id": "152-libros"}, {"version": "1.5.2", "estado": "por_probar", "area": "1.5.2", "nombre": "Marco de objetos: poner y girar", "nota": "Del plan 69.", "ref": "", "orden": 42, "id": "152-marco"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Redstone 1.5.2: tolva, soltador, comparador de luz, placas de peso, raíl activador", "nota": "Confirmado.", "ref": "", "orden": 22, "id": "152-ok-0"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Vagonetas 1.5.2 y raíl activador", "nota": "", "ref": "", "orden": 23, "id": "152-ok-1"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Cabaña de bruja de la semilla y sonidos de bruja y aldeano", "nota": "", "ref": "", "orden": 32, "id": "152-ok-10"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Cielo, sol, luna, nubes y niebla a ~60 fps", "nota": "Referencia de rendimiento: mediana 59,9 fps.", "ref": "", "orden": 33, "id": "152-ok-11"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Redstone con los ticks por chunk", "nota": "", "ref": "", "orden": 34, "id": "152-ok-12"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Reloj animado y collar del lobo", "nota": "", "ref": "", "orden": 35, "id": "152-ok-13"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Gráficos → Avanzado en el menú Legacy", "nota": "", "ref": "", "orden": 36, "id": "152-ok-14"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Selector de skins estilo LCE (carrusel 3D)", "nota": "", "ref": "", "orden": 37, "id": "152-ok-15"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Wither: invocación, barra de jefe, escudo, estrella", "nota": "«Perfecto».", "ref": "", "orden": 38, "id": "152-ok-16"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Logros recortados y con desplazamiento", "nota": "", "ref": "", "orden": 39, "id": "152-ok-17"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Crear mundo y texto «Minecraft 1.5.2»", "nota": "", "ref": "", "orden": 40, "id": "152-ok-18"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Templos del desierto y la jungla, cofre extra, biomas grandes", "nota": "", "ref": "", "orden": 24, "id": "152-ok-2"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Esqueleto Wither, corazones negros, pigman", "nota": "", "ref": "", "orden": 25, "id": "152-ok-3"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Pociones", "nota": "", "ref": "", "orden": 26, "id": "152-ok-4"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Mapa (dibuja)", "nota": "", "ref": "", "orden": 27, "id": "152-ok-5"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Cuarzo del Nether y cofre trampa", "nota": "", "ref": "", "orden": 28, "id": "152-ok-6"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Creativo con 12 pestañas", "nota": "El creativo no se toca.", "ref": "", "orden": 29, "id": "152-ok-7"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Yunque: nombre y resultado", "nota": "", "ref": "", "orden": 30, "id": "152-ok-8"}, {"version": "1.5.2", "estado": "probado", "area": "1.5.2", "nombre": "Aldeanos: comercio (Java y Legacy) y aldea del desierto", "nota": "Encargo 72.", "ref": "", "orden": 31, "id": "152-ok-9"}, {"version": "1.5.2", "estado": "aparcado", "area": "Portales", "nombre": "Mobs y objetos cruzan los portales", "nota": "Hecho por agy (86), sin auditar: escribe en regiones de la otra dimensión.", "ref": "86", "orden": 46, "id": "152-portales"}, {"version": "1.5.2", "estado": "falta", "area": "Ramas", "nombre": "Pasar port152-erluza a la rama buena (port152-claude)", "nota": "Cuando todo lo de arriba esté probado.", "ref": "", "orden": 72, "id": "152-rama-buena"}, {"version": "1.5.2", "estado": "por_probar", "area": "Rendimiento", "nombre": "134 vagonetas con TNT sin bajar a 4 fps ni colgarse", "nota": "Arreglado (encargo 91): 134 vagonetas paradas pasan de 38-98 ms a 9 ms por tick; la explosión de 783 ms a ~20 ms y sin fuga de memoria; la cadena de 134 explota en 3 s sin colgarse; si falta memoria vuelve al menú en vez de colgarse. Probar: 130+ vagonetas TNT juntas y detonarlas.", "ref": "91", "orden": 2, "id": "152-vagonetas-tnt"}, {"version": "1.5.2", "estado": "falta", "area": "Wither", "nombre": "Wither con menos tirones", "nota": "Limitar búsquedas de camino, luz de la explosión una vez.", "ref": "83", "orden": 48, "id": "152-wither-tirones"}, {"version": "1.5.2", "estado": "por_probar", "area": "1.5.2", "nombre": "Yunque: coste de XP con número", "nota": "Del plan 69.", "ref": "", "orden": 44, "id": "152-yunque-xp"}, {"version": "ambas", "estado": "probado", "area": "Mando", "nombre": "Agacharse con interruptor", "nota": "Confirmado 20-11.", "ref": "84", "orden": 16, "id": "agacharse"}, {"version": "ambas", "estado": "por_probar", "area": "Gráficos", "nombre": "Cofre centrado en la mano, inventario y vagoneta", "nota": "1.2.5: bien; el cofre se ve un poco bajo en vertical (detalle).", "ref": "89", "orden": 13, "estado_125": "probado", "id": "cofre-mano"}, {"version": "ambas", "estado": "probado", "area": "Mando", "nombre": "Stick con icono y reasignable tras Restablecer", "nota": "Confirmado 20-11.", "ref": "89", "orden": 12, "id": "controles-stick"}, {"version": "ambas", "estado": "por_probar", "area": "Arreglos", "nombre": "Cuelgue al entrar a un mundo tras apagar la Xbox", "nota": "No se repitió con el log escuchando. Si vuelve: avisar con el log encendido.", "ref": "", "orden": 20, "estado_125": "probado", "id": "cuelgue-mundo"}, {"version": "ambas", "estado": "por_probar", "area": "Arreglos", "nombre": "Borde del mundo limitado sin quedarse pegado", "nota": "1.2.5 probado: Legacy 864x864 (X/Z de -432 a 431) y Antiguo 256x256 (de -128 a 127), bordes y esquinas sin crash.", "ref": "87", "orden": 4, "estado_125": "probado", "id": "erluza-borde"}, {"version": "ambas", "estado": "por_probar", "area": "Arreglos", "nombre": "Cofres y hornos se guardan al descargar el chunk", "nota": "Cambiar un cofre, alejarse y volver.", "ref": "87", "orden": 3, "estado_125": "probado", "id": "erluza-chunks"}, {"version": "ambas", "estado": "por_probar", "area": "Arreglos", "nombre": "Volver del End al mundo normal", "nota": "Antes caías enterrado en 100,50,0; ahora en tu punto de inicio. Entrada centrada en la obsidiana.", "ref": "87", "orden": 0, "estado_125": "probado", "id": "erluza-end"}, {"version": "ambas", "estado": "probado", "area": "Rendimiento", "nombre": "Pistones en cadena", "nota": "Confirmado 19-11.", "ref": "87", "orden": 2, "id": "erluza-pistones"}, {"version": "ambas", "estado": "probado", "area": "Rendimiento", "nombre": "TNT en cadena sin tirones", "nota": "Confirmado 19-11.", "ref": "87", "orden": 1, "id": "erluza-tnt"}, {"version": "ambas", "estado": "por_probar", "area": "Rendimiento", "nombre": "Vagonetas y explosiones más ligeras; no colgarse sin memoria", "nota": "Encargo 91 (también en 1.2.5): colisiones entre vagonetas, explosiones de TNT/creeper y recuperación si se acaba la memoria. Claude añadió que un chunk sin guardar no se descarga aunque falte memoria.", "ref": "91", "orden": 3, "id": "explosiones-memoria"}, {"version": "ambas", "estado": "por_probar", "area": "Opciones", "nombre": "Hielo opaco", "nota": "Cambia al momento entre transparente y sólido.", "ref": "87/88", "orden": 8, "estado_125": "probado", "id": "hielo"}, {"version": "ambas", "estado": "probado", "area": "Rendimiento", "nombre": "Hojas en Detallado sin caras entre hojas (erluza)", "nota": "Se queda activo, sin opción (decisión del usuario).", "ref": "87", "orden": 6, "id": "hojas"}, {"version": "ambas", "estado": "por_probar", "area": "HUD", "nombre": "Icono de guardado (cofre con flecha) en la esquina superior al autoguardar (como la LCE)", "nota": "Hecho por Claude. Visto en consola: el cofre sale; la flecha salía debajo → arreglado (b726226/b73c465, flecha encima bajando a la tapa), subido 21-11. Falta confirmar.", "ref": "Claude", "orden": 7, "id": "icono-guardado"}, {"version": "ambas", "estado": "por_probar", "area": "Interfaz", "nombre": "Logros: el cursor se ve encima de un logro", "nota": "Arreglado (encargo 90): el cursor se dibuja encima del logro y de su ventana de información.", "ref": "90", "orden": 15, "estado_125": "probado", "id": "logros-cursor"}, {"version": "ambas", "estado": "probado", "area": "Mando", "nombre": "Mantener A coge de 1 en 1", "nota": "Confirmado en las dos.", "ref": "85", "orden": 17, "id": "mantener-a"}, {"version": "ambas", "estado": "por_probar", "area": "Rendimiento", "nombre": "Mobs tapados: solo se ocultan 6+ bloques por debajo", "nota": "La vaca detrás de una colina ya no desaparece. Documentado en docs/XBOX_PORT.md (encargo 90).", "ref": "87", "orden": 5, "id": "mobs-ocultos"}, {"version": "ambas", "estado": "por_probar", "area": "Gráficos", "nombre": "Niebla del Nether", "nota": "agy midió las dos versiones en el Nether y salen idénticas (mismo código, mismos valores). Si en la consola se ven distintas, mirar Niebla, Distancia e Inicio de niebla en Vídeo de cada versión.", "ref": "88/90", "orden": 10, "estado_125": "probado", "id": "niebla-nether"}, {"version": "ambas", "estado": "probado", "area": "Opciones", "nombre": "Mismas opciones en las dos versiones", "nota": "Avanzado en 1.2.5; Pocket, Hielo y Zona segura en la página 1.", "ref": "88", "orden": 11, "id": "opciones-iguales"}, {"version": "ambas", "estado": "por_probar", "area": "Texturas", "nombre": "Pack de texturas LCE: partículas del cofre de madera y fuego/portal/agua/lava bien", "nota": "1.2.5: cofre, fuego y agua bien; la lava salía roja plana: arreglado (fdd2911 / 0db2440), subido a la consola. Falta confirmar.", "ref": "90", "orden": 14, "estado_125": "por_probar", "id": "pack-lce"}, {"version": "ambas", "estado": "falta", "area": "HUD", "nombre": "Personaje animado arriba a la izquierda al agacharse, correr o volar (como la LCE)", "nota": "Encargo 96 para agy, después del 95. Aún no hecho (por eso no sale). Referencia: Gui.cpp de la LCE.", "ref": "96", "orden": 6, "id": "personaje-hud"}, {"version": "ambas", "estado": "por_probar", "area": "Opciones", "nombre": "Optimizaciones Pocket", "nota": "Apagada por defecto; mirar si sube fps al activarla.", "ref": "87/88", "orden": 7, "estado_125": "probado", "id": "pocket"}, {"version": "ambas", "estado": "probado", "area": "Redstone", "nombre": "Reloj de redstone", "nota": "Confirmado 19-11.", "ref": "", "orden": 21, "id": "redstone-reloj"}, {"version": "ambas", "estado": "probado", "area": "Skins", "nombre": "Skins de Halo, Mass Effect y Skyrim", "nota": "«Perfectas».", "ref": "85", "orden": 18, "id": "skins-packs"}, {"version": "ambas", "estado": "por_probar", "area": "Interfaz", "nombre": "Frase «I love weed smoke everyday» en el menú", "nota": "Sale al azar en el menú principal.", "ref": "", "orden": 19, "id": "splash"}, {"version": "ambas", "estado": "probado", "area": "Interfaz", "nombre": "Zona segura del HUD (720p)", "nota": "«Perfecto». 4 % por defecto.", "ref": "88", "orden": 9, "id": "zona-segura"}], "meta": {"actualizado": "21-11-2026 12:35", "agy": "encargo 95 (reloj y dragón 1.2.5) retomado; luego 96 (personaje animado)", "nota": "Subido a la consola 21-11: icono de guardado con la flecha arreglada, lava LCE y crash del End (1.2.5), fuegos artificiales (1.5.2)."}}</script>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>OptiCraft <span>Xbox</span> · estado</h1>
+      <p class="sub">Todo lo que está hecho, probado en la consola, en marcha o por hacer, en la 1.5.2 y la 1.2.5. Claude lo va actualizando (fichero local: buzon-xbox\ESTADO-OPTICRAFT.html).</p>
+    </div>
+    <div class="stamp" id="stamp">Cargando…</div>
+  </header>
+
+  <div class="note" id="note"></div>
+
+  <section class="versions" id="versions" aria-label="Versiones"></section>
+
+  <div class="filters" role="group" aria-label="Filtrar por estado">
+    <label>Mostrar</label>
+    <button class="chip" data-f="todo" aria-pressed="true">Todo</button>
+    <button class="chip" data-f="pendiente" aria-pressed="false">Pendiente (probar, falla, en marcha, falta)</button>
+    <button class="chip" data-f="probado" aria-pressed="false">Solo probado</button>
+  </div>
+
+  <section class="groups" id="groups" aria-live="polite">
+    <div class="empty">Cargando la lista de tareas…</div>
+  </section>
+</div>
+
+<script>
+const ESTADOS = [
+  ["fallo","Falla"],["en_marcha","En marcha"],["por_probar","Por probar en la consola"],
+  ["falta","Falta crear"],["aparcado","Aparcado"],["probado","Probado en la consola"]
+];
+const NOMBRE = Object.fromEntries(ESTADOS);
+let tareas = [], meta = null, verSel = "1.5.2", filtro = "todo";
+
+function esDe(t, v){ return t.version === v || t.version === "ambas"; }
+function est(t, v){ return t["estado_" + v.replace(/\./g, "")] || t.estado; }
+try { const g = localStorage.getItem("verSel"); if (g === "1.2.5" || g === "1.5.2") verSel = g; } catch (e) {}
+
+function renderVersiones(){
+  const box = document.getElementById("versions");
+  box.textContent = "";
+  for (const v of ["1.5.2","1.2.5"]) {
+    const ts = tareas.filter(t => esDe(t, v));
+    const cuenta = {}; ESTADOS.forEach(([k]) => cuenta[k] = 0);
+    ts.forEach(t => { const e = est(t, v); cuenta[e] = (cuenta[e]||0) + 1; });
+    const total = ts.length || 1;
+    const pct = Math.round(100 * cuenta.probado / total);
+    const b = document.createElement("button");
+    b.className = "ver"; b.type = "button"; b.setAttribute("aria-pressed", String(v === verSel));
+    b.onclick = () => { verSel = v; try { localStorage.setItem("verSel", v); } catch (e) {} render(); };
+    const h = document.createElement("h2");
+    h.innerHTML = `Java ${v} <small>${v === "1.5.2" ? "port152-erluza" : "opti30-erluza"}</small>`;
+    const p = document.createElement("div"); p.className = "pct";
+    p.innerHTML = `${pct}%<em>probado (${cuenta.probado} de ${ts.length})</em>`;
+    const bar = document.createElement("div"); bar.className = "bar";
+    const leg = document.createElement("div"); leg.className = "legend";
+    for (const [k, nombre] of [["probado"],["por_probar"],["en_marcha"],["fallo"],["aparcado"],["falta"]].map(x=>[x[0],NOMBRE[x[0]]])) {
+      if (!cuenta[k]) continue;
+      const i = document.createElement("i"); i.dataset.s = k; i.style.background = "var(--c)";
+      i.style.width = (100 * cuenta[k] / total) + "%"; i.title = `${nombre}: ${cuenta[k]}`; bar.appendChild(i);
+      const s = document.createElement("span"); s.dataset.s = k; s.textContent = `${nombre} ${cuenta[k]}`; leg.appendChild(s);
+    }
+    b.append(h, p, bar, leg); box.appendChild(b);
+  }
+}
+
+function renderLista(){
+  const box = document.getElementById("groups");
+  box.textContent = "";
+  let ts = tareas.filter(t => esDe(t, verSel));
+  if (filtro === "probado") ts = ts.filter(t => est(t, verSel) === "probado");
+  if (filtro === "pendiente") ts = ts.filter(t => est(t, verSel) !== "probado");
+  if (!tareas.length) { box.innerHTML = '<div class="empty">Todavía no hay tareas guardadas. Claude las añade desde el chat.</div>'; return; }
+  const tit = document.createElement("h2"); tit.className = "vertit"; tit.textContent = "Lista de Java " + verSel; box.appendChild(tit);
+  if (!ts.length) { box.insertAdjacentHTML("beforeend", '<div class="empty">Nada en este filtro.</div>'); return; }
+  for (const [k, nombre] of ESTADOS) {
+    const g = ts.filter(t => est(t, verSel) === k).sort((a,b) => (a.orden||0)-(b.orden||0) || a.nombre.localeCompare(b.nombre));
+    if (!g.length) continue;
+    const sec = document.createElement("div"); sec.className = "group"; sec.dataset.s = k;
+    const h = document.createElement("h3");
+    h.innerHTML = `<span class="dot"></span>`; h.append(nombre);
+    const n = document.createElement("span"); n.className = "n"; n.textContent = `${g.length}`; h.appendChild(n);
+    const list = document.createElement("div"); list.className = "list";
+    for (const t of g) {
+      const r = document.createElement("div"); r.className = "row"; r.dataset.s = est(t, verSel);
+      const st = document.createElement("span"); st.className = "stripe";
+      const m = document.createElement("div"); m.className = "main";
+      const nm = document.createElement("div"); nm.className = "name"; nm.textContent = t.nombre;
+      m.appendChild(nm);
+      if (t.nota) { const d = document.createElement("div"); d.className = "desc"; d.textContent = t.nota; m.appendChild(d); }
+      const meta = document.createElement("div"); meta.className = "meta";
+      if (t.version === "ambas") { const v = document.createElement("span"); v.className = "tag v"; v.textContent = "1.2.5 + 1.5.2"; meta.appendChild(v); }
+      if (t.area) { const a = document.createElement("span"); a.className = "tag"; a.textContent = t.area; meta.appendChild(a); }
+      if (t.ref) { const a = document.createElement("span"); a.className = "tag"; a.textContent = t.ref; meta.appendChild(a); }
+      r.append(st, m, meta); list.appendChild(r);
+    }
+    sec.append(h, list); box.appendChild(sec);
+  }
+}
+
+function renderMeta(){
+  const s = document.getElementById("stamp"), n = document.getElementById("note");
+  if (meta) {
+    s.innerHTML = `Actualizado <b></b><br>`;
+    s.querySelector("b").textContent = meta.actualizado || "—";
+    if (meta.agy) s.append("agy: " + meta.agy);
+    n.textContent = meta.nota || ""; n.classList.toggle("show", !!meta.nota);
+  }
+}
+
+function render(){ renderVersiones(); renderLista(); renderMeta(); }
+
+document.querySelectorAll(".chip").forEach(c => c.onclick = () => {
+  filtro = c.dataset.f;
+  document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", String(x === c)));
+  renderLista();
+});
+
+render();
+
+const DATOS = JSON.parse(document.getElementById("datos").textContent);
+tareas = DATOS.tareas; meta = DATOS.meta; render();
+</script>
+
+</body>
+</html>

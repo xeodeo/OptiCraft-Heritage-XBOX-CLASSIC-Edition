@@ -1,0 +1,1 @@
+{"version": "ambas", "estado": "por_probar", "area": "Rendimiento", "nombre": "Vagonetas y explosiones más ligeras; no colgarse sin memoria", "nota": "Encargo 91 (también en 1.2.5): colisiones entre vagonetas, explosiones de TNT/creeper y recuperación si se acaba la memoria. Claude añadió que un chunk sin guardar no se descarga aunque falte memoria.", "ref": "91", "orden": 3}

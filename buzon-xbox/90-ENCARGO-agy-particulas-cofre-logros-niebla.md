@@ -31,11 +31,9 @@ Lo de abajo queda como contexto:
   cursor se dibuje siempre encima de todo, también sobre el tooltip.
 
 ## 3. Niebla del Nether: en 1.2.5 se ve mejor que en 1.5.2
-**ACTUALIZACIÓN DEL USUARIO (20-11):** en la 1.2.5 la niebla del Nether «estaba bien, era muy poca o no había». Mira bien
-si en 1.2.5 la niebla del Nether se aplica de verdad (quizá ni se activa, o el color/densidad la hace casi invisible)
-y deja la 1.5.2 igual que la 1.2.5. Si para eso hay que cambiar algo que sea cuestión de gusto (más o menos niebla),
-que sea una **opción** en las dos interfaces y las dos versiones (p. ej. «Niebla del Nether: Normal / Poca / No»), con el
-valor por defecto = como se ve ahora la 1.2.5.
+**CORRECCIÓN DEL USUARIO (20-11, la última vale):** la niebla del Nether de la **1.2.5 está genial: NO la toques**. La
+1.5.2 tiene que verse **exactamente igual que la 1.2.5**. **Sin opción nueva.** Busca qué difiere en 1.5.2 (color,
+densidad, distancias, cielo/OptiFine) y cópialo de la 1.2.5.
 - El código de `setupFog` del encargo 88 es igual en las dos, pero el usuario ve mejor la 1.2.5. Busca qué difiere en
   1.5.2 (color de niebla `getFogColor`/`calcSunriseSunsetColors`, `fogColor` del proveedor del Nether, brillo, distancia
   de visión por defecto, la niebla «W-friendly» de Xbox, `ofFogStart` por defecto, opciones de cielo de OptiFine...).

@@ -30,3 +30,5 @@
 - [Respaldo del contexto](respaldo-contexto.md) — rama `contexto` en xbox; `sh actualizar-contexto.sh`; push de ramas a xbox (fork da 403)
 - [PS3: SDK listo](ps3-sdk.md) — Minecraft en xboox clasico\ps3 (SDK 3.70 sin instalar, ruta corta MINECR~1); port en otro chat
 - [Subir a la consola por FTP](subir-a-consola-ftp.md) — 192.168.0.3 xbox:xbox, F:\Games\OptiCraft\<versión>
+- [Nunca artifacts](no-artifacts.md) — no publicar Artifacts de claude.ai si no dice "artifact"; HTML = fichero local
+- [Página de estado local](pagina-estado-local.md) — buzon-xbox/ESTADO-OPTICRAFT.html, se regenera con estado/generar.py

@@ -1,13 +1,13 @@
-# Estado actual del proyecto (20-11-2026)
+# Estado actual del proyecto (21-11-2026)
 
 Resumen para empezar un chat nuevo. Contexto de fondo: `00-CONTEXTO.md`. Lo técnico del port: `docs/XBOX_PORT.md`
-(en cada rama). Plan de la 1.5.2: `69-PLAN-COMPLETO-152.md`. Lo más reciente: encargos 87-90 (sección «En marcha»).
+(en cada rama). Plan de la 1.5.2: `69-PLAN-COMPLETO-152.md`. Lo más reciente: sección «21-11» justo abajo; estado de cada cosa en `ESTADO-OPTICRAFT.html`.
 
 ## Ramas y carpetas (20-11)
 | Qué | Rama | Carpeta | Último |
 |---|---|---|---|
-| **1.5.2 en prueba en la consola** (87+88+89) | `port152-erluza` | `wt-152-rend` | `501b40d` (+commit/revert hojas `1c120bb`) |
-| **1.2.5 en prueba en la consola** (87+88+89) | `opti30-erluza` | `wt-opti30` | `410957a` (+commit/revert hojas `a6642bb`) |
+| **1.5.2 en prueba en la consola** (87-94 + Claude) | `port152-erluza` | `wt-152-rend` | `b73c465` |
+| **1.2.5 en prueba en la consola** (87-91 + Claude) | `opti30-erluza` | `wt-opti30` | `d0bff75` (+ 95 de agy SIN commit) |
 | 1.5.2 anterior (base de erluza) | `port152-aldeanos` | `wt-152-pociones` | `ce80a3b` |
 | 1.5.2 buena (confirmada 09-11) | `port152-claude` | `wt-152-codex` | `91b5f42` (+ datos `port152-data`) |
 | 1.2.5 buena / anterior | `xbox-opti-30` / `opti30-cruceta` | — | `a6a19ea` / `fd2d3a0` |
@@ -18,6 +18,23 @@ agy trabaja en `wt-152-rend` y `wt-opti30` (encargo 90). Cuando el usuario confi
 Remotos: `xbox` (del usuario, push aquí), `fork` (403), **`origin` = OptiJuegos (DMCA, no existe): nunca push**,
 `erluza/main` = fork de bolha.dev descargado a mano (`git fetch https://bolha.dev/erluza/OptiCraftHeritage.git main:refs/remotes/erluza/main`).
 Consola por FTP: `192.168.0.3` `xbox:xbox`, juego en `F:\Games\OptiCraft\<versión>` (solo con el dashboard abierto).
+
+## 21-11: dónde estamos
+- **Subido a la consola (21-11 12:2x, XBE de las dos + paks del 20-11 18:55):** 1.2.5 `d0bff75`, 1.5.2 `b73c465`.
+  Incluye: arreglo crash al volver del End en 1.2.5 (`dc0285e`, puntero del dragón de la barra de jefe), lava roja con
+  el pack LCE (fotograma estático se «calienta» 100 ticks: `fdd2911`/`0db2440`), **icono de guardado LCE** (cofre +
+  flecha que baja, arriba a la derecha ~1,6 s en cada autoguardado = cada minuto; `World::lastAutosaveMillis`,
+  `GuiIngame::renderSaveIcon`, PNG `gui/save_chest.png`/`save_arrow.png` en los paks y datos) y en 1.5.2 los fuegos
+  artificiales (encargo 94 `3d283f8`).
+- **Probado por el usuario en 1.2.5 (20-11):** End, cofres/hornos al descargar, Pocket, hielo, niebla Nether, cofre en
+  mano (un poco bajo, vale), logros, chat/stick, ticks por chunk, cuelgue tras apagar, bordes 864 (-432..431) y 256
+  (-128..127). Todo en la experimental; la normal solo necesita prueba corta (misma base, cambia el hilo de chunks).
+- **agy (terminal `term_0ea8d336…`, cuenta con cuota nueva 21-11):** encargo 95 (1.2.5: reloj que no gira + tirones del
+  dragón 100-170 ms/tick) EN MARCHA desde su árbol sin commit en `wt-opti30`. Luego **96**: personaje animado en el
+  HUD al agacharse/correr/volar (LCE `Gui.cpp`), las dos versiones.
+- **Repo erluza (bolha.dev) revisado 20-11** (`f8ab704`): solo novedades de versiones nuevas (comercio, bloques, X-Ray,
+  lanza, luces dinámicas, menú nuevo) y cambios de generación → NO se traen. Nada nuevo de Pocket/PS2 que sirva.
+- Cuidado al hacer commit en `wt-opti30`/`wt-152-rend` mientras agy trabaja: usar `git add <fichero>`, nunca `-a`.
 
 ## Builds en el lanzador (`Downloads\ClassicXboxLoader\downloads\OptiCraft_extracted\`)
 - `OptiCraft\1.5.2\` y `OptiCraft\1.2.5\` (20-11): 4 XBE de cada una del 19-11 18:05 (87+88+89: `501b40d` /

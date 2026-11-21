@@ -1,0 +1,1 @@
+{"version": "1.5.2", "estado": "por_probar", "area": "Faro", "nombre": "Faro: cobra el pago como en Java", "nota": "Arreglado (encargo 92): solo confirma con lingote/esmeralda/diamante y lo gasta; cancelar devuelve el objeto; cambiar de efecto vuelve a cobrar; se guarda al recargar; el jugador 2 cierra solo su pantalla.", "ref": "92", "orden": 45}
