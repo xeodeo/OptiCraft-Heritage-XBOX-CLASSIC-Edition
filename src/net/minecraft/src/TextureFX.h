@@ -12,6 +12,7 @@ public:
 	virtual ~TextureFX() = default;
 
 	virtual void onTick();
+	virtual void onTexturePackChanged(RenderEngine *renderengine);
 	virtual bool isAnimationEnabled() const;
 	virtual void bindImage(RenderEngine *renderengine);
 

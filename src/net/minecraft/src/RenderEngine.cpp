@@ -293,6 +293,58 @@ std::vector<int_t> RenderEngine::readTextureImageData(const std::string &s)
 	}
 }
 
+bool RenderEngine::readTextureImageDataWithSize(const std::string &s, std::vector<int_t> &pixels, int_t &width, int_t &height)
+{
+	pixels.clear();
+	width = 0;
+	height = 0;
+	try
+	{
+		TexturePackBase *selected = texturePack != nullptr ? texturePack->getSelectedTexturePack() : nullptr;
+		if (selected == nullptr)
+			return false;
+		std::unique_ptr<BufferedImage> image = readTextureImage(selected->getResourceAsStream(normalizedTexturePath(s)));
+		if (!image || image->getWidth() <= 0 || image->getHeight() <= 0)
+			return false;
+		width = image->getWidth();
+		height = image->getHeight();
+		pixels = getImagePixelsARGB(image.get());
+		return true;
+	}
+	catch (...)
+	{
+		pixels.clear();
+		width = 0;
+		height = 0;
+		return false;
+	}
+}
+
+bool RenderEngine::readDefaultTextureImageDataWithSize(const std::string &s, std::vector<int_t> &pixels, int_t &width, int_t &height)
+{
+	pixels.clear();
+	width = 0;
+	height = 0;
+	try
+	{
+		TexturePackBase defaultFallback;
+		std::unique_ptr<BufferedImage> image = readTextureImage(defaultFallback.getResourceAsStream(normalizedTexturePath(s)));
+		if (!image || image->getWidth() <= 0 || image->getHeight() <= 0)
+			return false;
+		width = image->getWidth();
+		height = image->getHeight();
+		pixels = getImagePixelsARGB(image.get());
+		return true;
+	}
+	catch (...)
+	{
+		pixels.clear();
+		width = 0;
+		height = 0;
+		return false;
+	}
+}
+
 std::vector<int_t> RenderEngine::getImagePixelsARGB(BufferedImage *bufferedimage)
 {
 	if (bufferedimage == nullptr)
@@ -1891,6 +1943,7 @@ void RenderEngine::refreshTextures()
 			failedTextures[entry.first] = TEXTURE_RETRY_INTERVAL;
 	}
 	field_28151_c.clear();
+	uploadedTextureFxTiles.clear();
 
 	// Texture-pack dependent OptiFine caches must be rebuilt after the base
 	// texture map has been refreshed so their texture IDs and color maps refer
@@ -1906,6 +1959,15 @@ void RenderEngine::refreshTextures()
 	for (const auto &entry : textureMap)
 		TextureResidencyPolicy::afterNamedTextureUpload(
 			entry.second, isDynamicTextureResource(entry.first));
+
+	// Reload pack-dependent dynamic tiles (clock, compass) before the immediate
+	// refresh upload so switching between default and custom/LCE packs updates
+	// their source pixels right away.
+	for (TextureFX *texturefx : textureList)
+	{
+		if (texturefx != nullptr)
+			texturefx->onTexturePackChanged(this);
+	}
 
 	// OptiFine C6 updates dynamic textures at the end of a texture-pack refresh.
 	// This is required while the game is paused: terrain.png has just replaced

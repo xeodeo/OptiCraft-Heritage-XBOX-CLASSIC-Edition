@@ -10,21 +10,57 @@
 TextureWatchFX::TextureWatchFX(Minecraft *minecraft) :
 	TextureFX(Item::pocketSundial->getIconFromDamage(0)),
 	mc(minecraft),
+	frameCount(0),
 	field_94239_h(0.0),
 	field_94240_i(0.0),
 	frameCounter(-1),
 	lastAnaglyph(false)
 {
 	tileImage = 1;
-	if (mc != nullptr && mc->renderEngine != nullptr && mc->renderEngine->hasResource("/textures/items/clock.png"))
+	if (mc != nullptr && mc->renderEngine != nullptr)
+		reloadAssets(mc->renderEngine);
+}
+
+void TextureWatchFX::onTexturePackChanged(RenderEngine *renderengine)
+{
+	reloadAssets(renderengine);
+}
+
+void TextureWatchFX::reloadAssets(RenderEngine *renderengine)
+{
+	clockImageData.clear();
+	frameCount = 0;
+	frameCounter = -1;
+	if (renderengine == nullptr || !renderengine->hasResource("/textures/items/clock.png"))
+		return;
+
+	std::vector<int_t> strip;
+	int_t w = 0, h = 0;
+	if (!renderengine->readTextureImageDataWithSize("/textures/items/clock.png", strip, w, h) ||
+	    w <= 0 || h < w * 2 || (h % w) != 0)
+		return;
+
+	const int_t frames = h / w;
+	clockImageData.resize(static_cast<std::size_t>(frames) * 256u);
+	for (int_t f = 0; f < frames; ++f)
 	{
-		clockImageData = mc->renderEngine->readTextureImageData("/textures/items/clock.png");
+		const int_t baseY = f * w;
+		for (int_t y = 0; y < 16; ++y)
+		{
+			const int_t sy = baseY + y * w / 16;
+			for (int_t x = 0; x < 16; ++x)
+			{
+				const int_t sx = x * w / 16;
+				clockImageData[static_cast<std::size_t>(f) * 256u + static_cast<std::size_t>(y * 16 + x)] =
+					strip[static_cast<std::size_t>(sy) * static_cast<std::size_t>(w) + static_cast<std::size_t>(sx)];
+			}
+		}
 	}
+	frameCount = frames;
 }
 
 void TextureWatchFX::onTick()
 {
-	const int_t frameCount = static_cast<int_t>(clockImageData.size() / 256u);
 	if (frameCount <= 0)
 		return;
 

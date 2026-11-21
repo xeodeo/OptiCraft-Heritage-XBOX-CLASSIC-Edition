@@ -18,6 +18,11 @@ void TextureFX::onTick()
 {
 }
 
+void TextureFX::onTexturePackChanged(RenderEngine *renderengine)
+{
+	(void)renderengine;
+}
+
 bool TextureFX::isAnimationEnabled() const
 {
 	return true;
