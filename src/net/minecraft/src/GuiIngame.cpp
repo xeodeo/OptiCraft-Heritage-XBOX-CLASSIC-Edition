@@ -448,8 +448,9 @@ void GuiIngame::renderSaveIcon(int_t screenWidth, int_t screenHeight)
 	const HudSafeInsets safe = computeHudSafeInsets(mc, screenWidth, screenHeight, true);
 	constexpr int_t size = 24;
 	const int_t x = screenWidth - safe.right - size - 4;
-	const int_t chestY = safe.top + 4 + size / 2;
-	const int_t arrowY = chestY - size / 2 + static_cast<int_t>((since % kDropMs) * (size / 2) / kDropMs);
+	// The arrow drops from above the chest onto its lid, drawn on top of it.
+	const int_t chestY = safe.top + 4 + size;
+	const int_t arrowY = chestY - size + static_cast<int_t>((since % kDropMs) * (size * 2 / 3) / kDropMs);
 
 	auto drawWhole = [&](int_t qx, int_t qy) {
 		Tessellator *tess = &Tessellator::instance;
@@ -464,10 +465,10 @@ void GuiIngame::renderSaveIcon(int_t screenWidth, int_t screenHeight)
 	renderEnable(RenderCapability::Blend);
 	renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
 	renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	renderBindTexture(mc->renderEngine->getTexture("/gui/save_arrow.png"));
-	drawWhole(x, arrowY);
 	renderBindTexture(mc->renderEngine->getTexture("/gui/save_chest.png"));
 	drawWhole(x, chestY);
+	renderBindTexture(mc->renderEngine->getTexture("/gui/save_arrow.png"));
+	drawWhole(x, arrowY);
 	renderBindTexture(mc->renderEngine->getTexture("/gui/icons.png"));
 }
 
