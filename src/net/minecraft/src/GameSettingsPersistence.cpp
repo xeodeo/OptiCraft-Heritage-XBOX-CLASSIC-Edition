@@ -380,6 +380,10 @@ void GameSettings::loadOptions()
 	ofRenderDistanceFine = Config::limit(ofRenderDistanceFine, 32, Config::getMaxRenderDistanceFine());
 	platformGameSettingsFinalizeLoad(*this);
 	PlatformUserSettings::setControllerDeadzone(controllerDeadzone);
+	// The key lookup table was built in setDefaults() with the default codes;
+	// rebuild it from the loaded ones, or a rebound action (e.g. chat on the
+	// D-pad) shows the saved button but never fires after a restart.
+	KeyBinding::resetKeyBindingArrayAndHash();
 	syncKeyBindingsToPlatform();
 	syncControllerBindingsToPlatform();
 
@@ -473,9 +477,6 @@ void GameSettings::saveOptions()
 	std::ostringstream printwriter;
 	printwriter.imbue(std::locale::classic());
 #endif
-	for (const std::string &line : preservedLines)
-		printwriter << line << "\n";
-
 	printwriter << "music:" << musicVolume << "\n";
 	printwriter << "sound:" << soundVolume << "\n";
 	printwriter << "invertYMouse:" << (invertMouse ? "true" : "false") << "\n";
@@ -583,7 +584,38 @@ void GameSettings::saveOptions()
 	printwriter << "ofAnimatedItems:" << (ofAnimatedItems ? "true" : "false") << "\n";
 	printwriter << "ofAnimatedTextures:" << (ofAnimatedTextures ? "true" : "false") << "\n";
 
-	const std::string output = printwriter.str();
+	// Lines kept from the old file go first, but only once each and never one
+	// this writer also emits: a key missing from knownKeys (e.g. dolbyDigital)
+	// used to be both preserved and rewritten, so the file grew on every save.
+	const std::string body = printwriter.str();
+	std::unordered_set<std::string> writtenKeys;
+	{
+		std::size_t start = 0;
+		while (start < body.size())
+		{
+			std::size_t end = body.find('\n', start);
+			if (end == std::string::npos)
+				end = body.size();
+			const std::size_t colon = body.find(':', start);
+			if (colon != std::string::npos && colon < end)
+				writtenKeys.insert(body.substr(start, colon - start));
+			start = end + 1;
+		}
+	}
+	std::string output;
+	std::unordered_set<std::string> preservedKeys;
+	for (const std::string &line : preservedLines)
+	{
+		if (line.empty())
+			continue;
+		const std::size_t colon = line.find(':');
+		const std::string key = colon == std::string::npos ? line : line.substr(0, colon);
+		if (writtenKeys.count(key) != 0 || !preservedKeys.insert(key).second)
+			continue;
+		output += line;
+		output += "\n";
+	}
+	output += body;
 	bool saved = false;
 	if (PlatformStorage::supportsAtomicRename())
 	{
