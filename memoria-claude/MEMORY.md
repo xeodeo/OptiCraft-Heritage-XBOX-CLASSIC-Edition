@@ -10,7 +10,7 @@
 - [Anotar en buzon-xbox](anotar-en-buzon.md) — en tareas largas dejar hallazgos y plan en buzon-xbox/NN.md por si se corta la sesión
 - [agy y OpenCode sin permisos](agy-sin-permisos.md) — agy --dangerously-skip-permissions; OpenCode opencode.json allow; --worktree current
 - [Una compilación a la vez](una-compilacion-a-la-vez.md) — candado buzon-xbox/BUILD.lock antes de compilar o usar xemu (Claude, agy, OpenCode)
-- [Estado actual del proyecto](estado-actual.md) — empezar por buzon-xbox/ESTADO-ACTUAL.md (20-11): ramas de prueba port152-erluza (wt-152-rend) y opti30-erluza (wt-opti30)
+- [Estado actual del proyecto](estado-actual.md) — empezar por buzon-xbox/ESTADO-ACTUAL.md (21-11): ramas de prueba port152-erluza y opti30-erluza; agy en el 95, luego 96
 - [Música como el original](musica-comportamiento-original.md) — en Xbox y PS2 se revierte lo que cambia OptiJuegos, con guarda por plataforma
 - [Datos del juego en worktrees](xbox-data-dir-worktrees.md) — sin -DXBOX_DATA_DIR el ISO sale vacío
 - [RE4 a Xbox](re4-xbox-port.md) — empezar por RE4 port/buzon/COMO-VAMOS.md (pendientes) y TRASPASO-08-10-noche.md; nada commiteado
@@ -32,3 +32,5 @@
 - [Subir a la consola por FTP](subir-a-consola-ftp.md) — 192.168.0.3 xbox:xbox, F:\Games\OptiCraft\<versión>
 - [Nunca artifacts](no-artifacts.md) — no publicar Artifacts de claude.ai si no dice "artifact"; HTML = fichero local
 - [Página de estado local](pagina-estado-local.md) — buzon-xbox/ESTADO-OPTICRAFT.html, se regenera con estado/generar.py
+- [Commit sin -a con agy](commit-sin-a-con-agy.md) — en wt-opti30/wt-152-rend solo git add <fichero>, agy puede tener trabajo a medias
+- [Qué es de cada versión](que-es-de-cada-version.md) — qué existe en 1.2.5 y qué solo en 1.5.2; tamaños de mundo; normal vs exp

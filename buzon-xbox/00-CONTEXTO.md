@@ -230,3 +230,8 @@ Si xemu tiene abierta la ISO, el build enlaza y copia los XBE pero falla al reha
 
 ## 9. Si eres Claude Code
 Tu memoria persistente de este proyecto está en `C:\Users\xeodeo\.claude\projects\C--Users-xeodeo-Desktop-Minecraft-en-xboox-clasico-OptiCraftHeritageEdition\memory\` (índice `MEMORY.md`). Este documento resume lo mismo para las IAs que no la leen. Si cambia algo importante, **actualiza los dos**.
+
+## 21-11
+Estado al día en `ESTADO-ACTUAL.md` (sección «21-11») y `ESTADO-OPTICRAFT.html`. Subido a la consola: 1.2.5 `d0bff75`,
+1.5.2 `b73c465` (arreglo End, lava LCE, icono de guardado LCE, fuegos artificiales). agy en el encargo 95 (reloj y dragón,
+1.2.5) desde su árbol sin commit en `wt-opti30`; luego el 96 (personaje animado en el HUD). Ramas en `xbox`.

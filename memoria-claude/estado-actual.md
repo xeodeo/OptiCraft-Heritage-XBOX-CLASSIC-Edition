@@ -1,6 +1,6 @@
 ---
 name: estado-actual
-description: "Start any session by reading buzon-xbox/ESTADO-ACTUAL.md (20-11): test branches port152-erluza (wt-152-rend) and opti30-erluza (wt-opti30)"
+description: "Start any session by reading buzon-xbox/ESTADO-ACTUAL.md (21-11): test branches port152-erluza (wt-152-rend) and opti30-erluza (wt-opti30)"
 metadata:
   node_type: memory
   type: project
@@ -11,10 +11,11 @@ metadata:
 `Desktop\Minecraft en xboox clasico\buzon-xbox\ESTADO-ACTUAL.md` is the short status file: branches per version,
 builds in the launcher, decisions the user made, what to test and what is next. Header rewritten on 2026-11-20.
 
-As of 2026-11-20: the builds on the console are the `*-erluza` test branches (1.5.2 `port152-erluza` in `wt-152-rend`,
-1.2.5 `opti30-erluza` in `wt-opti30`): fixes from the erluza fork (encargo 87), Nether fog / HUD safe area / same
-options in both versions (88), stick rebind + chest in hand (89). agy is on encargo 90 (LCE texture pack: green chest
-particles and fire; cursor over achievements; Nether fog 1.5.2 like 1.2.5, option if it is a matter of taste).
+As of 2026-11-21: the console runs the `*-erluza` test branches (1.5.2 `port152-erluza` `b73c465` in `wt-152-rend`,
+1.2.5 `opti30-erluza` `d0bff75` in `wt-opti30`), pushed to `xbox`. Encargos 87-94 done (94 = fireworks 1.5.2); Claude
+added the End-return crash fix (1.2.5), LCE lava fix and the LCE autosave icon (both). Most 1.2.5 items confirmed by the
+user. agy: encargo 95 (1.2.5 clock not turning + dragon tick spikes) in progress from its UNCOMMITTED tree in
+`wt-opti30` — commit there only with `git add <file>`, never `-a`; next encargo 96 (LCE animated character in the HUD).
 User decisions: hidden mobs only 6+ blocks below the camera; erluza's leaves culling stays on (no option).
 Once the user confirms: fast-forward `port152-claude` and `xbox-opti-30` to the erluza branches.
 
