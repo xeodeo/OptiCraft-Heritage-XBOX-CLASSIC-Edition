@@ -158,6 +158,8 @@ void XboxCraftingScreen::buildEntries()
         Entry entry;
         entry.recipe = recipe;
         entry.output = recipe->getRecipeOutput();
+        entry.defaultDyeDamage = 1;
+        entry.isFadeStar = false;
         entry.canMake = false;
         entry.missingCells = 0;
         for (int_t i = 0; i < 9; ++i)
@@ -230,7 +232,8 @@ void XboxCraftingScreen::addDynamicFireworkEntries()
         Item::paper == nullptr || Item::gunpowder == nullptr || Item::dyePowder == nullptr)
         return;
 
-    auto pushPreset = [this](ItemStack *output, std::initializer_list<std::pair<int_t, int_t>> cells)
+    auto pushPreset = [this](ItemStack *output, int_t defaultDyeDamage, bool isFadeStar,
+                             std::initializer_list<std::pair<int_t, int_t>> cells)
     {
         if (static_cast<int_t>(cells.size()) > gridSize * gridSize)
         {
@@ -242,6 +245,8 @@ void XboxCraftingScreen::addDynamicFireworkEntries()
         Entry entry;
         entry.recipe = nullptr;
         entry.output = output;
+        entry.defaultDyeDamage = defaultDyeDamage;
+        entry.isFadeStar = isFadeStar;
         entry.canMake = false;
         entry.missingCells = 0;
         for (int_t i = 0; i < 9; ++i)
@@ -323,28 +328,28 @@ void XboxCraftingScreen::addDynamicFireworkEntries()
     const int_t idDye = Item::dyePowder->shiftedIndex;
 
     // Firework Rocket presets (flight 1-3, with and without star)
-    pushPreset(makeRocketPreview(1, false), { { idPaper, 0 }, { idGunpowder, 0 } });
-    pushPreset(makeRocketPreview(2, false), { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 } });
-    pushPreset(makeRocketPreview(3, false), { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 } });
-    pushPreset(makeRocketPreview(1, true),  { { idPaper, 0 }, { idGunpowder, 0 }, { idStar, -1 } });
-    pushPreset(makeRocketPreview(2, true),  { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idStar, -1 } });
-    pushPreset(makeRocketPreview(3, true),  { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idStar, -1 } });
+    pushPreset(makeRocketPreview(1, false), 1, false, { { idPaper, 0 }, { idGunpowder, 0 } });
+    pushPreset(makeRocketPreview(2, false), 1, false, { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 } });
+    pushPreset(makeRocketPreview(3, false), 1, false, { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 } });
+    pushPreset(makeRocketPreview(1, true),  1, false, { { idPaper, 0 }, { idGunpowder, 0 }, { idStar, -1 } });
+    pushPreset(makeRocketPreview(2, true),  1, false, { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idStar, -1 } });
+    pushPreset(makeRocketPreview(3, true),  1, false, { { idPaper, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idGunpowder, 0 }, { idStar, -1 } });
 
     // Firework Star presets (all 5 shapes + twinkle + trail + fade; dye uses wildcard -1 so any dye in inventory works)
-    pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[1],  false, false, -1), { { idGunpowder, 0 }, { idDye, -1 } });
+    pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[1],  false, false, -1), 1,  false, { { idGunpowder, 0 }, { idDye, -1 } });
     if (Item::fireballCharge != nullptr)
-        pushPreset(makeStarPreview(1, ItemDye::worldChunkManager[14], false, false, -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::fireballCharge->shiftedIndex, 0 } });
+        pushPreset(makeStarPreview(1, ItemDye::worldChunkManager[14], false, false, -1), 14, false, { { idGunpowder, 0 }, { idDye, -1 }, { Item::fireballCharge->shiftedIndex, 0 } });
     if (Item::goldNugget != nullptr)
-        pushPreset(makeStarPreview(2, ItemDye::worldChunkManager[11], false, false, -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::goldNugget->shiftedIndex, 0 } });
+        pushPreset(makeStarPreview(2, ItemDye::worldChunkManager[11], false, false, -1), 11, false, { { idGunpowder, 0 }, { idDye, -1 }, { Item::goldNugget->shiftedIndex, 0 } });
     if (Item::skull != nullptr)
-        pushPreset(makeStarPreview(3, ItemDye::worldChunkManager[10], false, false, -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::skull->shiftedIndex, -1 } });
+        pushPreset(makeStarPreview(3, ItemDye::worldChunkManager[10], false, false, -1), 10, false, { { idGunpowder, 0 }, { idDye, -1 }, { Item::skull->shiftedIndex, -1 } });
     if (Item::feather != nullptr)
-        pushPreset(makeStarPreview(4, ItemDye::worldChunkManager[12], false, false, -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::feather->shiftedIndex, 0 } });
+        pushPreset(makeStarPreview(4, ItemDye::worldChunkManager[12], false, false, -1), 12, false, { { idGunpowder, 0 }, { idDye, -1 }, { Item::feather->shiftedIndex, 0 } });
     if (Item::lightStoneDust != nullptr)
-        pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[15], true,  false, -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::lightStoneDust->shiftedIndex, 0 } });
+        pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[15], true,  false, -1), 15, false, { { idGunpowder, 0 }, { idDye, -1 }, { Item::lightStoneDust->shiftedIndex, 0 } });
     if (Item::diamond != nullptr)
-        pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[6],  false, true,  -1), { { idGunpowder, 0 }, { idDye, -1 }, { Item::diamond->shiftedIndex, 0 } });
-    pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[13], false, false, ItemDye::worldChunkManager[11]), { { idStar, -1 }, { idDye, -1 } });
+        pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[6],  false, true,  -1), 6,  false, { { idGunpowder, 0 }, { idDye, -1 }, { Item::diamond->shiftedIndex, 0 } });
+    pushPreset(makeStarPreview(0, ItemDye::worldChunkManager[13], false, false, ItemDye::worldChunkManager[11]), 11, true, { { idStar, -1 }, { idDye, -1 } });
 }
 
 void XboxCraftingScreen::buildColumns()
@@ -399,6 +404,134 @@ int_t XboxCraftingScreen::countInInventory(int_t id, int_t damage) const
     return total;
 }
 
+ItemStack *XboxCraftingScreen::firstInventoryStack(int_t id, int_t damage) const
+{
+    if (inventorySlots == nullptr)
+        return nullptr;
+    const int_t count = static_cast<int_t>(inventorySlots->slots.size());
+    for (int_t slot = count - INVENTORY_SLOTS; slot < count; ++slot)
+    {
+        if (slot < 0)
+            continue;
+        ItemStack *stack = inventorySlots->slots[slot]->getStack();
+        if (stackMatches(stack, id, damage))
+            return stack;
+    }
+    return nullptr;
+}
+
+int_t XboxCraftingScreen::firstMatchingDyeDamage(int_t fallbackDamage) const
+{
+    if (Item::dyePowder != nullptr)
+    {
+        ItemStack *dye = firstInventoryStack(Item::dyePowder->shiftedIndex, -1);
+        if (dye != nullptr)
+        {
+            const int_t dmg = dye->getItemDamage();
+            if (dmg >= 0 && dmg < 16)
+                return dmg;
+        }
+    }
+    return (fallbackDamage >= 0 && fallbackDamage < 16) ? fallbackDamage : 1;
+}
+
+ItemStack *XboxCraftingScreen::displayStackFor(const Entry *entry, int_t id, int_t damage)
+{
+    if (damage == -1)
+    {
+        if (Item::dyePowder != nullptr && id == Item::dyePowder->shiftedIndex)
+        {
+            const int_t fallback = entry != nullptr ? entry->defaultDyeDamage : 1;
+            return iconStack(id, firstMatchingDyeDamage(fallback));
+        }
+        if (Item::fireworkCharge != nullptr && id == Item::fireworkCharge->shiftedIndex)
+        {
+            ItemStack *invStar = firstInventoryStack(id, -1);
+            if (invStar != nullptr)
+                return invStar;
+            // Fallback preview star with a vivid color (avoid plain grey untinted charge).
+            for (const Entry &e : entries)
+            {
+                if (e.output != nullptr && e.output->itemID == id && !e.isFadeStar)
+                    return e.output;
+            }
+        }
+    }
+    return iconStack(id, damage);
+}
+
+void XboxCraftingScreen::refreshFireworkPreviews()
+{
+    if (Item::firework == nullptr || Item::fireworkCharge == nullptr || Item::dyePowder == nullptr)
+        return;
+
+    ItemStack *invStar = firstInventoryStack(Item::fireworkCharge->shiftedIndex, -1);
+    NBTTagCompound *invStarExp = nullptr;
+    if (invStar != nullptr && invStar->hasTagCompound() && invStar->getTagCompound()->hasKey("Explosion"))
+        invStarExp = invStar->getTagCompound()->getCompoundTag("Explosion");
+
+    for (Entry &entry : entries)
+    {
+        if (entry.recipe != nullptr || entry.output == nullptr || !entry.output->hasTagCompound())
+            continue;
+
+        if (entry.output->itemID == Item::fireworkCharge->shiftedIndex)
+        {
+            NBTTagCompound *root = entry.output->getTagCompound();
+            if (root == nullptr || !root->hasKey("Explosion"))
+                continue;
+            NBTTagCompound *exp = root->getCompoundTag("Explosion");
+            if (exp == nullptr)
+                continue;
+
+            const int_t dyeDmg = firstMatchingDyeDamage(entry.defaultDyeDamage);
+            const int_t dyeRgb = ItemDye::worldChunkManager[dyeDmg];
+            if (entry.isFadeStar)
+            {
+                if (invStarExp != nullptr)
+                {
+                    const std::vector<int_t> baseColors = invStarExp->getIntArray("Colors");
+                    if (!baseColors.empty())
+                        exp->setIntArray("Colors", baseColors);
+                    exp->setByte("Type", invStarExp->getByte("Type"));
+                }
+                else
+                {
+                    exp->setIntArray("Colors", { ItemDye::worldChunkManager[13] });
+                }
+                exp->setIntArray("FadeColors", { dyeRgb });
+            }
+            else
+            {
+                exp->setIntArray("Colors", { dyeRgb });
+            }
+        }
+        else if (entry.output->itemID == Item::firework->shiftedIndex)
+        {
+            NBTTagCompound *root = entry.output->getTagCompound();
+            if (root == nullptr || !root->hasKey("Fireworks"))
+                continue;
+            NBTTagCompound *fw = root->getCompoundTag("Fireworks");
+            if (fw == nullptr || !fw->hasKey("Explosions"))
+                continue;
+
+            NBTTagList *list = new NBTTagList("Explosions");
+            if (invStarExp != nullptr)
+            {
+                list->appendTag(invStarExp->copy());
+            }
+            else
+            {
+                NBTTagCompound *exp = new NBTTagCompound();
+                exp->setByte("Type", 0);
+                exp->setIntArray("Colors", { ItemDye::worldChunkManager[firstMatchingDyeDamage(1)] });
+                list->appendTag(exp);
+            }
+            fw->setTag("Explosions", list);
+        }
+    }
+}
+
 unsigned int XboxCraftingScreen::inventorySignature() const
 {
     unsigned int hash = 2166136261u;
@@ -420,6 +553,7 @@ void XboxCraftingScreen::refreshAvailability()
     if (signature == lastSignature)
         return;
     lastSignature = signature;
+    refreshFireworkPreviews();
 
     for (const Column &col : columns)
     {
@@ -960,7 +1094,7 @@ void XboxCraftingScreen::drawScreen(int_t, int_t, float_t)
         {
             if (entry->cellId[cell] == 0)
                 continue;
-            drawItem(iconStack(entry->cellId[cell], entry->cellDamage[cell]),
+            drawItem(displayStackFor(entry, entry->cellId[cell], entry->cellDamage[cell]),
                 sc.x(L.gridX + (cell % gridSize) * L.gridStep) + cellInset,
                 sc.y(L.gridY + (cell / gridSize) * L.gridStep) + cellInset, cellItem, false);
         }
@@ -981,7 +1115,7 @@ void XboxCraftingScreen::drawScreen(int_t, int_t, float_t)
     else if (entry != nullptr)
     {
         for (int_t j = 0; j < static_cast<int_t>(entry->needs.size()) && j < 4; ++j)
-            drawItem(iconStack(entry->needs[j].id, entry->needs[j].damage), sc.x(L.ingX) + smallInset,
+            drawItem(displayStackFor(entry, entry->needs[j].id, entry->needs[j].damage), sc.x(L.ingX) + smallInset,
                 sc.y(L.ingY + j * 36) + smallInset, smallItem, false);
     }
 
@@ -1043,7 +1177,7 @@ void XboxCraftingScreen::drawScreen(int_t, int_t, float_t)
         {
             const Ingredient &need = entry->needs[j];
             const int_t have = countInInventory(need.id, need.damage);
-            const std::vector<std::string> needInfo = iconStack(need.id, need.damage)->getItemNameandInformation();
+            const std::vector<std::string> needInfo = displayStackFor(entry, need.id, need.damage)->getItemNameandInformation();
             const std::string line = std::to_string(need.count) + " x " + (needInfo.empty() ? std::string() : needInfo[0]);
             const int_t tx = sc.x(L.ingX + 40);
             fontRenderer->drawString(fontRenderer->trimStringToWidth(line, sc.x(L.rightX1 - 8) - tx), tx,

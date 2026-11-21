@@ -49,9 +49,9 @@ protected:
 	void dropRareDrop(int_t lootingRoll) override;
 	void convertToVillager();
 	int_t getConversionTimeBoost();
+	ItemStack *heldItemInstance;
 
 private:
 	int_t conversionTime;
-	ItemStack *heldItemInstance;
 	bool canPickUpLoot;
 };

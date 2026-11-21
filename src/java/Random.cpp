@@ -2,6 +2,9 @@
 #include "java/Arithmetic.h"
 #include "java/Math.h"
 #include "platform/PlatformConfig.h"
+#if defined(XBOX_PLATFORM)
+#include "platform/Log.h"
+#endif
 
 #include <atomic>
 #include <chrono>
@@ -125,7 +128,15 @@ int_t Random::nextInt()
 int_t Random::nextInt(int_t bound)
 {
 	if (bound <= 0)
+	{
+#if defined(XBOX_PLATFORM)
+		MC_LOG_ERROR("random", "Random::nextInt called with non-positive bound=%d; returning 0\n",
+			static_cast<int>(bound));
+		return 0;
+#else
 		throw std::invalid_argument("bound must be positive");
+#endif
+	}
 
 	const int_t m = bound - 1;
 	int_t r = next(31);

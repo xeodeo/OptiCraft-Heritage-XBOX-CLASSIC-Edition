@@ -94,7 +94,9 @@ void EntityFireworkStarterFX::onUpdate()
     if ((fireworkAge % 2) == 0 && !explosions.empty() &&
         static_cast<size_t>(fireworkAge / 2) < explosions.size())
     {
-        const ExplosionDef &def = explosions[static_cast<size_t>(fireworkAge / 2)];
+        // Copy by value so spark emission cannot invalidate references if the
+        // particle layer mutates during addEffect().
+        const ExplosionDef def = explosions[static_cast<size_t>(fireworkAge / 2)];
 
         if (def.type == 1)
         {
@@ -183,13 +185,15 @@ void EntityFireworkStarterFX::createParticle(double x, double y, double z,
     EntityFireworkSparkFX *spark = new EntityFireworkSparkFX(worldObj, x, y, z, vx, vy, vz, effectRenderer);
     spark->setTrail(hasTrail);
     spark->setTwinkle(hasTwinkle);
-    const int_t color = colors.empty()
+    const int_t colorCount = static_cast<int_t>(colors.size());
+    const int_t color = colorCount <= 0
         ? 0xFFFFFF
-        : colors[static_cast<size_t>(rand.nextInt(static_cast<int_t>(colors.size())))];
+        : colors[static_cast<size_t>(rand.nextInt(colorCount))];
     spark->setColour(color);
-    if (!fadeColors.empty())
+    const int_t fadeCount = static_cast<int_t>(fadeColors.size());
+    if (fadeCount > 0)
     {
-        spark->setFadeColour(fadeColors[static_cast<size_t>(rand.nextInt(static_cast<int_t>(fadeColors.size())))]);
+        spark->setFadeColour(fadeColors[static_cast<size_t>(rand.nextInt(fadeCount))]);
     }
     effectRenderer->addEffect(spark);
 }

@@ -77,8 +77,30 @@ void EntityCreature::updatePlayerActionState()
 	}
 	else
 	{
-		pathToEntity.reset(worldObj->getPathEntityToEntity(
-			this, playerToAttack, searchRange, true, false, false, true));
+		PathEntity *newPath = worldObj->getPathEntityToEntity(
+			this, playerToAttack, searchRange, true, false, false, true);
+		if (newPath == nullptr && pathToEntity == nullptr)
+		{
+			// Angry mobs alerted at > 16 blocks (e.g. Zombie Pigmen within 32 blocks)
+			// exceed the 16-block A* range: step toward an intermediate waypoint within
+			// range so the whole group actually charges instead of stalling.
+			const double dx = playerToAttack->posX - posX;
+			const double dy = playerToAttack->boundingBox->minY - boundingBox->minY;
+			const double dz = playerToAttack->posZ - posZ;
+			const double distSq = dx * dx + dy * dy + dz * dz;
+			if (distSq > static_cast<double>(searchRange * searchRange) && distSq <= 36.0 * 36.0)
+			{
+				const double dist = std::sqrt(distSq);
+				const double step = static_cast<double>(searchRange - 2.0f) / dist;
+				const int_t wx = MathHelper::floor_double(posX + dx * step);
+				const int_t wy = MathHelper::floor_double(boundingBox->minY + dy * step);
+				const int_t wz = MathHelper::floor_double(posZ + dz * step);
+				newPath = worldObj->getEntityPathToXYZ(this, wx, wy, wz, searchRange, true, false, false, true);
+			}
+		}
+		// Keep an existing chase path if the per-tick pathfind budget returned nullptr.
+		if (newPath != nullptr)
+			pathToEntity.reset(newPath);
 	}
 
 	const int_t currentY = MathHelper::floor_double(boundingBox->minY + 0.5);

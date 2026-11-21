@@ -256,6 +256,8 @@ void RenderItem::drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* rende
         renderPopMatrix();
     } else if (item->func_46058_c()) {
         renderDisable(RenderCapability::Lighting);
+        renderEnable(RenderCapability::AlphaTest);
+        renderAlphaFunc(RenderCompare::Greater, 0.1f);
         renderengine->bindTexture(renderengine->getTexture("/gui/items.png"));
         for (int renderPass = 0; renderPass <= 1; ++renderPass) {
             const int icon = item->func_46057_a(j, renderPass);
@@ -274,6 +276,8 @@ void RenderItem::drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* rende
         renderEnable(RenderCapability::Lighting);
     } else if (k >= 0) {
         renderDisable(RenderCapability::Lighting);
+        renderEnable(RenderCapability::AlphaTest);
+        renderAlphaFunc(RenderCompare::Greater, 0.1f);
         if (i < 256 && (Block::blocksList[i] == nullptr || Block::blocksList[i]->getItemIconName() == nullptr)) {
             renderengine->bindTexture(renderengine->getTexture("/terrain.png"));
         } else {

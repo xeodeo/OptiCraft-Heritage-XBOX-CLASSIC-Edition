@@ -39,6 +39,7 @@ public:
 	                            float f1, float f2, float f3,
 	                            float f4, float f5);
 	virtual int_t getFXLayer();
+	virtual bool canBeEvicted() const { return true; }
 
 	void writeEntityToNBT(NBTTagCompound *nbttagcompound) override;
 	void readEntityFromNBT(NBTTagCompound *nbttagcompound) override;

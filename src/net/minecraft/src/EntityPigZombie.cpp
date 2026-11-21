@@ -47,6 +47,25 @@ bool EntityPigZombie::getCanSpawnHere()
 	return worldObj->difficultySetting > 0 && worldObj->checkIfAABBIsClear(boundingBox) && worldObj->getCollidingBoundingBoxes(this, boundingBox).size() == 0 && !worldObj->getIsAnyLiquid(boundingBox);
 }
 
+void EntityPigZombie::initCreature()
+{
+	EntityZombie::initCreature();
+	// Java 1.5.2 EntityPigZombie.initCreature(): pigmen are never zombie
+	// villagers and do not inherit zombie iron swords/shovels.
+	setVillager(false);
+	if (heldItemInstance != nullptr)
+	{
+		delete heldItemInstance;
+		heldItemInstance = nullptr;
+	}
+}
+
+bool EntityPigZombie::interact(EntityPlayer *entityPlayer)
+{
+	(void)entityPlayer;
+	return false;
+}
+
 void EntityPigZombie::writeEntityToNBT(NBTTagCompound *nbttagcompound)
 {
 	EntityZombie::writeEntityToNBT(nbttagcompound);
@@ -56,6 +75,8 @@ void EntityPigZombie::writeEntityToNBT(NBTTagCompound *nbttagcompound)
 void EntityPigZombie::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 {
 	EntityZombie::readEntityFromNBT(nbttagcompound);
+	// Guard against worlds where a pigman was previously saved with IsVillager=1.
+	setVillager(false);
 	angerLevel = nbttagcompound->getShort("Anger");
 }
 
@@ -85,6 +106,9 @@ bool EntityPigZombie::attackEntityFrom(Entity *entity, int_t damage)
 
 bool EntityPigZombie::attackEntityFrom(const DamageSource &source, int_t damage)
 {
+	if (isEntityInvulnerable())
+		return false;
+
 	Entity *entity = source.getEntity();
 	if (dynamic_cast<EntityPlayer *>(entity) != nullptr)
 	{
@@ -105,6 +129,8 @@ void EntityPigZombie::becomeAngryAt(Entity *entity)
 	playerToAttack = entity;
 	angerLevel = 400 + rand.nextInt(400);
 	randomSoundDelay = rand.nextInt(40);
+	// Drop any idle wander path so newly angered pigmen turn toward the player immediately.
+	setPathToEntity(nullptr);
 }
 
 // EntityZombie overrides the texture in 1.5.2 (zombie villager); the pig zombie overrides it back.

@@ -51,8 +51,6 @@ void RecipesCrafting::addRecipes(CraftingManager *craftingmanager)
 	                           { "###", "###", '#', Block::cobblestoneMossy });
 	craftingmanager->addRecipe(new ItemStack(Item::flowerPot, 1),
 	                           { "# #", " # ", '#', Item::brick });
-	craftingmanager->addRecipe(new ItemStack(Block::anvil, 1),
-	                           { "III", " i ", "iii", 'I', Block::blockSteel, 'i', Item::ingotIron });
 	craftingmanager->addRecipe(new ItemStack(Block::enderChest, 1),
 	                           { "###", "#E#", "###", '#', Block::obsidian, 'E', Item::eyeOfEnder });
 	craftingmanager->addRecipe(new ItemStack(Block::beacon, 1),

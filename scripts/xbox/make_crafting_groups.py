@@ -30,24 +30,37 @@ ORE_FILE = 'OreRecipies.cpp'
 # Tiles whose constructor does not take the id.
 TILE_ID_FALLBACK = {'Tile::cloth': 35, 'Tile::stoneSlabHalf': 44, 'Tile::woodSlabHalf': 126,
                     'Tile::tripWireSource': 131}
-CAST = r'(?:\(\s*\w+\s*\*\s*\)\s*)?'
+CAST = r'(?:(?:\(\s*\w+\s*\*\s*\)|static_cast\s*<\s*\w+\s*\*\s*>\s*\(?)\s*)*'
 
-# Crafted items the Legacy sources have no recipe for, as (id, aux, group letter,
-# base type, name). Chainmail is crafted from fire in Java 1.2.5 and 1.5.2;
-# the block of redstone is new in 1.5.
+# Crafted items the Legacy sources have no recipe for (or whose recipe is
+# commented out in TU19), as (id, aux, group letter, base type, name).
+# Chainmail is crafted from fire in Java 1.2.5 and 1.5.2; writingBook and
+# emptyMap are Java 1.5.2 recipes not active in TU19; fireworks/fireworkCharge
+# are dynamic in Recipes.cpp (FireworksRecipe) so listed explicitly.
 EXTRA_ENTRIES = [
     (302, -1, 'A', 'helmet', 'Item::helmetChain'),
     (303, -1, 'A', 'chestplate', 'Item::plateChain'),
     (304, -1, 'A', 'leggings', 'Item::legsChain'),
     (305, -1, 'A', 'boots', 'Item::bootsChain'),
+    (138, -1, 'M', 'none', 'Tile::beacon'),
+    (146, -1, 'S', 'chest', 'Tile::chestTrapped'),
+    (147, -1, 'M', 'pressureplate', 'Tile::pressurePlateGold'),
+    (148, -1, 'M', 'pressureplate', 'Tile::pressurePlateIron'),
+    (151, -1, 'M', 'none', 'Tile::daylightSensor'),
     (152, -1, 'D', 'block', 'Tile::blockRedstone'),
+    (154, -1, 'M', 'redstoneContainer', 'Tile::hopperBlock'),
     (155, -1, 'S', 'structblock', 'Tile::quartzBlock'),
     (156, -1, 'S', 'stairs', 'Tile::stairs_quartz'),
+    (157, -1, 'V', 'rail', 'Tile::railActivator'),
+    (158, -1, 'M', 'redstoneContainer', 'Tile::dropper'),
     (331, -1, 'D', 'treasure', 'Item::redstone'),
-    (154, -1, 'M', 'none', 'Tile::hopperBlock'),
-    (158, -1, 'M', 'none', 'Tile::dropper'),
+    (386, -1, 'T', 'pockettool', 'Item::writingBook'),
+    (395, -1, 'T', 'pockettool', 'Item::emptyMap'),
+    (401, -1, 'D', 45, 'Item::firework'),
+    (402, -1, 'D', 46, 'Item::fireworkCharge'),
     (404, -1, 'M', 'none', 'Item::comparator'),
-    (408, -1, 'V', 'minecart', 'Item::minecartHopper'),
+    (407, -1, 'V', 'none', 'Item::minecartTnt'),
+    (408, -1, 'V', 'none', 'Item::minecartHopper'),
 ]
 
 
@@ -111,7 +124,7 @@ def parse_recipes(src):
         text = read(src, fname)
         for fn in ('addShapedRecipy', 'addShapelessRecipy'):
             for body in calls(text, fn):
-                letters = re.findall(r"L'([A-Z])'\s*$", body.strip())
+                letters = re.findall(r"L?'([A-Z])'\s*$", body.strip())
                 if not letters:
                     continue
                 m = re.match(r'\s*new\s+ItemInstance\s*\(\s*' + CAST + r'((?:Tile|Item)::\w+)\s*(?:,\s*([^,()]+?)\s*(?:,\s*([^,()]+?)\s*)?)?\)', body)
@@ -172,10 +185,17 @@ def main():
     lines.append('')
     lines.append('static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {')
     for item_id, aux, letter, base, name in EXTRA_ENTRIES:
-        rows.setdefault((item_id, aux), (GROUPS[letter], type_names.index(base) if base in type_names else 0, name))
+        base_id = base if isinstance(base, int) else (type_names.index(base) if base in type_names else 0)
+        # Keep firework rockets (401) and firework stars (402) in separate Decoration
+        # columns and stack activatorRail (157) with the other rails.
+        if item_id in (157, 401, 402):
+            rows[(item_id, aux)] = (GROUPS[letter], base_id, name)
+        else:
+            rows.setdefault((item_id, aux), (GROUPS[letter], base_id, name))
     for (item_id, aux), (group, base, name) in sorted(rows.items()):
+        base_label = type_names[base] if 0 < base < len(type_names) else (str(base) if base else '')
         lines.append('    { %d, %d, %d, %d }, // %s%s' % (item_id, aux, group, base, name,
-                     (' (%s)' % type_names[base]) if base else ''))
+                     (' (%s)' % base_label) if base_label else ''))
     lines.append('};')
     lines.append('')
     with open(out_h, 'w', newline='\n') as f:

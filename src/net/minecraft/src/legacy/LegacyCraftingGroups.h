@@ -21,20 +21,20 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 5, -1, 0, 18 }, // Tile::wood (structwoodstuff)
     { 5, 0, 0, 18 }, // Tile::wood (structwoodstuff)
     { 22, -1, 6, 13 }, // Tile::lapisBlock (block)
-    { 23, -1, 4, 0 }, // Tile::dispenser
+    { 23, -1, 4, 40 }, // Tile::dispenser (redstoneContainer)
     { 24, -1, 0, 19 }, // Tile::sandStone (structblock)
-    { 25, -1, 4, 0 }, // Tile::musicBlock
+    { 25, -1, 4, 0 }, // Tile::noteblock
     { 27, -1, 5, 12 }, // Tile::goldenRail (rail)
     { 28, -1, 5, 12 }, // Tile::detectorRail (rail)
     { 29, -1, 4, 26 }, // Tile::pistonStickyBase (piston)
     { 33, -1, 4, 26 }, // Tile::pistonBase (piston)
-    { 35, -1, 6, 16 }, // Tile::cloth (cloth)
+    { 35, -1, 6, 16 }, // Tile::wool (cloth)
     { 41, -1, 6, 13 }, // Tile::goldBlock (block)
     { 42, -1, 6, 13 }, // Tile::ironBlock (block)
     { 44, -1, 0, 21 }, // Tile::stoneSlabHalf (halfslab)
     { 45, -1, 0, 19 }, // Tile::redBrick (structblock)
     { 46, -1, 1, 0 }, // Tile::tnt
-    { 47, -1, 6, 0 }, // Tile::bookshelf
+    { 47, -1, 6, 43 }, // Tile::bookshelf (paper)
     { 50, -1, 1, 22 }, // Tile::torch (torch)
     { 53, -1, 0, 15 }, // Tile::stairs_wood (stairs)
     { 54, -1, 0, 34 }, // Tile::chest (chest)
@@ -44,18 +44,20 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 65, -1, 0, 0 }, // Tile::ladder
     { 66, -1, 5, 12 }, // Tile::rail (rail)
     { 67, -1, 0, 15 }, // Tile::stairs_stone (stairs)
-    { 69, -1, 4, 0 }, // Tile::lever
+    { 69, -1, 4, 42 }, // Tile::lever (lever)
     { 70, -1, 4, 14 }, // Tile::pressurePlate_stone (pressureplate)
     { 72, -1, 4, 14 }, // Tile::pressurePlate_wood (pressureplate)
-    { 76, -1, 4, 0 }, // Tile::notGate_on
+    { 76, -1, 4, 0 }, // Tile::redstoneTorch_on
     { 77, -1, 4, 33 }, // Tile::button (button)
+    { 78, -1, 0, 19 }, // Tile::topSnow (structblock)
     { 80, -1, 0, 19 }, // Tile::snow (structblock)
     { 82, -1, 0, 19 }, // Tile::clay (structblock)
+    { 84, -1, 6, 0 }, // Tile::jukebox
     { 85, -1, 0, 28 }, // Tile::fence (fence)
-    { 89, -1, 1, 22 }, // Tile::lightGem (torch)
+    { 89, -1, 1, 22 }, // Tile::glowstone (torch)
     { 91, -1, 1, 22 }, // Tile::litPumpkin (torch)
     { 96, -1, 0, 6 }, // Tile::trapdoor (door)
-    { 98, -1, 0, 19 }, // Tile::stoneBrickSmooth (structblock)
+    { 98, -1, 0, 19 }, // Tile::stoneBrick (structblock)
     { 101, -1, 0, 28 }, // Tile::ironFence (fence)
     { 102, -1, 6, 0 }, // Tile::thinGlass
     { 103, -1, 2, 0 }, // Tile::melon
@@ -71,29 +73,36 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 126, 0, 0, 21 }, // Tile::woodSlabHalf (halfslab)
     { 128, -1, 0, 15 }, // Tile::stairs_sandstone (stairs)
     { 130, -1, 0, 34 }, // Tile::enderChest (chest)
-    { 146, -1, 0, 34 }, // Tile::chestTrapped (chest)
-    { 131, -1, 4, 0 }, // Tile::tripWireSource
+    { 131, -1, 4, 42 }, // Tile::tripWireSource (lever)
     { 133, -1, 6, 13 }, // Tile::emeraldBlock (block)
     { 134, -1, 0, 15 }, // Tile::woodStairsDark (stairs)
     { 135, -1, 0, 15 }, // Tile::woodStairsBirch (stairs)
     { 136, -1, 0, 15 }, // Tile::woodStairsJungle (stairs)
-    { 138, -1, 6, 0 }, // Tile::beacon
+    { 138, -1, 4, 0 }, // Tile::beacon
     { 139, -1, 0, 28 }, // Tile::cobbleWall (fence)
     { 143, -1, 4, 33 }, // Tile::button_wood (button)
     { 145, -1, 0, 29 }, // Tile::anvil (device)
-    { 152, -1, 6, 13 }, // Tile::blockRedstone (block)
-    { 154, -1, 4, 0 }, // Tile::hopperBlock
+    { 146, -1, 0, 34 }, // Tile::chest_trap (chest)
+    { 147, -1, 4, 14 }, // Tile::weightedPlate_light (pressureplate)
+    { 148, -1, 4, 14 }, // Tile::weightedPlate_heavy (pressureplate)
+    { 151, -1, 4, 0 }, // Tile::daylightDetector
+    { 152, -1, 6, 13 }, // Tile::redstoneBlock (block)
+    { 154, -1, 4, 40 }, // Tile::hopper (redstoneContainer)
     { 155, -1, 0, 19 }, // Tile::quartzBlock (structblock)
     { 156, -1, 0, 15 }, // Tile::stairs_quartz (stairs)
-    { 158, -1, 4, 0 }, // Tile::dropper
-
+    { 157, -1, 5, 12 }, // Tile::railActivator (rail)
+    { 158, -1, 4, 40 }, // Tile::dropper (redstoneContainer)
+    { 160, -1, 6, 39 }, // Tile::stained_glass_pane (glass)
+    { 170, -1, 6, 13 }, // Tile::hayBlock (block)
     { 171, -1, 6, 37 }, // Tile::woolCarpet (carpet)
+    { 173, -1, 6, 13 }, // Tile::coalBlock (block)
     { 256, -1, 1, 2 }, // Item::shovel_iron (shovel)
     { 257, -1, 1, 3 }, // Item::pickAxe_iron (pickaxe)
     { 258, -1, 1, 4 }, // Item::hatchet_iron (hatchet)
     { 259, -1, 1, 27 }, // Item::flintAndSteel (devicetool)
     { 261, -1, 1, 23 }, // Item::bow (bow)
     { 262, -1, 1, 23 }, // Item::arrow (bow)
+    { 263, -1, 6, 30 }, // Item::coal (treasure)
     { 264, -1, 6, 30 }, // Item::diamond (treasure)
     { 265, -1, 6, 30 }, // Item::ironIngot (treasure)
     { 266, -1, 6, 30 }, // Item::goldIngot (treasure)
@@ -122,11 +131,12 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 292, -1, 1, 5 }, // Item::hoe_iron (hoe)
     { 293, -1, 1, 5 }, // Item::hoe_diamond (hoe)
     { 294, -1, 1, 5 }, // Item::hoe_gold (hoe)
+    { 296, -1, 6, 30 }, // Item::wheat (treasure)
     { 297, -1, 2, 0 }, // Item::bread
-    { 298, -1, 3, 7 }, // Item::helmet_cloth (helmet)
-    { 299, -1, 3, 8 }, // Item::chestplate_cloth (chestplate)
-    { 300, -1, 3, 9 }, // Item::leggings_cloth (leggings)
-    { 301, -1, 3, 10 }, // Item::boots_cloth (boots)
+    { 298, -1, 3, 7 }, // Item::helmet_leather (helmet)
+    { 299, -1, 3, 8 }, // Item::chestplate_leather (chestplate)
+    { 300, -1, 3, 9 }, // Item::leggings_leather (leggings)
+    { 301, -1, 3, 10 }, // Item::boots_leather (boots)
     { 302, -1, 3, 7 }, // Item::helmetChain (helmet)
     { 303, -1, 3, 8 }, // Item::plateChain (chestplate)
     { 304, -1, 3, 9 }, // Item::legsChain (leggings)
@@ -151,10 +161,10 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 325, -1, 1, 25 }, // Item::bucket_empty (utensil)
     { 328, -1, 5, 0 }, // Item::minecart
     { 330, -1, 0, 6 }, // Item::door_iron (door)
-    { 331, -1, 6, 30 }, // Item::redstone (treasure)
+    { 331, -1, 6, 30 }, // Item::redStone (treasure)
     { 333, -1, 5, 0 }, // Item::boat
-    { 339, -1, 6, 0 }, // Item::paper
-    { 340, -1, 6, 0 }, // Item::book
+    { 339, -1, 6, 43 }, // Item::paper (paper)
+    { 340, -1, 6, 43 }, // Item::book (paper)
     { 342, -1, 5, 0 }, // Item::minecart_chest
     { 343, -1, 5, 0 }, // Item::minecart_furnace
     { 345, -1, 1, 24 }, // Item::compass (pockettool)
@@ -165,7 +175,7 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 353, -1, 2, 0 }, // Item::sugar
     { 354, -1, 2, 0 }, // Item::cake
     { 355, -1, 0, 0 }, // Item::bed
-    { 356, -1, 4, 0 }, // Item::diode
+    { 356, -1, 4, 0 }, // Item::repeater
     { 357, -1, 2, 0 }, // Item::cookie
     { 358, -1, 1, 24 }, // Item::map (pockettool)
     { 359, -1, 1, 27 }, // Item::shears (devicetool)
@@ -189,9 +199,10 @@ static const LegacyCraftingGroupEntry s_legacyCraftingGroups[] = {
     { 396, 0, 2, 36 }, // Item::carrotGolden (giltFruit)
     { 398, -1, 1, 35 }, // Item::carrotOnAStick (rod)
     { 400, -1, 2, 0 }, // Item::pumpkinPie
-    { 401, -1, 6, 38 }, // Item::firework (fireworks)
-    { 402, -1, 6, 39 }, // Item::fireworkCharge (fireworkCharge)
+    { 401, -1, 6, 45 }, // Item::firework (45)
+    { 402, -1, 6, 46 }, // Item::fireworkCharge (46)
     { 404, -1, 4, 0 }, // Item::comparator
-    { 407, -1, 5, 11 }, // Item::minecartTnt (minecart)
-    { 408, -1, 5, 11 }, // Item::minecartHopper (minecart)
+    { 407, -1, 5, 0 }, // Item::minecart_tnt
+    { 408, -1, 5, 0 }, // Item::minecart_hopper
+    { 420, -1, 1, 24 }, // Item::lead (pockettool)
 };

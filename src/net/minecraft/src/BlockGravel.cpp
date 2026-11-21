@@ -16,5 +16,10 @@ int_t BlockGravel::idDropped(int_t i, Random &random)
 int_t BlockGravel::idDropped(int_t i, Random &random, int_t fortune)
 {
     (void)i;
-    return random.nextInt(10 - fortune * 3) == 0 ? Item::flint->shiftedIndex : blockID;
+    if (fortune > 3)
+        fortune = 3;
+    int_t bound = 10 - fortune * 3;
+    if (bound < 1)
+        bound = 1;
+    return random.nextInt(bound) == 0 ? Item::flint->shiftedIndex : blockID;
 }

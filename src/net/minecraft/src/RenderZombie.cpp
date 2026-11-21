@@ -1,6 +1,7 @@
 #include "RenderZombie.h"
 
 #include <cmath>
+#include "EntityPigZombie.h"
 #include "EntityZombie.h"
 #include "ModelZombie.h"
 #include "ModelZombieVillager.h"
@@ -21,7 +22,7 @@ RenderZombie::~RenderZombie()
 
 void RenderZombie::setupZombieModel(EntityZombie *zombie)
 {
-	if (zombie != nullptr && zombie->isVillager())
+	if (zombie != nullptr && zombie->isVillager() && dynamic_cast<EntityPigZombie *>(zombie) == nullptr)
 	{
 		mainModel = zombieVillagerModel;
 	}

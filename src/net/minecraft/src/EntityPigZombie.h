@@ -20,6 +20,8 @@ public:
 	const char *getEntityTexture() override;
 	bool isAIEnabled() override;
 	bool getCanSpawnHere() override;
+	void initCreature() override;
+	bool interact(EntityPlayer *entityPlayer) override;
 	void writeEntityToNBT(NBTTagCompound *nbttagcompound) override;
 	void readEntityFromNBT(NBTTagCompound *nbttagcompound) override;
 

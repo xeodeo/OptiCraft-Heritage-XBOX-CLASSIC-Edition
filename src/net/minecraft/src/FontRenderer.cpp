@@ -424,14 +424,20 @@ float_t FontRenderer::renderStringScaled(const std::string &s, float_t x, float_
 
 		if (obfuscated && charIndex > 0)
 		{
-			const float_t originalWidth = charWidth[charIndex + 32];
-			int_t candidate = charIndex;
-			do
+			const int_t allowedLen = static_cast<int_t>(ChatAllowedCharacters::allowedCharacters().length());
+			if (allowedLen > 0)
 			{
-				candidate = fontRandom.nextInt(static_cast<int_t>(ChatAllowedCharacters::allowedCharacters().length()));
+				const float_t originalWidth = charWidth[charIndex + 32];
+				int_t candidate = charIndex;
+				int_t tries = 0;
+				do
+				{
+					candidate = fontRandom.nextInt(allowedLen);
+				}
+				while (charWidth[candidate + 32] != originalWidth && ++tries < 64);
+				if (charWidth[candidate + 32] == originalWidth)
+					charIndex = candidate;
 			}
-			while (charWidth[candidate + 32] != originalWidth);
-			charIndex = candidate;
 		}
 
 		const int_t glyph = charIndex + 32;
@@ -523,14 +529,20 @@ float_t FontRenderer::renderStringScaled(const std::string &s, float_t x, float_
 
 		if (obfuscated && charIndex > 0)
 		{
-			const float_t originalWidth = charWidth[charIndex + 32];
-			int_t candidate = charIndex;
-			do
+			const int_t allowedLen = static_cast<int_t>(ChatAllowedCharacters::allowedCharacters().length());
+			if (allowedLen > 0)
 			{
-				candidate = fontRandom.nextInt(static_cast<int_t>(ChatAllowedCharacters::allowedCharacters().length()));
+				const float_t originalWidth = charWidth[charIndex + 32];
+				int_t candidate = charIndex;
+				int_t tries = 0;
+				do
+				{
+					candidate = fontRandom.nextInt(allowedLen);
+				}
+				while (charWidth[candidate + 32] != originalWidth && ++tries < 64);
+				if (charWidth[candidate + 32] == originalWidth)
+					charIndex = candidate;
 			}
-			while (charWidth[candidate + 32] != originalWidth);
-			charIndex = candidate;
 		}
 
 		const int_t glyph = charIndex + 32;

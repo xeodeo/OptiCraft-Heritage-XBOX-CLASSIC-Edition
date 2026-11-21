@@ -152,7 +152,6 @@ CraftingManager::CraftingManager()
 	addShapelessRecipe(new ItemStack(Item::fireballCharge, 3),     { Item::gunpowder, Item::blazePowder, Item::coal });
 	addShapelessRecipe(new ItemStack(Item::fireballCharge, 3),     { Item::gunpowder, Item::blazePowder, new ItemStack(Item::coal, 1, 1) });
 	addRecipe(new ItemStack(Block::anvil, 1),                 { "III", " i ", "iii", 'I', Block::blockSteel, 'i', Item::ingotIron });
-	addRecipe(new ItemStack(Block::beacon, 1),                { "GGG", "GSG", "OOO", 'G', Block::glass, 'S', Item::netherStar, 'O', Block::obsidian });
 	addRecipe(new ItemStack(Item::itemFrame, 1),              { "###", "#X#", "###", '#', Item::stick, 'X', Item::leather });
 	addRecipe(new ItemStack(Item::emptyMap, 1),              { "###", "#X#", "###", '#', Item::paper, 'X', Item::compass });
 	addShapelessRecipe(new ItemStack(Item::carrotOnAStick, 1), { Item::fishingRod, Item::carrot });

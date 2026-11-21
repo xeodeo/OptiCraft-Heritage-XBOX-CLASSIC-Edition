@@ -22,6 +22,7 @@ public:
                         float rotationYZ, float rotationXY) override;
     void onUpdate() override;
     int_t getFXLayer() override;
+    bool canBeEvicted() const override { return false; }
 
 private:
     struct ExplosionDef

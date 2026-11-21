@@ -169,6 +169,16 @@ void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 
 	drawGuiContainerBackgroundLayer(partialTick);
 
+	// Match Java 1.5.2 GuiContainer.drawScreen(): draw controlList buttons
+	// (e.g. GuiBeacon power/confirm/cancel buttons, GuiMerchant arrows) after
+	// the background and BEFORE slots/items/foreground so button hover states
+	// are fresh and foreground tooltips render on top of the buttons.
+	renderDisable(RenderCapability::RescaleNormal);
+	RenderHelper::disableStandardItemLighting();
+	renderDisable(RenderCapability::Lighting);
+	renderDisable(RenderCapability::DepthTest);
+	GuiScreen::drawScreen(mouseX, mouseY, partialTick);
+
 #if PLATFORM_GUI_FORCE_DEPTH_DISABLED
 	// The console GUI pass starts with depth disabled, but 3D item icons need
 	// their own faces depth-sorted before the 2D overlay/foreground pass.
@@ -309,7 +319,6 @@ void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 	}
 
 	renderPopMatrix();
-	GuiScreen::drawScreen(mouseX, mouseY, partialTick);
 	ModManager::getInstance().onDrawContainer(this, mouseX, mouseY);
 
 	renderEnable(RenderCapability::Lighting);

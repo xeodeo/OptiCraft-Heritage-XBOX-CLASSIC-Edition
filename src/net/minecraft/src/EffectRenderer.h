@@ -37,6 +37,7 @@ protected:
 private:
     std::vector<std::unique_ptr<EntityFX>> fxLayers[4];
     int_t                    fxEvictCursor[4];
+    EntityFX                *currentlyUpdatingEffect;
     RenderEngine            *renderer;
     Random                   rand;
 };

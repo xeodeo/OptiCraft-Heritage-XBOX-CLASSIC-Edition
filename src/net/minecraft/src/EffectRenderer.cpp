@@ -21,7 +21,7 @@
 #include "platform/RenderAPI.h"
 
 EffectRenderer::EffectRenderer(World *world, RenderEngine *renderengine)
-    : worldObj(nullptr), renderer(renderengine), rand()
+    : worldObj(nullptr), currentlyUpdatingEffect(nullptr), renderer(renderengine), rand()
 {
     if (world != nullptr)
         worldObj = world;
@@ -72,8 +72,30 @@ void EffectRenderer::addEffect(EntityFX *entityfx)
             int_t &cursor = fxEvictCursor[i];
             if (cursor < 0 || cursor >= count)
                 cursor = 0;
-            fxLayers[i][cursor].reset(entityfx);
-            cursor = (cursor + 1) % count;
+            // Never evict the particle currently running onUpdate() (which would
+            // delete `this` mid-callback, e.g. EntityFireworkStarterFX emitting
+            // sparks) or any active particle marked non-evictable.
+            int_t victim = -1;
+            for (int_t step = 0; step < count; ++step)
+            {
+                const int_t idx = (cursor + step) % count;
+                EntityFX *candidate = fxLayers[i][idx].get();
+                if (candidate != currentlyUpdatingEffect &&
+                    (candidate == nullptr || candidate->canBeEvicted()))
+                {
+                    victim = idx;
+                    break;
+                }
+            }
+            if (victim >= 0)
+            {
+                fxLayers[i][victim].reset(entityfx);
+                cursor = (victim + 1) % count;
+            }
+            else
+            {
+                delete entityfx;
+            }
             return;
         }
     }
@@ -99,8 +121,11 @@ void EffectRenderer::updateEffects()
         for (int j = 0; j < (int)fxLayers[i].size(); j++)
         {
 			EntityFX *entityfx = fxLayers[i][j].get();
+            currentlyUpdatingEffect = entityfx;
             entityfx->onUpdate();
-            if (entityfx->isDead)
+            currentlyUpdatingEffect = nullptr;
+            entityfx = fxLayers[i][j].get();
+            if (entityfx == nullptr || entityfx->isDead)
             {
                 // Order within a layer is not observable, so a dead particle
                 // is swapped with the last one instead of shifting the vector.

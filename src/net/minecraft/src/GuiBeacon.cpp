@@ -313,9 +313,63 @@ void GuiBeacon::actionPerformed(GuiButton *button)
 
 void GuiBeacon::drawCreativeTabHoveringText(const std::string &text, int x, int y)
 {
-    int w = fontRenderer->getStringWidth(text);
-    drawGradientRect(x - 3, y - 3, x + w + 3, y + 8 + 3, 0xC0000000, 0xC0000000);
-    fontRenderer->drawStringWithShadow(text, x, y, -1);
+    if (fontRenderer == nullptr || text.empty())
+        return;
+
+    renderDisable(RenderCapability::RescaleNormal);
+    RenderHelper::disableStandardItemLighting();
+    renderDisable(RenderCapability::Lighting);
+    renderDisable(RenderCapability::DepthTest);
+
+    const int tooltipWidth = fontRenderer->getStringWidth(text);
+    const int tooltipHeight = 8;
+    int tx = x + 12;
+    int ty = y - 12;
+
+    if (guiLeft + tx + tooltipWidth + 6 > width)
+    {
+        tx -= 28 + tooltipWidth;
+    }
+    if (guiLeft + tx < 4)
+    {
+        tx = 4 - guiLeft;
+    }
+    if (guiTop + ty + tooltipHeight + 6 > height)
+    {
+        ty = height - guiTop - tooltipHeight - 6;
+    }
+    if (guiTop + ty < 4)
+    {
+        ty = 4 - guiTop;
+    }
+
+    zLevel = 300.0f;
+    if (itemRenderer != nullptr)
+        itemRenderer->zLevel = 300.0f;
+
+    const int background = static_cast<int>(0xf0100010u);
+    drawGradientRect(tx - 3, ty - 4, tx + tooltipWidth + 3, ty - 3, background, background);
+    drawGradientRect(tx - 3, ty + tooltipHeight + 3, tx + tooltipWidth + 3, ty + tooltipHeight + 4, background, background);
+    drawGradientRect(tx - 3, ty - 3, tx + tooltipWidth + 3, ty + tooltipHeight + 3, background, background);
+    drawGradientRect(tx - 4, ty - 3, tx - 3, ty + tooltipHeight + 3, background, background);
+    drawGradientRect(tx + tooltipWidth + 3, ty - 3, tx + tooltipWidth + 4, ty + tooltipHeight + 3, background, background);
+
+    const int borderTop = 0x505000ff;
+    const int borderBottom = (borderTop & 0x00fefefe) >> 1 | (borderTop & static_cast<int>(0xff000000u));
+    drawGradientRect(tx - 3, ty - 2, tx - 2, ty + tooltipHeight + 2, borderTop, borderBottom);
+    drawGradientRect(tx + tooltipWidth + 2, ty - 2, tx + tooltipWidth + 3, ty + tooltipHeight + 2, borderTop, borderBottom);
+    drawGradientRect(tx - 3, ty - 3, tx + tooltipWidth + 3, ty - 2, borderTop, borderTop);
+    drawGradientRect(tx - 3, ty + tooltipHeight + 2, tx + tooltipWidth + 3, ty + tooltipHeight + 3, borderBottom, borderBottom);
+
+    fontRenderer->drawStringWithShadow(text, tx, ty, -1);
+
+    zLevel = 0.0f;
+    if (itemRenderer != nullptr)
+        itemRenderer->zLevel = 0.0f;
+    renderEnable(RenderCapability::Lighting);
+    renderEnable(RenderCapability::DepthTest);
+    RenderHelper::enableGUIStandardItemLighting();
+    renderEnable(RenderCapability::RescaleNormal);
 }
 
 void GuiBeacon::drawGuiContainerForegroundLayer()

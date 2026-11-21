@@ -56,6 +56,8 @@ private:
         int_t cellId[9];      // pattern laid out from the top-left, 0 = empty
         int_t cellDamage[9];
         std::vector<Ingredient> needs;
+        int_t defaultDyeDamage;   // fallback dye damage for wildcard -1 display (never Ink Sac)
+        bool isFadeStar;          // true for star + dye fade preset
         bool canMake;
         unsigned short missingCells;   // bit per grid cell short of items
     };
@@ -71,8 +73,12 @@ private:
     void addDynamicFireworkEntries();
     void buildColumns();
     void refreshAvailability();
+    void refreshFireworkPreviews();
     unsigned int inventorySignature() const;
     int_t countInInventory(int_t id, int_t damage) const;
+    int_t firstMatchingDyeDamage(int_t fallbackDamage) const;
+    ItemStack *firstInventoryStack(int_t id, int_t damage) const;
+    ItemStack *displayStackFor(const Entry *entry, int_t id, int_t damage);
 
     Entry *selectedEntry();
     void moveColumn(int_t delta);
