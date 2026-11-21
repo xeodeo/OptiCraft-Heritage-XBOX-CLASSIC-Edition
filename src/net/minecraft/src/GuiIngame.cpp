@@ -43,6 +43,7 @@
 #include "HudSafeArea.h"
 #include "RenderManager.h"
 #include "Render.h"
+#include "OpenGlHelper.h"
 #include "PlayerCapabilities.h"
 #include <cmath>
 #include "World.h"
@@ -561,6 +562,13 @@ void GuiIngame::renderAnimatedCharacter(int_t screenWidth, int_t screenHeight)
 		render->doRender(player, 0.0, 0.0, 0.0, 0.0f, 1.0f);
 	player->entityBrightness = savedBrightness;
 	RenderManager::instance->playerViewY = savedViewY;
+	// RenderLiving re-enables the world lightmap unit when it finishes; the
+	// hotbar items drawn after us would then be tinted by the light where the
+	// player stands (dark in caves, a gradient while flying). The HUD draws with
+	// it off.
+	OpenGlHelper::setActiveTexture(OpenGlHelper::lightmapTexUnit);
+	renderDisable(RenderCapability::Texture2D);
+	OpenGlHelper::setActiveTexture(OpenGlHelper::defaultTexUnit);
 
 	player->renderYawOffset = savedYawOffset;
 	player->prevRenderYawOffset = savedPrevYawOffset;
