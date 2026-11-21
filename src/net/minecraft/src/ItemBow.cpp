@@ -14,6 +14,24 @@ ItemBow::ItemBow(int id) : Item(id)
     setMaxDamage(384);
 }
 
+bool ItemBow::hasArrow(EntityPlayer* entityplayer)
+{
+    if (entityplayer == nullptr || entityplayer->inventory == nullptr)
+        return false;
+    if (entityplayer->capabilities.isCreativeMode)
+        return true;
+    if (Item::arrow == nullptr)
+        return false;
+    return entityplayer->inventory->getInventorySlotContainItem(Item::arrow->shiftedIndex) >= 0;
+}
+
+float ItemBow::getLaunchPower(int charge)
+{
+    float p = static_cast<float>(charge) / 20.0f;
+    p = (p * p + p * 2.0f) / 3.0f;
+    return (p > 1.0f) ? 1.0f : p;
+}
+
 ItemStack* ItemBow::onFoodEaten(ItemStack* itemstack, World*, EntityPlayer*)
 {
     return itemstack;
@@ -21,21 +39,21 @@ ItemStack* ItemBow::onFoodEaten(ItemStack* itemstack, World*, EntityPlayer*)
 
 void ItemBow::onPlayerStoppedUsing(ItemStack* itemstack, World* world, EntityPlayer* entityplayer, int timeLeft)
 {
+    if (itemstack == nullptr || world == nullptr || entityplayer == nullptr || entityplayer->inventory == nullptr)
+        return;
+
     const bool infinite = entityplayer->capabilities.isCreativeMode ||
         (Enchantment::infinity != nullptr && EnchantmentHelper::getEnchantmentLevel(Enchantment::infinity->effectId, itemstack) > 0);
-    if (!infinite && entityplayer->inventory->getInventorySlotContainItem(Item::arrow->shiftedIndex) < 0)
+    if (!infinite && !hasArrow(entityplayer))
         return;
 
     const int charge = getMaxItemUseDuration(itemstack) - timeLeft;
-    float strength = static_cast<float>(charge) / 20.0f;
-    strength = (strength * strength + strength * 2.0f) / 3.0f;
+    const float strength = getLaunchPower(charge);
     if (strength < 0.1f)
         return;
-    if (strength > 1.0f)
-        strength = 1.0f;
 
     EntityArrow* arrow = new EntityArrow(world, entityplayer, strength * 2.0f);
-    if (strength == 1.0f)
+    if (strength >= 1.0f)
         arrow->arrowCritical = true;
 
     if (Enchantment::power != nullptr)
@@ -58,9 +76,14 @@ void ItemBow::onPlayerStoppedUsing(ItemStack* itemstack, World* world, EntityPla
         1.0f / (itemRand.nextFloat() * 0.4f + 1.2f) + strength * 0.5f);
 
     if (!infinite)
-        entityplayer->inventory->consumeInventoryItem(Item::arrow->shiftedIndex);
+    {
+        if (Item::arrow != nullptr)
+            entityplayer->inventory->consumeInventoryItem(Item::arrow->shiftedIndex);
+    }
     else
+    {
         arrow->doesArrowBelongToPlayer = false;
+    }
 
     if (!world->multiplayerWorld)
     {
@@ -68,7 +91,9 @@ void ItemBow::onPlayerStoppedUsing(ItemStack* itemstack, World* world, EntityPla
             delete arrow;
     }
     else
+    {
         delete arrow;
+    }
 }
 
 int ItemBow::getMaxItemUseDuration(ItemStack*) { return 72000; }
@@ -76,7 +101,7 @@ EnumAction ItemBow::getItemUseAction(ItemStack*) { return EnumAction::bow; }
 
 ItemStack* ItemBow::onItemRightClick(ItemStack* itemstack, World*, EntityPlayer* entityplayer)
 {
-    if (entityplayer->capabilities.isCreativeMode || entityplayer->inventory->getInventorySlotContainItem(Item::arrow->shiftedIndex) >= 0)
+    if (hasArrow(entityplayer))
         entityplayer->setItemInUse(itemstack, getMaxItemUseDuration(itemstack));
     return itemstack;
 }

@@ -530,6 +530,7 @@ std::string StringTranslate::translateUi(const std::string &english)
         if (english == "Weather") return "Clima";
         if (english == "Time") return "Tiempo";
         if (english == "Autosave") return "Autoguardado";
+        if (english == "On-Screen Hints") return "Pistas en pantalla";
     }
     return english;
 }

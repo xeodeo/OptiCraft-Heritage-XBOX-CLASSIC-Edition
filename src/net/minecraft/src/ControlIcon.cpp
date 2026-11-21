@@ -1,6 +1,7 @@
 #include "ControlIcon.h"
 #include "Minecraft.h"
 #include "FontRenderer.h"
+#include "GameSettings.h"
 #include "RenderEngine.h"
 #include "Tessellator.h"
 #include "platform/PlatformConfig.h"
@@ -179,6 +180,7 @@ void drawControlHintRow(Minecraft *mc, int_t width, int_t y,
     const std::string *buttons, const std::string *actions, int_t count)
 {
     if (!mc || !mc->fontRenderer || count < 1 || count > 4) return;
+    if (mc->gameSettings != nullptr && !mc->gameSettings->onScreenHints) return;
     FontRenderer *font = mc->fontRenderer;
     ControlIcon icons[4], secondIcons[4];
     int_t iconWidths[4] = {};

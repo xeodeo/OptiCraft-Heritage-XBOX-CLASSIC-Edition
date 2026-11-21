@@ -1739,18 +1739,18 @@ void Minecraft::clickMouse(int_t i)
             {
                 flag = false;
                 thePlayer->swingItem();
+                if (itemstack1 == nullptr)
+                    return;
+                if (itemstack1->stackSize == 0)
+                {
+                    delete itemstack1;
+                    thePlayer->inventory->mainInventory[thePlayer->inventory->currentItem] = nullptr;
+                }
+                else if (itemstack1->stackSize != j1 || playerController->isInCreativeMode())
+                {
+                    entityRenderer->getItemRenderer()->resetEquippedProgressAfterBlockPlace();
+                }
             }
-            if (itemstack1 == nullptr)
-                return;
-          if (itemstack1->stackSize == 0)
-{
-    delete itemstack1;
-    thePlayer->inventory->mainInventory[thePlayer->inventory->currentItem] = nullptr;
-}
-else if (itemstack1->stackSize != j1 || playerController->isInCreativeMode())
-{
-    entityRenderer->getItemRenderer()->resetEquippedProgressAfterBlockPlace();
-}
 
         }
     }
@@ -2381,7 +2381,10 @@ void Minecraft::runTick()
         if (thePlayer->isUsingItem())
         {
             if (!gameSettings->keyBindUseItem->pressed)
+            {
                 playerController->onStoppedUsingItem(thePlayer);
+                rightClickDelayTimer = 4;
+            }
 
             while (gameSettings->keyBindAttack->isPressed()) {}
             while (gameSettings->keyBindUseItem->isPressed()) {}
@@ -2409,7 +2412,7 @@ void Minecraft::runTick()
         if (gameSettings->keyBindUseItem->pressed && rightClickDelayTimer == 0 && !thePlayer->isUsingItem() && !isPlayerScreenActive(0))
             clickMouse(1);
 
-        clickMouse(0, currentScreen == nullptr && !isPlayerScreenActive(0) && gameSettings->keyBindAttack->pressed && inGameHasFocus);
+        clickMouse(0, currentScreen == nullptr && !isPlayerScreenActive(0) && !thePlayer->isUsingItem() && gameSettings->keyBindAttack->pressed && inGameHasFocus);
         ClientProfiler::tickPhase("input", System::nanoTime() - clientPhaseStartNs);
     }
 

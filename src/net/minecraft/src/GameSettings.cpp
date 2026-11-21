@@ -169,6 +169,7 @@ void GameSettings::setDefaults()
     legacyCrafting = PLATFORM_XBOX != 0;
     legacyCreative = true;
     xboxStyleCrafting = (PLATFORM_XBOX || PLATFORM_PS2) != 0;
+    onScreenHints = true;
     alternativeControllerLayout = false;
     controllerDeadzone = 0.20f;
     wiiDeflicker = true;

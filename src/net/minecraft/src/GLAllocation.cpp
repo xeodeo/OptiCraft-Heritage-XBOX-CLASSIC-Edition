@@ -25,10 +25,12 @@ int_t GLAllocation::generateDisplayLists(int_t count)
 
 void GLAllocation::deleteDisplayLists(int_t first)
 {
-    auto it = std::find(displayLists.begin(), displayLists.end(), first);
-    if (it == displayLists.end())
+    // displayLists is a flat [base, count, base, count, ...] table, and counts
+    // share slots with list names. Match pair bases only; a count is never a
+    // list name.
+    const int_t index = findDisplayListPair(displayLists, first);
+    if (index < 0)
         return;
-    const int_t index = static_cast<int_t>(it - displayLists.begin());
     renderDeleteDisplayLists(displayLists[index], displayLists[index + 1]);
     displayLists.erase(displayLists.begin() + index, displayLists.begin() + index + 2);
 }

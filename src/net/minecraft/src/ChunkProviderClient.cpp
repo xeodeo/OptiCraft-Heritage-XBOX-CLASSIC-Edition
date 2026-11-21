@@ -120,6 +120,36 @@ Chunk *ChunkProviderClient::prepareChunk(int_t i, int_t j)
 			delete old;
 	}
 
+	return createChunk(key, i, j);
+}
+
+Chunk *ChunkProviderClient::ensureChunk(int_t i, int_t j)
+{
+	// A resident column is handed back as it is: its blocks, its tile entities
+	// and its entities survive the call, and the topology version stays put.
+	const ulong_t key = ChunkCoordIntPair::chunkXZ2Long(i, j);
+	auto existing = chunkMapping.find(key);
+	if (existing != chunkMapping.end() && existing->second != nullptr &&
+		existing->second != blankChunk)
+	{
+		return existing->second;
+	}
+
+	// A stale entry (null, or the shared EmptyChunk placeholder) is not a
+	// resident column: drop it before materializing the real one.
+	if (existing != chunkMapping.end())
+	{
+		chunkList.erase(std::remove(chunkList.begin(), chunkList.end(), existing->second),
+		                chunkList.end());
+		chunkMapping.erase(existing);
+		markChunkTopologyChanged();
+	}
+
+	return createChunk(key, i, j);
+}
+
+Chunk *ChunkProviderClient::createChunk(ulong_t key, int_t i, int_t j)
+{
 	// Packet51 fills section storage immediately after this call. Constructing
 	// through the old 128-high flat block array only allocated and scanned 32 KiB
 	// of zeroes before throwing it away.

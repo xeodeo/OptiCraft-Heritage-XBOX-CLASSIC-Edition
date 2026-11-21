@@ -35,6 +35,7 @@ constexpr int_t BUTTON_EDIT_PLAYER_NAME2 = 608;
 constexpr int_t BUTTON_LEGACY_CRAFTING = 609;
 constexpr int_t BUTTON_LEGACY_CREATIVE = 610;
 constexpr int_t BUTTON_XBOX_STYLE_CRAFTING = 611;
+constexpr int_t BUTTON_ON_SCREEN_HINTS = 612;
 
 }
 
@@ -42,7 +43,7 @@ LegacyHeritageOptions::LegacyHeritageOptions(GuiScreen *parent, GameSettings *se
     LegacyOptionsBackgroundMode backgroundModeValue)
     : LegacyOptionsScreen(parent, settingsValue, backgroundModeValue), nameField(nullptr), nameField2(nullptr), legacyUiCheckbox(nullptr),
       legacyLookCheckbox(nullptr), legacyCraftingCheckbox(nullptr), xboxStyleCraftingCheckbox(nullptr), legacyCreativeCheckbox(nullptr),
-      alternativeControlsCheckbox(nullptr)
+      onScreenHintsCheckbox(nullptr), alternativeControlsCheckbox(nullptr)
 {
 }
 
@@ -56,7 +57,7 @@ LegacyHeritageOptions::~LegacyHeritageOptions()
 
 void LegacyHeritageOptions::initGui()
 {
-    int_t rowCount = 7; // player name label, player name field, Legacy UI, Legacy Look, Legacy Crafting, Legacy Creative, Done
+    int_t rowCount = 8; // player name label, player name field, Legacy UI, Legacy Look, Legacy Crafting, Legacy Creative, On-Screen Hints, Done
 #if PLATFORM_HAS_ASPECT_RATIO_OPTION
     ++rowCount;
 #endif
@@ -136,6 +137,10 @@ void LegacyHeritageOptions::initGui()
     legacyCreativeCheckbox = new LegacyOptionCheckbox(BUTTON_LEGACY_CREATIVE, x, legacyLayout.rowY(row++), w, h,
         uiText("Legacy Creative"), settings->legacyCreative);
     controlList.push_back(legacyCreativeCheckbox);
+
+    onScreenHintsCheckbox = new LegacyOptionCheckbox(BUTTON_ON_SCREEN_HINTS, x, legacyLayout.rowY(row++), w, h,
+        uiText("On-Screen Hints"), settings->onScreenHints);
+    controlList.push_back(onScreenHintsCheckbox);
 
 #ifdef WII_PLATFORM
     alternativeControlsCheckbox = new LegacyOptionCheckbox(BUTTON_ALTERNATIVE_CONTROLS, x,
@@ -320,6 +325,15 @@ void LegacyHeritageOptions::actionPerformed(GuiButton *button)
         settings->legacyCreative = !settings->legacyCreative;
         if (legacyCreativeCheckbox != nullptr)
             legacyCreativeCheckbox->setChecked(settings->legacyCreative);
+        settings->saveOptions();
+        return;
+    }
+
+    if (button->id == BUTTON_ON_SCREEN_HINTS)
+    {
+        settings->onScreenHints = !settings->onScreenHints;
+        if (onScreenHintsCheckbox != nullptr)
+            onScreenHintsCheckbox->setChecked(settings->onScreenHints);
         settings->saveOptions();
         return;
     }

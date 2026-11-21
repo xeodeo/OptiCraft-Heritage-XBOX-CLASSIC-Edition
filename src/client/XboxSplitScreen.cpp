@@ -343,18 +343,27 @@ void tick(Minecraft *mc)
     // Same order as player 1's input (Minecraft::runTick): the press is the
     // hit / block click, holding keeps mining, LT uses and repeats, and
     // releasing LT finishes eating, drawing a bow...
-    mc->player2Mining = (held & XBOX_PAD_RT) != 0;
+    mc->player2Mining = (held & XBOX_PAD_RT) != 0 && !p2->isUsingItem();
     mc->enterPlayer2Context();
     mc->tickClickCounters();
-    if (p2->isUsingItem() && (held & XBOX_PAD_LT) == 0 && mc->playerController != nullptr)
-        mc->playerController->onStoppedUsingItem(p2);
-    if (pressed & XBOX_PAD_RT)
-        mc->clickMouse(0);
-    if (pressed & XBOX_PAD_LT)
+    if (p2->isUsingItem())
+    {
+        if ((held & XBOX_PAD_LT) == 0 && mc->playerController != nullptr)
+        {
+            mc->playerController->onStoppedUsingItem(p2);
+            mc->armUseItemDelay();
+        }
+    }
+    else
+    {
+        if (pressed & XBOX_PAD_RT)
+            mc->clickMouse(0);
+        if (pressed & XBOX_PAD_LT)
+            mc->clickMouse(1);
+    }
+    if ((held & XBOX_PAD_LT) && mc->useItemReady() && !p2->isUsingItem())
         mc->clickMouse(1);
-    else if ((held & XBOX_PAD_LT) && mc->useItemReady() && !p2->isUsingItem())
-        mc->clickMouse(1);
-    if (held & XBOX_PAD_RT)
+    if ((held & XBOX_PAD_RT) && !p2->isUsingItem())
         mc->clickMouse(0, true);
     else if ((released & XBOX_PAD_RT) && mc->playerController != nullptr)
         mc->playerController->resetBlockRemoving();
