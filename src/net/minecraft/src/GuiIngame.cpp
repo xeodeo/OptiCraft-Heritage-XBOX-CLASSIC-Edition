@@ -41,6 +41,7 @@
 #include "Minecraft.h"
 #include "HudSafeArea.h"
 #include "RenderManager.h"
+#include "Render.h"
 #include "PlayerCapabilities.h"
 #include <cmath>
 #include "World.h"
@@ -550,7 +551,14 @@ void GuiIngame::renderAnimatedCharacter(int_t screenWidth, int_t screenHeight)
 	renderTranslate(0.0f, player->yOffset, 0.0f);
 	const float_t savedViewY = RenderManager::instance->playerViewY;
 	RenderManager::instance->playerViewY = 180.0f;
-	RenderManager::instance->renderEntityWithPosYaw(player, 0.0, 0.0, 0.0, 0.0f, 1.0f);
+	// Model only: renderEntityWithPosYaw would also draw the ground shadow (and
+	// fire) from the player's world position, which landed on the hotbar as a
+	// dark, flickering gradient in dark places and while flying low.
+	const float_t savedBrightness = player->entityBrightness;
+	player->entityBrightness = 1.0f;
+	if (Render *render = RenderManager::instance->getEntityRenderObject(player))
+		render->doRender(player, 0.0, 0.0, 0.0, 0.0f, 1.0f);
+	player->entityBrightness = savedBrightness;
 	RenderManager::instance->playerViewY = savedViewY;
 
 	player->renderYawOffset = savedYawOffset;
