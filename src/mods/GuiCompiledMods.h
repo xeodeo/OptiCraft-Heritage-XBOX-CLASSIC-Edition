@@ -42,6 +42,7 @@ private:
     };
 
     bool isLegacyMode() const;
+    void drawLegacyScreen(float_t partialTick);
     void rebuildFilteredList();
     void toggleSelectedMod();
     void openSelectedModConfig();

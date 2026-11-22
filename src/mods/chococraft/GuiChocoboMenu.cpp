@@ -13,6 +13,7 @@
 #include "net/minecraft/src/StringTranslate.h"
 #include "net/minecraft/src/ControlIcon.h"
 #include "net/minecraft/src/legacy/LegacyMenuHints.h"
+#include "net/minecraft/src/legacy/LegacyMenuWidgets.h"
 #include "net/minecraft/src/legacy/LegacyOptionsLayout.h"
 #include "net/minecraft/src/legacy/LegacyOptionsPanel.h"
 #include "platform/PlatformConfig.h"
@@ -341,8 +342,13 @@ void GuiChocoboMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
     if (m_chocobo == nullptr)
         return;
 
+    if (isLegacyMode())
+    {
+        drawLegacyScreen(partialTick);
+        return;
+    }
+
     const bool es = chocoMenuIsSpanish();
-    const bool legacy = isLegacyMode();
     const bool isSplit = (mc != nullptr && mc->isSplitScreenActive());
 
     drawGradientRect(0, 0, width, height, static_cast<int_t>(0xC0080808u), static_cast<int_t>(0xE0141414u));
@@ -353,22 +359,9 @@ void GuiChocoboMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
     const int_t panelX = (width - panelW) / 2;
     const int_t panelY = std::max<int_t>(10, (hintY - panelH) / 2);
 
-    if (legacy)
-    {
-        LegacyOptionsLayout layout{};
-        layout.panelX = panelX;
-        layout.panelY = panelY;
-        layout.panelWidth = panelW;
-        layout.panelHeight = panelH;
-        LegacyOptionsPanel panel;
-        panel.draw(layout);
-    }
-    else
-    {
-        drawRect(panelX, panelY, panelX + panelW, panelY + panelH, static_cast<int_t>(0xD8141414u));
-        drawRect(panelX, panelY, panelX + panelW, panelY + 1, static_cast<int_t>(0xFF666666u));
-        drawRect(panelX, panelY + panelH - 1, panelX + panelW, panelY + panelH, static_cast<int_t>(0xFF666666u));
-    }
+    drawRect(panelX, panelY, panelX + panelW, panelY + panelH, static_cast<int_t>(0xD8141414u));
+    drawRect(panelX, panelY, panelX + panelW, panelY + 1, static_cast<int_t>(0xFF666666u));
+    drawRect(panelX, panelY + panelH - 1, panelX + panelW, panelY + panelH, static_cast<int_t>(0xFF666666u));
 
     // Header & Chocobo Stats
     std::string title = m_chocobo->getCustomName().empty()
@@ -384,55 +377,7 @@ void GuiChocoboMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         EntityChocobo::getColorAbility(m_chocobo->getColor(), es));
     drawCenteredString(fontRenderer, statBuf, panelX + panelW / 2, panelY + 20, 0xCCCCCC);
 
-    if (legacy)
-    {
-        const char *aiStr = "";
-        switch (m_chocobo->getAiMode())
-        {
-        case ChocoboAiMode::Wander: aiStr = es ? "Libre" : "Wander"; break;
-        case ChocoboAiMode::Follow: aiStr = es ? "Seguir" : "Follow"; break;
-        case ChocoboAiMode::Stay:   aiStr = es ? "Quieto" : "Stay"; break;
-        }
-        const std::string rows[4] = {
-            std::string(es ? "Cambiar nombre: " : "Rename: ") +
-                (m_chocobo->getCustomName().empty() ? (es ? "(Sin nombre)" : "(Unnamed)") : m_chocobo->getCustomName()),
-            m_chocobo->hasSaddlebags()
-                ? (es ? "Abrir Alforjas (27 huecos)" : "Open Saddlebags (27 slots)")
-                : (es ? "Alforjas (Usa alforjas en el)" : "Saddlebags (Not equipped)"),
-            std::string(es ? "Comportamiento: " : "Behavior: ") + aiStr,
-            m_chocobo->isSaddled()
-                ? (es ? "Montar Chocobo" : "Mount Chocobo")
-                : (es ? "Montar (Equipa una silla)" : "Mount (Needs saddle)")
-        };
-
-        const int_t listX = panelX + 10;
-        const int_t listW = panelW - 20;
-        const int_t listY = panelY + 38;
-        const int_t rowH = 24;
-        for (int_t i = 0; i < 4; ++i)
-        {
-            const int_t ry = listY + i * rowH;
-            const bool sel = (i == m_selectedIndex);
-            const bool avail = (i == 0 || i == 2) ||
-                               (i == 1 && m_chocobo->hasSaddlebags()) ||
-                               (i == 3 && m_chocobo->isSaddled() && !m_chocobo->isChild());
-            drawRect(listX, ry, listX + listW, ry + rowH - 3,
-                sel ? static_cast<int_t>(0xD83A5288u) : static_cast<int_t>(0x90222222u));
-            if (sel)
-                drawRect(listX, ry, listX + 3, ry + rowH - 3, static_cast<int_t>(0xFFFFDD44u));
-            drawString(fontRenderer, rows[i], listX + 8, ry + 6,
-                avail ? (sel ? 0xFFFFAA : 0xFFFFFF) : 0x777777);
-        }
-
-        drawCenteredString(fontRenderer,
-            es ? "Montado: A=Saltar/Volar(Dorado) | L3=Bajar"
-               : "Mounted: A=Jump/Fly(Gold) | L3=Dismount",
-            panelX + panelW / 2, panelY + panelH - 16, 0xAAAAAA);
-    }
-    else
-    {
-        GuiScreen::drawScreen(mouseX, mouseY, partialTick);
-    }
+    GuiScreen::drawScreen(mouseX, mouseY, partialTick);
 
     if (m_renaming && m_nameField != nullptr)
     {
@@ -453,5 +398,97 @@ void GuiChocoboMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         es ? "Cerrar" : "Back"
     };
     drawControlHintRow(mc, width, hintY, btns, acts, 3);
+#endif
+}
+
+// LCE look: grey bevelled panel, dark title, one stone button per action with
+// the yellow label on the selected one, hint row at the bottom.
+void GuiChocoboMenu::drawLegacyScreen(float_t partialTick)
+{
+    const bool es = chocoMenuIsSpanish();
+    legacyDrawMenuBackdrop(mc, width, height, partialTick);
+
+    const char *aiStr = "";
+    switch (m_chocobo->getAiMode())
+    {
+    case ChocoboAiMode::Wander: aiStr = es ? "Libre" : "Wander"; break;
+    case ChocoboAiMode::Follow: aiStr = es ? "Seguir" : "Follow"; break;
+    case ChocoboAiMode::Stay:   aiStr = es ? "Quieto" : "Stay"; break;
+    }
+    const std::string rows[4] = {
+        std::string(es ? "Cambiar nombre: " : "Rename: ") +
+            (m_chocobo->getCustomName().empty() ? (es ? "(Sin nombre)" : "(Unnamed)") : m_chocobo->getCustomName()),
+        m_chocobo->hasSaddlebags()
+            ? (es ? "Abrir alforjas (27 huecos)" : "Open Saddlebags (27 slots)")
+            : (es ? "Alforjas (sin equipar)" : "Saddlebags (Not equipped)"),
+        std::string(es ? "Comportamiento: " : "Behavior: ") + aiStr,
+        m_chocobo->isSaddled()
+            ? (es ? "Montar chocobo" : "Mount Chocobo")
+            : (es ? "Montar (necesita silla)" : "Mount (Needs saddle)")
+    };
+
+    const bool compact = (height < 180);
+    const int_t headerH = compact ? 26 : 32;
+    const LegacyMenuLayout l = legacyMenuLayout(mc, width, height, 250, 4, headerH, compact ? 0 : 12);
+    legacyDrawMenuPanel(l.panelX, l.panelY, l.panelW, l.panelH);
+
+    const std::string title = m_chocobo->getCustomName().empty()
+        ? (std::string("Chocobo ") + EntityChocobo::getColorName(m_chocobo->getColor(), es))
+        : m_chocobo->getCustomName();
+    legacyDrawPanelTitle(fontRenderer, title, l.panelX + l.panelW / 2, l.titleY);
+
+    char statBuf[96];
+    std::snprintf(statBuf, sizeof(statBuf), "%s | HP: %d/%d | %s",
+        EntityChocobo::getColorName(m_chocobo->getColor(), es),
+        static_cast<int>(m_chocobo->getHealth()),
+        static_cast<int>(m_chocobo->getMaxHealth()),
+        EntityChocobo::getColorAbility(m_chocobo->getColor(), es));
+    const std::string stats = legacyFitText(fontRenderer, statBuf, l.contentW);
+    legacyDrawPanelText(fontRenderer, stats, l.panelX + (l.panelW - fontRenderer->getStringWidth(stats)) / 2,
+        l.titleY + (compact ? 10 : 12), static_cast<int_t>(0xff606060u));
+
+    const int_t scroll = legacyMenuKeepVisible(m_selectedIndex, 4, l.visibleRows, 0);
+    for (int_t vi = 0; vi < l.visibleRows && scroll + vi < 4; ++vi)
+    {
+        const int_t i = scroll + vi;
+        const bool avail = (i == 0 || i == 2) ||
+                           (i == 1 && m_chocobo->hasSaddlebags()) ||
+                           (i == 3 && m_chocobo->isSaddled() && !m_chocobo->isChild());
+        legacyDrawMenuButton(mc, l.contentX, l.rowY(vi), l.contentW, l.rowH, rows[i], i == m_selectedIndex, avail);
+    }
+
+    if (!compact)
+    {
+        const std::string tip = legacyFitText(fontRenderer,
+            es ? "Montado: A = saltar / volar (dorado), L3 = bajar"
+               : "Mounted: A = jump / fly (gold), L3 = dismount", l.contentW);
+        legacyDrawPanelText(fontRenderer, tip, l.panelX + (l.panelW - fontRenderer->getStringWidth(tip)) / 2,
+            l.footerY + 1, static_cast<int_t>(0xff606060u));
+    }
+
+    if (m_renaming && m_nameField != nullptr)
+    {
+        // The text field sits at height / 2 - 44 (initGui); the small panel wraps it.
+        const int_t boxW = std::min<int_t>(224, width - 8);
+        const int_t boxX = (width - boxW) / 2;
+        const int_t by = std::max<int_t>(4, height / 2 - 70);
+        legacyDrawMenuPanel(boxX, by, boxW, 54);
+        const std::string hdr = legacyFitText(fontRenderer,
+            es ? "Nombre del chocobo (Start: guardar)" : "Chocobo name (Start: save)", boxW - 12);
+        legacyDrawPanelTitle(fontRenderer, hdr, width / 2, by + 8);
+        m_nameField->drawTextBox();
+    }
+
+#if PLATFORM_XBOX
+    if (!m_renaming)
+    {
+        const std::string btns[] = {"D-Pad", "A", "B"};
+        const std::string acts[] = {
+            es ? "Navegar" : "Navigate",
+            es ? "Elegir" : "Select",
+            es ? "Cerrar" : "Back"
+        };
+        drawControlHintRow(mc, width, l.hintY, btns, acts, 3);
+    }
 #endif
 }

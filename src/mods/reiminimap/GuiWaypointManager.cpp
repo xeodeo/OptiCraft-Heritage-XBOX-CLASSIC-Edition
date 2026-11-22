@@ -12,6 +12,8 @@
 #include "net/minecraft/src/StringTranslate.h"
 #include "net/minecraft/src/UiStrings.h"
 #include "net/minecraft/src/legacy/LegacyMenuHints.h"
+#include "net/minecraft/src/legacy/LegacyMenuWidgets.h"
+#include "net/minecraft/src/legacy/LegacyOptionText.h"
 #include "net/minecraft/src/legacy/LegacyOptionsLayout.h"
 #include "net/minecraft/src/legacy/LegacyOptionsPanel.h"
 #include "net/minecraft/src/ControlIcon.h"
@@ -475,8 +477,172 @@ void GuiWaypointManager::closeScreen()
     }
 }
 
+// LCE look: grey bevelled panel, one stone button per waypoint (colour swatch,
+// name, coordinates, TickBox = shown on the map), yellow label on the selected one.
+void GuiWaypointManager::drawLegacyScreen(float_t partialTick)
+{
+    const bool isEs = isSpanishLocale();
+    const bool isSplit = (mc != nullptr && mc->isSplitScreenActive());
+    legacyDrawMenuBackdrop(mc, width, height, partialTick);
+
+    const size_t totalWaypoints = ReiMinimap::getInstance().getWaypointCount();
+    const int_t total = static_cast<int_t>(totalWaypoints);
+    const bool compact = (height < 180);
+    const int_t rowH = compact ? 20 : (height >= 330 ? 24 : 22);
+    const int_t headerH = (isSplit && !compact) ? 30 : (compact ? 16 : 20);
+    const LegacyMenuLayout l = legacyMenuLayout(mc, width, height, 280,
+        std::max<int_t>(total, 3), headerH, compact ? 0 : 14, rowH);
+    legacyDrawMenuPanel(l.panelX, l.panelY, l.panelW, l.panelH);
+    m_maxVisibleRows = l.visibleRows;
+
+    const std::string title = isEs ? "Waypoints del minimapa" : "Minimap Waypoints";
+    legacyDrawPanelTitle(fontRenderer, title, l.panelX + l.panelW / 2, l.titleY);
+    if (isSplit && !compact)
+    {
+        const std::string playerTag = (m_playerIndex == 1)
+            ? (isEs ? "Jugador 2" : "Player 2")
+            : (isEs ? "Jugador 1" : "Player 1");
+        legacyDrawPanelText(fontRenderer, playerTag,
+            l.panelX + (l.panelW - fontRenderer->getStringWidth(playerTag)) / 2, l.titleY + 11,
+            static_cast<int_t>(0xff606060u));
+    }
+
+    if (total == 0)
+    {
+        const std::string a = isEs ? "No hay waypoints guardados" : "No waypoints saved";
+        const std::string b = isEs ? "Pulsa Y para crear uno nuevo" : "Press Y to create a new one";
+        const int_t midY = l.firstRowY + (l.visibleRows * (l.rowH + l.rowGap)) / 2 - 10;
+        legacyDrawPanelText(fontRenderer, a, l.panelX + (l.panelW - fontRenderer->getStringWidth(a)) / 2, midY);
+        legacyDrawPanelText(fontRenderer, b, l.panelX + (l.panelW - fontRenderer->getStringWidth(b)) / 2, midY + 12,
+            static_cast<int_t>(0xff606060u));
+    }
+    else
+    {
+        if (m_selectedIndex < 0) m_selectedIndex = 0;
+        if (m_selectedIndex >= total) m_selectedIndex = total - 1;
+        m_scrollOffset = legacyMenuKeepVisible(m_selectedIndex, total, l.visibleRows, m_scrollOffset);
+
+        char counterBuf[32];
+        std::snprintf(counterBuf, sizeof(counterBuf), "%d/%u", m_selectedIndex + 1, static_cast<unsigned>(totalWaypoints));
+        legacyDrawPanelText(fontRenderer, counterBuf,
+            l.panelX + l.panelW - fontRenderer->getStringWidth(counterBuf) - 8, l.titleY, static_cast<int_t>(0xff606060u));
+
+        const int_t rowW = l.contentW - 8;
+        for (int_t vi = 0; vi < l.visibleRows; ++vi)
+        {
+            const int_t itemIdx = m_scrollOffset + vi;
+            if (itemIdx >= total)
+                break;
+            const Waypoint &wp = ReiMinimap::getInstance().getWaypoint(static_cast<size_t>(itemIdx));
+            const bool sel = (itemIdx == m_selectedIndex);
+            const int_t ry = l.rowY(vi);
+            const int_t labelColor = legacyDrawMenuButtonFrame(mc, l.contentX, ry, rowW, l.rowH, sel, true);
+
+            // Colour swatch (grey when hidden)
+            const int_t sw = 8;
+            const int_t sx = l.contentX + 6;
+            const int_t sy = ry + (l.rowH - sw) / 2;
+            drawRect(sx - 1, sy - 1, sx + sw + 1, sy + sw + 1, static_cast<int_t>(0xFF000000u));
+            drawRect(sx, sy, sx + sw, sy + sw,
+                wp.enabled ? (static_cast<int_t>(0xFF000000u) | wp.color) : static_cast<int_t>(0xFF555555u));
+
+            // "Shown on the map" tick on the right
+            const int_t tickX = l.contentX + rowW - 17;
+            legacyDrawTickBox(mc, tickX, ry + (l.rowH - 12) / 2, wp.enabled, sel);
+
+            const int_t textX = sx + sw + 6;
+            const int_t textW = tickX - 4 - textX;
+            const std::string label = std::to_string(itemIdx + 1) + ". " + wp.name;
+            char coordBuf[64];
+            std::snprintf(coordBuf, sizeof(coordBuf), "X:%d Y:%d Z:%d", wp.x, wp.y, wp.z);
+            if (l.rowH >= 20)
+            {
+                const int_t top = ry + (l.rowH - 18) / 2;
+                legacyDrawOptionText(fontRenderer, legacyFitText(fontRenderer, label, textW), textX, top,
+                    wp.enabled ? labelColor : static_cast<int_t>(0xffc0c0c0u));
+                legacyDrawOptionText(fontRenderer, legacyFitText(fontRenderer, coordBuf, textW), textX, top + 10,
+                    sel ? static_cast<int_t>(0xffe0e0e0u) : static_cast<int_t>(0xffc8c8c8u));
+            }
+            else
+            {
+                legacyDrawOptionText(fontRenderer, legacyFitText(fontRenderer, label, textW), textX,
+                    ry + (l.rowH - 7) / 2, wp.enabled ? labelColor : static_cast<int_t>(0xffc0c0c0u));
+            }
+        }
+        const int_t listH = l.visibleRows * l.rowH + (l.visibleRows - 1) * l.rowGap;
+        legacyDrawMenuScrollbar(l.panelX + l.panelW - 10, l.firstRowY, listH, m_scrollOffset, l.visibleRows, total);
+    }
+
+    const bool editing = (m_editMode != EditMode::None && m_nameField != nullptr);
+
+#if PLATFORM_XBOX
+    // The bottom row holds four prompts; the rest go on the panel.
+    if (!compact && !editing)
+    {
+        const std::string ib[] = {"White", "Black", "D-Pad"};
+        const std::string ia[] = {
+            isEs ? "Nombre" : "Rename",
+            isEs ? "Opciones" : "Options",
+            isEs ? "Color" : "Colour"
+        };
+        legacyDrawInlineHints(mc, l.panelX + l.panelW / 2, l.footerY + 3, ib, ia, 3);
+    }
+#endif
+
+    if (editing)
+    {
+        // The text field sits at height / 2 - 44 (initGui); the small panel wraps it.
+        const int_t boxW = std::min<int_t>(232, width - 8);
+        const int_t boxX = (width - boxW) / 2;
+        const int_t boxY = std::max<int_t>(4, height / 2 - 70);
+        legacyDrawMenuPanel(boxX, boxY, boxW, 54);
+        const std::string editTitle = legacyFitText(fontRenderer, (m_editMode == EditMode::CreateNew)
+            ? (isEs ? "Nuevo waypoint (Start: guardar)" : "New waypoint (Start: save)")
+            : (isEs ? "Renombrar waypoint (Start: guardar)" : "Rename waypoint (Start: save)"), boxW - 12);
+        legacyDrawPanelTitle(fontRenderer, editTitle, width / 2, boxY + 8);
+        m_nameField->drawTextBox();
+        return;
+    }
+
+#if PLATFORM_XBOX
+    const std::string buttons[] = {"A", "Y", "X", "B"};
+    const std::string actions[] = {
+        isEs ? "Ver" : "Toggle",
+        isEs ? "Nuevo" : "New",
+        isEs ? "Borrar" : "Delete",
+        isEs ? "Salir" : "Back"
+    };
+    drawControlHintRow(mc, width, l.hintY, buttons, actions, 4);
+#elif PLATFORM_PS2
+    const std::string buttons[] = {"Cross", "Triangle", "Square", "Circle"};
+    const std::string actions[] = {
+        isEs ? "Alternar" : "Toggle",
+        isEs ? "Nuevo" : "New",
+        isEs ? "Eliminar" : "Delete",
+        isEs ? "Volver" : "Back"
+    };
+    drawControlHintRow(mc, width, l.hintY, buttons, actions, 4);
+#else
+    const std::string buttons[] = {"Space", "N/R", "Del", "Esc"};
+    const std::string actions[] = {
+        isEs ? "Alternar" : "Toggle",
+        isEs ? "Nuevo/Ren" : "New/Ren",
+        isEs ? "Eliminar" : "Delete",
+        isEs ? "Volver" : "Back"
+    };
+    drawControlHintRow(mc, width, l.hintY, buttons, actions, 4);
+#endif
+}
+
 void GuiWaypointManager::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 {
+    if (isLegacyMode())
+    {
+        drawLegacyScreen(partialTick);
+        GuiScreen::drawScreen(mouseX, mouseY, partialTick);
+        return;
+    }
+
     const bool isEs = isSpanishLocale();
     const bool isSplit = (mc != nullptr && mc->isSplitScreenActive());
     const bool legacy = isLegacyMode();
