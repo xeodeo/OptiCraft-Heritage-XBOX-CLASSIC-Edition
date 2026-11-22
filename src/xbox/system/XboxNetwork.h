@@ -11,6 +11,8 @@
 // VS2022 STL the game uses, so no std:: object may cross this boundary.
 namespace XboxNetwork
 {
+// Why the last host name lookup failed (or used the public-DNS fallback); "" if fine.
+const char *lastResolveError();
 // XNetStartup (security bypassed: the only mode that may reach PCs and
 // ordinary servers) + WSAStartup, then waits for the dashboard/DHCP address.
 // Safe to call from any thread and more than once.
