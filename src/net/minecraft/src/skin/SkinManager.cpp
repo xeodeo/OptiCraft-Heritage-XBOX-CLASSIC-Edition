@@ -881,19 +881,20 @@ bool SkinManager::saveDownloadedSkin(const std::string &username,
         return false;
     }
 
-    // 2. Write 64x32 retro texture (always write for 64x64; remove stale _32.png if replaced by 64x32)
-    if (h == 64)
+    // 2. Write the 64x32 texture the game draws. Always, also for 64x32 skins:
+    // makeRetro32 applies Java's skin fixes (opaque base, an all-opaque hat layer
+    // cleared). Saving only the raw download left old skins such as Notch's
+    // with a black box over the face in game.
+    std::vector<unsigned char> retro32;
+    const bool haveRetro = makeRetro32(rgba, w, h, retro32);
+    if (haveRetro)
     {
-        std::vector<unsigned char> retro32;
-        if (makeRetro32(rgba, w, h, retro32))
+        int len = 0;
+        unsigned char *png = stbi_write_png_to_mem(retro32.data(), 64 * 4, 64, 32, 4, &len);
+        if (png != nullptr)
         {
-            int len = 0;
-            unsigned char *png = stbi_write_png_to_mem(retro32.data(), 64 * 4, 64, 32, 4, &len);
-            if (png != nullptr)
-            {
-                PlatformStorage::writeFile(model32Path, png, len);
-                STBIW_FREE(png);
-            }
+            PlatformStorage::writeFile(model32Path, png, len);
+            STBIW_FREE(png);
         }
     }
     else
@@ -901,9 +902,10 @@ bool SkinManager::saveDownloadedSkin(const std::string &username,
         PlatformStorage::removeFile(model32Path);
     }
 
-    // 3. Assemble and write 16x32 front preview
+    // 3. Assemble and write 16x32 front preview (from the fixed texture)
     std::vector<unsigned char> frontRgba;
-    if (assembleFrontPreview(rgba, w, h, frontRgba))
+    if (haveRetro ? assembleFrontPreview(retro32.data(), 64, 32, frontRgba)
+                  : assembleFrontPreview(rgba, w, h, frontRgba))
     {
         int len = 0;
         unsigned char *png = stbi_write_png_to_mem(frontRgba.data(), 16 * 4, 16, 32, 4, &len);
