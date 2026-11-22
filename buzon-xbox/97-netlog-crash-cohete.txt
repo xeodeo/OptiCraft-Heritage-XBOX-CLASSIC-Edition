@@ -1,0 +1,14 @@
+[MC][I][xbox.input] text pressed=0010 held=0010
+[MC][I][xbox.input] text pressed=0010 held=0010
+[MC][I][xbox.input] text pressed=0010 held=0010
+[MC][I][xbox.fpu] frame=77701 cw=027f sw=0336 tag=ffff double53=1 freeKB=18016
+[MC][I][xbox.mem] lists=911 (4836KB) vbPools=13 textures=57 (6270KB)
+[MC][I][xbox.input] text pressed=0010 held=0010
+[MC][I][xbox.input] text pressed=0008 held=0008
+[MC][I][xbox.input] text pressed=0200 held=0200
+[MC][I][gui] screen -> (none)
+[MC][I][gui] screen -> (none)
+[MC][I][xbox.fpu] frame=78001 cw=027f sw=0136 tag=ffff double53=1 freeKB=18044
+[MC][I][xbox.mem] lists=911 (4969KB) vbPools=13 textures=57 (6270KB)
+[MC][E][crash] Unexpected error: bound must be positive
+[MC][E][crash] Unexpected error: bound must be positive

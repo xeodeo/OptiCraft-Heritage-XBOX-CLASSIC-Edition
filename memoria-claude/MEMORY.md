@@ -34,3 +34,4 @@
 - [Página de estado local](pagina-estado-local.md) — buzon-xbox/ESTADO-OPTICRAFT.html, se regenera con estado/generar.py
 - [Commit sin -a con agy](commit-sin-a-con-agy.md) — en wt-opti30/wt-152-rend solo git add <fichero>, agy puede tener trabajo a medias
 - [Qué es de cada versión](que-es-de-cada-version.md) — qué existe en 1.2.5 y qué solo en 1.5.2; tamaños de mundo; normal vs exp
+- [Repos de la LCE](lce-repos-referencia.md) — TU19 (hugozz26) bajada en lce-tu19 con recetas 1.5/1.6; URLs de las que no sirven

@@ -194,3 +194,15 @@ El otro repo (CPPEditionLegacy, 1.8.9 en C++17 con shared_ptr) NO sirve para Xbo
   usuario confirme que la barra ya no se oscurece. Confirmado 21-11: icono de guardado, mobs tapados, lava LCE (1.2.5),
   vagonetas TNT (1.5.2).
 - Falta: opción «Personaje animado» en Opciones (Java y Legacy) para poder quitarlo.
+
+## 21-11 19:20 (antes de hibernar)
+- Encargo 97 (agy, 1.5.2 `b900220`): crash del cohete (el emisor se borraba al llenarse el tope de partículas;
+  `Random::nextInt(<=0)` ya no lanza en Xbox), crafteo de consola con categorías de la LCE TU19 (`lce-tu19\`) y sin
+  duplicados, textos del faro, pigman (nunca aldeano; enfado en grupo), hielo del Nether evapora (solo 1.5.2: Java 1.2.5
+  deja agua). Encargo 98 (agy, 1.2.5 `f1bf66a`, 1.5.2 `a2ec7d1`): arco como Java, `findDisplayListPair`, carteles y
+  columnas en multijugador, opción «Pistas en pantalla». Probado en mundo 5 min.
+- **A vigilar:** en la prueba del 98, al volver sobre chunks ya guardados `freeKB` bajó de ~24 a ~11 MB en 65 s
+  (listas 529→895). Mirar si se estabiliza o si hay que limitar (¿pasa también antes del 98?).
+- **PENDIENTE: subir a la consola los 8 XBE del lanzador** (f1bf66a / a2ec7d1): FTP no respondía.
+- Portal del End: idea de pintar 4 capas por pasada (multitextura) en vez de 16; el usuario no ha dicho sí todavía.
+- Futuro: 1.6.4 y luego 1.7.10 (techo); referencias en memoria `lce-repos-referencia`.

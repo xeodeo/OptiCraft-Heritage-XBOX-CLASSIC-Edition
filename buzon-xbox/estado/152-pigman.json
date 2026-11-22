@@ -1,0 +1,1 @@
+{"version": "1.5.2", "estado": "por_probar", "area": "Fallos", "nombre": "Zombi pigman: a veces textura rara; al pegar a uno no se enfadan todos", "nota": "b900220: a veces salía como zombi aldeano (textura rara) o con espada de hierro; ahora nunca. Al pegar a uno se enfadan y van todos en 32 bloques.", "ref": "97", "orden": 4}
