@@ -8,7 +8,20 @@ Visto por el usuario en la consola real (22-11 18:20) con nuestro ChocoCraft hec
 5. **Al planear y aterrizar, el jugador recibe daño por caída**: montado/planeando NO debe hacer daño.
 El usuario esperaba que se descompilaran los mods y se portaran.
 
-## Fuente (buscada por Claude, 22-11)
+## FUENTE PRINCIPAL (decidido por el usuario 22-11 18:30): el ChocoCraft REAL de 1.7.10, descompilado
+`C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\mcp-diff\chococraft-1710\`:
+- `ChocoCraft-4.1.5.jar` (Forge 1.7.10, de Modrinth), código descompilado en `src\chococraft\` (97 clases: entidades
+  `EntityChocobo`, `EntityChocoboRideable`, `EntityChicobo`, colores en `entities\colours\`, IA en `entities\ai\`,
+  `RiderActionState`, modelos `ModelChocobo`/`ModelChicobo` que usan ModelBase/ModelRenderer como nuestra 1.5.2) y
+  sus recursos en `assets\chococraft\` (texturas de entidades, objetos, bloques, sonidos, lang).
+- Los nombres `func_XXXX_x`/`field_XXXX_x` son SRG de 1.7.10: tradúcelos con el MCP de 1.7.10 (Forge maven
+  `de/oceanlabs/mcp/mcp/1.7.10` + `mcp_stable` 12-1.7.10, mismo método que la guía 55 para 1.6.4) o a mano mirando
+  el uso; nuestras clases equivalentes están en `mcp-diff\src152` / `src125`.
+- PORTAR ESE MOD (modelo, texturas, cría, colores, montar con silla, saltar, planear, volar del dorado, alforjas,
+  gysahl, recetas, sonidos) a nuestras dos versiones, en lugar del nuestro hecho a mano. ChocoCraft4 (abajo) solo como
+  referencia secundaria.
+
+## Referencia secundaria (buscada por Claude, 22-11)
 No queda ningún ChocoCraft descargable para 1.2.5 ni 1.5.2 (lo más viejo es 1.7.10, «All Rights Reserved»). Se usa
 **ChocoCraft4** (continuación del ChocoCraft de EddieV → ArnoSaxena → clienthax → Slayer5934): código **MIT**, recursos
 **CC-BY-SA 4.0** (hay que citarlo). Bajado en `C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\mcp-diff\chococraft4-ref\`:

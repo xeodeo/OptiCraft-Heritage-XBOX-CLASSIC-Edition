@@ -36,6 +36,9 @@ Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-
 - **113 (chocobos, usuario 22-11 18:20)**: cría con la cabeza despegada; no parece un chocobo (usar modelo y
   texturas de ChocoCraft4, MIT/CC-BY-SA, bajado en `mcp-diff\chococraft4-ref`); el dorado no vuela; montado se mueve
   solo y monta sin silla; daño por caída al planear/aterrizar.
+- **115 (mods por mundo)**: apagar un mod no lo apaga (los chocobos se siguen viendo); detector de mods y versión
+  por mundo con aviso al abrirlo (activar / entrar sin ellos conservándolos / volver); Herobrine con la maldición
+  (fuego) encendida por defecto como el original.
 - **114 (minimapa)**: funciona, pero a veces se redibuja entero (usuario 22-11 18:25).
 - **112 (subagente de Claude, en marcha)**: todas las pantallas nuevas con aspecto LCE de Xbox (parecían Bedrock).
 - **105** (agy-1, A MEDIAS, 54 ficheros sin commit + sonda `XboxProbe105.cpp`): superplano personalizable, marcador
