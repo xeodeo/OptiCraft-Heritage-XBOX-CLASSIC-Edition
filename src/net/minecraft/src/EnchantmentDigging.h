@@ -7,4 +7,5 @@ public:
     int getMinEnchantability(int level) const override;
     int getMaxEnchantability(int level) const override;
     int getMaxLevel() const override;
+    bool canApply(ItemStack *stack) const override;
 };

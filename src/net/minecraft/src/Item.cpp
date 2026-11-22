@@ -40,6 +40,7 @@
 #include "ItemEmptyMap.h"
 #include "ItemWritableBook.h"
 #include "ItemEditableBook.h"
+#include "ItemBook.h"
 #include "ItemEnchantedBook.h"
 #include "ItemCarrotOnAStick.h"
 #include "ItemHangingEntity.h"
@@ -606,7 +607,7 @@ void Item::initItems() {
     clay = (new Item(81))->setIconCoord(9, 3)->setItemName("clay");
     reed = (new ItemReed(82, Block::reed))->setIconCoord(11, 1)->setItemName("reeds");
     paper = (new Item(83))->setIconCoord(10, 3)->setItemName("paper");
-    book = (new Item(84))->setIconCoord(11, 3)->setItemName("book");
+    book = (new ItemBook(84))->setIconCoord(11, 3)->setItemName("book");
     slimeBall = (new Item(85))->setIconCoord(14, 1)->setItemName("slimeball");
     minecartCrate = (new ItemMinecart(86, 1))->setIconCoord(7, 9)->setItemName("minecartChest");
     minecartPowered = (new ItemMinecart(87, 2))->setIconCoord(7, 10)->setItemName("minecartFurnace");

@@ -6,6 +6,8 @@
 #include "EnchantmentData.h"
 
 class DamageSource;
+class Enchantment;
+class Entity;
 class EntityLiving;
 class InventoryPlayer;
 class ItemStack;
@@ -28,11 +30,19 @@ public:
     static int getFortuneModifier(InventoryPlayer *inventory);
     static int getLootingModifier(InventoryPlayer *inventory);
     static bool getAquaAffinityModifier(InventoryPlayer *inventory);
+    // Java 1.5.2: highest Thorns level on the entity's worn items, and the first worn item carrying it.
+    static int func_92098_i(EntityLiving *living);
+    static ItemStack *func_92099_a(Enchantment *enchantment, EntityLiving *living);
+    // Java 1.5.2 getMaxEnchantmentLevel(id, entity.getLastActiveItems()).
+    static int getMaxEnchantmentLevel(int effectId, Entity *entity);
 
     static int calcItemStackEnchantability(Random &random, int slot, int bookshelves, ItemStack *stack);
     static void addRandomEnchantment(Random &random, ItemStack *stack, int level);
     static std::vector<EnchantmentData> buildEnchantmentList(Random &random, ItemStack *stack, int level);
     static std::vector<EnchantmentData> mapEnchantmentData(int enchantability, ItemStack *stack);
+
+    // Java getLastActiveItems(): a player's armour; other mobs here only carry a held item.
+    static int getLastActiveItems(Entity *entity, ItemStack **out);
 
 private:
     static int getMaxEnchantmentLevel(int effectId, ItemStack **stacks, int count);

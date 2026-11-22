@@ -1,4 +1,5 @@
 #include "EntityPlayer.h"
+#include "EnchantmentThorns.h"
 #include "InventoryEnderChest.h"
 #include "java/Math.h"
 #include "java/Arithmetic.h"
@@ -992,6 +993,8 @@ void EntityPlayer::attackTargetEntityWithCurrentItem(Entity *entity)
 		if (damage >= 18)
 			triggerAchievement(AchievementList::overkill);
 		setLastAttackingEntity(entity);
+		if (living != nullptr)
+			EnchantmentThorns::func_92096_a(this, living, rand);
 	}
 
 	ItemStack *itemstack = getCurrentEquippedItem();

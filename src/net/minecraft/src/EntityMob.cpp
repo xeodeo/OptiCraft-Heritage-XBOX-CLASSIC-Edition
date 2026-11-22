@@ -1,4 +1,5 @@
 #include "EntityMob.h"
+#include "EnchantmentThorns.h"
 #include "java/Arithmetic.h"
 
 #include "AxisAlignedBB.h"
@@ -76,7 +77,11 @@ bool EntityMob::attackEntityAsMob(Entity *target)
 			damage -= JavaArithmetic::intShl(2, effect->getAmplifier());
 	}
 
-	return target->attackEntityFrom(DamageSource::causeMobDamage(this), damage);
+	const bool hit = target->attackEntityFrom(DamageSource::causeMobDamage(this), damage);
+	// Java 1.5.2: the target's Thorns armour hits back.
+	if (hit && target->isLiving())
+		EnchantmentThorns::func_92096_a(this, static_cast<EntityLiving *>(target), rand);
+	return hit;
 }
 
 void EntityMob::attackEntity(Entity *entity, float distance)

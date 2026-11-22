@@ -1,5 +1,6 @@
 #pragma once
 #include "Enchantment.h"
+class Random;
 class EnchantmentDurability : public Enchantment
 {
 public:
@@ -7,4 +8,6 @@ public:
     int getMinEnchantability(int level) const override;
     int getMaxEnchantability(int level) const override;
     int getMaxLevel() const override;
+    bool canApply(ItemStack *stack) const override;
+    static bool negateDamage(ItemStack *stack, int level, Random &random);
 };

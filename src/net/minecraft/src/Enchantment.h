@@ -40,6 +40,7 @@ public:
     static Enchantment *projectileProtection;
     static Enchantment *respiration;
     static Enchantment *aquaAffinity;
+    static Enchantment *thorns;
     static Enchantment *sharpness;
     static Enchantment *smite;
     static Enchantment *baneOfArthropods;

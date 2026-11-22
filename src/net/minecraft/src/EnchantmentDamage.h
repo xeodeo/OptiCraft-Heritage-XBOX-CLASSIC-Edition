@@ -10,5 +10,6 @@ public:
     int calcModifierLiving(int level, EntityLiving *living) const override;
     std::string getName() const override;
     bool canApplyTogether(const Enchantment *other) const override;
+    bool canApply(ItemStack *stack) const override;
     const int damageType;
 };

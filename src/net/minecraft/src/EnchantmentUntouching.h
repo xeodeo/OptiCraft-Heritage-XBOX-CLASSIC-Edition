@@ -8,4 +8,5 @@ public:
     int getMaxEnchantability(int level) const override;
     int getMaxLevel() const override;
     bool canApplyTogether(const Enchantment *other) const override;
+    bool canApply(ItemStack *stack) const override;
 };
