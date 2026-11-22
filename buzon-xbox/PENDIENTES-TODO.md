@@ -1,12 +1,13 @@
-# TODO lo pendiente (22-11-2026, 17:55)
+# TODO lo pendiente (22-11-2026, 18:40)
 
 Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-ENCARGO-*.md`) y en
 `ESTADO-OPTICRAFT.html`. Qué rehacer en cada consola: `PLATAFORMAS-QUE-HACER.md`.
 
 ## 0. Versiones y dónde está cada cosa
-- **En la consola (subido 22-11 17:55)**: 1.5.2 `2ff4078` (rama `port152-int`) y 1.2.5 `a0addaf` (`opti30-erluza`):
-  todo lo de los encargos 87–103 + mods (101) + skins 3D 1.8 (107) + DNS de respaldo + **HTTPS relajado** (mbedTLS
-  como la Classic Xbox Store; las skins reintentan por HTTPS si HTTP falla).
+- **En la consola (subido 22-11 18:40)**: 1.5.2 `ee55f32` (rama `port152-int`) y 1.2.5 `e4af03f` (`opti30-erluza`):
+  todo lo de los encargos 87–103 + mods (101) + skins 3D 1.8 (107) + DNS de respaldo + HTTPS relajado (mbedTLS de
+  la Classic Xbox Store; skins reintentan por HTTPS) + Texture Packs de vuelta en el catálogo (botón/Start) + fondo
+  animado y panel centrado en los menús nuevos + HTTPS se libera al salir de buscar skin.
 - **Ramas a juntar cuando acaben**: `port152-erluza` (agy-1, encargo 105 sin commit en `wt-152-rend`) y
   `port152-blq` (agy-2, encargo 108) → `port152-int`.
 - Lanzador: `Downloads\ClassicXboxLoader\downloads\OptiCraft_extracted\OptiCraft\<versión>\` (+ `texturepacks\`).

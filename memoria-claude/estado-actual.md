@@ -11,10 +11,10 @@ metadata:
 `Desktop\Minecraft en xboox clasico\buzon-xbox\ESTADO-ACTUAL.md` is the short status file: branches per version,
 builds in the launcher, decisions the user made, what to test and what is next. Header rewritten on 2026-11-20.
 
-As of 2026-11-22 17:55: **full pending list in `buzon-xbox/PENDIENTES-TODO.md`** (read it first). On the console:
-1.5.2 `2ff4078` (branch `port152-int` = everything + mods + 3D skins + HTTPS) and 1.2.5 `a0addaf` (`opti30-erluza`).
+As of 2026-11-22 17:55: **full pending list in `buzon-xbox/PENDIENTES-TODO.md`** (read it first). On the console (18:40):
+1.5.2 `ee55f32` (branch `port152-int` = everything + mods + 3D skins + HTTPS + UI fixes) and 1.2.5 `e4af03f` (`opti30-erluza`).
 agy-1 encargo 105 half done uncommitted in `wt-152-rend` (no reset); agy-2 encargo 108 on `port152-blq` not started;
-109 (packs from console) queued; 110 HTTPS done by Claude (`XboxTls`, mbedTLS from the Classic Xbox Store, relaxed).
+agy queue 105→108→111→113→114→115; 110 HTTPS done by Claude (`XboxTls`, mbedTLS from the Classic Xbox Store, relaxed).
 Merge 105/108 into `port152-int`. Per-console work: [[plataformas-que-hacer]]. Commit in agy trees only with
 `git add <file>` ([[commit-sin-a-con-agy]]). Decisions: hidden mobs 6+ below; erluza leaves culling stays.
 

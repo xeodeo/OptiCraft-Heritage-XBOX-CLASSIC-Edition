@@ -10,7 +10,7 @@
 - [Anotar en buzon-xbox](anotar-en-buzon.md) — en tareas largas dejar hallazgos y plan en buzon-xbox/NN.md por si se corta la sesión
 - [agy y OpenCode sin permisos](agy-sin-permisos.md) — agy --dangerously-skip-permissions; OpenCode opencode.json allow; --worktree current
 - [Una compilación a la vez](una-compilacion-a-la-vez.md) — candado buzon-xbox/BUILD.lock antes de compilar o usar xemu (Claude, agy, OpenCode)
-- [Estado actual del proyecto](estado-actual.md) — empezar por buzon-xbox/PENDIENTES-TODO.md (22-11 17:55): consola = port152-int 2ff4078 y opti30-erluza a0addaf
+- [Estado actual del proyecto](estado-actual.md) — empezar por buzon-xbox/PENDIENTES-TODO.md (22-11 18:40): consola = port152-int ee55f32 y opti30-erluza e4af03f
 - [Música como el original](musica-comportamiento-original.md) — en Xbox y PS2 se revierte lo que cambia OptiJuegos, con guarda por plataforma
 - [Datos del juego en worktrees](xbox-data-dir-worktrees.md) — sin -DXBOX_DATA_DIR el ISO sale vacío
 - [RE4 a Xbox](re4-xbox-port.md) — empezar por RE4 port/buzon/COMO-VAMOS.md (pendientes) y TRASPASO-08-10-noche.md; nada commiteado

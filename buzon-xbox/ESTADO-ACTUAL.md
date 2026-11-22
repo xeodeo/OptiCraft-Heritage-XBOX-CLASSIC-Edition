@@ -229,3 +229,9 @@ informe 107), sin subir. agy-1 105 a medias (sin commit), agy-2 108 sin empezar.
 **Lista completa de pendientes: `PENDIENTES-TODO.md`.** En consola: 1.5.2 `2ff4078` (`port152-int`) y 1.2.5 `a0addaf`
 con HTTPS relajado hecho por Claude (`src/xbox/system/XboxTls.*`, `external/mbedtls`, `mbedtls_config.h` de la
 Classic Xbox Store; `httpGetUrl` acepta https; skins reintentan por HTTPS).
+
+## 22-11 18:40
+Subido a la consola: 1.5.2 `ee55f32` (`port152-int`) y 1.2.5 `e4af03f`. Lista completa: `PENDIENTES-TODO.md`.
+Cola de agy (~19:05): 105 → 108 → 111 (Modrinth + tirón al guardar) → 113 (ChocoCraft real 1.7.10 descompilado en
+`mcp-diff\chococraft-1710`) → 114 (minimapa redibujo) → 115 (apagar mods de verdad, detector por mundo, Herobrine
+con maldición). Subagente de Claude: estilo LCE en las pantallas nuevas (informe 112, ramas `port152-ui`/`opti30-ui`).
