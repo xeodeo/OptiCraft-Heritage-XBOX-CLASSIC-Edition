@@ -462,6 +462,23 @@ bool makeRetro32(const unsigned char *rgba, int w, int h, std::vector<unsigned c
         for (int x = 0; x < 64; ++x)
             outRetro[(x + y * 64) * 4 + 3] = 255;
 
+    // Hat layer (32, 0, 32, 16): Java's ImageBufferDownload.setAreaTransparent.
+    // Old skins (Notch's among them) paint this area fully opaque, usually
+    // black; with no transparent pixel at all Java treats it as "no hat" and
+    // clears it, otherwise the head is boxed in black.
+    bool hatHasTransparency = false;
+    for (int y = 0; y < 16 && !hatHasTransparency; ++y)
+        for (int x = 32; x < 64; ++x)
+            if (outRetro[(x + y * 64) * 4 + 3] < 128)
+            {
+                hatHasTransparency = true;
+                break;
+            }
+    if (!hatHasTransparency)
+        for (int y = 0; y < 16; ++y)
+            for (int x = 32; x < 64; ++x)
+                outRetro[(x + y * 64) * 4 + 3] = 0;
+
     return true;
 }
 
