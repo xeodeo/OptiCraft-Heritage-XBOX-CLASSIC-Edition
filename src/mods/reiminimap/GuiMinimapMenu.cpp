@@ -1,4 +1,5 @@
 #include "GuiMinimapMenu.h"
+#include "legacy/LegacySceneState.h"
 #include "GuiWaypointManager.h"
 #include "ReiMinimap.h"
 
@@ -330,7 +331,7 @@ void GuiMinimapMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
     }
 
     const bool inWorld = (mc != nullptr && mc->theWorld != nullptr);
-    if (!inWorld && mc != nullptr && legacyDrawPanorama(mc, width, height, 0, partialTick, zLevel))
+    if (!inWorld && mc != nullptr && legacyDrawPanorama(mc, width, height, legacyScenePanoramaTimer(), partialTick, zLevel))
     {
     }
     else

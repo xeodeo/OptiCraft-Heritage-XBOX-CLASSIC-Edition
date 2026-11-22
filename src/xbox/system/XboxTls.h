@@ -26,4 +26,9 @@ int send(Session *session, const char *data, int length, int timeoutMs);
 int recv(Session *session, char *buffer, int length, int timeoutMs);
 
 void close(Session *session);
+
+// Frees the shared TLS state (random generator, entropy, configuration) so it costs
+// nothing in game. Call it when leaving a download screen; if a download is still
+// running it is freed when that connection closes. open() prepares it again.
+void shutdown();
 }

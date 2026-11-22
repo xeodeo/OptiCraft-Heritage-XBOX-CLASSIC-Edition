@@ -1,4 +1,5 @@
 #include "GuiServerInfo.h"
+#include "legacy/LegacySceneState.h"
 
 #include <algorithm>
 #include <string>
@@ -110,7 +111,7 @@ void GuiServerInfo::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
     const bool es = serverInfoIsEs();
     const bool legacy = (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI);
 
-    if (legacy && mc != nullptr && legacyDrawPanorama(mc, width, height, 0, partialTick, zLevel))
+    if (legacy && mc != nullptr && legacyDrawPanorama(mc, width, height, legacyScenePanoramaTimer(), partialTick, zLevel))
     {
     }
     else

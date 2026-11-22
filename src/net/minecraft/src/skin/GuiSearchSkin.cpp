@@ -1,4 +1,8 @@
 #include "GuiSearchSkin.h"
+#include "platform/PlatformConfig.h"
+#if PLATFORM_XBOX
+#include "xbox/system/XboxTls.h"
+#endif
 #include "GuiSkinSelector.h"
 #include "SkinManager.h"
 
@@ -366,6 +370,10 @@ void GuiSearchSkin::initGui()
 
 void GuiSearchSkin::onGuiClosed()
 {
+#if PLATFORM_XBOX
+    // Free the shared TLS state so HTTPS costs nothing once back in the game.
+    XboxTls::shutdown();
+#endif
     lwjgl::Keyboard::enableRepeatEvents(false);
     if (usernameField != nullptr)
         usernameField->setFocused(false);

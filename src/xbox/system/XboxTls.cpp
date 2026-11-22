@@ -31,6 +31,8 @@ namespace
 {
 volatile LONG s_lock = 0;
 bool s_ready = false;
+int s_sessions = 0;              // open or handshaking sessions
+bool s_shutdownPending = false;
 mbedtls_entropy_context s_entropy;
 mbedtls_ctr_drbg_context s_drbg;
 mbedtls_ssl_config s_config;
@@ -65,8 +67,36 @@ bool initOnce(char *error, int errorSize)
         }
     }
     const bool ready = s_ready;
+    if (ready)
+    {
+        ++s_sessions;
+        s_shutdownPending = false;
+    }
     InterlockedExchange(&s_lock, 0);
     return ready;
+}
+
+// Caller holds s_lock.
+void freeSharedLocked()
+{
+    if (!s_ready)
+        return;
+    mbedtls_ssl_config_free(&s_config);
+    mbedtls_ctr_drbg_free(&s_drbg);
+    mbedtls_entropy_free(&s_entropy);
+    s_ready = false;
+    s_shutdownPending = false;
+}
+
+void sessionEnded()
+{
+    while (InterlockedCompareExchange(&s_lock, 1, 0) != 0)
+        Sleep(1);
+    if (s_sessions > 0)
+        --s_sessions;
+    if (s_sessions == 0 && s_shutdownPending)
+        freeSharedLocked();
+    InterlockedExchange(&s_lock, 0);
 }
 } // namespace
 
@@ -136,6 +166,7 @@ Session *open(intptr_t socket, const char *host, int timeoutMs, char *error, int
         }
         mbedtls_ssl_free(&s->ssl);
         delete s;
+        sessionEnded();
         return nullptr;
     }
     return s;
@@ -184,6 +215,18 @@ void close(Session *session)
     mbedtls_ssl_close_notify(&session->ssl);
     mbedtls_ssl_free(&session->ssl);
     delete session;
+    sessionEnded();
+}
+
+void shutdown()
+{
+    while (InterlockedCompareExchange(&s_lock, 1, 0) != 0)
+        Sleep(1);
+    if (s_sessions == 0)
+        freeSharedLocked();
+    else
+        s_shutdownPending = true;
+    InterlockedExchange(&s_lock, 0);
 }
 } // namespace XboxTls
 
@@ -201,6 +244,7 @@ Session *open(intptr_t, const char *, int, char *error, int errorSize)
 int send(Session *, const char *, int, int) { return -1; }
 int recv(Session *, char *, int, int) { return -1; }
 void close(Session *) {}
+void shutdown() {}
 }
 
 #endif // NO_NETWORK

@@ -1,4 +1,5 @@
 #include "GuiHerobrineMenu.h"
+#include "legacy/LegacySceneState.h"
 #include "HerobrineMod.h"
 
 #include "net/minecraft/src/Minecraft.h"
@@ -283,7 +284,7 @@ void GuiHerobrineMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTic
 
     const bool inWorld = (mc != nullptr && mc->theWorld != nullptr);
     if (!inWorld && mc != nullptr)
-        legacyDrawPanorama(mc, width, height, 0, partialTick, zLevel);
+        legacyDrawPanorama(mc, width, height, legacyScenePanoramaTimer(), partialTick, zLevel);
     else
         drawGradientRect(0, 0, width, height, static_cast<int_t>(0xC0101010u), static_cast<int_t>(0xD8101010u));
 
