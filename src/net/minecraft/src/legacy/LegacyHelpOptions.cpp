@@ -1,4 +1,5 @@
 #include "net/minecraft/src/UiStrings.h"
+#include "GuiTexturePacks.h"
 #include "LegacyHelpOptions.h"
 
 #include "LegacyGuiButton.h"
@@ -23,6 +24,7 @@ enum LegacyHelpButtonId
     BUTTON_LANGUAGE = 102,
     BUTTON_HERITAGE = 103,
     BUTTON_MODS = 105,
+    BUTTON_TEXTURES = 106,
     BUTTON_VIEW = 104,
     BUTTON_BACK = 200
 };
@@ -36,8 +38,8 @@ LegacyHelpOptions::LegacyHelpOptions(GuiScreen *parent, GameSettings *settingsVa
 
 void LegacyHelpOptions::initGui()
 {
-    configureLegacyLayout(7, false);
-    const LegacyMainMenuLayout layout = legacyMainMenuLayout(width, height, 7);
+    configureLegacyLayout(8, false);
+    const LegacyMainMenuLayout layout = legacyMainMenuLayout(width, height, 8);
     const int_t stride = layout.buttonHeight + layout.buttonSpacing;
     const std::string labels[] = {
         uiText("Video"),
@@ -45,6 +47,7 @@ void LegacyHelpOptions::initGui()
         uiText("Language"),
         uiText("OptiCraft Options"),
         uiText("Mods"),
+        uiText("Texture Packs"),
         uiText("View"),
         uiText("Back")
     };
@@ -54,11 +57,12 @@ void LegacyHelpOptions::initGui()
         BUTTON_LANGUAGE,
         BUTTON_HERITAGE,
         BUTTON_MODS,
+        BUTTON_TEXTURES,
         BUTTON_VIEW,
         BUTTON_BACK
     };
 
-    for (int_t i = 0; i < 7; ++i)
+    for (int_t i = 0; i < 8; ++i)
     {
         controlList.push_back(new LegacyGuiButton(ids[i], layout.buttonX,
             layout.firstButtonY + i * stride, layout.buttonWidth, layout.buttonHeight, labels[i]));
@@ -87,6 +91,9 @@ void LegacyHelpOptions::actionPerformed(GuiButton *button)
         return;
     case BUTTON_MODS:
         mc->displayGuiScreen(new GuiMods(this));
+        break;
+    case BUTTON_TEXTURES:
+        mc->displayGuiScreen(new GuiTexturePacks(this));
         return;
     case BUTTON_VIEW:
         mc->displayGuiScreen(new LegacyViewOptions(this, settings, backgroundMode));
