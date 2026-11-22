@@ -67,3 +67,20 @@ Los nombres `func_XXXXX_x` / `field_XXXXX_x` que quedan son de MCP sin nombre; s
 4. Después: fuegos artificiales, libro encantado, Wither, comercio con aldeanos, tinte de cuero, clonar mapas,
    Espinas, reglas de juego.
 5. Optimización: lag del fuego, tolvas buscando sin parar, tirón de 7 s.
+
+## 1.6.4 (22-11-2026): MCP 8.11 desde Forge
+RetroMCP v1.2 solo llega a 1.5.2. Para 1.6.4 (`mcp-diff\v164\`):
+1. Jar oficial: `version_manifest_v2.json` de piston-meta → 1.6.4 → `client.jar` (sha1 1703704407101cf72bd88e68579e3696ce733ecd).
+2. Mapeos MCP 8.11: `forge-1.6.4-9.11.1.1345-src.zip` (maven.minecraftforge.net) → `forge/fml/conf/joined.srg`,
+   `fields.csv`, `methods.csv` (paquete plano `net/minecraft/src`, como la 1.5.2).
+3. `python tools/srg_named.py v164/conf` → `joined-named.srg`; `SpecialSource-1.11.4-shaded.jar --in-jar
+   v164/jars/minecraft.jar --out-jar mc164-named.jar --srg-in v164/conf/joined-named.srg`.
+4. vineflower → `src164\` (1562 clases). Listas: `solo164` (152 nuevas), `cambiadas164` (863 clases, ~23 000 líneas).
+Para 1.7.10 vale lo mismo (Forge tiene MCP 1.7.10); desde 1.14.4 Mojang publica sus mapeos oficiales.
+
+### OptiFine 1.6.4 HD U D1 (22-11-2026)
+optifine.net ya no ofrece 1.6.4: sale del «Optifine Archive B1.2-R1.8.9» de archive.org
+(`archive.org/download/optifine-archive.-7z`, en `mcp-diff\optifine164\archivo\`). Se fusiona con el jar vanilla
+(las 96 clases de OF sustituyen a 27 de Mojang + 69 nuevas), se renombra con el mismo `joined-named.srg` y vineflower →
+`mcp-diff\srcOF164\` (las clases de OF quedan en `net/minecraft/src`: Config, ConnectedTextures, CustomColorizer...).
+Clases de Mojang que toca: `optifine164\clases-tocadas-nombres.txt`.

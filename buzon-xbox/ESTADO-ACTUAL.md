@@ -206,3 +206,8 @@ El otro repo (CPPEditionLegacy, 1.8.9 en C++17 con shared_ptr) NO sirve para Xbo
 - **PENDIENTE: subir a la consola los 8 XBE del lanzador** (f1bf66a / a2ec7d1): FTP no respondía.
 - Portal del End: idea de pintar 4 capas por pasada (multitextura) en vez de 16; el usuario no ha dicho sí todavía.
 - Futuro: 1.6.4 y luego 1.7.10 (techo); referencias en memoria `lce-repos-referencia`.
+
+## 22-11 12:25
+Ver `TRASPASO-hibernado.md` (juntado 950da98/0e1a3b6, sin subir; agy-2 con el 101 casi acabado sin commit; agy-1
+empezando el 103). 1.6.4 y OptiFine 1.6.4 ya descompilados en `mcp-diff\src164` y `srcOF164` (guía 55).
+Mods/skins/texturas: encargos 101, 103 y conversor `texturas\`.

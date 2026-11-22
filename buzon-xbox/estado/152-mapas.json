@@ -1,0 +1,1 @@
+{"version": "1.5.2", "estado": "en_marcha", "area": "Plan 69", "nombre": "Mapas: ampliar, copiar y marcos", "nota": "Hecho (port152-sub 06cc60b): copiar ya no da mapas en blanco, ampliar con tope 4, marcador del marco. Ampliar/copiar solo desde la cuadrícula Java (la LCE TU19 tampoco los tiene en el menú de consola).", "ref": "100", "orden": 25}

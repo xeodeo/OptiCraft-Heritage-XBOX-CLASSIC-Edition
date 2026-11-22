@@ -1,6 +1,6 @@
 ---
 name: usar-agy-no-subagentes
-description: "Encargos de implementación grandes van a agy (skill agy), no a muchos subagentes/forks de Claude"
+description: "Encargos grandes van a agy; como MÁXIMO 1 subagente de Claude a la vez (dicho dos veces: 09-11 y 22-11)"
 metadata:
   node_type: memory
   type: feedback
@@ -15,3 +15,7 @@ Dicho el 09-11-2026: «ojo, estás creando mucho tú, tenemos agy».
 **Why:** coste/uso de Claude; agy está para el trabajo pesado.
 **How to apply:** implementación larga → encargo `buzon-xbox/NN-ENCARGO-agy-*.md` + lanzar agy; Claude se queda con revisar,
 auditar (un subagente de auditoría está bien) y arreglos pequeños hechos a mano.
+
+**22-11-2026, otra vez:** lancé 2 subagentes a la vez (encantar/mapas y texturas) además de 2 agy; el usuario dijo
+«lanzaste muchos agents tuyos, no hagas tanto: máximo 1 agente tuyo». Regla: **como mucho UN subagente de Claude
+activo**; varios agy en paralelo sí (el usuario pidió un segundo agy), cada uno en su worktree.

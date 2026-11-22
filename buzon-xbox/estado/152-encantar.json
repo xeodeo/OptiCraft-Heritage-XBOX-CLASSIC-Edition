@@ -1,0 +1,1 @@
+{"version": "1.5.2", "estado": "en_marcha", "area": "Plan 69", "nombre": "Encantamientos: Espinas y libros en la mesa", "nota": "Hecho por el subagente (port152-sub 356b334): Espinas, libros en la mesa y valores de encantamiento de 1.5.2. Compila; sin probar en juego. Se junta con la 1.5.2 al acabar el 99 (ojo: cambia IRecipe::matches).", "ref": "100", "orden": 24}

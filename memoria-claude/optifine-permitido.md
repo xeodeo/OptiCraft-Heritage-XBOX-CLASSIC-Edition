@@ -13,4 +13,4 @@ Dicho el 09-11-2026: «tranquilo, eso como la Legacy lo podemos reutilizar».
 
 **Why:** el usuario no quiere que la licencia de OptiFine frene el port; lo trata como la LCE.
 **How to apply:** usar `mcp-diff\srcOF152\` (OptiFine 1.5.2 HD U D5 remapeado a MCP) y el informe
-`buzon-xbox\74-INVESTIGACION-optifine-152.md` como fuente para portar; no hace falta avisar de la licencia cada vez.
+`buzon-xbox\74-INVESTIGACION-optifine-152.md` como fuente para portar; para 1.6.4: `mcp-diff\srcOF164\` (HD U D1, 22-11) y Java 1.6.4 en `mcp-diff\src164\`; no hace falta avisar de la licencia cada vez.
