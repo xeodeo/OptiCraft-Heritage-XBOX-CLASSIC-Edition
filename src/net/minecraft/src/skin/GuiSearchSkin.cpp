@@ -8,6 +8,7 @@
 #include "GuiTextField.h"
 #include "Minecraft.h"
 #include "ModelBiped.h"
+#include "ModelPlayer.h"
 #include "ModelRenderer.h"
 #include "RenderEngine.h"
 #include "RenderHelper.h"
@@ -152,7 +153,7 @@ struct GuiSearchSkin::SearchJob
     JavaNetwork::HttpResult httpResult = JavaNetwork::HttpResult::NoConnection;
     int httpStatus = -1;
     std::vector<unsigned char> rawPng;
-    std::vector<unsigned char> rgba64x32;
+    std::vector<unsigned char> rgba64x64;
     int srcW = 0;
     int srcH = 0;
     bool wasSlim = false;
@@ -183,6 +184,9 @@ GuiSearchSkin::GuiSearchSkin(GuiScreen *parent, bool isPlayer2)
     , statusMessage("")
     , statusColor(0xFFB8B8B8)
     , previewModel(nullptr)
+    , previewModelWide(nullptr)
+    , previewModelSlim(nullptr)
+    , previewTexSlim(false)
     , previewTexId(-1)
     , previewYaw(18.0f)
     , previewWalkPos(0.0f)
@@ -221,6 +225,10 @@ GuiSearchSkin::~GuiSearchSkin()
     releasePreviewTexture();
     delete previewModel;
     previewModel = nullptr;
+    delete previewModelWide;
+    previewModelWide = nullptr;
+    delete previewModelSlim;
+    previewModelSlim = nullptr;
 }
 
 bool GuiSearchSkin::isLegacyMode() const
@@ -256,15 +264,15 @@ void GuiSearchSkin::releasePreviewTexture()
     previewTexId = -1;
 }
 
-void GuiSearchSkin::uploadPreviewTexture(const std::vector<unsigned char> &rgba64x32)
+void GuiSearchSkin::uploadPreviewTexture(const std::vector<unsigned char> &rgba64x64)
 {
     releasePreviewTexture();
-    if (mc == nullptr || mc->renderEngine == nullptr || rgba64x32.size() < 64 * 32 * 4)
+    if (mc == nullptr || mc->renderEngine == nullptr || rgba64x64.size() < 64 * 64 * 4)
         return;
 
-    std::unique_ptr<unsigned char[]> pixels(new unsigned char[64 * 32 * 4]);
-    std::memcpy(pixels.get(), rgba64x32.data(), 64 * 32 * 4);
-    BufferedImage img(64, 32, std::move(pixels));
+    std::unique_ptr<unsigned char[]> pixels(new unsigned char[64 * 64 * 4]);
+    std::memcpy(pixels.get(), rgba64x64.data(), 64 * 64 * 4);
+    BufferedImage img(64, 64, std::move(pixels));
     previewTexId = mc->renderEngine->allocateAndSetupTexture(&img);
 }
 
@@ -452,7 +460,7 @@ void GuiSearchSkin::startSearch()
         std::string decodeErr;
         if (res == JavaNetwork::HttpResult::Ok)
         {
-            decodeOk = SkinManager::convertSkinToRetro32(png.data(), png.size(), rgba, w, h, slim, decodeErr);
+            decodeOk = SkinManager::convertSkinTo64(png.data(), png.size(), rgba, w, h, slim, decodeErr);
         }
 
         {
@@ -462,7 +470,7 @@ void GuiSearchSkin::startSearch()
             if (decodeOk)
             {
                 job->rawPng = std::move(png);
-                job->rgba64x32 = std::move(rgba);
+                job->rgba64x64 = std::move(rgba);
                 job->srcW = w;
                 job->srcH = h;
                 job->wasSlim = slim;
@@ -567,18 +575,19 @@ void GuiSearchSkin::updateScreen()
                 downloadedWasSlim = job->wasSlim;
                 alreadySaved = false;
 
-                uploadPreviewTexture(job->rgba64x32);
+                previewTexSlim = job->wasSlim;
+                uploadPreviewTexture(job->rgba64x64);
 
                 if (downloadedWasSlim)
                 {
-                    statusMessage = es ? "Skin lista (aviso: slim/Alex adaptada a 64x32)"
-                                       : "Skin ready (note: slim/Alex adapted to 64x32)";
-                    statusColor = 0xFFFFCC55;
+                    statusMessage = es ? "Skin lista (slim/Alex, brazos finos)"
+                                       : "Skin ready (slim/Alex arms)";
+                    statusColor = 0xFF77FF77;
                 }
                 else if (downloadedSrcH == 64)
                 {
-                    statusMessage = es ? "Skin lista (convertida 64x64 -> 64x32)"
-                                       : "Skin ready (converted 64x64 -> 64x32)";
+                    statusMessage = es ? "Skin lista (64x64, segunda capa)"
+                                       : "Skin ready (64x64, second layer)";
                     statusColor = 0xFF77FF77;
                 }
                 else
@@ -860,16 +869,33 @@ void GuiSearchSkin::drawPreviewCharacter3D(float centerX, float feetY, float sca
         return;
 
     int_t texId = previewTexId;
+    bool slim = previewTexSlim;
     if (texId < 0)
     {
         const std::string fallback = isPlayer2Skin ? SkinManager::getPlayer2SkinTexture() : SkinManager::getActiveSkinTexture();
         texId = mc->renderEngine->getTexture(fallback);
+        slim = SkinManager::isSlimSkinTexture(fallback);
     }
     if (texId < 0)
         return;
 
-    if (previewModel == nullptr)
-        previewModel = new ModelBiped(0.0f, 0.0f);
+    // 64x64 textures get the in-game ModelPlayer (second layer, slim arms).
+    int_t tw = 0, th = 0;
+    mc->renderEngine->getTextureDimensions(texId, &tw, &th);
+    ModelBiped *model = nullptr;
+    if (tw > 0 && tw == th)
+    {
+        ModelPlayer *&slot = slim ? previewModelSlim : previewModelWide;
+        if (slot == nullptr)
+            slot = new ModelPlayer(0.0f, slim);
+        model = slot;
+    }
+    else
+    {
+        if (previewModel == nullptr)
+            previewModel = new ModelBiped(0.0f, 0.0f);
+        model = previewModel;
+    }
 
     // Ground shadow
     renderEnable(RenderCapability::Blend);
@@ -895,13 +921,13 @@ void GuiSearchSkin::drawPreviewCharacter3D(float centerX, float feetY, float sca
 
     mc->renderEngine->bindTexture(texId);
 
-    previewModel->isChild = false;
-    previewModel->isRiding = false;
-    previewModel->aimedBow = false;
-    previewModel->heldItemLeft = 0;
-    previewModel->heldItemRight = 0;
-    previewModel->isSneak = false;
-    previewModel->onGround = 0.0f;
+    model->isChild = false;
+    model->isRiding = false;
+    model->aimedBow = false;
+    model->heldItemLeft = 0;
+    model->heldItemRight = 0;
+    model->isSneak = false;
+    model->onGround = 0.0f;
 
     renderPushMatrix();
     renderTranslate(centerX, feetY, 50.0f);
@@ -917,7 +943,7 @@ void GuiSearchSkin::drawPreviewCharacter3D(float centerX, float feetY, float sca
 
     const float brightness = hasDownloadedSkin() ? 1.0f : 0.72f;
     renderColor4f(brightness, brightness, brightness, 1.0f);
-    previewModel->render(previewWalkPos, 0.25f, previewBobTicks + partialTick, 0.0f, 0.0f, 0.0625f);
+    model->render(previewWalkPos, 0.25f, previewBobTicks + partialTick, 0.0f, 0.0f, 0.0625f);
     renderPopMatrix();
 
     RenderHelper::disableStandardItemLighting();

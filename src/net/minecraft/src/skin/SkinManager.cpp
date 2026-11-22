@@ -21,10 +21,12 @@
 #include "stb_image_write.h"
 
 #include <istream>
+#include <iterator>
 #include <memory>
 #include <algorithm>
 #include <cstring>
 #include <cctype>
+#include <unordered_map>
 
 namespace
 {
@@ -482,6 +484,114 @@ bool makeRetro32(const unsigned char *rgba, int w, int h, std::vector<unsigned c
     return true;
 }
 
+// 1.8 ImageBufferDownload.setAreaOpaque / setAreaTransparent ("Notch hack":
+// an area is only cleared when it has no transparent pixel at all).
+void setAreaOpaque64(std::vector<unsigned char> &img, int x1, int y1, int x2, int y2)
+{
+    for (int y = y1; y < y2; ++y)
+        for (int x = x1; x < x2; ++x)
+            img[(y * 64 + x) * 4 + 3] = 255;
+}
+
+void setAreaTransparent64(std::vector<unsigned char> &img, int x1, int y1, int x2, int y2)
+{
+    for (int y = y1; y < y2; ++y)
+        for (int x = x1; x < x2; ++x)
+            if (img[(y * 64 + x) * 4 + 3] < 128)
+                return;
+    for (int y = y1; y < y2; ++y)
+        for (int x = x1; x < x2; ++x)
+            img[(y * 64 + x) * 4 + 3] = 0;
+}
+
+void setAreaClear64(std::vector<unsigned char> &img, int x1, int y1, int x2, int y2)
+{
+    for (int y = y1; y < y2; ++y)
+        for (int x = x1; x < x2; ++x)
+            img[(y * 64 + x) * 4 + 3] = 0;
+}
+
+// Builds the 64x64 texture the game draws with ModelPlayer, like Minecraft
+// 1.8 ImageBufferDownload.parseUserSkin: a 64x32 skin is copied into the top
+// half and its right arm/leg are mirrored into the separate left arm/leg
+// areas; then the 1.8 alpha rules are applied.
+bool makeModern64(const unsigned char *rgba, int w, int h, std::vector<unsigned char> &out, bool *outWasSlim = nullptr)
+{
+    if (rgba == nullptr || w != 64 || (h != 32 && h != 64))
+        return false;
+
+    // Decided on the source: the alpha rules below make the unused slim
+    // columns opaque.
+    const bool slim = isLikelySlimSkinRgba(rgba, w, h);
+    if (outWasSlim != nullptr)
+        *outWasSlim = slim;
+
+    out.assign(64 * 64 * 4, 0);
+    std::memcpy(out.data(), rgba, static_cast<std::size_t>(64 * h * 4));
+
+    if (h == 32)
+    {
+        // Graphics.drawImage(img, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2)
+        // with dx1 > dx2: a horizontally mirrored copy into [dx2, dx1).
+        struct FlipCopy { int dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2; };
+        static const FlipCopy kCopies[] = {
+            // left leg (16,48) from the right leg (0,16)
+            {24, 48, 20, 52, 4, 16, 8, 20},
+            {28, 48, 24, 52, 8, 16, 12, 20},
+            {20, 52, 16, 64, 8, 20, 12, 32},
+            {24, 52, 20, 64, 4, 20, 8, 32},
+            {28, 52, 24, 64, 0, 20, 4, 32},
+            {32, 52, 28, 64, 12, 20, 16, 32},
+            // left arm (32,48) from the right arm (40,16)
+            {40, 48, 36, 52, 44, 16, 48, 20},
+            {44, 48, 40, 52, 48, 16, 52, 20},
+            {36, 52, 32, 64, 48, 20, 52, 32},
+            {40, 52, 36, 64, 44, 20, 48, 32},
+            {44, 52, 40, 64, 40, 20, 44, 32},
+            {48, 52, 44, 64, 52, 20, 56, 32},
+        };
+        for (const FlipCopy &c : kCopies)
+            copyPixelRect(out.data(), 64, 64, c.sx1, c.sy1, c.sx2 - c.sx1, c.sy2 - c.sy1,
+                          out.data(), 64, 64, c.dx2, c.dy1, true, false);
+    }
+
+    setAreaOpaque64(out, 0, 0, 32, 16);
+    setAreaTransparent64(out, 32, 0, 64, 32);
+    setAreaOpaque64(out, 0, 16, 64, 32);
+    setAreaTransparent64(out, 0, 32, 16, 48);
+    setAreaTransparent64(out, 16, 32, 40, 48);
+    setAreaTransparent64(out, 40, 32, 56, 48);
+    setAreaTransparent64(out, 0, 48, 16, 64);
+    setAreaOpaque64(out, 16, 48, 48, 64);
+    setAreaTransparent64(out, 48, 48, 64, 64);
+
+    if (slim)
+    {
+        // Texels a 3 px arm never reads. Kept clear so the saved texture
+        // still reads as slim (isLikelySlimSkinRgba) when loaded again.
+        setAreaClear64(out, 50, 16, 56, 20);
+        setAreaClear64(out, 54, 20, 56, 32);
+        setAreaClear64(out, 42, 48, 48, 52);
+        setAreaClear64(out, 46, 52, 48, 64);
+    }
+    return true;
+}
+
+bool writeRgbaPng(const std::string &path, const unsigned char *rgba, int w, int h)
+{
+    int len = 0;
+    unsigned char *png = stbi_write_png_to_mem(rgba, w * 4, w, h, 4, &len);
+    if (png == nullptr)
+        return false;
+    const bool ok = PlatformStorage::writeFile(path, png, len);
+    STBIW_FREE(png);
+    return ok;
+}
+
+// Texture path -> slim arms. Filled when a 64x64 texture is written, or on
+// first use by decoding the image once.
+std::unordered_map<std::string, bool> s_slimByTexture;
+
 std::string sanitizeSkinName(const std::string &raw)
 {
     std::string name;
@@ -548,6 +658,13 @@ void SkinManager::init()
     s_defaultSkins.push_back({"Crocodile", "Crocodile", "/skins/Crocodile.png", "/skins/Crocodile_32.png", "/skins/Crocodile_Front.png", false, ""});
     s_defaultSkins.push_back({"LegacySquid", "Legacy Squid", "/skins/LegacySquid.png", "/skins/LegacySquid_32.png", "/skins/LegacySquid_Front.png", false, ""});
 
+    // The built-in skins above are 64x64 in the data: the game binds them as
+    // they are with ModelPlayer (wear layer, own left limbs, slim arms). The
+    // _32 copies stay for older data sets and code paths. Pack skins are
+    // 64x32 and keep their _32 texture with the classic ModelBiped.
+    for (SkinEntry &entry : s_defaultSkins)
+        entry.modelPath = entry.skinPath;
+
     loadLceSkinPacks();
 
     s_initialized = true;
@@ -613,7 +730,8 @@ void SkinManager::scanCustomSkins()
                 continue;
 
             // Skip companion files generated automatically
-            if (lower.find("_32.png") != std::string::npos || lower.find("_front.png") != std::string::npos)
+            if (lower.find("_32.png") != std::string::npos || lower.find("_64.png") != std::string::npos ||
+                lower.find("_front.png") != std::string::npos)
                 continue;
 
             std::string fullPath = PlatformStorage::join(dir, entry);
@@ -636,57 +754,38 @@ void SkinManager::scanCustomSkins()
             seenIds.push_back(id);
 
             std::string model32 = PlatformStorage::join(dir, baseName + "_32.png");
+            std::string model64 = PlatformStorage::join(dir, baseName + "_64.png");
             std::string front32 = PlatformStorage::join(dir, baseName + "_Front.png");
 
-            // Auto-generate retro 64x32 and front preview if missing
-            if (h == 64 && !PlatformStorage::exists(model32))
+            // Auto-generate the 64x64 game texture, the retro 64x32 and the
+            // front preview if missing (one decode for all of them).
+            const bool need64 = !PlatformStorage::exists(model64);
+            const bool need32 = h == 64 && !PlatformStorage::exists(model32);
+            const bool needFront = !PlatformStorage::exists(front32);
+            if (need64 || need32 || needFront)
             {
                 unsigned char *rgba = stbi_load_from_memory(rawBytes.data(), static_cast<int>(rawBytes.size()), &w, &h, &comp, 4);
                 if (rgba != nullptr)
                 {
-                    std::vector<unsigned char> retro32;
-                    if (makeRetro32(rgba, w, h, retro32))
+                    if (need64)
                     {
-                        int len = 0;
-                        unsigned char *png = stbi_write_png_to_mem(retro32.data(), 64 * 4, 64, 32, 4, &len);
-                        if (png != nullptr)
-                        {
-                            PlatformStorage::writeFile(model32, png, len);
-                            STBIW_FREE(png);
-                        }
+                        std::vector<unsigned char> modern64;
+                        bool slim = false;
+                        if (makeModern64(rgba, w, h, modern64, &slim) &&
+                            writeRgbaPng(model64, modern64.data(), 64, 64))
+                            s_slimByTexture[model64] = slim;
                     }
-                    if (!PlatformStorage::exists(front32))
+                    if (need32)
+                    {
+                        std::vector<unsigned char> retro32;
+                        if (makeRetro32(rgba, w, h, retro32))
+                            writeRgbaPng(model32, retro32.data(), 64, 32);
+                    }
+                    if (needFront)
                     {
                         std::vector<unsigned char> frontRgba;
                         if (assembleFrontPreview(rgba, w, h, frontRgba))
-                        {
-                            int len = 0;
-                            unsigned char *png = stbi_write_png_to_mem(frontRgba.data(), 16 * 4, 16, 32, 4, &len);
-                            if (png != nullptr)
-                            {
-                                PlatformStorage::writeFile(front32, png, len);
-                                STBIW_FREE(png);
-                            }
-                        }
-                    }
-                    stbi_image_free(rgba);
-                }
-            }
-            else if (h == 32 && !PlatformStorage::exists(front32))
-            {
-                unsigned char *rgba = stbi_load_from_memory(rawBytes.data(), static_cast<int>(rawBytes.size()), &w, &h, &comp, 4);
-                if (rgba != nullptr)
-                {
-                    std::vector<unsigned char> frontRgba;
-                    if (assembleFrontPreview(rgba, w, h, frontRgba))
-                    {
-                        int len = 0;
-                        unsigned char *png = stbi_write_png_to_mem(frontRgba.data(), 16 * 4, 16, 32, 4, &len);
-                        if (png != nullptr)
-                        {
-                            PlatformStorage::writeFile(front32, png, len);
-                            STBIW_FREE(png);
-                        }
+                            writeRgbaPng(front32, frontRgba.data(), 16, 32);
                     }
                     stbi_image_free(rgba);
                 }
@@ -696,7 +795,10 @@ void SkinManager::scanCustomSkins()
             custom.id = id;
             custom.name = sanitizeSkinName(baseName);
             custom.skinPath = fullPath;
-            custom.modelPath = (h == 64 && PlatformStorage::exists(model32)) ? model32 : (h == 32 ? fullPath : model32);
+            if (PlatformStorage::exists(model64))
+                custom.modelPath = model64;
+            else
+                custom.modelPath = (h == 64 && PlatformStorage::exists(model32)) ? model32 : (h == 32 ? fullPath : model32);
             custom.frontPath = PlatformStorage::exists(front32) ? front32 : "";
             custom.isCustom = true;
             custom.filePath = fullPath;
@@ -871,6 +973,7 @@ bool SkinManager::saveDownloadedSkin(const std::string &username,
     std::string base = sanitizeSkinName(username);
     std::string mainPath = PlatformStorage::join(destDir, base + ".png");
     std::string model32Path = PlatformStorage::join(destDir, base + "_32.png");
+    std::string model64Path = PlatformStorage::join(destDir, base + "_64.png");
     std::string frontPath = PlatformStorage::join(destDir, base + "_Front.png");
 
     // 1. Write original downloaded PNG
@@ -902,6 +1005,18 @@ bool SkinManager::saveDownloadedSkin(const std::string &username,
         PlatformStorage::removeFile(model32Path);
     }
 
+    // 2b. Write the 64x64 texture the game binds (ModelPlayer: second layer on
+    // every part, own left arm/leg, slim arms); 64x32 skins are converted like 1.8.
+    {
+        std::vector<unsigned char> modern64;
+        bool slim = false;
+        if (makeModern64(rgba, w, h, modern64, &slim) &&
+            writeRgbaPng(model64Path, modern64.data(), 64, 64))
+            s_slimByTexture[model64Path] = slim;
+        else
+            PlatformStorage::removeFile(model64Path);
+    }
+
     // 3. Assemble and write 16x32 front preview (from the fixed texture)
     std::vector<unsigned char> frontRgba;
     if (haveRetro ? assembleFrontPreview(retro32.data(), 64, 32, frontRgba)
@@ -924,6 +1039,7 @@ bool SkinManager::saveDownloadedSkin(const std::string &username,
     {
         mc->renderEngine->releaseTexture(mainPath);
         mc->renderEngine->releaseTexture(model32Path);
+        mc->renderEngine->releaseTexture(model64Path);
         mc->renderEngine->releaseTexture(frontPath);
     }
 
@@ -932,7 +1048,8 @@ bool SkinManager::saveDownloadedSkin(const std::string &username,
 
     if (applyImmediately)
     {
-        std::string activeModelPath = (h == 64 && PlatformStorage::exists(model32Path)) ? model32Path : mainPath;
+        std::string activeModelPath = PlatformStorage::exists(model64Path) ? model64Path
+                                    : ((h == 64 && PlatformStorage::exists(model32Path)) ? model32Path : mainPath);
         if (forPlayer2)
         {
             setSelectedSkinIdP2(outSkinId);
@@ -1008,6 +1125,7 @@ bool SkinManager::installCustomSkin(const std::string &sourcePath, const std::st
     std::string base = sanitizeSkinName(skinName);
     std::string mainPath = PlatformStorage::join(destDir, base + ".png");
     std::string model32Path = PlatformStorage::join(destDir, base + "_32.png");
+    std::string model64Path = PlatformStorage::join(destDir, base + "_64.png");
     std::string frontPath = PlatformStorage::join(destDir, base + "_Front.png");
 
     // 1. Write the original raw file
@@ -1032,6 +1150,15 @@ bool SkinManager::installCustomSkin(const std::string &sourcePath, const std::st
                 STBIW_FREE(png);
             }
         }
+    }
+
+    // 2b. The 64x64 texture the game binds (see saveDownloadedSkin)
+    {
+        std::vector<unsigned char> modern64;
+        bool slim = false;
+        if (makeModern64(rgba, w, h, modern64, &slim) &&
+            writeRgbaPng(model64Path, modern64.data(), 64, 64))
+            s_slimByTexture[model64Path] = slim;
     }
 
     // 3. Assemble and save the 16x32 Front Preview
@@ -1065,7 +1192,10 @@ bool SkinManager::installCustomSkin(const std::string &sourcePath, const std::st
         }
         if (mc->thePlayer != nullptr)
         {
-            std::string activeModelPath = (h == 64 && PlatformStorage::exists(model32Path)) ? model32Path : mainPath;
+            std::string activeModelPath = PlatformStorage::exists(model64Path) ? model64Path
+                                        : ((h == 64 && PlatformStorage::exists(model32Path)) ? model32Path : mainPath);
+            if (mc->renderEngine != nullptr)
+                mc->renderEngine->releaseTexture(model64Path);
             mc->thePlayer->setEntityTexture(activeModelPath);
             mc->thePlayer->skinUrl = "";
         }
@@ -1100,6 +1230,8 @@ bool SkinManager::deleteCustomSkin(const std::string &id)
                 {
                     std::string stem = path.substr(0, path.size() - 4);
                     PlatformStorage::removeFile(stem + "_32.png");
+                    PlatformStorage::removeFile(stem + "_64.png");
+                    s_slimByTexture.erase(stem + "_64.png");
                     PlatformStorage::removeFile(stem + "_Front.png");
                 }
             }
@@ -1321,4 +1453,76 @@ std::string SkinManager::getActiveSkinTexture()
 std::string SkinManager::getDefaultSkinTexture()
 {
     return "/mob/char.png";
+}
+
+bool SkinManager::isSlimSkinTexture(const std::string &path)
+{
+    if (path.empty())
+        return false;
+    auto it = s_slimByTexture.find(path);
+    if (it != s_slimByTexture.end())
+        return it->second;
+
+    // First use of this texture: decode it once (64x64 PNG, a few KB).
+    bool slim = false;
+    std::unique_ptr<std::istream> stream = GameResources::open(path);
+    if (stream != nullptr && stream->good())
+    {
+        std::vector<unsigned char> bytes((std::istreambuf_iterator<char>(*stream)), std::istreambuf_iterator<char>());
+        int w = 0, h = 0, comp = 0;
+        if (!bytes.empty())
+        {
+            unsigned char *rgba = stbi_load_from_memory(bytes.data(), static_cast<int>(bytes.size()), &w, &h, &comp, 4);
+            if (rgba != nullptr)
+            {
+                slim = isLikelySlimSkinRgba(rgba, w, h);
+                stbi_image_free(rgba);
+            }
+        }
+    }
+    s_slimByTexture[path] = slim;
+    return slim;
+}
+
+bool SkinManager::convertSkinTo64(const unsigned char *pngBytes, std::size_t pngLen,
+                                  std::vector<unsigned char> &outRgba64x64,
+                                  int &outSrcW, int &outSrcH, bool &outWasSlim,
+                                  std::string &outError)
+{
+    outRgba64x64.clear();
+    outSrcW = 0;
+    outSrcH = 0;
+    outWasSlim = false;
+
+    if (!hasPngSignature(pngBytes, pngLen))
+    {
+        outError = "Invalid PNG file.";
+        return false;
+    }
+
+    int w = 0, h = 0, comp = 0;
+    unsigned char *rgba = stbi_load_from_memory(pngBytes, static_cast<int>(pngLen), &w, &h, &comp, 4);
+    if (rgba == nullptr)
+    {
+        outError = "Invalid PNG image.";
+        return false;
+    }
+
+    if (w != 64 || (h != 32 && h != 64))
+    {
+        stbi_image_free(rgba);
+        outError = "Skin must be 64x32 or 64x64.";
+        return false;
+    }
+
+    outSrcW = w;
+    outSrcH = h;
+    const bool ok = makeModern64(rgba, w, h, outRgba64x64, &outWasSlim);
+    stbi_image_free(rgba);
+    if (!ok)
+    {
+        outError = "Failed to convert skin.";
+        return false;
+    }
+    return true;
 }

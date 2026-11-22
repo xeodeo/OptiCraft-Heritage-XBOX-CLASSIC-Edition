@@ -8,7 +8,7 @@ struct SkinEntry
     std::string id;          // Internal ID, e.g. "LegacySteve", "pack:Halo:Master_Chief", "custom_Goku"
     std::string name;        // Display name, e.g. "Steve", "Master Chief", "Goku"
     std::string skinPath;    // 64x64 or full skin path
-    std::string modelPath;   // 64x32 model texture path
+    std::string modelPath;   // texture the game binds: 64x64 (ModelPlayer) or 64x32 (ModelBiped)
     std::string frontPath;   // 16x32 2D front preview path (or empty if custom)
     bool isCustom = false;
     std::string filePath;    // Source file path on disk
@@ -44,6 +44,15 @@ public:
                                      std::vector<unsigned char> &outRgba64x32,
                                      int &outSrcW, int &outSrcH, bool &outWasSlim,
                                      std::string &outError);
+    // Same, but to the 64x64 layout the game draws with ModelPlayer (64x32
+    // skins converted like Minecraft 1.8, second layer kept).
+    static bool convertSkinTo64(const unsigned char *pngBytes, std::size_t pngLen,
+                                std::vector<unsigned char> &outRgba64x64,
+                                int &outSrcW, int &outSrcH, bool &outWasSlim,
+                                std::string &outError);
+    // True when a 64x64 skin texture has slim (3 px, "Alex") arms. Cached per
+    // path; the first call for a path decodes the image once.
+    static bool isSlimSkinTexture(const std::string &path);
     static bool saveDownloadedSkin(const std::string &username,
                                    const std::vector<unsigned char> &rawPng,
                                    bool applyImmediately,
