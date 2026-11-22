@@ -23,3 +23,4 @@ XMB, como PKGi — lo pidió el usuario). Logo hecho por agy (`assets\icon`, `sc
 Ver [[ps3-sdk]] para el entorno (gcc13+PSL1GHT, scetool, FTP 192.168.0.21).
 
 Estado completo al 17-11: buzon\05-ESTADO-TIENDA.md (qué funciona, qué falta, problema abierto Terraria convertido+update, mapa de código, trampas). La carpeta NO está en git.
+22-11: EBOOT 3 855 520 en consola. PSN 10,8 MB/s (Extras.cpp, conexiones largas); pkg >2GB con lv2 (PkgExtract); archive.org limitado por ellos (~0,3 MB/s por conexion). ERROR 55 = red de la PS3 agotada, cuelga la consola al salir (paso 2 veces): no subir conexiones ni reconexiones. Doc: README.md + buzon/05 (secciones 13-16) + buzon/06.

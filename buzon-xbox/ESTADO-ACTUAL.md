@@ -211,3 +211,12 @@ El otro repo (CPPEditionLegacy, 1.8.9 en C++17 con shared_ptr) NO sirve para Xbo
 Ver `TRASPASO-hibernado.md` (juntado 950da98/0e1a3b6, sin subir; agy-2 con el 101 casi acabado sin commit; agy-1
 empezando el 103). 1.6.4 y OptiFine 1.6.4 ya descompilados en `mcp-diff\src164` y `srcOF164` (guía 55).
 Mods/skins/texturas: encargos 101, 103 y conversor `texturas\`.
+
+## 22-11 tarde
+- **Qué hacer en cada consola: `PLATAFORMAS-QUE-HACER.md`** (Xbox, PS2 con el plan de 7 pasos del informe 106,
+  PS3, otras).
+- En consola: 1.2.5 `c66352d` (todo + mods + skins + DNS de respaldo); 1.5.2 `ac018fe` (`port152-int`) en el lanzador,
+  falta subir. Skins: Notch arreglado (siempre se guarda la textura corregida, regla «Notch hack» de Java).
+- En marcha: agy-1 encargo 105 (superplano/marcador/combate, `wt-152-rend`), agy-2 encargo 108
+  (bloques/mobs/inventario/pantalla, `wt-152-mods` rama `port152-blq`), subagente de Claude: skins 3D como la 1.8
+  (`wt-152-skin`/`wt-125-skin`, informe 107). Cuando acaben: juntar en `port152-int`/`opti30-erluza`.

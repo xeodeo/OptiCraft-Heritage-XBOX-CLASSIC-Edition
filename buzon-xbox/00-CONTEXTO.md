@@ -235,3 +235,7 @@ Tu memoria persistente de este proyecto está en `C:\Users\xeodeo\.claude\projec
 Estado al día en `ESTADO-ACTUAL.md` (sección «21-11») y `ESTADO-OPTICRAFT.html`. Subido a la consola: 1.2.5 `d0bff75`,
 1.5.2 `b73c465` (arreglo End, lava LCE, icono de guardado LCE, fuegos artificiales). agy en el encargo 95 (reloj y dragón,
 1.2.5) desde su árbol sin commit en `wt-opti30`; luego el 96 (personaje animado en el HUD). Ramas en `xbox`.
+
+## 22-11 tarde
+Qué rehacer por consola en `PLATAFORMAS-QUE-HACER.md`. Auditoría PS2 completa en `106-INFORME-agy-auditoria-ps2.md`
+(compila; 1.5.2 viable con recortes). Estado al día en `ESTADO-ACTUAL.md` y `ESTADO-OPTICRAFT.html`.

@@ -57,6 +57,31 @@ Como el mod original "Herobrine Mod" de la era beta/1.2:
 - Si no tienes claro qué hacía el mod original, documenta lo que implementas en el informe; nada de inventar textos
   como si fueran oficiales.
 
+### 3b. Lo que se sabe del original (Claude buscó, 22-11)
+- El primero fue un plugin de servidor hMod de **tkelly** («Herobrine v0.3.1», 10-12-2010, se considera perdido; copias:
+  github.com/darkdiplomat/iLoveYou). Según la Minecraft Wiki: altar de **bloques de oro, netherrack, antorchas de
+  redstone y piedra musgosa, encendiendo el netherrack de arriba** (base de oro 3×3 o el oro en el centro sobre piedra
+  musgosa, netherrack encima, 4 antorchas de redstone en los lados). Herobrine **pone antorchas de redstone, construye
+  mazmorras bajo tierra, se teletransporta detrás del jugador y le atrae a trampas**.
+- El más popular, **«The Herobrine Mod» de burnner_** (Minecraft Forum, 2011, hasta 1.7.10): invocación con un tótem
+  (huesos alrededor de arena de almas), desaparece cuando lo ves, construye estructuras, a veces una trampa de TNT,
+  **grita cuando lo ves**, config en `herobrine.ini`.
+- La leyenda original (creepypasta): túneles 2×2, pirámides de arena en el mar, árboles sin hojas, mensaje «Stop».
+- El **rayo** al encenderlo NO está confirmado en ninguna fuente: si lo pones, que sea efecto opcional.
+Haz el altar como el de tkelly/wiki y el comportamiento combinando lo confirmado; nada de trampas de TNT que rompan el
+mundo del jugador sin poder desactivarlas (opción en el menú del mod).
+
+### 3c. EL ORIGINAL (confirmado por el usuario 22-11): plugin de tkelly → «iLoveYou»
+Fuente completa (solo lectura, GPL v3: reimplementa el comportamiento en C++):
+`C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\mcp-diff\herobrine-iloveyou\src\*.java`.
+- **Altar exacto** (`AltarEvent.checkForAltar`): netherrack (87) encendido en (x,y,z); debajo piedra musgosa (48) en
+  (x,y-1,z) rodeada por 8 bloques de oro (41) en y-1; 4 antorchas de redstone (76) en (x±1,y,z) y (x,y,z±1). Lo que hace
+  al invocarse y cómo limpia el altar: el resto de `AltarEvent`.
+- **Eventos**: `BlackoutEvent`, `DiamondEvent`, `GhostEvent`, `HeroDigger` (túneles), `PyramidBuilder`, `SpawnEvent`,
+  `StalkerEvent`, `ThiefEvent`, `TreeScraper`, `WheelSpinner`, frecuencias en `HeroSettings`, mensajes en `HeroLanguage`,
+  orquestación en `iLoveYou`/`HerobrineEvent`. Haz el mod así (cada evento con su opción en el menú del mod; lo que
+  rompa o robe al jugador, apagado por defecto o con aviso). Esto manda sobre lo de 3 y 3b.
+
 ## 4. ChocoCraft (el mod de los chocobos)
 Como el mod clásico «ChocoCraft» (Final Fantasy) de la era 1.2.5/1.5.2: chocobos salvajes en llanuras/bosques,
 gysahl greens (planta que se cultiva y se usa para domesticarlos y criarlos), montar con silla, colores (amarillo,

@@ -32,3 +32,5 @@ ramide1/OptiCraftHeritage (46 commits propios: arco, cambio de dimensión, multi
 toroho/opticrafthorotege (copia de erluza + rasterizador software, no sirve), ramide1/CPPEditionLegacy (1.8.9, no sirve).
 
 Relacionado: [[legacy-lce-permitido]], [[que-es-de-cada-version]].
+
+**Herobrine original (confirmado por el usuario 22-11):** plugin de tkelly → https://github.com/darkdiplomat/iLoveYou (GPL v3), bajado en `mcp-diff\herobrine-iloveyou\`. Altar: netherrack encendido sobre piedra musgosa rodeada de 8 oros, 4 antorchas de redstone alrededor del netherrack.
