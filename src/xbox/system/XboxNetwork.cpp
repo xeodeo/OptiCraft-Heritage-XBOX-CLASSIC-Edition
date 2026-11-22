@@ -29,6 +29,95 @@ void unlock()
 {
     InterlockedExchange(&s_initLock, 0);
 }
+
+const char *s_lastResolveError = "";
+
+// Minimal DNS A query over UDP to a public resolver. Used when the console's own
+// DNS (dashboard settings) fails, e.g. a static IP configured without DNS: the
+// FTP and the UDP log work by IP, but every host name lookup fails.
+bool queryPublicDns(const char *host, unsigned long resolverIp, unsigned long *address, int timeoutMs)
+{
+    unsigned char pkt[300];
+    int n = 0;
+    const unsigned short id = static_cast<unsigned short>(GetTickCount() & 0xFFFF);
+    pkt[n++] = static_cast<unsigned char>(id >> 8); pkt[n++] = static_cast<unsigned char>(id & 0xFF);
+    pkt[n++] = 0x01; pkt[n++] = 0x00;            // recursion desired
+    pkt[n++] = 0; pkt[n++] = 1;                  // one question
+    for (int i = 0; i < 6; ++i) pkt[n++] = 0;    // no answers/authority/additional
+    const char *label = host;
+    while (*label != '\0')
+    {
+        const char *dot = strchr(label, '.');
+        const int len = dot != nullptr ? static_cast<int>(dot - label) : static_cast<int>(strlen(label));
+        if (len <= 0 || len > 63 || n + len + 6 >= static_cast<int>(sizeof(pkt)))
+            return false;
+        pkt[n++] = static_cast<unsigned char>(len);
+        memcpy(pkt + n, label, len);
+        n += len;
+        label += len;
+        if (*label == '.')
+            ++label;
+    }
+    pkt[n++] = 0;
+    pkt[n++] = 0; pkt[n++] = 1;                  // type A
+    pkt[n++] = 0; pkt[n++] = 1;                  // class IN
+
+    SOCKET s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (s == INVALID_SOCKET)
+        return false;
+    sockaddr_in to;
+    memset(&to, 0, sizeof(to));
+    to.sin_family = AF_INET;
+    to.sin_port = htons(53);
+    to.sin_addr.s_addr = resolverIp;
+    bool ok = false;
+    if (sendto(s, reinterpret_cast<const char *>(pkt), n, 0, reinterpret_cast<sockaddr *>(&to), sizeof(to)) == n)
+    {
+        fd_set rd;
+        FD_ZERO(&rd);
+        FD_SET(s, &rd);
+        timeval tv;
+        tv.tv_sec = timeoutMs / 1000;
+        tv.tv_usec = (timeoutMs % 1000) * 1000;
+        unsigned char resp[512];
+        if (select(0, &rd, nullptr, nullptr, &tv) > 0)
+        {
+            const int got = recv(s, reinterpret_cast<char *>(resp), sizeof(resp), 0);
+            if (got > 12 && resp[0] == pkt[0] && resp[1] == pkt[1] && (resp[3] & 0x0F) == 0)
+            {
+                const int answers = (resp[6] << 8) | resp[7];
+                int p = 12;
+                while (p < got && resp[p] != 0)          // skip the question name
+                    p += (resp[p] & 0xC0) == 0xC0 ? 1 : resp[p] + 1;
+                p += 5;                                  // terminator + type + class
+                for (int a = 0; a < answers && p + 10 <= got && !ok; ++a)
+                {
+                    if ((resp[p] & 0xC0) == 0xC0)
+                        p += 2;
+                    else
+                    {
+                        while (p < got && resp[p] != 0)
+                            p += resp[p] + 1;
+                        ++p;
+                    }
+                    if (p + 10 > got)
+                        break;
+                    const int type = (resp[p] << 8) | resp[p + 1];
+                    const int rdlen = (resp[p + 8] << 8) | resp[p + 9];
+                    p += 10;
+                    if (type == 1 && rdlen == 4 && p + 4 <= got)
+                    {
+                        memcpy(address, resp + p, 4);
+                        ok = true;
+                    }
+                    p += rdlen;
+                }
+            }
+        }
+    }
+    closesocket(s);
+    return ok;
+}
 } // namespace
 
 namespace XboxNetwork
@@ -119,7 +208,29 @@ bool resolveIPv4Timeout(const char* host, unsigned long* address, int timeoutMs)
         XNetDnsRelease(dns);
     }
     WSACloseEvent(event);
-    return ok;
+    if (ok)
+    {
+        s_lastResolveError = "";
+        return true;
+    }
+
+    // The console DNS failed (or has none configured): ask public resolvers.
+    const unsigned long resolvers[] = { inet_addr("8.8.8.8"), inet_addr("1.1.1.1") };
+    for (unsigned long r : resolvers)
+    {
+        if (queryPublicDns(host, r, address, 2000))
+        {
+            s_lastResolveError = "dns de la consola fallo; resuelto con DNS publico";
+            return true;
+        }
+    }
+    s_lastResolveError = "sin DNS: ni el de la consola ni 8.8.8.8/1.1.1.1 respondieron";
+    return false;
+}
+
+const char *lastResolveError()
+{
+    return s_lastResolveError;
 }
 
 bool resolveIPv4(const char* host, unsigned long* address)

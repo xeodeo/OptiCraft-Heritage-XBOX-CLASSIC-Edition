@@ -397,8 +397,9 @@ HttpResult httpGetUrl(const std::string &url, std::vector<unsigned char> &outDat
 		const intptr_t sock = XboxNetwork::tcpConnectTimeout(parsed.host.c_str(), parsed.port, rem);
 		if (sock == XboxNetwork::kInvalidSocket)
 		{
-			MC_LOG_INFO("network", "httpGetUrl connect failed: %s:%d (wsa=%d)\n",
-			            parsed.host.c_str(), parsed.port, XboxNetwork::lastError());
+			MC_LOG_INFO("network", "httpGetUrl connect failed: %s:%d (wsa=%d) link=%d dns='%s'\n",
+			            parsed.host.c_str(), parsed.port, XboxNetwork::lastError(),
+			            XboxNetwork::hasLink() ? 1 : 0, XboxNetwork::lastResolveError());
 			return HttpResult::NoConnection;
 		}
 
