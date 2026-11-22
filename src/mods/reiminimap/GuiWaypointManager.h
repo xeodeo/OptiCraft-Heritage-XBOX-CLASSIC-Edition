@@ -31,6 +31,7 @@ private:
     };
 
     bool isLegacyMode() const;
+    void drawLegacyScreen(float_t partialTick);
     void beginCreateWaypoint();
     void beginRenameWaypoint();
     void commitTextEdit();

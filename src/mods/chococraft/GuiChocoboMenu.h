@@ -26,6 +26,7 @@ protected:
 
 private:
     bool isLegacyMode() const;
+    void drawLegacyScreen(float_t partialTick);
     void activateRow(int_t row);
     void beginRename();
     void commitRename();
