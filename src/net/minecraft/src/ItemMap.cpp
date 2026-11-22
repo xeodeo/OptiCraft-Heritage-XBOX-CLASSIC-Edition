@@ -13,11 +13,13 @@
 #include "Material.h"
 #include "MapColor.h"
 #include "EntityPlayer.h"
+#include "MapInfo.h"
 #include <cstdint>
 
 ItemMap::ItemMap(int i)
     : ItemMapBase(i) {
-    setMaxStackSize(1);
+    // Java 1.5.2: filled maps stack (cloning gives several) and have subtypes.
+    setHasSubtypes(true);
 }
 
 MapData* ItemMap::getMapData(int_t id, World* world)
@@ -41,13 +43,15 @@ MapData* ItemMap::getHorizon(short word0, World* world)
 MapData* ItemMap::getMapData(ItemStack* itemstack, World* world) {
     std::string s = "map_" + std::to_string(itemstack->getItemDamage());
     MapData* mapdata = dynamic_cast<MapData*>(world->loadItemData(typeid(MapData), s));
-    if (mapdata == nullptr) {
+    if (mapdata == nullptr && !world->multiplayerWorld) {
         itemstack->setItemDamage(world->getUniqueDataId("map"));
         std::string s1 = "map_" + std::to_string(itemstack->getItemDamage());
         mapdata = new MapData(s1);
-        mapdata->xCenter = world->getWorldInfo()->getSpawnX();
-        mapdata->zCenter = world->getWorldInfo()->getSpawnZ();
         mapdata->scale = 3;
+        // Java 1.5.2: snap the centre to the map grid (Math.round(float)).
+        const int_t size = 128 * JavaArithmetic::intShl(1, mapdata->scale);
+        mapdata->xCenter = MathHelper::floor_float((float)world->getWorldInfo()->getSpawnX() / (float)size + 0.5f) * size;
+        mapdata->zCenter = MathHelper::floor_float((float)(world->getWorldInfo()->getSpawnZ() / size) + 0.5f) * size;
         mapdata->dimension = (byte_t)world->worldProvider->worldType;
         mapdata->markDirty();
         world->setItemData(s1, mapdata);
@@ -55,8 +59,9 @@ MapData* ItemMap::getMapData(ItemStack* itemstack, World* world) {
     return mapdata;
 }
 
-void ItemMap::initDimension(World* world, Entity* entity, MapData* mapdata) {
-    if (world->worldProvider->worldType != mapdata->dimension) {
+void ItemMap::updateMapData(World* world, Entity* entity, MapData* mapdata) {
+    // Java 1.5.2: only a player updates the map, with a column counter of its own.
+    if (world->worldProvider->worldType != mapdata->dimension || entity == nullptr || !entity->isPlayer()) {
         return;
     }
     int_t c = 128;
@@ -70,9 +75,10 @@ void ItemMap::initDimension(World* world, Entity* entity, MapData* mapdata) {
     if (world->worldProvider->hasNoSky) {
         j1 /= 2;
     }
-    mapdata->achievementParent++;
+    MapInfo* mapinfo = mapdata->func_82568_a(static_cast<EntityPlayer*>(entity));
+    mapinfo->field_82569_d++;
     for (int k1 = (l - j1) + 1; k1 < l + j1; k1++) {
-        if ((k1 & 0xf) != (mapdata->achievementParent & 0xf)) {
+        if ((k1 & 0xf) != (mapinfo->field_82569_d & 0xf)) {
             continue;
         }
         int l1 = 255;
@@ -129,7 +135,10 @@ void ItemMap::initDimension(World* world, Entity* entity, MapData* mapdata) {
                                     flag1 = false;
                                 }
                                 if (!flag1) {
-                                    j6--;
+                                    // Java 1.5.2 stops at the bottom instead of reading y = -1.
+                                    if (--j6 <= 0) {
+                                        break;
+                                    }
                                     l6 = chunk->getBlockID(j5 + j4, j6 - 1, l5 + k4);
                                 }
                             } while (j6 > 0 && !flag1);
@@ -213,44 +222,35 @@ void ItemMap::onUpdate(ItemStack* itemstack, World* world, Entity* entity, int i
     }
     MapData* mapdata = getMapData(itemstack, world);
     EntityPlayer* entityplayer = entity->isPlayer() ? static_cast<EntityPlayer*>(entity) : nullptr;
+    if (mapdata == nullptr) {
+        return;
+    }
     if (entityplayer) {
-        mapdata->updateMapData(entityplayer, itemstack);
+        mapdata->updateVisiblePlayers(entityplayer, itemstack);
     }
     if (flag) {
-        initDimension(world, entity, mapdata);
+        updateMapData(world, entity, mapdata);
     }
 }
 
 void ItemMap::onCreated(ItemStack* itemstack, World* world, EntityPlayer* entityplayer) {
+    // Java 1.5.2: only a map made by RecipesMapExtending gets a new, zoomed-out
+    // copy of its data. A cloned map keeps the id it was crafted with, and the
+    // "map_is_scaling" tag stays on the stack as in Java.
+    (void)entityplayer;
     if (itemstack != nullptr && itemstack->hasTagCompound() && itemstack->getTagCompound()->getBoolean("map_is_scaling")) {
         MapData* var4 = getMapData(itemstack, world);
-        itemstack->getTagCompound()->removeTag("map_is_scaling");
-        if (itemstack->getTagCompound()->hasNoTags()) {
-            itemstack->setTagCompound(nullptr);
+        itemstack->setItemDamage(world->getUniqueDataId("map"));
+        std::string s = "map_" + std::to_string(itemstack->getItemDamage());
+        MapData* var5 = new MapData(s);
+        var5->scale = (byte_t)(var4->scale + 1);
+        if (var5->scale > 4) {
+            var5->scale = 4;
         }
-        if (var4 != nullptr) {
-            itemstack->setItemDamage(world->getUniqueDataId("map"));
-            std::string s = "map_" + std::to_string(itemstack->getItemDamage());
-            MapData* var5 = new MapData(s);
-            var5->scale = (byte_t)(var4->scale + 1);
-            if (var5->scale > 4) {
-                var5->scale = 4;
-            }
-            var5->xCenter = var4->xCenter;
-            var5->zCenter = var4->zCenter;
-            var5->dimension = var4->dimension;
-            var5->markDirty();
-            world->setItemData(s, var5);
-        }
-        return;
+        var5->xCenter = var4->xCenter;
+        var5->zCenter = var4->zCenter;
+        var5->dimension = var4->dimension;
+        var5->markDirty();
+        world->setItemData(s, var5);
     }
-    itemstack->setItemDamage(world->getUniqueDataId("map"));
-    std::string s = "map_" + std::to_string(itemstack->getItemDamage());
-    MapData* mapdata = new MapData(s);
-    world->setItemData(s, mapdata);
-    mapdata->xCenter = MathHelper::floor_double(entityplayer->posX);
-    mapdata->zCenter = MathHelper::floor_double(entityplayer->posZ);
-    mapdata->scale = 3;
-    mapdata->dimension = (byte_t)world->worldProvider->worldType;
-    mapdata->markDirty();
 }

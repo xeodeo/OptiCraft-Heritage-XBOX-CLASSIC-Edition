@@ -367,7 +367,8 @@ void ItemRenderer::renderItemInFirstPerson(float partialTick) {
         tessellator->addVertexWithUV(-border, -border, 0.0, 0.0, 0.0);
         tessellator->draw();
         MapData* mapdata = static_cast<ItemMap*>(Item::mapItem)->getMapData(itemstack, mc->theWorld);
-        field_28131_f->renderMap(player, mc->renderEngine, mapdata);
+        if (mapdata != nullptr)
+            field_28131_f->renderMap(player, mc->renderEngine, mapdata);
         renderPopMatrix();
     } else if (itemstack != nullptr && heldItem != nullptr) {
         renderPushMatrix();

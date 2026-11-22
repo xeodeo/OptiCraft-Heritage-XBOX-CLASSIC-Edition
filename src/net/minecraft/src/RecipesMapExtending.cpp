@@ -3,6 +3,8 @@
 #include "ItemStack.h"
 #include "Item.h"
 #include "NBTTagCompound.h"
+#include "ItemMap.h"
+#include "MapData.h"
 
 static ItemStack **createRecipePattern()
 {
@@ -26,6 +28,11 @@ RecipesMapExtending::RecipesMapExtending()
 
 bool RecipesMapExtending::matches(InventoryCrafting *inv)
 {
+    return matches(inv, nullptr);
+}
+
+bool RecipesMapExtending::matches(InventoryCrafting *inv, World *world)
+{
     if (!ShapedRecipes::matches(inv))
     {
         return false;
@@ -45,7 +52,18 @@ bool RecipesMapExtending::matches(InventoryCrafting *inv)
         }
     }
 
-    return mapStack != nullptr;
+    if (mapStack == nullptr)
+    {
+        return false;
+    }
+
+    // Java 1.5.2: a map already at the widest zoom (scale 4) cannot be extended.
+    if (world == nullptr)
+    {
+        return false;
+    }
+    MapData *mapData = static_cast<ItemMap *>(Item::mapItem)->getMapData(mapStack, world);
+    return mapData == nullptr ? false : mapData->scale < 4;
 }
 
 ItemStack *RecipesMapExtending::getCraftingResult(InventoryCrafting *inv)

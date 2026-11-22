@@ -16,5 +16,6 @@ public:
 	int_t maxVisibleY[128]; // maxVisibleY
 	int_t hasSkyLight;
 	int_t isHellWorld;
+	int_t field_82569_d; // Java 1.5.2: per-player column counter for ItemMap.updateMapData
 	MapData *mapDataObj;
 };

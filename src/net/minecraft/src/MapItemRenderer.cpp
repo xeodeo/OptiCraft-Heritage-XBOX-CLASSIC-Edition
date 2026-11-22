@@ -79,8 +79,10 @@ void MapItemRenderer::renderMap(EntityPlayer *entityplayer, RenderEngine *render
 	tessellator->draw();
 
 	renderengine->bindTexture(renderengine->getTexture("/misc/mapicons.png"));
-	for (auto *mapcoord : mapdata->playersVisibleOnMap)
+	int_t iconIndex = 0;
+	for (auto &visible : mapdata->playersVisibleOnMap)
 	{
+		MapCoord *mapcoord = visible.second;
 		renderPushMatrix();
 		renderTranslate((float)j + (float)mapcoord->centerX / 2.0f + 64.0f,
 			(float)k + (float)mapcoord->centerZ / 2.0f + 64.0f, -0.02f);
@@ -94,12 +96,15 @@ void MapItemRenderer::renderMap(EntityPlayer *entityplayer, RenderEngine *render
 		float f4 = (float)(mapcoord->iconSize / 4 + 1) / 4.0f;
 
 		tessellator->startDrawingQuads();
-		tessellator->addVertexWithUV(-1.0, 1.0, 0.0, f1, f2);
-		tessellator->addVertexWithUV(1.0, 1.0, 0.0, f3, f2);
-		tessellator->addVertexWithUV(1.0, -1.0, 0.0, f3, f4);
-		tessellator->addVertexWithUV(-1.0, -1.0, 0.0, f1, f4);
+		// Java 1.5.2 lifts each icon a little so overlapping markers do not z-fight.
+		const double iconZ = (double)((float)iconIndex * 0.001f);
+		tessellator->addVertexWithUV(-1.0, 1.0, iconZ, f1, f2);
+		tessellator->addVertexWithUV(1.0, 1.0, iconZ, f3, f2);
+		tessellator->addVertexWithUV(1.0, -1.0, iconZ, f3, f4);
+		tessellator->addVertexWithUV(-1.0, -1.0, iconZ, f1, f4);
 		tessellator->draw();
 		renderPopMatrix();
+		++iconIndex;
 	}
 
 	renderPushMatrix();

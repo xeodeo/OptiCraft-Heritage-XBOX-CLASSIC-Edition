@@ -5,6 +5,7 @@
 
 #include "java/Type.h"
 
+class World;
 class Block;
 class InventoryCrafting;
 class IRecipe;
@@ -55,7 +56,7 @@ public:
 	void addRecipe(ItemStack *itemstack, std::initializer_list<RecipeArg> args);
 	void addShapelessRecipe(ItemStack *itemstack, std::initializer_list<RecipeArg> args);
 
-	ItemStack *findMatchingRecipe(InventoryCrafting *inventorycrafting);
+	ItemStack *findMatchingRecipe(InventoryCrafting *inventorycrafting, World *world = nullptr);
 	const std::vector<IRecipe *> &getRecipeList();
 
 private:

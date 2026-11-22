@@ -27,10 +27,12 @@ public:
     void writeEntityToNBT(NBTTagCompound *nbt) override;
     void readEntityFromNBT(NBTTagCompound *nbt) override;
     bool interact(EntityPlayer *player) override;
+    void onUpdate() override;
 
 protected:
     void entityInit() override;
 
 private:
     float itemDropChance = 1.0f;
+    int mapTrackerTicks = 0; // Java EntityTrackerEntry.ticks
 };

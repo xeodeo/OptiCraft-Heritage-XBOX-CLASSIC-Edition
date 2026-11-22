@@ -5,6 +5,8 @@
 #include "InventoryPlayer.h"
 #include "Item.h"
 #include "ItemStack.h"
+#include "ItemMap.h"
+#include "MapData.h"
 #include "NBTTagCompound.h"
 #include "World.h"
 #include "java/Random.h"
@@ -156,4 +158,31 @@ bool EntityItemFrame::interact(EntityPlayer *player)
     }
 
     return true;
+}
+
+void EntityItemFrame::onUpdate()
+{
+    EntityHanging::onUpdate();
+
+    // Java 1.5.2 does this in EntityTrackerEntry (every 10 ticks, for each player
+    // tracking the frame, range 160): a map in a frame refreshes its MapData so
+    // the green frame marker shows. There is no server tracker here.
+    const int tick = mapTrackerTicks++;
+    if (isDead || worldObj == nullptr || worldObj->multiplayerWorld || tick % 10 != 0)
+        return;
+    ItemStack *stack = getDisplayedItem();
+    if (stack == nullptr || Item::mapItem == nullptr || stack->itemID != Item::mapItem->shiftedIndex)
+        return;
+    MapData *mapData = static_cast<ItemMap *>(Item::mapItem)->getMapData(stack, worldObj);
+    if (mapData == nullptr)
+        return;
+    for (EntityPlayer *player : worldObj->playerEntities)
+    {
+        if (player == nullptr)
+            continue;
+        const double dx = player->posX - posX;
+        const double dz = player->posZ - posZ;
+        if (dx >= -160.0 && dx <= 160.0 && dz >= -160.0 && dz <= 160.0)
+            mapData->updateVisiblePlayers(player, stack);
+    }
 }
