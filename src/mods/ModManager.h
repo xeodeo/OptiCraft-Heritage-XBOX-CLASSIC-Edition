@@ -11,6 +11,20 @@ class Minecraft;
 class GuiContainer;
 class GuiIngame;
 
+struct CompiledModInfo
+{
+    std::string id;
+    std::string name;
+    std::string version;
+    std::string author;
+    std::string description;
+    bool builtIn = true;
+    bool installed = true;
+    bool enabled = false;
+    bool removable = false;
+    bool hasConfig = false;
+};
+
 class ModManager
 {
 public:
@@ -26,6 +40,9 @@ public:
     IMod *getMod(const std::string &id);
     bool isModEnabled(const std::string &id);
     void setModEnabled(const std::string &id, bool enabled);
+
+    // Store / Catalog API (compiled internal mods + optional local mods/catalog.txt)
+    std::vector<CompiledModInfo> getCatalogEntries() const;
 
     // .ochpack Pack Management
     void scanAndLoadPacks();
@@ -52,6 +69,7 @@ private:
     ModManager &operator=(const ModManager &) = delete;
 
     std::string getConfigPath() const;
+    std::string getExtraCatalogPath() const;
 
     Minecraft *mc;
     std::vector<std::unique_ptr<IMod>> mods;

@@ -10,6 +10,7 @@
 #include "ServerNBTStorage.h"
 #include "java/System.h"
 #include "ThreadPollServers.h"
+#include "mods/serverutils/ServerUtilsMod.h"
 
 GuiSlotServer::GuiSlotServer(GuiMultiplayer *parent)
     : GuiSlot(parent->getMinecraft(), parent->width, parent->height, 32, parent->height - 64, 36),
@@ -104,11 +105,19 @@ void GuiSlotServer::drawSlot(int_t index, int_t x, int_t y, int_t, Tessellator *
         ThreadPollServers::start(server);
     }
 
+    const bool serverUtils = ServerUtilsMod::isActive();
     FontRenderer *font = parentGui->getFontRenderer();
     parentGui->drawString(font, name, x + 2, y + 1, 0xffffff);
-    parentGui->drawString(font, motd, x + 2, y + 12, 0x808080);
-    parentGui->drawString(font, playerCount, x + 215 - font->getStringWidth(playerCount), y + 12, 0x808080);
+    parentGui->drawString(font, font->trimStringToWidth(motd, serverUtils ? 174 : 210), x + 2, y + 12, 0x808080);
+    parentGui->drawString(font, playerCount, x + (serverUtils ? 196 : 215) - font->getStringWidth(playerCount), y + 12, 0x808080);
     parentGui->drawString(font, host, x + 2, y + 23, 0x303030);
+
+    if (serverUtils)
+    {
+        // Server Utils indicator badge [Y:Info] on right side of row
+        parentGui->drawRect(x + 184, y + 1, x + 202, y + 11, static_cast<int_t>(0x90284868u));
+        parentGui->drawCenteredString(font, "i", x + 193, y + 2, 0x88EEFF);
+    }
 
     Minecraft *minecraft = parentGui->getMinecraft();
     if (minecraft == nullptr || minecraft->renderEngine == nullptr)

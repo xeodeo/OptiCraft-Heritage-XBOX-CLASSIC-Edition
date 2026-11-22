@@ -1,4 +1,5 @@
 #include "World.h"
+#include "DynamicLights.h"
 #include "EntitySheep.h"
 #include <algorithm>
 #include <cstdio>
@@ -2223,6 +2224,12 @@ void World::neighborLightPropagationChanged(EnumSkyBlock* enumSkyBlock, int x, i
         if (Block::lightValue[blockId] > lightValue)
         {
             lightValue = Block::lightValue[blockId];
+        }
+        if (DynamicLights::activeFor(this))
+        {
+            const int_t dynamicLight = DynamicLights::getLightValue(this, x, y, z);
+            if (dynamicLight > lightValue)
+                lightValue = dynamicLight;
         }
     }
     
@@ -4856,6 +4863,8 @@ int_t World::computeBlockLightValue(int_t currentLight, int_t x, int_t y, int_t 
 {
     (void)currentLight;
     int_t result = (blockId >= 0 && blockId < Block::BLOCK_REGISTRY_SIZE) ? Block::lightValue[blockId] : 0;
+    if (DynamicLights::activeFor(this))
+        result = std::max(result, DynamicLights::getLightValue(this, x, y, z));
     result = std::max(result, getSavedLightValue(EnumSkyBlock::Block, x - 1, y, z) - opacity);
     result = std::max(result, getSavedLightValue(EnumSkyBlock::Block, x + 1, y, z) - opacity);
     result = std::max(result, getSavedLightValue(EnumSkyBlock::Block, x, y - 1, z) - opacity);

@@ -1,6 +1,7 @@
 #include "platform/Log.h"
 #include "platform/PlatformTuning.h"
 #include "MetadataChunkBlock.h"
+#include "DynamicLights.h"
 #include "java/Arithmetic.h"
 
 #include "World.h"
@@ -132,6 +133,12 @@ void MetadataChunkBlock::updateLight(World *world)
             const int_t blockId = chunk->getBlockID(lx & 0xf, ly, lz & 0xf);
             if (Block::lightValue[blockId] > lightValue)
                 lightValue = Block::lightValue[blockId];
+            if (DynamicLights::activeFor(world))
+            {
+                const int_t dynamicLight = DynamicLights::getLightValue(world, lx, ly, lz);
+                if (dynamicLight > lightValue)
+                    lightValue = dynamicLight;
+            }
         }
 
         if (chunk->getSavedLightValue(const_cast<EnumSkyBlock*>(skyBlock), lx & 0xf, ly, lz & 0xf) != lightValue)
@@ -210,6 +217,12 @@ void MetadataChunkBlock::updateLight(World *world)
                 else if (skyBlock == EnumSkyBlock::Block)
                 {
                     newLight = Block::lightValue[blockId];
+                    if (DynamicLights::activeFor(world))
+                    {
+                        const int_t dynamicLight = DynamicLights::getLightValue(world, x, y, z);
+                        if (dynamicLight > newLight)
+                            newLight = dynamicLight;
+                    }
                 }
 
                 if (opacity < 15 || newLight > 0)

@@ -5,10 +5,16 @@
 #include "platform/Log.h"
 #include "DynamicMod.h"
 
-// Built-in mods
-#include "toomanyitems/TooManyItemsMod.h"
+// Built-in compiled mods (all OFF by default until activated in Mods Catalog)
 #include "reiminimap/ReiMinimapMod.h"
+#include "herobrine/HerobrineMod.h"
+#include "chococraft/ChocoCraftMod.h"
+#include "toomanyitems/TooManyItemsMod.h"
+#include "xray/XRayMod.h"
+#include "dynamiclights/DynamicLightsMod.h"
 #include "strongholdlocator/StrongholdLocatorMod.h"
+#include "villagelocator/VillageLocatorMod.h"
+#include "serverutils/ServerUtilsMod.h"
 
 #include <cstdio>
 
@@ -37,11 +43,26 @@ void ModManager::init(Minecraft *mcInstance)
     mc = mcInstance;
     initialized = true;
 
-    // Built-in internal debug mod: Stronghold Locator
+    // Register all built-in compiled mods so players can search and enable them
+    // with one click from the Mods store/catalog on Xbox without FTP transfers.
+    if (getMod("reiminimap") == nullptr)
+        registerMod(std::make_unique<ReiMinimapMod>());
+    if (getMod("herobrine") == nullptr)
+        registerMod(std::make_unique<HerobrineMod>());
+    if (getMod("chococraft") == nullptr)
+        registerMod(std::make_unique<ChocoCraftMod>());
+    if (getMod("toomanyitems") == nullptr)
+        registerMod(std::make_unique<TooManyItemsMod>());
+    if (getMod("xray") == nullptr)
+        registerMod(std::make_unique<XRayMod>());
+    if (getMod("dynamiclights") == nullptr)
+        registerMod(std::make_unique<DynamicLightsMod>());
     if (getMod("strongholdlocator") == nullptr)
-    {
         registerMod(std::make_unique<StrongholdLocatorMod>());
-    }
+    if (getMod("villagelocator") == nullptr)
+        registerMod(std::make_unique<VillageLocatorMod>());
+    if (getMod("serverutils") == nullptr)
+        registerMod(std::make_unique<ServerUtilsMod>());
 
     // Scan and load installed .ochpack packages from the persistent game mods directory
     scanAndLoadPacks();
@@ -113,10 +134,89 @@ std::string ModManager::getGameModsDir() const
 {
     File *dataDir = Minecraft::getMinecraftDir();
     if (dataDir != nullptr)
-    {
         return PlatformStorage::join(dataDir->toString(), "mods");
-    }
     return "mods";
+}
+
+std::string ModManager::getExtraCatalogPath() const
+{
+    return PlatformStorage::join(getGameModsDir(), "catalog.txt");
+}
+
+std::vector<CompiledModInfo> ModManager::getCatalogEntries() const
+{
+    std::vector<CompiledModInfo> out;
+    out.reserve(mods.size() + 4);
+    for (const auto &mod : mods)
+    {
+        if (!mod) continue;
+        CompiledModInfo info;
+        info.id = mod->getId();
+        info.name = mod->getName();
+        info.version = mod->getVersion();
+        info.author = mod->getAuthor();
+        info.description = mod->getDescription();
+        info.builtIn = true;
+        info.installed = true;
+        info.enabled = mod->isEnabled();
+        info.removable = mod->isRemovable();
+        info.hasConfig = mod->hasConfigScreen();
+        out.push_back(std::move(info));
+    }
+
+    // Optional local extra catalog (mods/catalog.txt): id|name|version|author|description
+    // Prepared for future local catalog expansion without requiring network access.
+    std::vector<unsigned char> bytes;
+    if (PlatformStorage::readFile(getExtraCatalogPath(), bytes) && !bytes.empty())
+    {
+        std::string content(bytes.begin(), bytes.end());
+        size_t pos = 0;
+        while (pos < content.size())
+        {
+            size_t nl = content.find('\n', pos);
+            std::string line = (nl == std::string::npos) ? content.substr(pos) : content.substr(pos, nl - pos);
+            pos = (nl == std::string::npos) ? content.size() : nl + 1;
+            while (!line.empty() && (line.back() == '\r' || line.back() == ' '))
+                line.pop_back();
+            if (line.empty() || line[0] == '#')
+                continue;
+
+            std::vector<std::string> fields;
+            size_t fStart = 0;
+            while (fStart <= line.size())
+            {
+                size_t bar = line.find('|', fStart);
+                if (bar == std::string::npos)
+                {
+                    fields.push_back(line.substr(fStart));
+                    break;
+                }
+                fields.push_back(line.substr(fStart, bar - fStart));
+                fStart = bar + 1;
+            }
+            if (fields.size() < 2 || fields[0].empty())
+                continue;
+            bool exists = false;
+            for (const auto &e : out)
+            {
+                if (e.id == fields[0]) { exists = true; break; }
+            }
+            if (exists)
+                continue;
+            CompiledModInfo extra;
+            extra.id = fields[0];
+            extra.name = fields[1];
+            extra.version = fields.size() > 2 ? fields[2] : "1.0";
+            extra.author = fields.size() > 3 ? fields[3] : "Local";
+            extra.description = fields.size() > 4 ? fields[4] : "External catalog entry (.ochpack)";
+            extra.builtIn = false;
+            extra.installed = false;
+            extra.enabled = false;
+            out.push_back(std::move(extra));
+        }
+    }
+
+    return out;
 }
 
 std::string ModManager::getInstalledModVersion(const std::string &id) const
@@ -145,35 +245,23 @@ void ModManager::scanAndLoadPacks()
         }
 
         std::unique_ptr<IMod> newMod;
-        if (pack.id == "toomanyitems")
-        {
-            newMod = std::make_unique<TooManyItemsMod>();
-        }
-        else if (pack.id == "reiminimap")
-        {
-            newMod = std::make_unique<ReiMinimapMod>();
-        }
-        else if (pack.id == "strongholdlocator")
-        {
-            newMod = std::make_unique<StrongholdLocatorMod>();
-        }
-        else
-        {
-            newMod = std::make_unique<DynamicMod>(pack);
-        }
+        if (pack.id == "toomanyitems")            newMod = std::make_unique<TooManyItemsMod>();
+        else if (pack.id == "reiminimap")         newMod = std::make_unique<ReiMinimapMod>();
+        else if (pack.id == "strongholdlocator")  newMod = std::make_unique<StrongholdLocatorMod>();
+        else if (pack.id == "herobrine")          newMod = std::make_unique<HerobrineMod>();
+        else if (pack.id == "chococraft")         newMod = std::make_unique<ChocoCraftMod>();
+        else if (pack.id == "xray")               newMod = std::make_unique<XRayMod>();
+        else if (pack.id == "villagelocator")     newMod = std::make_unique<VillageLocatorMod>();
+        else if (pack.id == "serverutils")        newMod = std::make_unique<ServerUtilsMod>();
+        else if (pack.id == "dynamiclights")      newMod = std::make_unique<DynamicLightsMod>();
+        else                                      newMod = std::make_unique<DynamicMod>(pack);
 
         if (newMod)
         {
             newMod->setPackPath(pack.filePath);
             if (initialized && mc != nullptr)
             {
-                try
-                {
-                    newMod->onInit(mc);
-                }
-                catch (...)
-                {
-                }
+                try { newMod->onInit(mc); } catch (...) {}
             }
             registerMod(std::move(newMod));
         }
@@ -198,14 +286,11 @@ bool ModManager::installModPack(const std::string &sourcePath, std::string &outE
 
     std::string destPath = PlatformStorage::join(modsDir, info.fileName);
 
-    // Read source file data using OchPackReader for full optical disc & candidate support
     std::vector<unsigned char> data;
     if (!OchPackReader::readFileBytes(sourcePath, data))
     {
         if (!info.filePath.empty() && info.filePath != sourcePath)
-        {
             OchPackReader::readFileBytes(info.filePath, data);
-        }
     }
 
     if (data.empty())
@@ -214,14 +299,12 @@ bool ModManager::installModPack(const std::string &sourcePath, std::string &outE
         return false;
     }
 
-    // Write to destination
     if (!PlatformStorage::writeFile(destPath, data.data(), data.size()))
     {
         outError = "Failed to write package to destination.";
         return false;
     }
 
-    // Update or register mod
     info.filePath = destPath;
     IMod *existing = getMod(info.id);
     if (existing != nullptr)
@@ -232,14 +315,16 @@ bool ModManager::installModPack(const std::string &sourcePath, std::string &outE
     else
     {
         std::unique_ptr<IMod> newMod;
-        if (info.id == "toomanyitems")
-            newMod = std::make_unique<TooManyItemsMod>();
-        else if (info.id == "reiminimap")
-            newMod = std::make_unique<ReiMinimapMod>();
-        else if (info.id == "strongholdlocator")
-            newMod = std::make_unique<StrongholdLocatorMod>();
-        else
-            newMod = std::make_unique<DynamicMod>(info);
+        if (info.id == "toomanyitems")           newMod = std::make_unique<TooManyItemsMod>();
+        else if (info.id == "reiminimap")        newMod = std::make_unique<ReiMinimapMod>();
+        else if (info.id == "strongholdlocator") newMod = std::make_unique<StrongholdLocatorMod>();
+        else if (info.id == "herobrine")         newMod = std::make_unique<HerobrineMod>();
+        else if (info.id == "chococraft")        newMod = std::make_unique<ChocoCraftMod>();
+        else if (info.id == "xray")              newMod = std::make_unique<XRayMod>();
+        else if (info.id == "villagelocator")    newMod = std::make_unique<VillageLocatorMod>();
+        else if (info.id == "serverutils")       newMod = std::make_unique<ServerUtilsMod>();
+        else if (info.id == "dynamiclights")     newMod = std::make_unique<DynamicLightsMod>();
+        else                                     newMod = std::make_unique<DynamicMod>(info);
 
         if (newMod)
         {
@@ -247,13 +332,7 @@ bool ModManager::installModPack(const std::string &sourcePath, std::string &outE
             newMod->setEnabled(true);
             if (initialized && mc != nullptr)
             {
-                try
-                {
-                    newMod->onInit(mc);
-                }
-                catch (...)
-                {
-                }
+                try { newMod->onInit(mc); } catch (...) {}
             }
             registerMod(std::move(newMod));
         }
@@ -288,9 +367,7 @@ std::string ModManager::getConfigPath() const
 {
     File *dataDir = Minecraft::getMinecraftDir();
     if (dataDir != nullptr)
-    {
         return PlatformStorage::join(dataDir->toString(), "mods.txt");
-    }
     return "mods.txt";
 }
 
@@ -347,7 +424,7 @@ void ModManager::save()
 {
     std::string path = getConfigPath();
     std::string content;
-    content.reserve(256);
+    content.reserve(384);
     content += "# OptiCraft Mods Configuration\n";
     for (const auto &mod : mods)
     {

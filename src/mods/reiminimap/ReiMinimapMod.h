@@ -9,13 +9,16 @@ public:
     ~ReiMinimapMod() override = default;
 
     std::string getId() const override { return "reiminimap"; }
-    std::string getName() const override { return "Rei's Minimap"; }
-    std::string getVersion() const override { return "v3.2_05"; }
-    std::string getDescription() const override { return "Minimap radar, coordinates & waypoints. Set waypoint: Triangle + Up."; }
-    std::string getAuthor() const override { return "ReiFNSK"; }
+    std::string getName() const override { return "Rei & Xaero Minimap"; }
+    std::string getVersion() const override { return "v3.5"; }
+    std::string getDescription() const override { return "Round/Square map, radar, cave mode, biome & waypoints (Back+D-Pad)."; }
+    std::string getAuthor() const override { return "ReiFNSK / OptiCraft"; }
 
     bool isEnabled() const override;
     void setEnabled(bool state) override;
+
+    bool hasConfigScreen() const override { return true; }
+    GuiScreen *createConfigScreen(GuiScreen *parent) override;
 
     void onInit(Minecraft *mc) override;
     void onTick() override;

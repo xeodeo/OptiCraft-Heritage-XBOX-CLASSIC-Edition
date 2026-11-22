@@ -21,6 +21,7 @@
 #include "platform/WorldLoadTrace.h"
 #include "client/ClientProfiler.h"
 #include "mods/ModManager.h"
+#include "net/minecraft/src/DynamicLights.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -2473,6 +2474,7 @@ void Minecraft::runTick()
             XBOX_WATCHDOG_PHASE("worldTick");
             theWorld->tick();
             ClientProfiler::tickPhase("worldTick", System::nanoTime() - clientPhaseStartNs);
+            DynamicLights::tick(this);
         }
         if (!isGamePaused && theWorld != nullptr)
         {
@@ -2907,6 +2909,7 @@ void Minecraft::changeWorld(World *world, const std::string &s, EntityPlayerSP *
     if (oldWorld != nullptr && !ps2MultiplayerExit)
         oldWorld->saveWorldIndirectly(loadingScreen);
 
+    DynamicLights::reset();
     theWorld = world;
     if (renderEngine != nullptr && world == nullptr)
         renderEngine->setBackgroundTextureLoadingEnabled(false);

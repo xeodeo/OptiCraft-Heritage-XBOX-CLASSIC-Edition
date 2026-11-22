@@ -10,6 +10,7 @@
 
 #include "java/Arithmetic.h"
 #include "net/minecraft/src/Block.h"
+#include "net/minecraft/src/XRayMode.h"
 #include "net/minecraft/src/Chunk.h"
 #include "net/minecraft/src/ConnectedTextures.h"
 #include "net/minecraft/src/ExtendedBlockStorage.h"
@@ -432,6 +433,8 @@ bool WorldRenderer::pcLegacyBuildRendererStep(int_t blockBudget)
 
             const int_t id = sectionCache.getBlockIdLocal(lx, ly, lz);
             if (id <= 0 || id >= Block::BLOCK_REGISTRY_SIZE)
+                continue;
+            if (XRayMode::active() && !XRayMode::isVisibleBlock(id))
                 continue;
 
             Block *block = Block::blocksList[id];

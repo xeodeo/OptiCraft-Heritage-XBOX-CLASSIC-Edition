@@ -47,7 +47,8 @@ int s_cameraWarmup = 0;
 // (the PS2 Triangle combos). Back alone still toggles the debug screen, on
 // release, so a combo does not also open it.
 bool s_backCombo = false;
-int s_waypointRequest = 0;
+int s_waypointRequest[2] = { 0, 0 };
+bool s_villageLocatorRequest = false;
 int s_menuAnalogDirection = 0;
 float s_menuAnalogRepeat = 0.0f;
 bool s_rebindStickArmed = false;
@@ -373,12 +374,27 @@ void updateGameplay(const XboxPadSnapshot& p)
 		s_backCombo = false;
 	if (backHeld && (p.pressed & XBOX_PAD_DPAD_UP))
 	{
-		s_waypointRequest = 1;
+		s_waypointRequest[0] = 1;
 		s_backCombo = true;
 	}
 	else if (backHeld && (p.pressed & XBOX_PAD_DPAD_DOWN))
 	{
-		s_waypointRequest = 2;
+		s_waypointRequest[0] = 2;
+		s_backCombo = true;
+	}
+	else if (backHeld && (p.pressed & XBOX_PAD_DPAD_LEFT))
+	{
+		s_waypointRequest[0] = 3;
+		s_backCombo = true;
+	}
+	else if (backHeld && (p.pressed & XBOX_PAD_DPAD_RIGHT))
+	{
+		s_waypointRequest[0] = 4;
+		s_backCombo = true;
+	}
+	else if (backHeld && (p.pressed & XBOX_PAD_Y))
+	{
+		s_villageLocatorRequest = true;
 		s_backCombo = true;
 	}
 	// The D-pad does not walk while it is part of a Back combo.
@@ -425,11 +441,25 @@ void updateGameplay(const XboxPadSnapshot& p)
 
 namespace XboxInput
 {
-int consumeWaypointRequest()
+int consumeWaypointRequest(int playerIndex)
 {
-	const int request = s_waypointRequest;
-	s_waypointRequest = 0;
+	const int idx = (playerIndex == 1) ? 1 : 0;
+	const int request = s_waypointRequest[idx];
+	s_waypointRequest[idx] = 0;
 	return request;
+}
+
+void setWaypointRequest(int playerIndex, int request)
+{
+	const int idx = (playerIndex == 1) ? 1 : 0;
+	s_waypointRequest[idx] = request;
+}
+
+bool consumeVillageLocatorRequest()
+{
+	const bool req = s_villageLocatorRequest;
+	s_villageLocatorRequest = false;
+	return req;
 }
 
 

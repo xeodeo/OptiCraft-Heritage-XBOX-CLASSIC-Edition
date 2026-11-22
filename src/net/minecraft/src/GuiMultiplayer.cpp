@@ -16,7 +16,9 @@
 #endif
 #include "GuiScreenAddServer.h"
 #include "GuiScreenServerList.h"
+#include "GuiServerInfo.h"
 #include "GuiSlotServer.h"
+#include "mods/serverutils/ServerUtilsMod.h"
 #include "GuiYesNo.h"
 #include "Minecraft.h"
 #include "SoundManager.h"
@@ -602,6 +604,14 @@ void GuiMultiplayer::handleSpecializedMenuInput()
     else if ((pad.pressed & PLATFORM_TEXT_RIGHT) != 0) moveControllerFocusHorizontal(1);
     else if ((pad.pressed & PLATFORM_TEXT_UP) != 0) moveControllerFocusVertical(-1);
     else if ((pad.pressed & PLATFORM_TEXT_DOWN) != 0) moveControllerFocusVertical(1);
+    if ((pad.pressed & PLATFORM_TEXT_BACK) != 0 && ServerUtilsMod::isActive() &&
+        selectedServer >= 0 && selectedServer < static_cast<int_t>(serverList.size()))
+    {
+        if (mc != nullptr && mc->sndManager != nullptr)
+            mc->sndManager->playSoundFX("random.click", 1.0f, 1.0f);
+        openServerInfo(selectedServer);
+        return;
+    }
     if ((pad.pressed & (PLATFORM_TEXT_TYPE | PLATFORM_TEXT_ENTER)) != 0)
         activateControllerFocus();
 #endif
@@ -618,6 +628,13 @@ void GuiMultiplayer::keyTyped(char_t c, int_t key)
 void GuiMultiplayer::mouseClicked(int_t x, int_t y, int_t button)
 {
     GuiScreen::mouseClicked(x, y, button);
+}
+
+void GuiMultiplayer::openServerInfo(int_t index)
+{
+    if (mc == nullptr || index < 0 || index >= static_cast<int_t>(serverList.size()))
+        return;
+    mc->displayGuiScreen(new GuiServerInfo(this, serverList[static_cast<std::size_t>(index)]));
 }
 
 void GuiMultiplayer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
