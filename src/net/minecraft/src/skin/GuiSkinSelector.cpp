@@ -2,6 +2,7 @@
 #include "net/minecraft/src/UiStrings.h"
 #include "GuiSkinSelector.h"
 #include "GuiLoadSkinsMenu.h"
+#include "GuiSearchSkin.h"
 #include "SkinManager.h"
 #include "GuiButton.h"
 #include "Minecraft.h"
@@ -49,6 +50,7 @@ constexpr int_t BUTTON_ID_NEXT_SKIN = 4;
 constexpr int_t BUTTON_ID_PLAYER2 = 10;
 constexpr int_t BUTTON_ID_LOAD_SKINS = 11;
 constexpr int_t BUTTON_ID_DELETE_SKIN = 12;
+constexpr int_t BUTTON_ID_SEARCH_SKIN = 13;
 constexpr int_t BUTTON_ID_TAB_BASE = 100;
 
 std::string toUpperString(const std::string &str)
@@ -104,6 +106,7 @@ GuiSkinSelector::GuiSkinSelector(GuiScreen *parent, bool isPlayer2)
     , legacyNameplateX(0)
     , legacyNameplateW(0)
     , buttonPlayer2Skin(nullptr)
+    , buttonSearchSkin(nullptr)
     , buttonLoadSkins(nullptr)
     , buttonDeleteSkin(nullptr)
 #if PLATFORM_PS2
@@ -176,8 +179,12 @@ void GuiSkinSelector::initGui()
     controlList.clear();
     packButtons.clear();
     buttonPlayer2Skin = nullptr;
+    buttonSearchSkin = nullptr;
     buttonLoadSkins = nullptr;
     buttonDeleteSkin = nullptr;
+
+    if (mc != nullptr && mc->isScreenOwnedByPlayer2())
+        isPlayer2Skin = true;
 
     StringTranslate *tr = StringTranslate::getInstance();
     const bool isEs = (tr != nullptr && tr->getCurrentLanguage().rfind("es_", 0) == 0);
@@ -193,10 +200,19 @@ void GuiSkinSelector::initGui()
                 p2Skin = SkinManager::getSelectedSkinIdP2();
 
             const SkinEntry *entry = SkinManager::getSkinById(p2Skin);
-            if (entry != nullptr && entry->isCustom)
+            if (entry != nullptr && entry->isCustom && SkinManager::getCustomPackIndex() >= 0)
             {
-                currentPackIndex = 1;
-                currentSkinIndex = SkinManager::getIndexById(p2Skin);
+                currentPackIndex = SkinManager::getCustomPackIndex();
+                currentSkinIndex = 0;
+                const auto &customs = SkinManager::getCustomSkins();
+                for (std::size_t idx = 0; idx < customs.size(); ++idx)
+                {
+                    if (customs[idx].id == p2Skin)
+                    {
+                        currentSkinIndex = static_cast<int>(idx);
+                        break;
+                    }
+                }
             }
             else
             {
@@ -234,8 +250,8 @@ void GuiSkinSelector::initGui()
         legacyPackBarY = legacyStageTop + (hdLayout ? 5 : 3);
         legacyPackBarH = hdLayout ? 22 : 16;
 
-        legacyCenterTabW = std::clamp<int_t>(width * 34 / 100, 108, 220);
-        legacySideTabW = std::clamp<int_t>(width * 24 / 100, 72, 156);
+        legacyCenterTabW = std::clamp<int_t>(width * 44 / 100, 134, 240);
+        legacySideTabW = std::clamp<int_t>(width * 22 / 100, 64, 148);
         const int_t tabGap = hdLayout ? 6 : 4;
         legacyCenterTabX = (width - legacyCenterTabW) / 2;
         legacyLeftTabX = legacyCenterTabX - tabGap - legacySideTabW;
@@ -243,7 +259,7 @@ void GuiSkinSelector::initGui()
 
         nameplateHeight = hdLayout ? 28 : 22;
         nameplateY = legacyStageBottom - nameplateHeight - (hdLayout ? 5 : 3);
-        legacyNameplateW = std::clamp<int_t>(width * 40 / 100, 128, 250);
+        legacyNameplateW = std::clamp<int_t>(width * 50 / 100, 152, 260);
         legacyNameplateX = (width - legacyNameplateW) / 2;
 
         carouselCenterX = width / 2;
@@ -281,7 +297,7 @@ void GuiSkinSelector::initGui()
         if (p == 0)
             pName = isEs ? "Originales" : "Default";
         else if (pName == "Custom Skins")
-            pName = std::string(isEs ? "Personal." : "Custom") + " (" + std::to_string(SkinManager::getSkinCountForPack(p)) + ")";
+            pName = std::string(isEs ? "Skins pers." : "Custom") + " (" + std::to_string(SkinManager::getSkinCountForPack(p)) + ")";
 
         std::string label = (currentPackIndex == p) ? ("> " + pName + " <") : pName;
         GuiButton *btn = new GuiButton(BUTTON_ID_TAB_BASE + p, packBtnX, tabY + p * (btnH + btnGap), packBtnW, btnH, label);
@@ -289,41 +305,56 @@ void GuiSkinSelector::initGui()
         controlList.push_back(btn);
     }
 
-    // Bottom action buttons
+    // Bottom action buttons (even width distribution so buttons never overlap at 640x480)
     const int_t btnY = dialogTop + dialogHeight + 4;
-    const int_t p2BtnWidth = 140;
     const int_t p2BtnHeight = 18;
-    const int_t p2BtnX = dialogLeft + dialogWidth - p2BtnWidth;
+    const int_t gap = 4;
+    const bool isCustomPack = (SkinManager::getPackName(currentPackIndex) == "Custom Skins");
+    const bool showDelete = (isCustomPack && !SkinManager::getCustomSkins().empty());
+    const bool showP2 = !isPlayer2Skin;
 
-    if (!isPlayer2Skin)
+    int_t btnCount = 2 + (showDelete ? 1 : 0) + (showP2 ? 1 : 0);
+    const int_t eachW = (dialogWidth - gap * (btnCount - 1)) / btnCount;
+    int_t curX = dialogLeft;
+
+    if (showDelete)
     {
-        std::string p2BtnText = isEs ? "Skin 2do Jugador" : "Choose 2nd Player Skin";
-        buttonPlayer2Skin = new GuiButton(BUTTON_ID_PLAYER2, p2BtnX, btnY, p2BtnWidth, p2BtnHeight, p2BtnText);
+        std::string delBtnText = isEs ? "Eliminar" : "Delete";
+        buttonDeleteSkin = new GuiButton(BUTTON_ID_DELETE_SKIN, curX, btnY, eachW, p2BtnHeight, delBtnText);
+        controlList.push_back(buttonDeleteSkin);
+        curX += eachW + gap;
+    }
+    else
+    {
+        buttonDeleteSkin = nullptr;
+    }
+
+    {
+        std::string searchBtnText = isEs ? "Buscar Skin" : "Search Skin";
+        buttonSearchSkin = new GuiButton(BUTTON_ID_SEARCH_SKIN, curX, btnY, eachW, p2BtnHeight, searchBtnText);
+        controlList.push_back(buttonSearchSkin);
+        curX += eachW + gap;
+    }
+
+    {
+        const int_t loadW = showP2 ? eachW : (dialogLeft + dialogWidth - curX);
+        std::string loadBtnText = isEs ? "Cargar" : "Load Skins";
+        buttonLoadSkins = new GuiButton(BUTTON_ID_LOAD_SKINS, curX, btnY, loadW, p2BtnHeight, loadBtnText);
+        controlList.push_back(buttonLoadSkins);
+        curX += loadW + gap;
+    }
+
+    if (showP2)
+    {
+        const int_t p2W = dialogLeft + dialogWidth - curX;
+        std::string p2BtnText = isEs ? "Skin Jug. 2" : "2nd Player";
+        buttonPlayer2Skin = new GuiButton(BUTTON_ID_PLAYER2, curX, btnY, p2W, p2BtnHeight, p2BtnText);
         buttonPlayer2Skin->enabled = true;
         controlList.push_back(buttonPlayer2Skin);
     }
     else
     {
         buttonPlayer2Skin = nullptr;
-    }
-
-    const int_t loadBtnWidth = 85;
-    const int_t loadBtnX = (buttonPlayer2Skin != nullptr) ? (p2BtnX - loadBtnWidth - 5) : (dialogLeft + dialogWidth - loadBtnWidth);
-    std::string loadBtnText = isEs ? "Cargar Skins" : "Load Skins";
-    buttonLoadSkins = new GuiButton(BUTTON_ID_LOAD_SKINS, loadBtnX, btnY, loadBtnWidth, p2BtnHeight, loadBtnText);
-    controlList.push_back(buttonLoadSkins);
-
-    const bool isCustomPack = (SkinManager::getPackName(currentPackIndex) == "Custom Skins");
-    if (isCustomPack && !SkinManager::getCustomSkins().empty())
-    {
-        const int_t delBtnWidth = 85;
-        std::string delBtnText = isEs ? "Eliminar Skin" : "Delete Skin";
-        buttonDeleteSkin = new GuiButton(BUTTON_ID_DELETE_SKIN, dialogLeft, btnY, delBtnWidth, p2BtnHeight, delBtnText);
-        controlList.push_back(buttonDeleteSkin);
-    }
-    else
-    {
-        buttonDeleteSkin = nullptr;
     }
 }
 
@@ -362,6 +393,28 @@ void GuiSkinSelector::togglePlayer2Mode()
     initGui();
 }
 
+void GuiSkinSelector::focusCustomSkin(const std::string &skinId)
+{
+    SkinManager::scanCustomSkins();
+    const int customIdx = SkinManager::getCustomPackIndex();
+    if (customIdx < 0)
+        return;
+
+    currentPackIndex = customIdx;
+    currentSkinIndex = 0;
+    const auto &customs = SkinManager::getCustomSkins();
+    for (std::size_t i = 0; i < customs.size(); ++i)
+    {
+        if (customs[i].id == skinId)
+        {
+            currentSkinIndex = static_cast<int>(i);
+            break;
+        }
+    }
+    initializedSelection = true;
+    scrollOffset = 0.0f;
+}
+
 void GuiSkinSelector::deleteCurrentCustomSkin()
 {
     if (SkinManager::getPackName(currentPackIndex) != "Custom Skins")
@@ -379,10 +432,12 @@ void GuiSkinSelector::deleteCurrentCustomSkin()
     if (mc != nullptr && mc->sndManager != nullptr)
         mc->sndManager->playSoundFX("random.break", 1.0f, 1.0f);
 
-    // If no custom skins are left, return immediately to the main menu as requested
     if (SkinManager::getCustomSkins().empty())
     {
-        cancelAndReturn();
+        currentPackIndex = 0;
+        currentSkinIndex = 0;
+        scrollOffset = 0.0f;
+        initGui();
         return;
     }
 
@@ -581,12 +636,12 @@ void GuiSkinSelector::handleSpecializedMenuInput()
             return;
         }
 
-        // Y (PLATFORM_TEXT_SHIFT): Open Load Skins menu
+        // Y (PLATFORM_TEXT_SHIFT): Open Search Skin Online screen
         if ((pad.pressed & PLATFORM_TEXT_SHIFT) != 0)
         {
             if (mc != nullptr && mc->sndManager != nullptr)
                 mc->sndManager->playSoundFX("random.click", 1.0f, 1.0f);
-            mc->displayGuiScreen(new GuiLoadSkinsMenu(this));
+            mc->displayGuiScreen(new GuiSearchSkin(this, isPlayer2Skin));
             return;
         }
 
@@ -786,8 +841,15 @@ void GuiSkinSelector::keyTyped(char_t c, int_t key)
         return;
     }
 
-    // L or Y in Legacy mode: Open Load Skins menu
-    if (isLegacyMode() && (c == 'l' || c == 'L' || c == 'y' || c == 'Y'))
+    // Y in Legacy mode: Open Search Skin Online screen; L: Open Load Skins menu
+    if (isLegacyMode() && (c == 'y' || c == 'Y'))
+    {
+        if (mc != nullptr && mc->sndManager != nullptr)
+            mc->sndManager->playSoundFX("random.click", 1.0f, 1.0f);
+        mc->displayGuiScreen(new GuiSearchSkin(this, isPlayer2Skin));
+        return;
+    }
+    if (isLegacyMode() && (c == 'l' || c == 'L'))
     {
         if (mc != nullptr && mc->sndManager != nullptr)
             mc->sndManager->playSoundFX("random.click", 1.0f, 1.0f);
@@ -855,6 +917,11 @@ void GuiSkinSelector::selectAndConfirm()
             {
                 mc->gameSettings->selectedSkinP2 = skin->id;
                 mc->gameSettings->saveOptions();
+            }
+            if (mc != nullptr && mc->thePlayer2 != nullptr)
+            {
+                mc->thePlayer2->setEntityTexture(skin->modelPath);
+                mc->thePlayer2->skinUrl = "";
             }
         }
         else
@@ -1016,6 +1083,12 @@ void GuiSkinSelector::actionPerformed(GuiButton *button)
         if (mc != nullptr && mc->sndManager != nullptr)
             mc->sndManager->playSoundFX("random.click", 1.0f, 1.0f);
         mc->displayGuiScreen(new GuiSkinSelector(this, true));
+    }
+    else if (button->id == BUTTON_ID_SEARCH_SKIN)
+    {
+        if (mc != nullptr && mc->sndManager != nullptr)
+            mc->sndManager->playSoundFX("random.click", 1.0f, 1.0f);
+        mc->displayGuiScreen(new GuiSearchSkin(this, isPlayer2Skin));
     }
     else if (button->id == BUTTON_ID_LOAD_SKINS)
     {
@@ -1395,7 +1468,7 @@ void GuiSkinSelector::drawLegacyScreen(int_t mouseX, int_t mouseY, float_t parti
         if (pName == "Custom Skins")
         {
             const int customCount = SkinManager::getSkinCountForPack(packIdx);
-            return (isEs ? "Personalizado (" : "Custom Skins (") + std::to_string(customCount) + ")";
+            return (isEs ? "Skins personalizadas (" : "Custom Skins (") + std::to_string(customCount) + ")";
         }
         return pName;
     };
@@ -1566,12 +1639,13 @@ void GuiSkinSelector::drawLegacyScreen(int_t mouseX, int_t mouseY, float_t parti
 
     if (selectedSkin != nullptr)
     {
-        const std::string skinTitle = selectedSkin->name;
+        const std::string skinTitle = fontRenderer->trimStringToWidth(selectedSkin->name, std::max<int_t>(20, legacyNameplateW - 10));
         std::string originTitle = activePackTitle;
         if (totalSkins > 0)
             originTitle += "  (" + std::to_string(currentSkinIndex + 1) + "/" + std::to_string(totalSkins) + ")";
         if (isPlayer2Skin)
             originTitle += isEs ? " [J2]" : " [P2]";
+        originTitle = fontRenderer->trimStringToWidth(originTitle, std::max<int_t>(20, legacyNameplateW - 10));
 
         if (hdLayout)
         {
@@ -1589,7 +1663,7 @@ void GuiSkinSelector::drawLegacyScreen(int_t mouseX, int_t mouseY, float_t parti
     const int_t footerY = height - (hdLayout ? 16 : 13);
     const std::string lblSelect = isEs ? "Seleccionar" : "Select";
     const std::string lblBack   = isEs ? "Volver" : "Back";
-    const std::string lblLoad   = isEs ? "Cargar" : "Load Skins";
+    const std::string lblLoad   = isEs ? "Buscar" : "Search";
     const std::string lblDelete = isEs ? "Eliminar" : "Delete";
     const std::string lblP2     = isPlayer2Skin ? (isEs ? "Jugador 1" : "Player 1") : (isEs ? "Jugador 2" : "Player 2");
     const std::string lblNav    = isEs ? "Skin / Pack" : "Skin / Pack";
@@ -1696,6 +1770,10 @@ void GuiSkinSelector::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick
     const bool isEs = (tr != nullptr && tr->getCurrentLanguage().rfind("es_", 0) == 0);
 
     std::string headerName = SkinManager::getPackName(currentPackIndex);
+    if (headerName == "Custom Skins")
+        headerName = isEs ? "Skins personalizadas" : "Custom Skins";
+    else if (headerName == "Default Skins" && isEs)
+        headerName = "Skins Originales";
     if (isPlayer2Skin)
         headerName += isEs ? " (Jugador 2)" : " (Player 2)";
     fontRenderer->drawStringWithShadow(headerName, rightX1 + 10, rightY1 + 5, isPlayer2Skin ? 0x55FFFF : 0xFFFFFF);

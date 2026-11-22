@@ -30,8 +30,22 @@ std::unique_ptr<Socket> createSocket();
 std::unique_ptr<std::istream> createInputStream(Socket &socket);
 std::unique_ptr<std::ostream> createOutputStream(Socket &socket);
 
+enum class HttpResult
+{
+	Ok,
+	NotFound,
+	NoConnection,
+	InvalidResponse,
+	TooLarge
+};
+
 // Small platform layer for Java-like URL/HttpURLConnection operations.
 // The Minecraft port should call this instead of platform APIs directly.
+HttpResult httpGetUrl(const std::string &url,
+                      std::vector<unsigned char> &outData,
+                      int *outStatusCode = nullptr,
+                      std::size_t maxBytes = 64 * 1024,
+                      int timeoutMs = 8000);
 bool readUrl(const std::string &url, std::vector<unsigned char> &data);
 int getResponseCode(const std::string &url);
 bool postUrl(const std::string &url, const std::string &contentType,

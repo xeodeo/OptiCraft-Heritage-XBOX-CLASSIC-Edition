@@ -2,6 +2,7 @@
 #include "Minecraft.h"
 #include "GameSettings.h"
 #include "EntityPlayerSP.h"
+#include "RenderEngine.h"
 #include "java/File.h"
 #include "platform/Storage.h"
 #include "platform/Log.h"
@@ -345,11 +346,51 @@ bool assembleFrontPreview(const unsigned char *rgba, int w, int h, std::vector<u
     return true;
 }
 
-// Converts a 64x64 skin to a 64x32 retro-compatible texture for MC 1.2.5 ModelBiped
-bool makeRetro32(const unsigned char *rgba, int w, int h, std::vector<unsigned char> &outRetro)
+bool hasPngSignature(const unsigned char *data, std::size_t len)
+{
+    static const unsigned char kSig[8] = {0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A};
+    return data != nullptr && len >= 8 && std::memcmp(data, kSig, 8) == 0;
+}
+
+// Detects modern 64x64 slim (Alex, 3px arms) skins by checking the 2px classic-only arm columns.
+bool isLikelySlimSkinRgba(const unsigned char *rgba, int w, int h)
+{
+    if (rgba == nullptr || w != 64 || h != 64)
+        return false;
+
+    auto alphaAt = [&](int x, int y) -> unsigned char {
+        return rgba[(y * w + x) * 4 + 3];
+    };
+
+    int slimArmOpaque = 0;
+    for (int y = 20; y < 32; ++y)
+        for (int x = 44; x < 47; ++x)
+            if (alphaAt(x, y) > 0)
+                ++slimArmOpaque;
+    if (slimArmOpaque == 0)
+        return false;
+
+    for (int y = 20; y < 32; ++y)
+        if (alphaAt(54, y) > 0 || alphaAt(55, y) > 0)
+            return false;
+    for (int y = 16; y < 20; ++y)
+        if (alphaAt(50, y) > 0 || alphaAt(51, y) > 0)
+            return false;
+    for (int y = 52; y < 64; ++y)
+        if (alphaAt(46, y) > 0 || alphaAt(47, y) > 0)
+            return false;
+    return true;
+}
+
+// Converts a 64x64 skin to a 64x32 retro-compatible texture for MC 1.2.5/1.5.2 ModelBiped
+bool makeRetro32(const unsigned char *rgba, int w, int h, std::vector<unsigned char> &outRetro, bool *outWasSlim = nullptr)
 {
     if (rgba == nullptr || w != 64 || (h != 32 && h != 64))
         return false;
+
+    const bool slim = isLikelySlimSkinRgba(rgba, w, h);
+    if (outWasSlim != nullptr)
+        *outWasSlim = slim;
 
     outRetro.assign(64 * 32 * 4, 0);
     std::memcpy(outRetro.data(), rgba, 64 * 32 * 4);
@@ -363,9 +404,55 @@ bool makeRetro32(const unsigned char *rgba, int w, int h, std::vector<unsigned c
         copyPixelRect(rgba, w, h, 40, 32, 16, 16, outRetro.data(), 64, 32, 40, 16, false, true);
         // Right Leg overlay: (0, 32, 16, 16) -> (0, 16, 16, 16)
         copyPixelRect(rgba, w, h, 0, 32, 16, 16, outRetro.data(), 64, 32, 0, 16, false, true);
+
+        // Adapt 3px slim right-arm UV layout to 4px classic ModelBiped layout so no black strip appears.
+        if (slim)
+        {
+            std::vector<unsigned char> armCopy(16 * 16 * 4, 0);
+            for (int y = 0; y < 16; ++y)
+                std::memcpy(&armCopy[y * 16 * 4], &outRetro[((16 + y) * 64 + 40) * 4], 16 * 4);
+
+            auto copyArmPx = [&](int sx, int sy, int dx, int dy) {
+                const unsigned char *s = &armCopy[(sy * 16 + sx) * 4];
+                unsigned char *d = &outRetro[((16 + dy) * 64 + 40 + dx) * 4];
+                d[0] = s[0]; d[1] = s[1]; d[2] = s[2]; d[3] = s[3];
+            };
+
+            // Top (4..6 -> 4..7) and Bottom (7..9 -> 8..11), rows 0..3
+            for (int y = 0; y < 4; ++y)
+            {
+                copyArmPx(4, y, 4, y);
+                copyArmPx(5, y, 5, y);
+                copyArmPx(6, y, 6, y);
+                copyArmPx(6, y, 7, y);
+
+                copyArmPx(7, y, 8, y);
+                copyArmPx(8, y, 9, y);
+                copyArmPx(9, y, 10, y);
+                copyArmPx(9, y, 11, y);
+            }
+            // Body of arm, rows 4..15: outer 0..3 stays, front 4..6 -> 4..7, inner 7..10 -> 8..11, back 11..13 -> 12..15
+            for (int y = 4; y < 16; ++y)
+            {
+                copyArmPx(4, y, 4, y);
+                copyArmPx(5, y, 5, y);
+                copyArmPx(6, y, 6, y);
+                copyArmPx(6, y, 7, y);
+
+                copyArmPx(7, y, 8, y);
+                copyArmPx(8, y, 9, y);
+                copyArmPx(9, y, 10, y);
+                copyArmPx(10, y, 11, y);
+
+                copyArmPx(11, y, 12, y);
+                copyArmPx(12, y, 13, y);
+                copyArmPx(13, y, 14, y);
+                copyArmPx(13, y, 15, y);
+            }
+        }
     }
 
-    // Set base skin regions opaque (Minecraft 1.2.5 spec)
+    // Set base skin regions opaque (Minecraft 1.2.5/1.5.2 spec)
     // Head base (0, 0, 32, 16)
     for (int y = 0; y < 16; ++y)
         for (int x = 0; x < 32; ++x)
@@ -386,9 +473,9 @@ std::string sanitizeSkinName(const std::string &raw)
         if (std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '-' || c == ' ')
             name += c;
     }
-    while (!name.empty() && (name.front() == ' ' || name.front() == '_'))
+    while (!name.empty() && name.front() == ' ')
         name.erase(name.begin());
-    while (!name.empty() && (name.back() == ' ' || name.back() == '_'))
+    while (!name.empty() && name.back() == ' ')
         name.pop_back();
     return name.empty() ? "CustomSkin" : name;
 }
@@ -676,6 +763,197 @@ const std::vector<SkinEntry>& SkinManager::getCustomSkins()
     return s_customSkins;
 }
 
+int SkinManager::getCustomPackIndex()
+{
+    init();
+    if (s_customSkins.empty())
+        return -1;
+    return 1 + static_cast<int>(s_lcePacks.size());
+}
+
+bool SkinManager::convertSkinToRetro32(const unsigned char *pngBytes, std::size_t pngLen,
+                                       std::vector<unsigned char> &outRgba64x32,
+                                       int &outSrcW, int &outSrcH, bool &outWasSlim,
+                                       std::string &outError)
+{
+    outRgba64x32.clear();
+    outSrcW = 0;
+    outSrcH = 0;
+    outWasSlim = false;
+
+    if (!hasPngSignature(pngBytes, pngLen))
+    {
+        outError = "Invalid PNG file.";
+        return false;
+    }
+
+    int w = 0, h = 0, comp = 0;
+    unsigned char *rgba = stbi_load_from_memory(pngBytes, static_cast<int>(pngLen), &w, &h, &comp, 4);
+    if (rgba == nullptr)
+    {
+        outError = "Invalid PNG image.";
+        return false;
+    }
+
+    if (w != 64 || (h != 32 && h != 64))
+    {
+        stbi_image_free(rgba);
+        outError = "Skin must be 64x32 or 64x64.";
+        return false;
+    }
+
+    outSrcW = w;
+    outSrcH = h;
+    const bool ok = makeRetro32(rgba, w, h, outRgba64x32, &outWasSlim);
+    stbi_image_free(rgba);
+    if (!ok)
+    {
+        outError = "Failed to convert skin.";
+        return false;
+    }
+    return true;
+}
+
+bool SkinManager::saveDownloadedSkin(const std::string &username,
+                                     const std::vector<unsigned char> &rawPng,
+                                     bool applyImmediately,
+                                     bool forPlayer2,
+                                     std::string &outSkinId,
+                                     std::string &outError)
+{
+    outSkinId.clear();
+    if (!hasPngSignature(rawPng.data(), rawPng.size()))
+    {
+        outError = "Invalid PNG file.";
+        return false;
+    }
+
+    int w = 0, h = 0, comp = 0;
+    unsigned char *rgba = stbi_load_from_memory(rawPng.data(), static_cast<int>(rawPng.size()), &w, &h, &comp, 4);
+    if (rgba == nullptr)
+    {
+        outError = "Invalid PNG image.";
+        return false;
+    }
+
+    if (w != 64 || (h != 32 && h != 64))
+    {
+        stbi_image_free(rgba);
+        outError = "Skin must be 64x32 or 64x64.";
+        return false;
+    }
+
+    std::string destDir = getSkinsDir();
+    if (!PlatformStorage::mkdirs(destDir))
+    {
+        stbi_image_free(rgba);
+        outError = "Failed to create skins directory.";
+        return false;
+    }
+
+    std::string base = sanitizeSkinName(username);
+    std::string mainPath = PlatformStorage::join(destDir, base + ".png");
+    std::string model32Path = PlatformStorage::join(destDir, base + "_32.png");
+    std::string frontPath = PlatformStorage::join(destDir, base + "_Front.png");
+
+    // 1. Write original downloaded PNG
+    if (!PlatformStorage::writeFile(mainPath, rawPng.data(), rawPng.size()))
+    {
+        stbi_image_free(rgba);
+        outError = "Failed to save skin to storage.";
+        return false;
+    }
+
+    // 2. Write 64x32 retro texture (always write for 64x64; remove stale _32.png if replaced by 64x32)
+    if (h == 64)
+    {
+        std::vector<unsigned char> retro32;
+        if (makeRetro32(rgba, w, h, retro32))
+        {
+            int len = 0;
+            unsigned char *png = stbi_write_png_to_mem(retro32.data(), 64 * 4, 64, 32, 4, &len);
+            if (png != nullptr)
+            {
+                PlatformStorage::writeFile(model32Path, png, len);
+                STBIW_FREE(png);
+            }
+        }
+    }
+    else
+    {
+        PlatformStorage::removeFile(model32Path);
+    }
+
+    // 3. Assemble and write 16x32 front preview
+    std::vector<unsigned char> frontRgba;
+    if (assembleFrontPreview(rgba, w, h, frontRgba))
+    {
+        int len = 0;
+        unsigned char *png = stbi_write_png_to_mem(frontRgba.data(), 16 * 4, 16, 32, 4, &len);
+        if (png != nullptr)
+        {
+            PlatformStorage::writeFile(frontPath, png, len);
+            STBIW_FREE(png);
+        }
+    }
+
+    stbi_image_free(rgba);
+
+    // Release any cached GPU texture for this path in case user re-downloaded an updated skin
+    Minecraft *mc = Minecraft::getMinecraft();
+    if (mc != nullptr && mc->renderEngine != nullptr)
+    {
+        mc->renderEngine->releaseTexture(mainPath);
+        mc->renderEngine->releaseTexture(model32Path);
+        mc->renderEngine->releaseTexture(frontPath);
+    }
+
+    scanCustomSkins();
+    outSkinId = "custom_" + base;
+
+    if (applyImmediately)
+    {
+        std::string activeModelPath = (h == 64 && PlatformStorage::exists(model32Path)) ? model32Path : mainPath;
+        if (forPlayer2)
+        {
+            setSelectedSkinIdP2(outSkinId);
+            if (mc != nullptr)
+            {
+                if (mc->gameSettings != nullptr)
+                {
+                    mc->gameSettings->selectedSkinP2 = outSkinId;
+                    mc->gameSettings->saveOptions();
+                }
+                if (mc->thePlayer2 != nullptr)
+                {
+                    mc->thePlayer2->setEntityTexture(activeModelPath);
+                    mc->thePlayer2->skinUrl = "";
+                }
+            }
+        }
+        else
+        {
+            setSelectedSkinId(outSkinId);
+            if (mc != nullptr)
+            {
+                if (mc->gameSettings != nullptr)
+                {
+                    mc->gameSettings->selectedSkin = outSkinId;
+                    mc->gameSettings->saveOptions();
+                }
+                if (mc->thePlayer != nullptr)
+                {
+                    mc->thePlayer->setEntityTexture(activeModelPath);
+                    mc->thePlayer->skinUrl = "";
+                }
+            }
+        }
+    }
+
+    MC_LOG_INFO("skins", "Online skin saved: %s (apply=%d p2=%d)\n", base.c_str(), applyImmediately ? 1 : 0, forPlayer2 ? 1 : 0);
+    return true;
+}
+
 bool SkinManager::installCustomSkin(const std::string &sourcePath, const std::string &skinName, std::string &outError)
 {
     std::vector<unsigned char> rawBytes;
@@ -787,6 +1065,14 @@ bool SkinManager::deleteCustomSkin(const std::string &id)
         {
             if (!it->filePath.empty())
             {
+                Minecraft *mc = Minecraft::getMinecraft();
+                if (mc != nullptr && mc->renderEngine != nullptr)
+                {
+                    mc->renderEngine->releaseTexture(it->skinPath);
+                    mc->renderEngine->releaseTexture(it->modelPath);
+                    mc->renderEngine->releaseTexture(it->frontPath);
+                }
+
                 PlatformStorage::removeFile(it->filePath);
 
                 // Also remove companion files
@@ -801,10 +1087,49 @@ bool SkinManager::deleteCustomSkin(const std::string &id)
 
             s_customSkins.erase(it);
 
+            Minecraft *mc = Minecraft::getMinecraft();
+            if (s_selectedId == id)
+            {
+                s_selectedId = "LegacySteve";
+                s_selectedPackIndex = 0;
+                s_selectedIndex = 0;
+                if (mc != nullptr)
+                {
+                    if (mc->gameSettings != nullptr)
+                    {
+                        mc->gameSettings->selectedSkin = s_selectedId;
+                        mc->gameSettings->saveOptions();
+                    }
+                    if (mc->thePlayer != nullptr)
+                    {
+                        mc->thePlayer->setEntityTexture(getActiveSkinTexture());
+                        mc->thePlayer->skinUrl = "";
+                    }
+                }
+            }
+            if (s_selectedIdP2 == id)
+            {
+                s_selectedIdP2 = "TennisSteve";
+                if (mc != nullptr)
+                {
+                    if (mc->gameSettings != nullptr)
+                    {
+                        mc->gameSettings->selectedSkinP2 = s_selectedIdP2;
+                        mc->gameSettings->saveOptions();
+                    }
+                    if (mc->thePlayer2 != nullptr)
+                    {
+                        mc->thePlayer2->setEntityTexture(getPlayer2SkinTexture());
+                        mc->thePlayer2->skinUrl = "";
+                    }
+                }
+            }
+
             if (s_customSkins.empty())
             {
                 s_selectedPackIndex = 0;
-                s_selectedId = "LegacySteve";
+                if (s_selectedId.rfind("custom_", 0) == 0)
+                    s_selectedId = "LegacySteve";
                 s_selectedIndex = 0;
             }
             return true;

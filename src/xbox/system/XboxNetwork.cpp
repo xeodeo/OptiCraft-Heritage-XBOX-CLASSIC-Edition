@@ -46,9 +46,10 @@ bool initialize()
         WSADATA wsa;
         if (XNetStartup(&params) == 0 && WSAStartup(MAKEWORD(2, 2), &wsa) == 0)
         {
-            // Wait (up to 6 s) for the address, DHCP included.
+            // Wait for the address (DHCP included), but bail quickly if there is no Ethernet link.
             XNADDR addr;
-            for (int i = 0; i < 120 && XNetGetTitleXnAddr(&addr) == XNET_GET_XNADDR_PENDING; ++i)
+            const int maxSteps = (XNetGetEthernetLinkStatus() == 0) ? 10 : 80;
+            for (int i = 0; i < maxSteps && XNetGetTitleXnAddr(&addr) == XNET_GET_XNADDR_PENDING; ++i)
                 Sleep(50);
             s_state = State::Ready;
         }
@@ -58,7 +59,23 @@ bool initialize()
     return ready;
 }
 
-bool resolveIPv4(const char* host, unsigned long* address)
+bool hasLink()
+{
+    if (!initialize())
+        return false;
+    if (XNetGetEthernetLinkStatus() == 0)
+        return false;
+    XNADDR addr;
+    const DWORD st = XNetGetTitleXnAddr(&addr);
+    return st != XNET_GET_XNADDR_NONE && st != XNET_GET_XNADDR_PENDING;
+}
+
+unsigned int tickMs()
+{
+    return static_cast<unsigned int>(GetTickCount());
+}
+
+bool resolveIPv4Timeout(const char* host, unsigned long* address, int timeoutMs)
 {
     if (address == nullptr || host == nullptr || host[0] == '\0' || !initialize())
         return false;
@@ -70,6 +87,12 @@ bool resolveIPv4(const char* host, unsigned long* address)
         return true;
     }
 
+    if (XNetGetEthernetLinkStatus() == 0)
+        return false;
+
+    if (timeoutMs <= 0)
+        timeoutMs = 1000;
+
     WSAEVENT event = WSACreateEvent();
     if (event == WSA_INVALID_EVENT)
         return false;
@@ -77,9 +100,17 @@ bool resolveIPv4(const char* host, unsigned long* address)
     bool ok = false;
     if (XNetDnsLookup(host, event, &dns) == 0 && dns != nullptr)
     {
-        // Resolution runs in the stack; give it up to 10 s.
-        for (int i = 0; i < 200 && dns->iStatus == WSAEINPROGRESS; ++i)
-            WaitForSingleObject(event, 50);
+        const DWORD start = GetTickCount();
+        while (dns->iStatus == WSAEINPROGRESS)
+        {
+            const DWORD elapsed = GetTickCount() - start;
+            if (elapsed >= static_cast<DWORD>(timeoutMs))
+                break;
+            DWORD waitSlice = static_cast<DWORD>(timeoutMs) - elapsed;
+            if (waitSlice > 50)
+                waitSlice = 50;
+            WaitForSingleObject(event, waitSlice);
+        }
         if (dns->iStatus == 0 && dns->cina > 0)
         {
             *address = dns->aina[0].s_addr;
@@ -91,15 +122,26 @@ bool resolveIPv4(const char* host, unsigned long* address)
     return ok;
 }
 
+bool resolveIPv4(const char* host, unsigned long* address)
+{
+    return resolveIPv4Timeout(host, address, 10000);
+}
+
 namespace
 {
 const long kConnectTimeoutSeconds = 4;
 }
 
-intptr_t tcpConnect(const char* host, int port)
+intptr_t tcpConnectTimeout(const char* host, int port, int timeoutMs)
 {
+    if (timeoutMs <= 0)
+        timeoutMs = 4000;
+    const DWORD start = GetTickCount();
+    int dnsBudget = timeoutMs / 2;
+    if (dnsBudget < 1500)
+        dnsBudget = timeoutMs;
     unsigned long address = 0;
-    if (port < 1 || port > 65535 || !resolveIPv4(host, &address))
+    if (port < 1 || port > 65535 || !resolveIPv4Timeout(host, &address, dnsBudget))
         return kInvalidSocket;
 
     const SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -131,6 +173,10 @@ intptr_t tcpConnect(const char* host, int port)
             closesocket(s);
             return kInvalidSocket;
         }
+        const DWORD elapsed = GetTickCount() - start;
+        int remMs = timeoutMs - static_cast<int>(elapsed);
+        if (remMs < 500)
+            remMs = 500;
         fd_set writable;
         fd_set failed;
         FD_ZERO(&writable);
@@ -138,8 +184,8 @@ intptr_t tcpConnect(const char* host, int port)
         FD_SET(s, &writable);
         FD_SET(s, &failed);
         timeval timeout;
-        timeout.tv_sec = kConnectTimeoutSeconds;
-        timeout.tv_usec = 0;
+        timeout.tv_sec = remMs / 1000;
+        timeout.tv_usec = (remMs % 1000) * 1000;
         if (select(0, nullptr, &writable, &failed, &timeout) <= 0 || FD_ISSET(s, &failed) ||
             !FD_ISSET(s, &writable))
         {
@@ -148,6 +194,11 @@ intptr_t tcpConnect(const char* host, int port)
         }
     }
     return static_cast<intptr_t>(s);
+}
+
+intptr_t tcpConnect(const char* host, int port)
+{
+    return tcpConnectTimeout(host, port, kConnectTimeoutSeconds * 1000 + 10000);
 }
 
 namespace
@@ -163,15 +214,17 @@ bool shouldRetry()
 }
 } // namespace
 
-int tcpRecv(intptr_t s, char* buffer, int length)
+int tcpRecvTimeout(intptr_t s, char* buffer, int length, int timeoutMs)
 {
+    if (timeoutMs <= 0)
+        timeoutMs = 1000;
     const DWORD start = GetTickCount();
     for (;;)
     {
         const int count = recv(static_cast<SOCKET>(s), buffer, length, 0);
         if (count >= 0 || !shouldRetry())
             return count;
-        if (GetTickCount() - start > kStallTimeoutMs)
+        if (GetTickCount() - start > static_cast<DWORD>(timeoutMs))
         {
             WSASetLastError(WSAETIMEDOUT);
             return -1;
@@ -180,21 +233,33 @@ int tcpRecv(intptr_t s, char* buffer, int length)
     }
 }
 
-int tcpSend(intptr_t s, const char* buffer, int length)
+int tcpRecv(intptr_t s, char* buffer, int length)
 {
+    return tcpRecvTimeout(s, buffer, length, static_cast<int>(kStallTimeoutMs));
+}
+
+int tcpSendTimeout(intptr_t s, const char* buffer, int length, int timeoutMs)
+{
+    if (timeoutMs <= 0)
+        timeoutMs = 1000;
     const DWORD start = GetTickCount();
     for (;;)
     {
         const int count = send(static_cast<SOCKET>(s), buffer, length, 0);
         if (count >= 0 || !shouldRetry())
             return count;
-        if (GetTickCount() - start > kStallTimeoutMs)
+        if (GetTickCount() - start > static_cast<DWORD>(timeoutMs))
         {
             WSASetLastError(WSAETIMEDOUT);
             return -1;
         }
         Sleep(1);
     }
+}
+
+int tcpSend(intptr_t s, const char* buffer, int length)
+{
+    return tcpSendTimeout(s, buffer, length, static_cast<int>(kStallTimeoutMs));
 }
 
 void tcpShutdown(intptr_t s, bool receiveOnly)
@@ -220,12 +285,18 @@ namespace XboxNetwork
 {
 bool initialize() { return false; }
 bool resolveIPv4(const char*, unsigned long*) { return false; }
+bool resolveIPv4Timeout(const char*, unsigned long*, int) { return false; }
 intptr_t tcpConnect(const char*, int) { return kInvalidSocket; }
+intptr_t tcpConnectTimeout(const char*, int, int) { return kInvalidSocket; }
 int tcpRecv(intptr_t, char*, int) { return -1; }
+int tcpRecvTimeout(intptr_t, char*, int, int) { return -1; }
 int tcpSend(intptr_t, const char*, int) { return -1; }
+int tcpSendTimeout(intptr_t, const char*, int, int) { return -1; }
 void tcpShutdown(intptr_t, bool) {}
 void tcpClose(intptr_t) {}
 int lastError() { return 0; }
+unsigned int tickMs() { return 0; }
+bool hasLink() { return false; }
 }
 
 #endif // XBOX_NETLOG_HOST || !NO_NETWORK
