@@ -1,4 +1,5 @@
 #include "net/minecraft/src/UiStrings.h"
+#include "GuiTexturePacks.h"
 #include "GuiOptions.h"
 #include "GuiSmallButton.h"
 #include "GuiSlider.h"
@@ -62,7 +63,8 @@ void GuiOptions::initGui()
 	controlList.push_back(new GuiButton(104, width / 2 + 2, height / 6 + 114, 98, 20, uiText("Mods")));
 	controlList.push_back(new GuiButton(103, width / 2 - 100, height / 6 + 138, 98, 20, tr->translateKey("options.language")));
 	controlList.push_back(new GuiButton(102, width / 2 + 2, height / 6 + 138, 98, 20, uiText("OptiCraft Options...")));
-	controlList.push_back(new GuiButton(200, width / 2 - 100, height / 6 + 168, tr->translateKey("gui.done")));
+	controlList.push_back(new GuiButton(105, width / 2 - 100, height / 6 + 162, uiText("Texture Packs")));
+	controlList.push_back(new GuiButton(200, width / 2 - 100, height / 6 + 186, tr->translateKey("gui.done")));
 }
 
 void GuiOptions::actionPerformed(GuiButton *button)
@@ -98,6 +100,10 @@ void GuiOptions::actionPerformed(GuiButton *button)
 	{
 		mc->gameSettings->saveOptions();
 		mc->displayGuiScreen(new GuiMods(this));
+	}
+	if (button->id == 105)
+	{
+		mc->displayGuiScreen(new GuiTexturePacks(this));
 	}
 	if (button->id == 200)
 	{
