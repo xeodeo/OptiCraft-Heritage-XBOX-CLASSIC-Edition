@@ -11,6 +11,7 @@
 #include "net/minecraft/src/StringTranslate.h"
 #include "net/minecraft/src/ControlIcon.h"
 #include "net/minecraft/src/legacy/LegacyMenuHints.h"
+#include "net/minecraft/src/legacy/LegacyMenuWidgets.h"
 #include "net/minecraft/src/legacy/LegacyOptionsLayout.h"
 #include "net/minecraft/src/legacy/LegacyOptionsPanel.h"
 #include "net/minecraft/src/legacy/LegacyPanorama.h"
@@ -330,59 +331,61 @@ void GuiMinimapMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         return;
     }
 
-    const bool inWorld = (mc != nullptr && mc->theWorld != nullptr);
-    if (!inWorld && mc != nullptr && legacyDrawPanorama(mc, width, height, legacyScenePanoramaTimer(), partialTick, zLevel))
-    {
-    }
-    else
-        drawGradientRect(0, 0, width, height, static_cast<int_t>(0xC0101010u), static_cast<int_t>(0xD8101010u));
-
-    const int_t hintY = legacyHintRowY(height, isSplit);
-    const int_t panelW = std::min<int_t>(280, width - 16);
-    const int_t panelY = std::max<int_t>(10, (height - 196) / 2 - 6);
-    const int_t panelH = std::min<int_t>(184, hintY - panelY - 6);
-    const int_t panelX = (width - panelW) / 2;
-
-    LegacyOptionsLayout layout{};
-    layout.panelX = panelX;
-    layout.panelY = panelY;
-    layout.panelWidth = panelW;
-    layout.panelHeight = panelH;
-    LegacyOptionsPanel panelRenderer;
-    panelRenderer.draw(layout);
-
-    drawCenteredString(fontRenderer, title, panelX + panelW / 2, panelY + 7, 0xFFFFFF);
-    drawRect(panelX + 8, panelY + 19, panelX + panelW - 8, panelY + 20, static_cast<int_t>(0xFF777777u));
+    // LCE look: grey bevelled panel; on/off settings are TickBoxes, the cycling
+    // ones (shape, zoom, cave mode) and the waypoint manager are stone buttons.
+    legacyDrawMenuBackdrop(mc, width, height, partialTick);
+    (void)isSplit;
 
     const int_t count = getItemCount();
-    const int_t listX = panelX + 10;
-    const int_t listY = panelY + 24;
-    const int_t listW = panelW - 20;
-    const int_t rowH = 18;
-    const int_t visibleRows = std::max<int_t>(1, (panelY + panelH - 8 - listY) / rowH);
+    const bool compact = (height < 180);
+    // The shortcut line only where all nine rows still fit (720p).
+    const bool showTip = (height >= 300);
+    const LegacyMenuLayout l = legacyMenuLayout(mc, width, height, 270, count, compact ? 16 : 22, showTip ? 12 : 0);
+    legacyDrawMenuPanel(l.panelX, l.panelY, l.panelW, l.panelH);
+    legacyDrawPanelTitle(fontRenderer, title, l.panelX + l.panelW / 2, l.titleY);
 
     m_selectedIndex = std::clamp<int>(m_selectedIndex, 0, count - 1);
-    if (m_selectedIndex < m_scrollOffset) m_scrollOffset = m_selectedIndex;
-    if (m_selectedIndex >= m_scrollOffset + visibleRows) m_scrollOffset = m_selectedIndex - visibleRows + 1;
-    const int_t maxScroll = std::max<int_t>(0, count - visibleRows);
-    m_scrollOffset = std::clamp<int>(m_scrollOffset, 0, maxScroll);
+    m_scrollOffset = legacyMenuKeepVisible(m_selectedIndex, count, l.visibleRows, m_scrollOffset);
 
-    const int_t rowsToDraw = std::min<int_t>(visibleRows, count - m_scrollOffset);
-    for (int_t r = 0; r < rowsToDraw; ++r)
+    const MinimapSettings &s = ReiMinimap::getInstance().getSettings();
+    for (int_t vi = 0; vi < l.visibleRows; ++vi)
     {
-        const int_t idx = m_scrollOffset + r;
-        const int_t ry = listY + r * rowH;
+        const int_t idx = m_scrollOffset + vi;
+        if (idx >= count)
+            break;
+        const int_t ry = l.rowY(vi);
         const bool sel = (idx == m_selectedIndex);
+        const int_t rowW = l.contentW - 8;
+        bool checked = false;
+        bool isToggle = true;
+        switch (idx)
+        {
+        case 2: checked = s.entityRadar; break;
+        case 4: checked = s.rotateMap; break;
+        case 5: checked = s.showCoords; break;
+        case 6: checked = s.showBiome; break;
+        case 7: checked = s.deathWaypoints; break;
+        default: isToggle = false; break;
+        }
+        if (isToggle)
+            legacyDrawMenuCheckbox(mc, l.contentX + 2, ry, rowW, l.rowH, getItemLabel(idx), checked, sel);
+        else if (idx == 8)
+            legacyDrawMenuButton(mc, l.contentX, ry, rowW, l.rowH,
+                getItemLabel(8) + " (" + getItemValue(8) + ")", sel);
+        else
+            legacyDrawMenuValueButton(mc, l.contentX, ry, rowW, l.rowH,
+                getItemLabel(idx), sel ? ("< " + getItemValue(idx) + " >") : getItemValue(idx), sel);
+    }
+    const int_t listH = l.visibleRows * l.rowH + (l.visibleRows - 1) * l.rowGap;
+    legacyDrawMenuScrollbar(l.panelX + l.panelW - 10, l.firstRowY, listH, m_scrollOffset, l.visibleRows, count);
 
-        drawRect(listX, ry, listX + listW, ry + rowH - 2,
-            sel ? static_cast<int_t>(0xD83A5288u) : static_cast<int_t>(0x90222222u));
-        if (sel)
-            drawRect(listX, ry, listX + 3, ry + rowH - 2, static_cast<int_t>(0xFFFFDD44u));
-
-        drawString(fontRenderer, getItemLabel(idx), listX + 7, ry + 4, sel ? 0xFFFFAA : 0xFFFFFF);
-        std::string val = getItemValue(idx);
-        drawString(fontRenderer, val, listX + listW - fontRenderer->getStringWidth(val) - 6, ry + 4,
-            sel ? 0xAAFFAA : 0xCCCCCC);
+    if (showTip)
+    {
+        const std::string tip = legacyFitText(fontRenderer,
+            es ? "Back + cruceta: Arr=WP  Abj=Lista  Izq=Zoom  Der=Menu"
+               : "Back + D-Pad: Up=WP  Down=List  Left=Zoom  Right=Menu", l.contentW);
+        legacyDrawPanelText(fontRenderer, tip, l.panelX + (l.panelW - fontRenderer->getStringWidth(tip)) / 2,
+            l.footerY + 1, static_cast<int_t>(0xff606060u));
     }
 
 #if PLATFORM_XBOX
@@ -392,7 +395,7 @@ void GuiMinimapMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         es ? "Cambiar" : "Toggle",
         es ? "Volver" : "Back"
     };
-    drawControlHintRow(mc, width, hintY, btns, acts, 3);
+    drawControlHintRow(mc, width, l.hintY, btns, acts, 3);
 #else
     const std::string btns[] = {"Up/Down", "Enter", "Esc"};
     const std::string acts[] = {
@@ -400,6 +403,6 @@ void GuiMinimapMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         es ? "Cambiar" : "Toggle",
         es ? "Volver" : "Back"
     };
-    drawControlHintRow(mc, width, hintY, btns, acts, 3);
+    drawControlHintRow(mc, width, l.hintY, btns, acts, 3);
 #endif
 }

@@ -15,6 +15,7 @@
 #include "UiStrings.h"
 #include "ControlIcon.h"
 #include "legacy/LegacyMenuHints.h"
+#include "legacy/LegacyMenuWidgets.h"
 #include "legacy/LegacyOptionsLayout.h"
 #include "legacy/LegacyOptionsPanel.h"
 #include "legacy/LegacyPanorama.h"
@@ -106,10 +107,104 @@ void GuiServerInfo::handleSpecializedMenuInput()
 #endif
 }
 
+// LCE look: grey bevelled panel with a dark title and the details in a recessed
+// list well (the Legacy flat-world list style), hint row at the bottom.
+void GuiServerInfo::drawLegacyScreen(float_t partialTick)
+{
+    const bool es = serverInfoIsEs();
+    legacyDrawMenuBackdrop(mc, width, height, partialTick);
+
+    struct Line { std::string text; int_t color; int_t indent; };
+    std::vector<Line> lines;
+    if (server != nullptr)
+    {
+        std::string name, host, motd, playerCount;
+        long_t lag = -2;
+        bool polled = false;
+        std::vector<ServerActivityEntry> act;
+        std::vector<jstring> names;
+        {
+            std::lock_guard<std::mutex> guard(server->stateMutex);
+            name = server->name;
+            host = server->host;
+            motd = server->motd;
+            playerCount = server->playerCount;
+            lag = server->lag;
+            polled = server->polled;
+            act = server->activity;
+            names = server->playerNames;
+        }
+
+        lines.push_back({(es ? "Nombre: " : "Name: ") + name, 0xFFFFFF, 0});
+        lines.push_back({(es ? "Direccion: " : "Address: ") + host, 0xCCCCCC, 0});
+        const std::string status = !polled ? (es ? "Esperando..." : "Waiting...")
+                                 : (lag == -2 ? (es ? "Comprobando..." : "Checking...")
+                                 : (lag < 0 ? "Offline" : ("Online (" + std::to_string(lag) + " ms)")));
+        const int_t statusCol = (!polled || lag == -2) ? 0xAAAAAA : (lag < 0 ? 0xFF5555 : 0x55FF55);
+        lines.push_back({(es ? "Estado: " : "Status: ") + status, statusCol, 0});
+        if (!playerCount.empty())
+            lines.push_back({(es ? "Jugadores: " : "Players: ") + playerCount, 0xDDDDDD, 0});
+        if (!motd.empty())
+            lines.push_back({"MOTD: " + motd, 0xAAAAAA, 0});
+        if (!names.empty())
+        {
+            std::string plist;
+            for (size_t i = 0; i < names.size() && i < 6; ++i)
+            {
+                if (i > 0) plist += ", ";
+                plist += std::string(names[i]);
+            }
+            lines.push_back({plist, 0x88DDFF, 0});
+        }
+        lines.push_back({es ? "Actividad reciente:" : "Recent activity:", 0xFFFF88, 0});
+        const long_t now = System::currentTimeMillis();
+        int_t shown = 0;
+        for (int i = static_cast<int>(act.size()) - 1; i >= 0 && shown < 4; --i)
+        {
+            std::string line = relativeAge(now, act[i].timestamp) + " - " +
+                (act[i].latency < 0 ? "Offline" : (std::to_string(act[i].latency) + " ms"));
+            if (!act[i].playerCount.empty())
+                line += " (" + std::string(act[i].playerCount) + ")";
+            lines.push_back({line, act[i].latency < 0 ? 0xFF8888 : 0xAAFFAA, 4});
+            ++shown;
+        }
+        if (shown == 0)
+            lines.push_back({es ? "(Sin registros todavia)" : "(No polls recorded yet)", 0x888888, 4});
+    }
+
+    const int_t lineCount = std::max<int_t>(1, static_cast<int_t>(lines.size()));
+    // One layout row per text line; 10 px rows + the Legacy gap give an 12-13 px pitch.
+    const LegacyMenuLayout l = legacyMenuLayout(mc, width, height, 292, lineCount, 24, 4, 10);
+    legacyDrawMenuPanel(l.panelX, l.panelY, l.panelW, l.panelH);
+    legacyDrawPanelTitle(fontRenderer, es ? "Informacion del servidor" : "Server Information",
+        l.panelX + l.panelW / 2, l.titleY);
+
+    const int_t boxY = l.firstRowY - 5;
+    const int_t boxH = l.footerY + 4 - boxY;
+    legacyDrawInsetBox(l.contentX, boxY, l.contentW, boxH, true);
+    for (int_t i = 0; i < l.visibleRows && i < static_cast<int_t>(lines.size()); ++i)
+    {
+        const Line &ln = lines[static_cast<size_t>(i)];
+        drawString(fontRenderer, legacyFitText(fontRenderer, ln.text, l.contentW - 10 - ln.indent),
+            l.contentX + 5 + ln.indent, l.rowY(i) + 1, ln.color);
+    }
+
+#if PLATFORM_XBOX
+    const std::string btns[] = {"B"};
+    const std::string acts[] = { es ? "Volver" : "Back" };
+    drawControlHintRow(mc, width, l.hintY, btns, acts, 1);
+#endif
+}
+
 void GuiServerInfo::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 {
     const bool es = serverInfoIsEs();
     const bool legacy = (mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI);
+    if (legacy)
+    {
+        drawLegacyScreen(partialTick);
+        return;
+    }
 
     if (legacy && mc != nullptr && legacyDrawPanorama(mc, width, height, legacyScenePanoramaTimer(), partialTick, zLevel))
     {

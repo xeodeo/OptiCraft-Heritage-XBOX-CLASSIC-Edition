@@ -21,6 +21,10 @@
 #include "java/BufferedImage.h"
 #include "java/JavaNetwork.h"
 #include "legacy/LegacyButtonPrompt.h"
+#include "legacy/LegacyGuiButton.h"
+#include "legacy/LegacyMenuHints.h"
+#include "legacy/LegacyMenuWidgets.h"
+#include "ControlIcon.h"
 #include "legacy/LegacyPanorama.h"
 #include "legacy/LegacySceneState.h"
 #include "legacy/LegacyUiTheme.h"
@@ -303,6 +307,14 @@ void GuiSearchSkin::initGui()
 
     const bool es = isSpanish();
     const bool compact = (height < 180); // Split screen
+    // Legacy mode uses the LCE stone buttons (yellow label on the focused one).
+    const bool legacyButtons = isLegacyMode();
+    auto makeButton = [legacyButtons](int_t id, int_t x, int_t y, int_t w, int_t h, const std::string &text) -> GuiButton *
+    {
+        if (legacyButtons)
+            return new LegacyGuiButton(id, x, y, w, h, text);
+        return new GuiButton(id, x, y, w, h, text);
+    };
 
     panelW = std::min<int_t>(width - 14, compact ? 306 : 368);
     panelH = std::min<int_t>(height - (compact ? 14 : 34), compact ? 114 : 184);
@@ -327,7 +339,7 @@ void GuiSearchSkin::initGui()
     usernameField->setMaxStringLength(64);
     usernameField->setFocused(false);
 
-    btnSearch = new GuiButton(BTN_SEARCH, fieldX + fieldW + 4, fieldY - 1, searchBtnW, fieldH + 2,
+    btnSearch = makeButton(BTN_SEARCH, fieldX + fieldW + 4, fieldY - 1, searchBtnW, fieldH + 2,
                               es ? "Buscar" : "Search");
     controlList.push_back(btnSearch);
 
@@ -337,10 +349,10 @@ void GuiSearchSkin::initGui()
     const int_t popUseW = std::max<int_t>(60, rightW - arrowW * 2 - 4);
     const int_t popH = compact ? 16 : 18;
 
-    btnPopularPrev = new GuiButton(BTN_POPULAR_PREV, rightX, popY, arrowW, popH, "<");
-    btnPopularUse  = new GuiButton(BTN_POPULAR_USE, rightX + arrowW + 2, popY, popUseW, popH,
+    btnPopularPrev = makeButton(BTN_POPULAR_PREV, rightX, popY, arrowW, popH, "<");
+    btnPopularUse  = makeButton(BTN_POPULAR_USE, rightX + arrowW + 2, popY, popUseW, popH,
                                    std::string(es ? "Popular: " : "Popular: ") + kPopularSkins[popularIndex]);
-    btnPopularNext = new GuiButton(BTN_POPULAR_NEXT, rightX + arrowW + 2 + popUseW + 2, popY, arrowW, popH, ">");
+    btnPopularNext = makeButton(BTN_POPULAR_NEXT, rightX + arrowW + 2 + popUseW + 2, popY, arrowW, popH, ">");
     controlList.push_back(btnPopularPrev);
     controlList.push_back(btnPopularUse);
     controlList.push_back(btnPopularNext);
@@ -351,9 +363,9 @@ void GuiSearchSkin::initGui()
     const int_t gap = 4;
     const int_t actW = std::max<int_t>(42, (rightW - gap * 2) / 3);
 
-    btnSave   = new GuiButton(BTN_SAVE, rightX, btnY, actW, btnH, es ? "Guardar" : "Save");
-    btnUse    = new GuiButton(BTN_USE, rightX + actW + gap, btnY, actW, btnH, es ? "Usar" : "Use");
-    btnCancel = new GuiButton(BTN_CANCEL, rightX + (actW + gap) * 2, btnY,
+    btnSave   = makeButton(BTN_SAVE, rightX, btnY, actW, btnH, es ? "Guardar" : "Save");
+    btnUse    = makeButton(BTN_USE, rightX + actW + gap, btnY, actW, btnH, es ? "Usar" : "Use");
+    btnCancel = makeButton(BTN_CANCEL, rightX + (actW + gap) * 2, btnY,
                               rightW - (actW + gap) * 2, btnH, es ? "Cancelar" : "Cancel");
     controlList.push_back(btnSave);
     controlList.push_back(btnUse);
@@ -984,18 +996,7 @@ void GuiSearchSkin::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
     // 1. Background
     if (legacy)
     {
-        if (mc != nullptr && mc->theWorld != nullptr)
-        {
-            drawGradientRect(0, 0, width, height, 0xC0101010, 0xD0101010);
-        }
-        else if (!legacyDrawPanorama(mc, width, height, legacyScenePanoramaTimer(), partialTick, zLevel))
-        {
-            drawDefaultBackground();
-        }
-        else
-        {
-            drawGradientRect(0, 0, width, height, 0x20000000, 0x58000000);
-        }
+        legacyDrawMenuBackdrop(mc, width, height, partialTick);
     }
     else
     {
@@ -1017,8 +1018,16 @@ void GuiSearchSkin::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         drawCenteredString(fontRenderer, title, panelX + panelW / 2, panelY + (compact ? 2 : 6), titleColor);
 
     // 3. Left 3D Preview Stage
-    drawRect(previewBoxX - 1, previewBoxY - 1, previewBoxX + previewBoxW + 1, previewBoxY + previewBoxH + 1, 0xFF000000);
-    drawGradientRect(previewBoxX, previewBoxY, previewBoxX + previewBoxW, previewBoxY + previewBoxH, 0xFF1B2430, 0xFF0E1218);
+    if (legacy)
+    {
+        // Recessed dark well, the Legacy list look.
+        legacyDrawInsetBox(previewBoxX - 1, previewBoxY - 1, previewBoxW + 2, previewBoxH + 2, true);
+    }
+    else
+    {
+        drawRect(previewBoxX - 1, previewBoxY - 1, previewBoxX + previewBoxW + 1, previewBoxY + previewBoxH + 1, 0xFF000000);
+        drawGradientRect(previewBoxX, previewBoxY, previewBoxX + previewBoxW, previewBoxY + previewBoxH, 0xFF1B2430, 0xFF0E1218);
+    }
 
     const float previewCenterX = static_cast<float>(previewBoxX + previewBoxW / 2);
     const float previewFeetY = static_cast<float>(previewBoxY + previewBoxH - (compact ? 16 : 24));
@@ -1047,8 +1056,15 @@ void GuiSearchSkin::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
     // Status message area (between Popular row and Save/Use/Cancel buttons)
     const int_t statusY = (btnPopularUse != nullptr ? (btnPopularUse->yPosition + btnPopularUse->getButtonHeight()) : (fieldY + fieldH)) + (compact ? 4 : 10);
     const int_t statusBoxH = std::max<int_t>(14, (btnSave != nullptr ? btnSave->yPosition : (panelY + panelH - 24)) - statusY - 4);
-    drawRect(rightX, statusY, rightX + rightW, statusY + statusBoxH, 0xB0101010);
-    drawRect(rightX, statusY, rightX + rightW, statusY + 1, 0xFF383838);
+    if (legacy)
+    {
+        legacyDrawInsetBox(rightX, statusY, rightW, statusBoxH, true);
+    }
+    else
+    {
+        drawRect(rightX, statusY, rightX + rightW, statusY + statusBoxH, 0xB0101010);
+        drawRect(rightX, statusY, rightX + rightW, statusY + 1, 0xFF383838);
+    }
 
     if (!statusMessage.empty())
     {
@@ -1108,23 +1124,37 @@ void GuiSearchSkin::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         drawRect(fx + fw, fy, fx + fw + 2, fy + fh, 0xFFFFE855);
     };
 
-    if (legacy && !kbOpen)
+    if (legacy)
     {
-        if (focusIndex == 0) drawFocusFrame(fieldX, fieldY, fieldW, fieldH);
-        else if (focusIndex == 1 && btnSearch) drawFocusFrame(btnSearch->xPosition, btnSearch->yPosition, btnSearch->getButtonWidth(), btnSearch->getButtonHeight());
-        else if (focusIndex == 2 && btnPopularUse) drawFocusFrame(btnPopularUse->xPosition, btnPopularUse->yPosition, btnPopularUse->getButtonWidth(), btnPopularUse->getButtonHeight());
-        else if (focusIndex == 3 && btnSave) drawFocusFrame(btnSave->xPosition, btnSave->yPosition, btnSave->getButtonWidth(), btnSave->getButtonHeight());
-        else if (focusIndex == 4 && btnUse) drawFocusFrame(btnUse->xPosition, btnUse->yPosition, btnUse->getButtonWidth(), btnUse->getButtonHeight());
-        else if (focusIndex == 5 && btnCancel) drawFocusFrame(btnCancel->xPosition, btnCancel->yPosition, btnCancel->getButtonWidth(), btnCancel->getButtonHeight());
+        if (!kbOpen && focusIndex == 0)
+            drawFocusFrame(fieldX, fieldY, fieldW, fieldH);
+        GuiButton *const focusable[] = {nullptr, btnSearch, btnPopularUse, btnSave, btnUse, btnCancel};
+        for (int i = 1; i < 6; ++i)
+            if (focusable[i] != nullptr)
+                focusable[i]->setKeyboardSelected(!kbOpen && focusIndex == i);
     }
 
     // 6. Standard buttons
     GuiScreen::drawScreen(mouseX, mouseY, partialTick);
 
     // 7. Bottom Xbox prompts in Legacy mode (when not split-screen compact)
+#if PLATFORM_XBOX
     if (legacy && !compact && !kbOpen)
     {
-#if PLATFORM_XBOX || PLATFORM_PS2
+        // Same hint row (and safe-area position) as the other Legacy menus.
+        const std::string btns[] = {"A", "Y", "X", "B"};
+        const std::string acts[] = {
+            es ? "Elegir" : "Select",
+            es ? "Teclado" : "Keyboard",
+            es ? "Popular" : "Popular",
+            es ? "Volver" : "Back"
+        };
+        drawControlHintRow(mc, width, legacyHintRowY(height), btns, acts, 4);
+    }
+#else
+    if (legacy && !compact && !kbOpen)
+    {
+#if PLATFORM_PS2
         RenderEngine *renderEngine = mc ? mc->renderEngine : nullptr;
         if (renderEngine != nullptr)
         {
@@ -1148,4 +1178,5 @@ void GuiSearchSkin::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         }
 #endif
     }
+#endif
 }
