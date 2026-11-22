@@ -1,17 +1,30 @@
 #include "ReiMinimap.h"
 #include "GuiWaypointManager.h"
+#include "GuiMinimapMenu.h"
 #include "Minecraft.h"
 #include "GuiIngame.h"
+#include "HudSafeArea.h"
 #include "FontRenderer.h"
 #include "RenderEngine.h"
 #include "EntityPlayerSP.h"
+#include "EntityLiving.h"
+#include "EntityMob.h"
+#include "EntityAnimal.h"
+#include "EntityWaterMob.h"
+#include "EntitySlime.h"
+#include "EntityGhast.h"
+#include "EntityVillager.h"
+#include "EntityGolem.h"
 #include "World.h"
+#include "WorldProvider.h"
 #include "WorldInfo.h"
+#include "BiomeGenBase.h"
 #include "Chunk.h"
 #include "Block.h"
 #include "Material.h"
 #include "MapColor.h"
 #include "Tessellator.h"
+#include "StringTranslate.h"
 #include "platform/RenderAPI.h"
 #include "platform/Storage.h"
 #include "platform/Log.h"
@@ -21,6 +34,7 @@
 #include "ISaveHandler.h"
 
 #include <cmath>
+#include <cstring>
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -33,6 +47,8 @@
 #endif
 
 static const int_t MAP_RES = 64;
+static const int_t ROWS_PER_TICK = 1; // Ultra-light incremental refresh: 1 row * 64 cols (<0.04ms)
+static const float_t PI_F = 3.14159265f;
 
 static const int_t WAYPOINT_PALETTE[] = {
     0x00FF88, // Mint / Emerald (Default Spawn)
@@ -50,7 +66,13 @@ static const int_t WAYPOINT_PALETTE[] = {
 };
 static const size_t NUM_PALETTE_COLORS = sizeof(WAYPOINT_PALETTE) / sizeof(WAYPOINT_PALETTE[0]);
 
-static void drawColoredRect(int_t x1, int_t y1, int_t x2, int_t y2, int_t color)
+static bool minimapIsSpanish()
+{
+    StringTranslate *tr = StringTranslate::getInstance();
+    return (tr != nullptr && tr->getCurrentLanguage().rfind("es_", 0) == 0);
+}
+
+static void drawColoredRect(float_t x1, float_t y1, float_t x2, float_t y2, int_t color)
 {
     if (x1 > x2) std::swap(x1, x2);
     if (y1 > y2) std::swap(y1, y2);
@@ -73,6 +95,63 @@ static void drawColoredRect(int_t x1, int_t y1, int_t x2, int_t y2, int_t color)
     renderEnable(RenderCapability::Texture2D);
 }
 
+static void drawColoredRing(float_t cx, float_t cy, float_t rInner, float_t rOuter, int_t color, int segments = 16)
+{
+    float_t a = static_cast<float_t>((color >> 24) & 255) / 255.0f;
+    float_t r = static_cast<float_t>((color >> 16) & 255) / 255.0f;
+    float_t g = static_cast<float_t>((color >> 8) & 255) / 255.0f;
+    float_t b = static_cast<float_t>(color & 255) / 255.0f;
+    renderEnable(RenderCapability::Blend);
+    renderDisable(RenderCapability::Texture2D);
+    renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
+    renderColor4f(r, g, b, a);
+    Tessellator *tess = &Tessellator::instance;
+    tess->startDrawingQuads();
+    tess->setColorRGBA_F(r, g, b, a);
+    for (int i = 0; i < segments; ++i)
+    {
+        const float_t a0 = (2.0f * PI_F * static_cast<float_t>(i)) / static_cast<float_t>(segments);
+        const float_t a1 = (2.0f * PI_F * static_cast<float_t>(i + 1)) / static_cast<float_t>(segments);
+        const float_t c0 = std::cos(a0), s0 = std::sin(a0);
+        const float_t c1 = std::cos(a1), s1 = std::sin(a1);
+        tess->addVertex(cx + c0 * rInner, cy + s0 * rInner, 0.0);
+        tess->addVertex(cx + c0 * rOuter, cy + s0 * rOuter, 0.0);
+        tess->addVertex(cx + c1 * rOuter, cy + s1 * rOuter, 0.0);
+        tess->addVertex(cx + c1 * rInner, cy + s1 * rInner, 0.0);
+    }
+    tess->draw();
+    renderEnable(RenderCapability::Texture2D);
+}
+
+static void drawTexturedDisc(float_t cx, float_t cy, float_t radius, float_t uvScale, float_t rotRad, int segments = 24)
+{
+    const float_t cosR = std::cos(rotRad);
+    const float_t sinR = std::sin(rotRad);
+    Tessellator *tess = &Tessellator::instance;
+    tess->startDrawingQuads();
+    tess->setColorOpaque_I(0xFFFFFF);
+    for (int i = 0; i < segments; ++i)
+    {
+        const float_t a0 = (2.0f * PI_F * static_cast<float_t>(i)) / static_cast<float_t>(segments);
+        const float_t a1 = (2.0f * PI_F * static_cast<float_t>(i + 1)) / static_cast<float_t>(segments);
+        const float_t x0 = std::cos(a0);
+        const float_t y0 = std::sin(a0);
+        const float_t x1 = std::cos(a1);
+        const float_t y1 = std::sin(a1);
+        // Rotate UV sample vector by rotRad
+        const float_t ux0 = (x0 * cosR - y0 * sinR) * 0.5f * uvScale + 0.5f;
+        const float_t uy0 = (x0 * sinR + y0 * cosR) * 0.5f * uvScale + 0.5f;
+        const float_t ux1 = (x1 * cosR - y1 * sinR) * 0.5f * uvScale + 0.5f;
+        const float_t uy1 = (x1 * sinR + y1 * cosR) * 0.5f * uvScale + 0.5f;
+        // Degenerate quad as triangle slice (works natively with D3D8 quad path)
+        tess->addVertexWithUV(cx, cy, 0.0, 0.5, 0.5);
+        tess->addVertexWithUV(cx + x1 * radius, cy + y1 * radius, 0.0, ux1, uy1);
+        tess->addVertexWithUV(cx + x0 * radius, cy + y0 * radius, 0.0, ux0, uy0);
+        tess->addVertexWithUV(cx, cy, 0.0, 0.5, 0.5);
+    }
+    tess->draw();
+}
+
 ReiMinimap &ReiMinimap::getInstance()
 {
     static ReiMinimap instance;
@@ -84,19 +163,24 @@ ReiMinimap::ReiMinimap()
     , m_enabled(false)
     , m_updateTicks(0)
     , m_initialized(false)
+    , m_deathCounter(0)
 {
-    m_mapTextureId[0] = -1;
-    m_mapTextureId[1] = -1;
-    m_lastPlayerX[0] = -999999;
-    m_lastPlayerZ[0] = -999999;
-    m_lastPlayerX[1] = -999999;
-    m_lastPlayerZ[1] = -999999;
-    m_waypointComboWasPressed[0] = false;
-    m_waypointComboWasPressed[1] = false;
-    m_waypointMenuComboWasPressed[0] = false;
-    m_waypointMenuComboWasPressed[1] = false;
-    m_toastTimer[0] = 0;
-    m_toastTimer[1] = 0;
+    for (int i = 0; i < 2; ++i)
+    {
+        m_mapTextureId[i] = -1;
+        m_lastPlayerX[i] = -999999;
+        m_lastPlayerZ[i] = -999999;
+        m_lastPlayerY[i] = -999999;
+        m_lastCaveActive[i] = false;
+        m_scanRow[i] = 0;
+        m_uploadCooldown[i] = 0;
+        m_textureDirty[i] = false;
+        m_waypointComboWasPressed[i] = false;
+        m_waypointMenuComboWasPressed[i] = false;
+        m_toastTimer[i] = 0;
+        m_cachedBiomeX[i] = -999999;
+        m_cachedBiomeZ[i] = -999999;
+    }
 }
 
 ReiMinimap::~ReiMinimap()
@@ -114,30 +198,160 @@ ReiMinimap::~ReiMinimap()
     }
 }
 
+size_t ReiMinimap::getMemoryBytes() const
+{
+    size_t cpuBytes = m_pixelData[0].capacity() + m_pixelData[1].capacity();
+    if (m_mapImage)
+        cpuBytes += static_cast<size_t>(MAP_RES * MAP_RES * 4);
+    size_t gpuBytes = 0;
+    for (int i = 0; i < 2; ++i)
+    {
+        if (m_mapTextureId[i] >= 0)
+            gpuBytes += static_cast<size_t>(MAP_RES * MAP_RES * 4);
+    }
+    return cpuBytes + gpuBytes;
+}
+
+void ReiMinimap::ensureTexturesAllocated()
+{
+    if (!m_mapImage)
+        m_mapImage = std::make_unique<BufferedImage>(MAP_RES, MAP_RES);
+    for (int i = 0; i < 2; ++i)
+    {
+        if (m_pixelData[i].size() != static_cast<size_t>(MAP_RES * MAP_RES * 4))
+            m_pixelData[i].assign(static_cast<size_t>(MAP_RES * MAP_RES * 4), 0);
+        if (m_mapTextureId[i] < 0 && m_mc != nullptr && m_mc->renderEngine != nullptr)
+            m_mapTextureId[i] = m_mc->renderEngine->allocateAndSetupTexture(m_mapImage.get());
+    }
+}
+
+void ReiMinimap::setEnabled(bool en)
+{
+    m_enabled = en;
+    if (en)
+    {
+        ensureTexturesAllocated();
+        markMapDirty();
+    }
+}
+
 void ReiMinimap::init(Minecraft *mc)
 {
     if (m_initialized)
         return;
 
     m_mc = mc;
-    m_mapImage = std::make_unique<BufferedImage>(MAP_RES, MAP_RES);
-    m_pixelData.assign(MAP_RES * MAP_RES * 4, 0);
-
-    if (m_mc != nullptr && m_mc->renderEngine != nullptr)
-    {
-        m_mapTextureId[0] = m_mc->renderEngine->allocateAndSetupTexture(m_mapImage.get());
-        m_mapTextureId[1] = m_mc->renderEngine->allocateAndSetupTexture(m_mapImage.get());
-    }
+    loadSettings();
+    if (m_enabled)
+        ensureTexturesAllocated();
 
     loadWaypoints();
     m_initialized = true;
-    MC_LOG_INFO("mods", "Rei's Minimap initialized with texture IDs %d, %d\n", m_mapTextureId[0], m_mapTextureId[1]);
+    MC_LOG_INFO("mods", "Rei & Xaero Minimap initialized (enabled=%d, mem=%u KB)\n",
+                m_enabled ? 1 : 0, static_cast<unsigned>(getMemoryBytes() / 1024));
+}
+
+void ReiMinimap::markMapDirty()
+{
+    for (int i = 0; i < 2; ++i)
+    {
+        m_lastPlayerX[i] = -999999;
+        m_lastPlayerZ[i] = -999999;
+        m_lastPlayerY[i] = -999999;
+        m_scanRow[i] = 0;
+        m_uploadCooldown[i] = 0;
+        m_textureDirty[i] = true;
+    }
+}
+
+float_t ReiMinimap::getZoomFactor() const
+{
+    static const float_t ZOOMS[] = { 0.5f, 1.0f, 2.0f, 4.0f };
+    int idx = std::clamp<int>(m_settings.zoomIndex, 0, 3);
+    return ZOOMS[idx];
+}
+
+std::string ReiMinimap::getZoomLabel() const
+{
+    static const char *const LABELS[] = { "0.5x", "1.0x", "2.0x", "4.0x" };
+    int idx = std::clamp<int>(m_settings.zoomIndex, 0, 3);
+    return LABELS[idx];
+}
+
+void ReiMinimap::cycleZoom(int_t playerIndex)
+{
+    m_settings.zoomIndex = (m_settings.zoomIndex + 1) % 4;
+    saveSettings();
+    markMapDirty();
+    const bool isEs = minimapIsSpanish();
+    showToast(playerIndex, (isEs ? "Zoom: " : "Zoom: ") + getZoomLabel(), 45);
+    if (m_mc != nullptr && m_mc->sndManager != nullptr)
+        m_mc->sndManager->playSoundFX("random.click", 1.0f, 1.1f);
+}
+
+void ReiMinimap::showToast(int_t playerIndex, const std::string &msg, int_t ticks)
+{
+    int idx = (playerIndex == 1) ? 1 : 0;
+    m_toastMessage[idx] = msg;
+    m_toastTimer[idx] = ticks;
+}
+
+void ReiMinimap::handlePlayerComboRequest(int_t playerIndex, EntityPlayer *player, int req, bool isSplit)
+{
+    if (player == nullptr || req <= 0 || m_mc == nullptr)
+        return;
+
+    const bool isEs = minimapIsSpanish();
+    if (req == 1)
+    {
+        int_t px = static_cast<int_t>(std::floor(player->posX));
+        int_t py = static_cast<int_t>(std::floor(player->posY));
+        int_t pz = static_cast<int_t>(std::floor(player->posZ));
+        char nameBuf[32];
+        std::snprintf(nameBuf, sizeof(nameBuf),
+            isSplit ? (playerIndex == 1 ? "P2 Waypoint %u" : "P1 Waypoint %u") : "Waypoint %u",
+            static_cast<unsigned>(m_waypoints.size() + 1));
+        addWaypoint(nameBuf, px, py, pz);
+        showToast(playerIndex, isEs ? "Waypoint guardado!" : "Waypoint saved!", 60);
+        if (m_mc->sndManager != nullptr)
+            m_mc->sndManager->playSoundFX("random.orb", 1.0f, 1.0f);
+    }
+    else if (req == 2 && m_mc->currentScreen == nullptr)
+    {
+        if (isSplit && playerIndex == 1)
+        {
+            if (m_mc->player2Screen() == nullptr)
+                m_mc->displayPlayerScreen(1, new GuiWaypointManager(1));
+        }
+        else
+        {
+            m_mc->displayGuiScreen(new GuiWaypointManager(playerIndex));
+        }
+    }
+    else if (req == 3)
+    {
+        cycleZoom(playerIndex);
+    }
+    else if (req == 4 && m_mc->currentScreen == nullptr)
+    {
+        if (isSplit && playerIndex == 1)
+        {
+            if (m_mc->player2Screen() == nullptr)
+                m_mc->displayPlayerScreen(1, new GuiMinimapMenu(nullptr, 1));
+        }
+        else
+        {
+            m_mc->displayGuiScreen(new GuiMinimapMenu(nullptr, playerIndex));
+        }
+    }
 }
 
 void ReiMinimap::update()
 {
     if (!m_enabled || m_mc == nullptr || m_mc->theWorld == nullptr)
         return;
+
+    ensureTexturesAllocated();
 
     // Detect world switch / entering a world
     std::string curDir;
@@ -146,11 +360,9 @@ void ReiMinimap::update()
     if (curDir != m_currentWorldDir)
     {
         m_currentWorldDir = curDir;
+        m_deathCounter = 0;
         loadWaypoints();
-        m_lastPlayerX[0] = -999999;
-        m_lastPlayerZ[0] = -999999;
-        m_lastPlayerX[1] = -999999;
-        m_lastPlayerZ[1] = -999999;
+        markMapDirty();
     }
 
     m_updateTicks++;
@@ -158,6 +370,8 @@ void ReiMinimap::update()
     {
         if (m_toastTimer[i] > 0)
             m_toastTimer[i]--;
+        if (m_uploadCooldown[i] > 0)
+            m_uploadCooldown[i]--;
     }
 
     EntityPlayerSP *p1 = m_mc->thePlayerOne ? m_mc->thePlayerOne : m_mc->thePlayer;
@@ -165,135 +379,154 @@ void ReiMinimap::update()
     const bool isSplit = (m_mc->isSplitScreenActive() && p2 != nullptr);
 
 #if PLATFORM_PS2
-    // Check Pad 0 (Player 1) combo (Triangle + D-Pad Up)
     if (p1 != nullptr)
     {
         const Ps2PadSnapshot &pad0 = ps2PadGetSnapshot(0);
         bool combo0 = (pad0.held & PS2_PAD_TRIANGLE) != 0 && (pad0.held & PS2_PAD_UP) != 0;
         if (combo0 && !m_waypointComboWasPressed[0])
-        {
-            int_t px = static_cast<int_t>(std::floor(p1->posX));
-            int_t py = static_cast<int_t>(std::floor(p1->posY));
-            int_t pz = static_cast<int_t>(std::floor(p1->posZ));
-            char nameBuf[32];
-            std::snprintf(nameBuf, sizeof(nameBuf), isSplit ? "P1 Waypoint %u" : "Waypoint %u", static_cast<unsigned>(m_waypoints.size() + 1));
-            addWaypoint(nameBuf, px, py, pz);
-
-            m_toastMessage[0] = "Waypoint saved!";
-            m_toastTimer[0] = 60;
-            if (m_mc->sndManager != nullptr)
-                m_mc->sndManager->playSoundFX("random.orb", 1.0f, 1.0f);
-        }
+            handlePlayerComboRequest(0, p1, 1, isSplit);
         m_waypointComboWasPressed[0] = combo0;
 
-        // Check Pad 0 (Player 1) combo (Triangle + D-Pad Down) to open Waypoint Manager
         bool menuCombo0 = (pad0.held & PS2_PAD_TRIANGLE) != 0 && (pad0.held & PS2_PAD_DOWN) != 0;
         if (menuCombo0 && !m_waypointMenuComboWasPressed[0] && m_mc->currentScreen == nullptr)
-        {
-            if (isSplit)
-            {
-                if (m_mc->isPlayerScreenActive(0))
-                    m_mc->closePlayerScreen(0);
-                else
-                    m_mc->displayPlayerScreen(0, new GuiWaypointManager(0));
-            }
-            else
-            {
-                ps2SetMenuPad(0);
-                ps2SetMenuOwnerPad(0);
-                m_mc->displayGuiScreen(new GuiWaypointManager(0));
-            }
-        }
+            handlePlayerComboRequest(0, p1, 2, isSplit);
         m_waypointMenuComboWasPressed[0] = menuCombo0;
     }
-
-    // Check Pad 1 (Player 2) combo (Triangle + D-Pad Up) if split screen is active
     if (isSplit && p2 != nullptr)
     {
         const Ps2PadSnapshot &pad1 = ps2PadGetSnapshot(1);
         bool combo1 = (pad1.held & PS2_PAD_TRIANGLE) != 0 && (pad1.held & PS2_PAD_UP) != 0;
         if (combo1 && !m_waypointComboWasPressed[1])
-        {
-            int_t px = static_cast<int_t>(std::floor(p2->posX));
-            int_t py = static_cast<int_t>(std::floor(p2->posY));
-            int_t pz = static_cast<int_t>(std::floor(p2->posZ));
-            char nameBuf[32];
-            std::snprintf(nameBuf, sizeof(nameBuf), "P2 Waypoint %u", static_cast<unsigned>(m_waypoints.size() + 1));
-            addWaypoint(nameBuf, px, py, pz);
-
-            m_toastMessage[1] = "Waypoint saved!";
-            m_toastTimer[1] = 60;
-            if (m_mc->sndManager != nullptr)
-                m_mc->sndManager->playSoundFX("random.orb", 1.0f, 1.0f);
-        }
+            handlePlayerComboRequest(1, p2, 1, isSplit);
         m_waypointComboWasPressed[1] = combo1;
 
-        // Check Pad 1 (Player 2) combo (Triangle + D-Pad Down) to open Waypoint Manager
         bool menuCombo1 = (pad1.held & PS2_PAD_TRIANGLE) != 0 && (pad1.held & PS2_PAD_DOWN) != 0;
         if (menuCombo1 && !m_waypointMenuComboWasPressed[1] && m_mc->currentScreen == nullptr)
-        {
-            if (m_mc->isPlayerScreenActive(1))
-                m_mc->closePlayerScreen(1);
-            else
-                m_mc->displayPlayerScreen(1, new GuiWaypointManager(1));
-        }
+            handlePlayerComboRequest(1, p2, 2, isSplit);
         m_waypointMenuComboWasPressed[1] = menuCombo1;
     }
 #elif PLATFORM_XBOX
-    // Player 1: Back + D-pad Up saves a waypoint, Back + D-pad Down opens the
-    // manager (XboxInput reads the combo during gameplay).
-    const int waypointRequest = XboxInput::consumeWaypointRequest();
-    if (p1 != nullptr && waypointRequest == 1)
+    if (p1 != nullptr)
     {
-        int_t px = static_cast<int_t>(std::floor(p1->posX));
-        int_t py = static_cast<int_t>(std::floor(p1->posY));
-        int_t pz = static_cast<int_t>(std::floor(p1->posZ));
-        char nameBuf[32];
-        std::snprintf(nameBuf, sizeof(nameBuf), isSplit ? "P1 Waypoint %u" : "Waypoint %u", static_cast<unsigned>(m_waypoints.size() + 1));
-        addWaypoint(nameBuf, px, py, pz);
-
-        m_toastMessage[0] = "Waypoint saved!";
-        m_toastTimer[0] = 60;
-        if (m_mc->sndManager != nullptr)
-            m_mc->sndManager->playSoundFX("random.orb", 1.0f, 1.0f);
+        const int req1 = XboxInput::consumeWaypointRequest(0);
+        if (req1 > 0)
+            handlePlayerComboRequest(0, p1, req1, isSplit);
     }
-    else if (p1 != nullptr && waypointRequest == 2 && m_mc->currentScreen == nullptr)
+    if (isSplit && p2 != nullptr)
     {
-        m_mc->displayGuiScreen(new GuiWaypointManager(0));
+        const int req2 = XboxInput::consumeWaypointRequest(1);
+        if (req2 > 0)
+            handlePlayerComboRequest(1, p2, req2, isSplit);
     }
 #endif
 
-    // Update Player 1 texture
+    // Incremental map texture updates (never full 64x64 redraw per frame!)
     if (p1 != nullptr)
     {
-        int_t px = static_cast<int_t>(std::floor(p1->posX));
-        int_t pz = static_cast<int_t>(std::floor(p1->posZ));
-        if (px != m_lastPlayerX[0] || pz != m_lastPlayerZ[0] || m_updateTicks >= 10)
-        {
-            m_lastPlayerX[0] = px;
-            m_lastPlayerZ[0] = pz;
-            updateMapTexture(0, p1);
-        }
+        updatePlayerMapIncremental(0, p1, false);
+        if ((m_updateTicks & 3) == 0 || m_cachedBiomeX[0] == -999999)
+            refreshRadarAndBiomeCache(0, p1);
     }
-
-    // Update Player 2 texture if split-screen is active
     if (isSplit && p2 != nullptr)
     {
-        int_t px2 = static_cast<int_t>(std::floor(p2->posX));
-        int_t pz2 = static_cast<int_t>(std::floor(p2->posZ));
-        if (px2 != m_lastPlayerX[1] || pz2 != m_lastPlayerZ[1] || m_updateTicks >= 10)
-        {
-            m_lastPlayerX[1] = px2;
-            m_lastPlayerZ[1] = pz2;
-            updateMapTexture(1, p2);
-        }
+        updatePlayerMapIncremental(1, p2, false);
+        if ((m_updateTicks & 3) == 2 || m_cachedBiomeX[1] == -999999)
+            refreshRadarAndBiomeCache(1, p2);
     }
-
-    if (m_updateTicks >= 10)
-        m_updateTicks = 0;
 }
 
-int_t ReiMinimap::getBlockColor(int_t blockId, int_t height, int_t northHeight)
+void ReiMinimap::refreshRadarAndBiomeCache(int_t playerIndex, EntityPlayer *player)
+{
+    if (m_mc == nullptr || m_mc->theWorld == nullptr || player == nullptr || playerIndex < 0 || playerIndex >= 2)
+        return;
+
+    const int_t px = static_cast<int_t>(std::floor(player->posX));
+    const int_t pz = static_cast<int_t>(std::floor(player->posZ));
+    if (m_settings.showBiome && (px != m_cachedBiomeX[playerIndex] || pz != m_cachedBiomeZ[playerIndex]))
+    {
+        m_cachedBiomeX[playerIndex] = px;
+        m_cachedBiomeZ[playerIndex] = pz;
+        BiomeGenBase *biome = m_mc->theWorld->getBiomeGenForCoords(px, pz);
+        m_cachedBiome[playerIndex] = (biome != nullptr) ? biome->biomeName : "";
+    }
+
+    auto &dots = m_radarDots[playerIndex];
+    dots.clear();
+    if (!m_settings.entityRadar)
+        return;
+
+    const double ppx = player->posX;
+    const double ppy = player->posY;
+    const double ppz = player->posZ;
+    const bool useCave = m_lastCaveActive[playerIndex];
+    const double maxDy = useCave ? 12.0 : 28.0;
+    const auto &entities = m_mc->theWorld->loadedEntityList;
+
+    for (size_t i = 0; i < entities.size() && dots.size() < 32; ++i)
+    {
+        Entity *ent = entities[i];
+        if (ent == nullptr || ent == player || ent->isDead)
+            continue;
+        if (std::abs(ent->posY - ppy) > maxDy)
+            continue;
+        const float_t rawDx = static_cast<float_t>(ent->posX - ppx);
+        const float_t rawDz = static_cast<float_t>(ent->posZ - ppz);
+        if (std::abs(rawDx) > 64.0f || std::abs(rawDz) > 64.0f)
+            continue;
+
+        int_t dotColor = 0;
+        bool isOtherPlayer = false;
+        if (dynamic_cast<EntityPlayer *>(ent) != nullptr)
+        {
+            dotColor = static_cast<int_t>(0xFF44FFFFu);
+            isOtherPlayer = true;
+        }
+        else if (dynamic_cast<EntityMob *>(ent) != nullptr ||
+                 dynamic_cast<EntitySlime *>(ent) != nullptr ||
+                 dynamic_cast<EntityGhast *>(ent) != nullptr)
+        {
+            dotColor = static_cast<int_t>(0xFFFF3030u);
+        }
+        else if (dynamic_cast<EntityAnimal *>(ent) != nullptr ||
+                 dynamic_cast<EntityWaterMob *>(ent) != nullptr ||
+                 dynamic_cast<EntityVillager *>(ent) != nullptr ||
+                 dynamic_cast<EntityGolem *>(ent) != nullptr)
+        {
+            dotColor = static_cast<int_t>(0xFF38EE38u);
+        }
+        else
+        {
+            continue;
+        }
+        dots.push_back({ rawDx, rawDz, dotColor, isOtherPlayer });
+    }
+}
+
+bool ReiMinimap::isCaveActiveForPlayer(EntityPlayer *player) const
+{
+    if (m_settings.caveMode == MinimapCaveMode::Off)
+        return false;
+    if (m_settings.caveMode == MinimapCaveMode::Always)
+        return true;
+    if (player == nullptr || m_mc == nullptr || m_mc->theWorld == nullptr)
+        return false;
+
+    const int_t px = static_cast<int_t>(std::floor(player->posX));
+    const int_t py = static_cast<int_t>(std::floor(player->posY));
+    const int_t pz = static_cast<int_t>(std::floor(player->posZ));
+    if (m_mc->theWorld->worldProvider != nullptr && m_mc->theWorld->worldProvider->isHellWorld)
+        return true;
+    // Auto cave mode: when player cannot see sky and has a solid roof overhead
+    if (!m_mc->theWorld->canBlockSeeTheSky(px, py + 1, pz))
+    {
+        int_t height = m_mc->theWorld->getHeightValue(px, pz);
+        if (height > py + 3)
+            return true;
+    }
+    return false;
+}
+
+int_t ReiMinimap::getBlockColor(int_t blockId, int_t height, int_t northHeight) const
 {
     if (blockId <= 0)
         return 0x00000000;
@@ -359,9 +592,9 @@ int_t ReiMinimap::getBlockColor(int_t blockId, int_t height, int_t northHeight)
     // Hill / slope shading
     if (height > northHeight)
     {
-        r = std::min(255, r * 118 / 100);
-        g = std::min(255, g * 118 / 100);
-        b = std::min(255, b * 118 / 100);
+        r = std::min<int_t>(255, r * 118 / 100);
+        g = std::min<int_t>(255, g * 118 / 100);
+        b = std::min<int_t>(255, b * 118 / 100);
     }
     else if (height < northHeight)
     {
@@ -370,93 +603,325 @@ int_t ReiMinimap::getBlockColor(int_t blockId, int_t height, int_t northHeight)
         b = b * 82 / 100;
     }
 
-    return (r & 0xFF) | ((g & 0xFF) << 8) | ((b & 0xFF) << 16) | 0xFF000000;
+    return (r & 0xFF) | ((g & 0xFF) << 8) | ((b & 0xFF) << 16) | static_cast<int_t>(0xFF000000u);
 }
 
-void ReiMinimap::updateMapTexture(int_t playerIndex, EntityPlayer *player)
+int_t ReiMinimap::getCaveColor(int_t blockId, int_t relY, int_t lightLevel) const
 {
-    if (m_mc == nullptr || player == nullptr || m_mc->theWorld == nullptr || !m_mapImage)
-        return;
-    if (playerIndex < 0 || playerIndex >= 2 || m_mapTextureId[playerIndex] < 0)
-        return;
+    if (blockId <= 0)
+        return static_cast<int_t>(0xFF101016u); // Solid rock / no open cavern
 
-    int_t playerX = static_cast<int_t>(std::floor(player->posX));
-    int_t playerZ = static_cast<int_t>(std::floor(player->posZ));
+    int_t r = 90, g = 115, b = 135;
+    switch (blockId)
+    {
+    case 8: case 9:   r = 45;  g = 115; b = 255; break; // Water
+    case 10: case 11: r = 255; g = 90;  b = 15;  break; // Lava
+    case 14:          r = 240; g = 210; b = 60;  break; // Gold ore
+    case 15:          r = 210; g = 175; b = 145; break; // Iron ore
+    case 16:          r = 65;  g = 65;  b = 70;  break; // Coal ore
+    case 56:          r = 80;  g = 230; b = 240; break; // Diamond ore
+    case 73: case 74: r = 220; g = 45;  b = 45;  break; // Redstone ore
+    case 48:          r = 75;  g = 135; b = 75;  break; // Mossy cobble (dungeon!)
+    case 5: case 85:  r = 160; g = 120; b = 65;  break; // Mineshaft wood/fence
+    case 66:          r = 185; g = 165; b = 120; break; // Rails
+    default:
+        // Depth-coded cave floor: cyan-green at player Y, warmer above, bluer below
+        r = std::clamp<int_t>(85 + relY * 10, 35, 195);
+        g = std::clamp<int_t>(145 - std::abs(relY) * 8, 55, 195);
+        b = std::clamp<int_t>(165 - relY * 10, 45, 215);
+        break;
+    }
+
+    const int_t shade = 55 + std::clamp<int_t>(lightLevel, 0, 15) * 3; // 55..100%
+    r = (r * shade) / 100;
+    g = (g * shade) / 100;
+    b = (b * shade) / 100;
+    return (r & 0xFF) | ((g & 0xFF) << 8) | ((b & 0xFF) << 16) | static_cast<int_t>(0xFF000000u);
+}
+
+bool ReiMinimap::scanMapRow(int_t playerIndex, EntityPlayer *player, int_t dy, int_t centerX, int_t centerZ, int_t stepBlocks, bool useCave)
+{
     World *world = m_mc->theWorld;
+    if (world == nullptr || dy < 0 || dy >= MAP_RES)
+        return false;
 
+    bool changed = false;
+
+    const int_t playerY = static_cast<int_t>(std::floor(player->posY));
+    const int_t wz = centerZ + (dy - MAP_RES / 2) * stepBlocks;
+    const int_t chunkZ = wz >> 4;
     Chunk *cachedChunk = nullptr;
     int_t cachedChunkX = 0x7FFFFFFF;
-    int_t cachedChunkZ = 0x7FFFFFFF;
+    unsigned char *rowPtr = m_pixelData[playerIndex].data() + static_cast<size_t>(dy) * MAP_RES * 4;
 
-    for (int_t dy = 0; dy < MAP_RES; ++dy)
+    for (int_t dx = 0; dx < MAP_RES; ++dx)
     {
-        int_t wz = playerZ + (dy - MAP_RES / 2);
-        int_t chunkZ = wz >> 4;
-
-        for (int_t dx = 0; dx < MAP_RES; ++dx)
+        const int_t wx = centerX + (dx - MAP_RES / 2) * stepBlocks;
+        const int_t chunkX = wx >> 4;
+        if (cachedChunk == nullptr || chunkX != cachedChunkX)
         {
-            int_t wx = playerX + (dx - MAP_RES / 2);
-            int_t chunkX = wx >> 4;
+            cachedChunk = world->getChunkFromBlockCoords(wx, wz);
+            cachedChunkX = chunkX;
+        }
 
-            if (cachedChunk == nullptr || chunkX != cachedChunkX || chunkZ != cachedChunkZ)
+        int_t col = static_cast<int_t>(0xFF181818u);
+        if (cachedChunk != nullptr && !cachedChunk->isEmpty())
+        {
+            const int_t lx = wx & 15;
+            const int_t lz = wz & 15;
+
+            if (useCave)
             {
-                cachedChunk = world->getChunkFromBlockCoords(wx, wz);
-                cachedChunkX = chunkX;
-                cachedChunkZ = chunkZ;
+                // Find open cave air-above-floor near player's Y
+                const int_t yTop = std::min<int_t>(124, playerY + 5);
+                const int_t yBot = std::max<int_t>(2, playerY - 8);
+                int_t foundFloor = 0;
+                int_t foundY = playerY;
+                int_t foundLight = 6;
+                for (int_t cy = yTop; cy >= yBot; --cy)
+                {
+                    const int_t bid = cachedChunk->getBlockID(lx, cy, lz);
+                    const bool isOpen = (bid == 0 || bid == 50 || bid == 75 || bid == 76 || bid == 66 || bid == 30);
+                    if (isOpen)
+                    {
+                        const int_t below = cachedChunk->getBlockID(lx, cy - 1, lz);
+                        if (below != 0 && below != 50 && below != 75 && below != 76)
+                        {
+                            foundFloor = below;
+                            foundY = cy - 1;
+                            foundLight = cachedChunk->getBlockLightValue(lx, cy, lz, 0);
+                            break;
+                        }
+                    }
+                }
+                col = getCaveColor(foundFloor, foundY - playerY, foundLight);
             }
-
-            Chunk *chunk = cachedChunk;
-            int_t r = 24, g = 24, b = 24, a = 255;
-
-            if (chunk != nullptr && !chunk->isEmpty())
+            else
             {
-                int_t lx = wx & 15;
-                int_t lz = wz & 15;
-                int_t y = chunk->getHeightValue(lx, lz) + 1;
+                int_t y = cachedChunk->getHeightValue(lx, lz) + 1;
                 int_t blockId = 0;
-
                 while (y > 1)
                 {
-                    blockId = chunk->getBlockID(lx, y - 1, lz);
+                    blockId = cachedChunk->getBlockID(lx, y - 1, lz);
                     if (blockId != 0 && Block::blocksList[blockId] != nullptr)
                     {
                         Material *mat = Block::blocksList[blockId]->blockMaterial;
                         if (mat != nullptr && mat->materialMapColor != nullptr && mat->materialMapColor != MapColor::airColor)
-                        {
                             break;
-                        }
                     }
                     y--;
                 }
-
-                int_t northHeight = (lz > 0) ? chunk->getHeightValue(lx, lz - 1) : world->getHeightValue(wx, wz - 1);
-                int_t col = getBlockColor(blockId, y, northHeight);
-
-                r = col & 0xFF;
-                g = (col >> 8) & 0xFF;
-                b = (col >> 16) & 0xFF;
-                a = 255;
+                const int_t northHeight = (lz > 0) ? cachedChunk->getHeightValue(lx, lz - 1) : y;
+                col = getBlockColor(blockId, y, northHeight);
             }
+        }
 
-            size_t idx = (static_cast<size_t>(dy) * MAP_RES + static_cast<size_t>(dx)) * 4;
-            m_pixelData[idx + 0] = static_cast<unsigned char>(r);
-            m_pixelData[idx + 1] = static_cast<unsigned char>(g);
-            m_pixelData[idx + 2] = static_cast<unsigned char>(b);
-            m_pixelData[idx + 3] = static_cast<unsigned char>(a);
+        unsigned char *px = rowPtr + static_cast<size_t>(dx) * 4;
+        const unsigned char nr = static_cast<unsigned char>(col & 0xFF);
+        const unsigned char ng = static_cast<unsigned char>((col >> 8) & 0xFF);
+        const unsigned char nb = static_cast<unsigned char>((col >> 16) & 0xFF);
+        if (px[0] != nr || px[1] != ng || px[2] != nb || px[3] != 255)
+        {
+            px[0] = nr;
+            px[1] = ng;
+            px[2] = nb;
+            px[3] = 255;
+            changed = true;
         }
     }
+    return changed;
+}
 
-    m_mapImage->setRGB(0, 0, MAP_RES, MAP_RES, m_pixelData.data());
+void ReiMinimap::uploadPlayerTexture(int_t playerIndex)
+{
+    if (!m_mapImage || m_mapTextureId[playerIndex] < 0 || m_mc == nullptr || m_mc->renderEngine == nullptr)
+        return;
+    m_mapImage->setRGB(0, 0, MAP_RES, MAP_RES, m_pixelData[playerIndex].data());
+    m_mc->renderEngine->setupTexture(m_mapImage.get(), m_mapTextureId[playerIndex]);
+    m_textureDirty[playerIndex] = false;
+    m_uploadCooldown[playerIndex] = 5; // At most ~4 uploads/sec, 0 when stationary & unchanged
+}
 
-    if (m_mapTextureId[playerIndex] >= 0 && m_mc->renderEngine != nullptr)
+void ReiMinimap::updatePlayerMapIncremental(int_t playerIndex, EntityPlayer *player, bool forceFull)
+{
+    if (m_mc == nullptr || player == nullptr || m_mc->theWorld == nullptr)
+        return;
+    if (playerIndex < 0 || playerIndex >= 2)
+        return;
+    ensureTexturesAllocated();
+    if (m_mapTextureId[playerIndex] < 0)
+        return;
+
+    // 0.5x zoom scans every 2nd block (128x128 world area into 64x64 tex); 1x/2x/4x scan 1 block/texel and zoom UVs
+    const int_t stepBlocks = (m_settings.zoomIndex == 0) ? 2 : 1;
+    const int_t px = (static_cast<int_t>(std::floor(player->posX)) / stepBlocks) * stepBlocks;
+    const int_t pz = (static_cast<int_t>(std::floor(player->posZ)) / stepBlocks) * stepBlocks;
+    const int_t py = static_cast<int_t>(std::floor(player->posY));
+    const bool useCave = isCaveActiveForPlayer(player);
+
+    const bool firstInit = (m_lastPlayerX[playerIndex] == -999999);
+    const int_t dGridX = firstInit ? 999 : (px - m_lastPlayerX[playerIndex]) / stepBlocks;
+    const int_t dGridZ = firstInit ? 999 : (pz - m_lastPlayerZ[playerIndex]) / stepBlocks;
+    const bool caveChanged = (useCave != m_lastCaveActive[playerIndex]) ||
+                             (useCave && std::abs(py - m_lastPlayerY[playerIndex]) >= 3);
+
+    if (forceFull || firstInit || caveChanged || std::abs(dGridX) > 12 || std::abs(dGridZ) > 12)
     {
-        m_mc->renderEngine->setupTexture(m_mapImage.get(), m_mapTextureId[playerIndex]);
+        m_lastPlayerX[playerIndex] = px;
+        m_lastPlayerZ[playerIndex] = pz;
+        m_lastPlayerY[playerIndex] = py;
+        m_lastCaveActive[playerIndex] = useCave;
+        if (forceFull || firstInit)
+        {
+            for (int_t dy = 0; dy < MAP_RES; ++dy)
+                scanMapRow(playerIndex, player, dy, px, pz, stepBlocks, useCave);
+            m_scanRow[playerIndex] = 0;
+            uploadPlayerTexture(playerIndex);
+            return;
+        }
+        // Large move or cave height change: sweep incrementally over next ticks
+        m_scanRow[playerIndex] = 0;
+        m_textureDirty[playerIndex] = true;
+    }
+    else if (dGridX != 0 || dGridZ != 0)
+    {
+        // Fast in-memory shift of the 64x64 pixel buffer so already-scanned terrain is reused!
+        unsigned char *buf = m_pixelData[playerIndex].data();
+        const int_t rowBytes = MAP_RES * 4;
+        if (dGridZ > 0)
+        {
+            for (int_t y = 0; y < MAP_RES - dGridZ; ++y)
+                std::memmove(buf + y * rowBytes, buf + (y + dGridZ) * rowBytes, static_cast<size_t>(rowBytes));
+        }
+        else if (dGridZ < 0)
+        {
+            const int_t shift = -dGridZ;
+            for (int_t y = MAP_RES - 1; y >= shift; --y)
+                std::memmove(buf + y * rowBytes, buf + (y - shift) * rowBytes, static_cast<size_t>(rowBytes));
+        }
+        if (dGridX > 0)
+        {
+            const size_t keepBytes = static_cast<size_t>((MAP_RES - dGridX) * 4);
+            for (int_t y = 0; y < MAP_RES; ++y)
+                std::memmove(buf + y * rowBytes, buf + y * rowBytes + dGridX * 4, keepBytes);
+        }
+        else if (dGridX < 0)
+        {
+            const int_t shift = -dGridX;
+            const size_t keepBytes = static_cast<size_t>((MAP_RES - shift) * 4);
+            for (int_t y = 0; y < MAP_RES; ++y)
+                std::memmove(buf + y * rowBytes + shift * 4, buf + y * rowBytes, keepBytes);
+        }
+
+        m_lastPlayerX[playerIndex] = px;
+        m_lastPlayerZ[playerIndex] = pz;
+        m_lastPlayerY[playerIndex] = py;
+
+        // Scan newly exposed horizontal border rows right away (typically 1-2 rows)
+        if (dGridZ > 0)
+        {
+            for (int_t y = MAP_RES - dGridZ; y < MAP_RES; ++y)
+                scanMapRow(playerIndex, player, y, px, pz, stepBlocks, useCave);
+        }
+        else if (dGridZ < 0)
+        {
+            for (int_t y = 0; y < -dGridZ; ++y)
+                scanMapRow(playerIndex, player, y, px, pz, stepBlocks, useCave);
+        }
+        // Scan newly exposed vertical border columns on the swept rows (or full edge if |dGridX| <= 2)
+        if (dGridX != 0)
+        {
+            const int_t xStart = (dGridX > 0) ? (MAP_RES - dGridX) : 0;
+            const int_t xEnd = (dGridX > 0) ? MAP_RES : (-dGridX);
+            World *world = m_mc->theWorld;
+            for (int_t dy = 0; dy < MAP_RES; ++dy)
+            {
+                const int_t wz = pz + (dy - MAP_RES / 2) * stepBlocks;
+                for (int_t dx = xStart; dx < xEnd; ++dx)
+                {
+                    const int_t wx = px + (dx - MAP_RES / 2) * stepBlocks;
+                    Chunk *ch = world->getChunkFromBlockCoords(wx, wz);
+                    int_t col = static_cast<int_t>(0xFF181818u);
+                    if (ch != nullptr && !ch->isEmpty())
+                    {
+                        const int_t lx = wx & 15;
+                        const int_t lz = wz & 15;
+                        if (useCave)
+                        {
+                            const int_t yTop = std::min<int_t>(124, py + 5);
+                            const int_t yBot = std::max<int_t>(2, py - 8);
+                            int_t foundFloor = 0, foundY = py, foundLight = 6;
+                            for (int_t cy = yTop; cy >= yBot; --cy)
+                            {
+                                const int_t bid = ch->getBlockID(lx, cy, lz);
+                                if (bid == 0 || bid == 50 || bid == 75 || bid == 76 || bid == 66)
+                                {
+                                    const int_t below = ch->getBlockID(lx, cy - 1, lz);
+                                    if (below != 0 && below != 50 && below != 75 && below != 76)
+                                    {
+                                        foundFloor = below;
+                                        foundY = cy - 1;
+                                        foundLight = ch->getBlockLightValue(lx, cy, lz, 0);
+                                        break;
+                                    }
+                                }
+                            }
+                            col = getCaveColor(foundFloor, foundY - py, foundLight);
+                        }
+                        else
+                        {
+                            int_t y = ch->getHeightValue(lx, lz) + 1;
+                            int_t blockId = 0;
+                            while (y > 1)
+                            {
+                                blockId = ch->getBlockID(lx, y - 1, lz);
+                                if (blockId != 0 && Block::blocksList[blockId] != nullptr)
+                                {
+                                    Material *mat = Block::blocksList[blockId]->blockMaterial;
+                                    if (mat != nullptr && mat->materialMapColor != nullptr && mat->materialMapColor != MapColor::airColor)
+                                        break;
+                                }
+                                y--;
+                            }
+                            const int_t northH = (lz > 0) ? ch->getHeightValue(lx, lz - 1) : y;
+                            col = getBlockColor(blockId, y, northH);
+                        }
+                    }
+                    unsigned char *pxPtr = buf + (static_cast<size_t>(dy) * MAP_RES + static_cast<size_t>(dx)) * 4;
+                    pxPtr[0] = static_cast<unsigned char>(col & 0xFF);
+                    pxPtr[1] = static_cast<unsigned char>((col >> 8) & 0xFF);
+                    pxPtr[2] = static_cast<unsigned char>((col >> 16) & 0xFF);
+                    pxPtr[3] = 255;
+                }
+            }
+        }
+        m_textureDirty[playerIndex] = true;
+    }
+
+    // Incremental background sweep: refresh only ROWS_PER_TICK rows every 4 ticks,
+    // and only mark texture dirty if at least one pixel actually changed (0 GPU uploads when idle!).
+    if ((m_updateTicks & 3) == 0)
+    {
+        bool rowChanged = false;
+        for (int_t r = 0; r < ROWS_PER_TICK; ++r)
+        {
+            if (scanMapRow(playerIndex, player, m_scanRow[playerIndex], m_lastPlayerX[playerIndex], m_lastPlayerZ[playerIndex], stepBlocks, m_lastCaveActive[playerIndex]))
+                rowChanged = true;
+            m_scanRow[playerIndex] = (m_scanRow[playerIndex] + 1) % MAP_RES;
+        }
+        if (rowChanged)
+            m_textureDirty[playerIndex] = true;
+    }
+
+    if (m_textureDirty[playerIndex] && m_uploadCooldown[playerIndex] <= 0)
+    {
+        uploadPlayerTexture(playerIndex);
     }
 }
 
-void ReiMinimap::render(GuiIngame *, int_t screenWidth, int_t, float_t)
+void ReiMinimap::render(GuiIngame *, int_t screenWidth, int_t screenHeight, float_t)
 {
-    if (!m_enabled || m_mc == nullptr || m_mc->thePlayer == nullptr)
+    if (!m_enabled || m_mc == nullptr || m_mc->thePlayer == nullptr || m_mc->theWorld == nullptr)
         return;
 
     const bool isSplit = (m_mc->isSplitScreenActive() && m_mc->thePlayer2 != nullptr);
@@ -474,157 +939,287 @@ void ReiMinimap::render(GuiIngame *, int_t screenWidth, int_t, float_t)
     if (curPlayer == nullptr)
         curPlayer = m_mc->thePlayer;
 
+    ensureTexturesAllocated();
     if (m_mapTextureId[playerIndex] < 0)
         return;
 
+    if (m_lastPlayerX[playerIndex] == -999999)
+        updatePlayerMapIncremental(playerIndex, curPlayer, true);
+
     renderDisable(RenderCapability::DepthTest);
 
-    // Initial update if needed
-    if (m_lastPlayerX[playerIndex] == -999999)
+    // HUD Safe Area + Adaptive sizing for 480p, 720p, and split-screen
+    const HudSafeInsets safe = computeHudSafeInsets(m_mc, screenWidth, screenHeight);
+    const bool isHighRes = (screenWidth > 360);
+    const int_t mapSize = isSplit ? (isHighRes ? 56 : 44) : (isHighRes ? 76 : 58);
+    const int_t margin = isSplit ? 4 : 6;
+    const int_t posX = screenWidth - safe.right - mapSize - margin;
+    const int_t posY = safe.top + margin;
+    const float_t cx = posX + mapSize * 0.5f;
+    const float_t cy = posY + mapSize * 0.5f;
+    const float_t mapRadius = mapSize * 0.5f;
+
+    const bool isRound = (m_settings.shape == MinimapShape::Round);
+    const bool useCave = m_lastCaveActive[playerIndex];
+
+    // Zoom UV scaling: 0.5x & 1.0x show full 64x64 texture (0.5x uses stepBlocks=2),
+    // 2.0x crops center 32x32 (uvScale=0.5), 4.0x crops center 16x16 (uvScale=0.25)
+    float_t uvScale = 1.0f;
+    float_t visibleBlockRadius = 32.0f;
+    switch (m_settings.zoomIndex)
     {
-        m_lastPlayerX[playerIndex] = static_cast<int_t>(std::floor(curPlayer->posX));
-        m_lastPlayerZ[playerIndex] = static_cast<int_t>(std::floor(curPlayer->posZ));
-        updateMapTexture(playerIndex, curPlayer);
+    case 0: uvScale = 1.0f;  visibleBlockRadius = 64.0f; break;
+    case 1: uvScale = 1.0f;  visibleBlockRadius = 32.0f; break;
+    case 2: uvScale = 0.5f;  visibleBlockRadius = 16.0f; break;
+    case 3: uvScale = 0.25f; visibleBlockRadius = 8.0f;  break;
+    default: uvScale = 1.0f; visibleBlockRadius = 32.0f; break;
     }
 
-    // Adaptive map sizing: 64px for single player, 48px for split-screen half-viewports
-    const int_t mapSize = isSplit ? 48 : 64;
-    const int_t posX = isSplit ? (screenWidth - mapSize - 4) : (screenWidth - mapSize - 6);
-    const int_t posY = isSplit ? 4 : 6;
+    const float_t rotRad = m_settings.rotateMap ? ((curPlayer->rotationYaw + 180.0f) * PI_F / 180.0f) : 0.0f;
+    const float_t cosRot = std::cos(-rotRad);
+    const float_t sinRot = std::sin(-rotRad);
 
-    // Background panel & border
-    drawColoredRect(posX - 1, posY - 1, posX + mapSize + 1, posY + mapSize + 1, 0xA0000000);
-    drawColoredRect(posX - 2, posY - 2, posX + mapSize + 2, posY - 1, 0xFF555555);
-    drawColoredRect(posX - 2, posY + mapSize + 1, posX + mapSize + 2, posY + mapSize + 2, 0xFF555555);
-    drawColoredRect(posX - 2, posY - 2, posX - 1, posY + mapSize + 2, 0xFF555555);
-    drawColoredRect(posX + mapSize + 1, posY - 2, posX + mapSize + 2, posY + mapSize + 2, 0xFF555555);
+    // 1. Frame & Map Texture
+    const int_t frameAccent = useCave ? static_cast<int_t>(0xFF4488BBu) : static_cast<int_t>(0xFF777777u);
+    if (isRound)
+    {
+        drawColoredRing(cx, cy, mapRadius - 0.5f, mapRadius + 2.5f, static_cast<int_t>(0xE0101010u), 24);
+        drawColoredRing(cx, cy, mapRadius + 0.5f, mapRadius + 2.0f, frameAccent, 24);
 
-    // Draw the dynamic map texture for this player
-    renderEnable(RenderCapability::Texture2D);
+        renderEnable(RenderCapability::Texture2D);
+        renderEnable(RenderCapability::Blend);
+        renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
+        renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        renderBindTexture(m_mapTextureId[playerIndex]);
+        drawTexturedDisc(cx, cy, mapRadius, uvScale, rotRad, 24);
+    }
+    else
+    {
+        drawColoredRect(posX - 1, posY - 1, posX + mapSize + 1, posY + mapSize + 1, static_cast<int_t>(0xC0000000u));
+        drawColoredRect(posX - 2, posY - 2, posX + mapSize + 2, posY - 1, frameAccent);
+        drawColoredRect(posX - 2, posY + mapSize + 1, posX + mapSize + 2, posY + mapSize + 2, frameAccent);
+        drawColoredRect(posX - 2, posY - 2, posX - 1, posY + mapSize + 2, frameAccent);
+        drawColoredRect(posX + mapSize + 1, posY - 2, posX + mapSize + 2, posY + mapSize + 2, frameAccent);
+
+        renderEnable(RenderCapability::Texture2D);
+        renderEnable(RenderCapability::Blend);
+        renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
+        renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        renderBindTexture(m_mapTextureId[playerIndex]);
+
+        const float_t halfUv = 0.5f * uvScale;
+        const float_t cR = std::cos(rotRad);
+        const float_t sR = std::sin(rotRad);
+        auto rotU = [&](float_t dx, float_t dy) { return 0.5f + (dx * cR - dy * sR) * halfUv; };
+        auto rotV = [&](float_t dx, float_t dy) { return 0.5f + (dx * sR + dy * cR) * halfUv; };
+
+        Tessellator *tess = &Tessellator::instance;
+        tess->startDrawingQuads();
+        tess->setColorOpaque_I(0xFFFFFF);
+        tess->addVertexWithUV(posX,           posY + mapSize, 0.0, rotU(-1.0f,  1.0f), rotV(-1.0f,  1.0f));
+        tess->addVertexWithUV(posX + mapSize, posY + mapSize, 0.0, rotU( 1.0f,  1.0f), rotV( 1.0f,  1.0f));
+        tess->addVertexWithUV(posX + mapSize, posY,           0.0, rotU( 1.0f, -1.0f), rotV( 1.0f, -1.0f));
+        tess->addVertexWithUV(posX,           posY,           0.0, rotU(-1.0f, -1.0f), rotV(-1.0f, -1.0f));
+        tess->draw();
+    }
+
+    const float_t scale = mapRadius / visibleBlockRadius;
+    const float_t innerLimit = mapRadius - 3.0f;
+
+    // 2. Batched Entity Radar + Inside Waypoints (single D3D8 quad batch, 0 dynamic_casts in render!)
+    const int_t px = static_cast<int_t>(std::floor(curPlayer->posX));
+    const int_t py = static_cast<int_t>(std::floor(curPlayer->posY));
+    const int_t pz = static_cast<int_t>(std::floor(curPlayer->posZ));
+    const float_t borderR = mapRadius - 2.5f;
+    Tessellator *tess = &Tessellator::instance;
+
+    auto emitQuadColor = [&](float_t x1, float_t y1, float_t x2, float_t y2, int_t col) {
+        tess->setColorRGBA((col >> 16) & 255, (col >> 8) & 255, col & 255, (col >> 24) & 255);
+        tess->addVertex(x1, y2, 0.0);
+        tess->addVertex(x2, y2, 0.0);
+        tess->addVertex(x2, y1, 0.0);
+        tess->addVertex(x1, y1, 0.0);
+    };
+
+    renderDisable(RenderCapability::Texture2D);
     renderEnable(RenderCapability::Blend);
     renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
-    renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    renderBindTexture(m_mapTextureId[playerIndex]);
-
-    Tessellator *tess = &Tessellator::instance;
     tess->startDrawingQuads();
-    tess->setColorOpaque_I(0xFFFFFF);
-    tess->addVertexWithUV(posX,           posY + mapSize, 0.0, 0.0, 1.0);
-    tess->addVertexWithUV(posX + mapSize, posY + mapSize, 0.0, 1.0, 1.0);
-    tess->addVertexWithUV(posX + mapSize, posY,           0.0, 1.0, 0.0);
-    tess->addVertexWithUV(posX,           posY,           0.0, 0.0, 0.0);
-    tess->draw();
 
-    // Cardinal direction markers (N, S, W, E)
-    FontRenderer *fr = m_mc->fontRenderer;
-    if (fr != nullptr)
+    if (m_settings.entityRadar)
     {
-        fr->drawStringWithShadow("N", posX + mapSize / 2 - 2, posY + 2, 0xFF5555); // Red N
-        fr->drawStringWithShadow("S", posX + mapSize / 2 - 2, posY + mapSize - 9, 0xAAAAAA);
-        fr->drawStringWithShadow("W", posX + 2, posY + mapSize / 2 - 4, 0xAAAAAA);
-        fr->drawStringWithShadow("E", posX + mapSize - 7, posY + mapSize / 2 - 4, 0xAAAAAA);
+        for (const auto &dot : m_radarDots[playerIndex])
+        {
+            if (std::abs(dot.dx) > visibleBlockRadius || std::abs(dot.dz) > visibleBlockRadius)
+                continue;
+            const float_t rx = dot.dx * cosRot - dot.dz * sinRot;
+            const float_t rz = dot.dx * sinRot + dot.dz * cosRot;
+            const float_t sx = cx + rx * scale;
+            const float_t sy = cy + rz * scale;
+            if (isRound)
+            {
+                const float_t ox = sx - cx, oy = sy - cy;
+                if (ox * ox + oy * oy > innerLimit * innerLimit)
+                    continue;
+            }
+            else if (std::abs(sx - cx) > innerLimit || std::abs(sy - cy) > innerLimit)
+            {
+                continue;
+            }
+            const float_t half = dot.isPlayer ? 2.0f : 1.3f;
+            emitQuadColor(sx - half - 0.5f, sy - half - 0.5f, sx + half + 0.5f, sy + half + 0.5f, static_cast<int_t>(0xD0000000u));
+            emitQuadColor(sx - half, sy - half, sx + half, sy + half, dot.color);
+        }
     }
 
-    // Center and scaling
-    const float_t cx = posX + mapSize / 2.0f;
-    const float_t cy = posY + mapSize / 2.0f;
-    int_t px = static_cast<int_t>(std::floor(curPlayer->posX));
-    int_t pz = static_cast<int_t>(std::floor(curPlayer->posZ));
-
-    const float_t visibleBlockRadius = MAP_RES / 2.0f; // 32 blocks
-    const float_t mapPixelRadius = mapSize / 2.0f;
-    const float_t scale = mapPixelRadius / visibleBlockRadius;
-    const float_t maxBlockDist = visibleBlockRadius - 3.0f;
-    const float_t borderR = mapPixelRadius - 3.5f;
-
-    // Render Waypoints
+    // Inside waypoints batched in the same draw call; collect rim arrows
+    struct RimArrow { float_t bx, by, ang; int_t col; };
+    RimArrow rimArrows[16];
+    int rimCount = 0;
     for (const auto &wp : m_waypoints)
     {
         if (!wp.enabled) continue;
-        float_t dx = static_cast<float_t>(wp.x - px);
-        float_t dz = static_cast<float_t>(wp.z - pz);
+        const float_t rawDx = static_cast<float_t>(wp.x - px);
+        const float_t rawDz = static_cast<float_t>(wp.z - pz);
+        const float_t rx = (rawDx * cosRot - rawDz * sinRot) * scale;
+        const float_t rz = (rawDx * sinRot + rawDz * cosRot) * scale;
 
-        if (std::abs(dx) <= maxBlockDist && std::abs(dz) <= maxBlockDist)
+        const bool inside = isRound
+            ? (rx * rx + rz * rz <= innerLimit * innerLimit)
+            : (std::abs(rx) <= innerLimit && std::abs(rz) <= innerLimit);
+
+        if (inside)
         {
-            // Waypoint is inside minimap bounds: draw standard dot
-            int_t wxScreen = static_cast<int_t>(cx + dx * scale);
-            int_t wzScreen = static_cast<int_t>(cy + dz * scale);
-            drawColoredRect(wxScreen - 2, wzScreen - 2, wxScreen + 2, wzScreen + 2, 0xFF000000);
-            drawColoredRect(wxScreen - 1, wzScreen - 1, wxScreen + 1, wzScreen + 1, 0xFF000000 | wp.color);
+            const float_t wxScreen = cx + rx;
+            const float_t wzScreen = cy + rz;
+            emitQuadColor(wxScreen - 2.5f, wzScreen - 2.5f, wxScreen + 2.5f, wzScreen + 2.5f, static_cast<int_t>(0xFF000000u));
+            emitQuadColor(wxScreen - 1.5f, wzScreen - 1.5f, wxScreen + 1.5f, wzScreen + 1.5f, static_cast<int_t>(0xFF000000u) | wp.color);
         }
-        else
+        else if (rimCount < 16)
         {
-            // Waypoint is OUTSIDE the minimap: stay on border with directional arrow pointing towards it!
-            float_t maxAbs = std::max(std::abs(dx), std::abs(dz));
-            float_t bx = cx + (dx / maxAbs) * borderR;
-            float_t by = cy + (dz / maxAbs) * borderR;
-
-            float_t angleRad = std::atan2(dz, dx);
-            float_t angleDeg = angleRad * (180.0f / 3.14159265f);
-
-            // Draw directional pointer on the border
-            renderPushMatrix();
-            renderTranslate(bx, by, 0.0f);
-            renderRotate(angleDeg + 90.0f, 0.0f, 0.0f, 1.0f);
-            renderDisable(RenderCapability::Texture2D);
-
-            // Outer dark outline arrow
-            tess->startDrawingQuads();
-            tess->setColorOpaque_I(0x000000);
-            tess->addVertex(-3.5,  2.5, 0.0);
-            tess->addVertex( 3.5,  2.5, 0.0);
-            tess->addVertex( 0.0, -4.5, 0.0);
-            tess->addVertex( 0.0, -4.5, 0.0);
-            tess->draw();
-
-            // Inner colored arrow
-            tess->startDrawingQuads();
-            tess->setColorOpaque_I(0xFF000000 | wp.color);
-            tess->addVertex(-2.5,  1.5, 0.0);
-            tess->addVertex( 2.5,  1.5, 0.0);
-            tess->addVertex( 0.0, -3.5, 0.0);
-            tess->addVertex( 0.0, -3.5, 0.0);
-            tess->draw();
-
-            renderEnable(RenderCapability::Texture2D);
-            renderPopMatrix();
+            float_t bx = cx, by = cy;
+            if (isRound)
+            {
+                const float_t len = std::sqrt(rx * rx + rz * rz);
+                if (len > 0.001f) { bx = cx + (rx / len) * borderR; by = cy + (rz / len) * borderR; }
+            }
+            else
+            {
+                const float_t maxAbs = std::max(std::abs(rx), std::abs(rz));
+                if (maxAbs > 0.001f) { bx = cx + (rx / maxAbs) * borderR; by = cy + (rz / maxAbs) * borderR; }
+            }
+            rimArrows[rimCount++] = { bx, by, std::atan2(rz, rx) * (180.0f / PI_F), wp.color };
         }
     }
 
-    // Player arrow in center
-    renderPushMatrix();
-    renderTranslate(cx, cy, 0.0f);
-    renderRotate(curPlayer->rotationYaw + 180.0f, 0.0f, 0.0f, 1.0f);
-    renderDisable(RenderCapability::Texture2D);
+    // Batched rim waypoint arrows + player arrow (rotated in CPU -> zero push/pop matrix overhead!)
+    auto emitArrow = [&](float_t ax, float_t ay, float_t deg, float_t s, int_t outlineCol, int_t fillCol) {
+        const float_t rad = deg * (PI_F / 180.0f);
+        const float_t ca = std::cos(rad);
+        const float_t sa = std::sin(rad);
+        auto pt = [&](float_t lx, float_t ly, float_t &ox, float_t &oy) {
+            ox = ax + lx * ca - ly * sa;
+            oy = ay + lx * sa + ly * ca;
+        };
+        float_t x0, y0, x1, y1, x2, y2;
+        pt(-3.0f * s, 3.0f * s, x0, y0);
+        pt( 3.0f * s, 3.0f * s, x1, y1);
+        pt( 0.0f,    -4.6f * s, x2, y2);
+        tess->setColorRGBA((outlineCol >> 16) & 255, (outlineCol >> 8) & 255, outlineCol & 255, 255);
+        tess->addVertex(x0, y0, 0.0); tess->addVertex(x1, y1, 0.0); tess->addVertex(x2, y2, 0.0); tess->addVertex(x2, y2, 0.0);
 
-    tess->startDrawingQuads();
-    tess->setColorOpaque_I(0xFF2222); // Red arrow tip
-    tess->addVertex(-2.0,  3.0, 0.0);
-    tess->addVertex( 2.0,  3.0, 0.0);
-    tess->addVertex( 0.0, -4.0, 0.0);
-    tess->addVertex( 0.0, -4.0, 0.0);
+        pt(-2.0f * s, 2.0f * s, x0, y0);
+        pt( 2.0f * s, 2.0f * s, x1, y1);
+        pt( 0.0f,    -3.5f * s, x2, y2);
+        tess->setColorRGBA((fillCol >> 16) & 255, (fillCol >> 8) & 255, fillCol & 255, 255);
+        tess->addVertex(x0, y0, 0.0); tess->addVertex(x1, y1, 0.0); tess->addVertex(x2, y2, 0.0); tess->addVertex(x2, y2, 0.0);
+    };
+
+    for (int i = 0; i < rimCount; ++i)
+        emitArrow(rimArrows[i].bx, rimArrows[i].by, rimArrows[i].ang + 90.0f, 0.9f, 0x000000, rimArrows[i].col);
+
+    // Player orientation arrow in center
+    const float_t playerDeg = m_settings.rotateMap ? 0.0f : (curPlayer->rotationYaw + 180.0f);
+    emitArrow(cx, cy, playerDeg, 1.05f, 0xFFFFFF, 0xFF2222);
+
     tess->draw();
-
     renderEnable(RenderCapability::Texture2D);
-    renderPopMatrix();
 
-    // Coordinates display below minimap
+    // 3. Cardinal direction markers (N, S, W, E)
+    FontRenderer *fr = m_mc->fontRenderer;
     if (fr != nullptr)
     {
-        int_t py = static_cast<int_t>(std::floor(curPlayer->posY));
-        char coordBuf[48];
-        std::snprintf(coordBuf, sizeof(coordBuf), "X:%d Y:%d Z:%d", px, py, pz);
-        int_t strW = fr->getStringWidth(coordBuf);
-        fr->drawStringWithShadow(coordBuf, posX + (mapSize - strW) / 2, posY + mapSize + (isSplit ? 2 : 4), 0xFFFFFF);
+        const float_t rimR = mapRadius - 4.0f;
+        const struct { const char *lbl; float_t dx; float_t dz; int_t col; } dirs[4] = {
+            { "N",  0.0f, -1.0f, 0xFF5555 },
+            { "S",  0.0f,  1.0f, 0xCCCCCC },
+            { "W", -1.0f,  0.0f, 0xCCCCCC },
+            { "E",  1.0f,  0.0f, 0xCCCCCC }
+        };
+        for (int d = 0; d < 4; ++d)
+        {
+            float_t rx = dirs[d].dx * cosRot - dirs[d].dz * sinRot;
+            float_t rz = dirs[d].dx * sinRot + dirs[d].dz * cosRot;
+            if (!isRound)
+            {
+                const float_t m = std::max(std::abs(rx), std::abs(rz));
+                if (m > 0.001f) { rx /= m; rz /= m; }
+            }
+            int_t tx = static_cast<int_t>(cx + rx * rimR) - 2;
+            int_t ty = static_cast<int_t>(cy + rz * rimR) - 4;
+            fr->drawStringWithShadow(dirs[d].lbl, tx, ty, dirs[d].col);
+        }
+    }
 
-        // On-screen notification toast (e.g. when adding a waypoint)
+    // 6. Info lines below minimap: Coordinates, Biome, Cave/Zoom tag, Toast
+    if (fr != nullptr)
+    {
+        int_t infoY = posY + mapSize + (isSplit ? 3 : 4);
+        const int_t rightEdge = screenWidth - safe.right - 2;
+
+        auto drawCenteredClamped = [&](const std::string &text, int_t y, int_t col, bool bg)
+        {
+            const int_t sw = fr->getStringWidth(text);
+            int_t tx = posX + (mapSize - sw) / 2;
+            if (tx + sw > rightEdge)
+                tx = rightEdge - sw;
+            if (tx < safe.left + 2)
+                tx = safe.left + 2;
+            if (bg)
+                drawColoredRect(static_cast<float_t>(tx - 2), static_cast<float_t>(y - 1),
+                                static_cast<float_t>(tx + sw + 2), static_cast<float_t>(y + 9),
+                                static_cast<int_t>(0x90000000u));
+            fr->drawStringWithShadow(text, tx, y, col);
+        };
+
+        if (m_settings.showCoords)
+        {
+            char coordBuf[48];
+            std::snprintf(coordBuf, sizeof(coordBuf), "%d, %d, %d", px, py, pz);
+            drawCenteredClamped(coordBuf, infoY, 0xFFFFFF, true);
+            infoY += 10;
+        }
+
+        if (m_settings.showBiome && !isSplit)
+        {
+            if (!m_cachedBiome[playerIndex].empty())
+            {
+                std::string label = m_cachedBiome[playerIndex];
+                if (useCave)
+                    label += minimapIsSpanish() ? " [Cueva]" : " [Cave]";
+                drawCenteredClamped(label, infoY, useCave ? 0x88DDFF : 0xCCCCCC, true);
+                infoY += 10;
+            }
+        }
+        else if (useCave)
+        {
+            drawCenteredClamped(minimapIsSpanish() ? "[Cueva]" : "[Cave]", infoY, 0x88DDFF, true);
+            infoY += 10;
+        }
+
         if (m_toastTimer[playerIndex] > 0 && !m_toastMessage[playerIndex].empty())
         {
-            int_t toastW = fr->getStringWidth(m_toastMessage[playerIndex]);
-            int_t toastX = posX + (mapSize - toastW) / 2;
-            int_t toastY = posY + mapSize + (isSplit ? 12 : 16);
-            drawColoredRect(toastX - 3, toastY - 2, toastX + toastW + 3, toastY + 10, 0xC0000000);
-            fr->drawStringWithShadow(m_toastMessage[playerIndex], toastX, toastY, 0x55FF55);
+            drawCenteredClamped(m_toastMessage[playerIndex], infoY + 1, 0x55FF55, true);
         }
     }
 
@@ -640,7 +1235,15 @@ void ReiMinimap::addWaypoint(const std::string &name, int_t x, int_t y, int_t z,
 {
     if (color < 0)
         color = getNextWaypointColor();
-    m_waypoints.push_back({ name, x, y, z, color, true });
+    std::string cleanName = name;
+    for (char &ch : cleanName)
+    {
+        if (ch == ':' || ch == '\n' || ch == '\r')
+            ch = ' ';
+    }
+    if (cleanName.empty())
+        cleanName = "Waypoint";
+    m_waypoints.push_back({ cleanName, x, y, z, color, true });
     saveWaypoints();
 }
 
@@ -653,6 +1256,41 @@ void ReiMinimap::toggleWaypoint(size_t index)
     }
 }
 
+void ReiMinimap::renameWaypoint(size_t index, const std::string &newName)
+{
+    if (index >= m_waypoints.size())
+        return;
+    std::string cleanName = newName;
+    for (char &ch : cleanName)
+    {
+        if (ch == ':' || ch == '\n' || ch == '\r')
+            ch = ' ';
+    }
+    if (!cleanName.empty())
+    {
+        m_waypoints[index].name = cleanName;
+        saveWaypoints();
+    }
+}
+
+void ReiMinimap::cycleWaypointColor(size_t index, int_t dir)
+{
+    if (index >= m_waypoints.size())
+        return;
+    size_t curIdx = 0;
+    for (size_t i = 0; i < NUM_PALETTE_COLORS; ++i)
+    {
+        if (WAYPOINT_PALETTE[i] == m_waypoints[index].color)
+        {
+            curIdx = i;
+            break;
+        }
+    }
+    const int_t next = (static_cast<int_t>(curIdx) + dir + static_cast<int_t>(NUM_PALETTE_COLORS)) % static_cast<int_t>(NUM_PALETTE_COLORS);
+    m_waypoints[index].color = WAYPOINT_PALETTE[next];
+    saveWaypoints();
+}
+
 void ReiMinimap::removeWaypoint(size_t index)
 {
     if (index < m_waypoints.size())
@@ -662,20 +1300,92 @@ void ReiMinimap::removeWaypoint(size_t index)
     }
 }
 
+void ReiMinimap::onPlayerDeath(EntityPlayer *player)
+{
+    if (!m_enabled || !m_settings.deathWaypoints || player == nullptr)
+        return;
+    const int_t px = static_cast<int_t>(std::floor(player->posX));
+    const int_t py = static_cast<int_t>(std::floor(player->posY));
+    const int_t pz = static_cast<int_t>(std::floor(player->posZ));
+    m_deathCounter++;
+    char nameBuf[48];
+    const bool isEs = minimapIsSpanish();
+    std::snprintf(nameBuf, sizeof(nameBuf), isEs ? "Muerte #%d" : "Death #%d", m_deathCounter);
+    addWaypoint(nameBuf, px, py, pz, 0xFF2222);
+    const int_t pIdx = (m_mc != nullptr && player == m_mc->thePlayer2) ? 1 : 0;
+    showToast(pIdx, isEs ? "Punto de muerte guardado" : "Death point saved", 80);
+}
+
 std::string ReiMinimap::getWaypointsFilePath() const
 {
     if (m_mc != nullptr && m_mc->theWorld != nullptr && m_mc->theWorld->getSaveHandler() != nullptr)
     {
         std::string saveDir = m_mc->theWorld->getSaveHandler()->getSaveDirectory();
         if (!saveDir.empty())
-        {
             return PlatformStorage::join(saveDir, "waypoints.txt");
-        }
     }
     File *dir = Minecraft::getMinecraftDir();
     if (dir != nullptr)
         return PlatformStorage::join(dir->toString(), "waypoints.txt");
     return "waypoints.txt";
+}
+
+std::string ReiMinimap::getSettingsFilePath() const
+{
+    File *dir = Minecraft::getMinecraftDir();
+    if (dir != nullptr)
+        return PlatformStorage::join(dir->toString(), "minimap.txt");
+    return "minimap.txt";
+}
+
+void ReiMinimap::saveSettings()
+{
+    std::string content;
+    content.reserve(256);
+    content += "# Rei & Xaero Minimap Settings\n";
+    content += "shape:" + std::to_string(static_cast<int>(m_settings.shape)) + "\n";
+    content += "zoom:" + std::to_string(m_settings.zoomIndex) + "\n";
+    content += "radar:" + std::string(m_settings.entityRadar ? "1" : "0") + "\n";
+    content += "cave:" + std::to_string(static_cast<int>(m_settings.caveMode)) + "\n";
+    content += "rotate:" + std::string(m_settings.rotateMap ? "1" : "0") + "\n";
+    content += "coords:" + std::string(m_settings.showCoords ? "1" : "0") + "\n";
+    content += "biome:" + std::string(m_settings.showBiome ? "1" : "0") + "\n";
+    content += "death:" + std::string(m_settings.deathWaypoints ? "1" : "0") + "\n";
+    PlatformStorage::writeFile(getSettingsFilePath(), content.data(), content.size());
+}
+
+void ReiMinimap::loadSettings()
+{
+    std::vector<unsigned char> bytes;
+    if (!PlatformStorage::readFile(getSettingsFilePath(), bytes) || bytes.empty())
+        return;
+
+    std::string content(bytes.begin(), bytes.end());
+    size_t start = 0;
+    while (start < content.size())
+    {
+        size_t end = content.find('\n', start);
+        std::string line = (end == std::string::npos) ? content.substr(start) : content.substr(start, end - start);
+        start = (end == std::string::npos) ? content.size() : end + 1;
+        while (!line.empty() && (line.back() == '\r' || line.back() == ' '))
+            line.pop_back();
+        if (line.empty() || line[0] == '#')
+            continue;
+        size_t sep = line.find(':');
+        if (sep == std::string::npos)
+            continue;
+        std::string key = line.substr(0, sep);
+        std::string val = line.substr(sep + 1);
+        int iv = std::atoi(val.c_str());
+        if (key == "shape") m_settings.shape = (iv == 1) ? MinimapShape::Round : MinimapShape::Square;
+        else if (key == "zoom") m_settings.zoomIndex = std::clamp<int_t>(iv, 0, 3);
+        else if (key == "radar") m_settings.entityRadar = (iv != 0);
+        else if (key == "cave") m_settings.caveMode = static_cast<MinimapCaveMode>(std::clamp(iv, 0, 2));
+        else if (key == "rotate") m_settings.rotateMap = (iv != 0);
+        else if (key == "coords") m_settings.showCoords = (iv != 0);
+        else if (key == "biome") m_settings.showBiome = (iv != 0);
+        else if (key == "death") m_settings.deathWaypoints = (iv != 0);
+    }
 }
 
 void ReiMinimap::loadWaypoints()
@@ -736,7 +1446,9 @@ void ReiMinimap::loadWaypoints()
         int_t x = std::atoi(line.substr(p1 + 1, p2 - p1 - 1).c_str());
         int_t y = std::atoi(line.substr(p2 + 1, p3 - p2 - 1).c_str());
         int_t z = std::atoi(line.substr(p3 + 1, p4 - p3 - 1).c_str());
-        int_t color = (p4 != std::string::npos && p5 != std::string::npos) ? std::atoi(line.substr(p4 + 1, p5 - p4 - 1).c_str()) : WAYPOINT_PALETTE[m_waypoints.size() % NUM_PALETTE_COLORS];
+        int_t color = (p4 != std::string::npos && p5 != std::string::npos)
+            ? std::atoi(line.substr(p4 + 1, p5 - p4 - 1).c_str())
+            : WAYPOINT_PALETTE[m_waypoints.size() % NUM_PALETTE_COLORS];
         bool en = (p5 != std::string::npos) ? (line.substr(p5 + 1) == "1" || line.substr(p5 + 1) == "true") : true;
 
         m_waypoints.push_back({ name, x, y, z, color, en });
@@ -746,10 +1458,11 @@ void ReiMinimap::loadWaypoints()
 void ReiMinimap::saveWaypoints()
 {
     std::string path = getWaypointsFilePath();
-    std::string content = "# Rei's Minimap Waypoints\n";
+    std::string content = "# Rei & Xaero Minimap Waypoints\n";
     for (const auto &wp : m_waypoints)
     {
-        content += wp.name + ":" + std::to_string(wp.x) + ":" + std::to_string(wp.y) + ":" + std::to_string(wp.z) + ":" + std::to_string(wp.color) + ":" + (wp.enabled ? "1" : "0") + "\n";
+        content += wp.name + ":" + std::to_string(wp.x) + ":" + std::to_string(wp.y) + ":" +
+                   std::to_string(wp.z) + ":" + std::to_string(wp.color) + ":" + (wp.enabled ? "1" : "0") + "\n";
     }
     PlatformStorage::writeFile(path, content.data(), content.size());
 }

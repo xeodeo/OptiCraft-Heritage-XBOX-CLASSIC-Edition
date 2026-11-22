@@ -22,6 +22,8 @@
 
 #if PLATFORM_PS2
 #include "ps2/input/Ps2PadState.h"
+#elif PLATFORM_XBOX
+#include "xbox/input/XboxPad.h"
 #endif
 
 bool TooManyItems::s_enabled = true;
@@ -33,9 +35,26 @@ bool TooManyItems::s_initialized = false;
 std::vector<ItemStack*> TooManyItems::s_savedStates[4];
 bool TooManyItems::s_stateSaved[4] = { false, false, false, false };
 
-static const int TMI_COLS = 6;
-static const int TMI_ROWS = 7;
-static const int TMI_ITEMS_PER_PAGE = TMI_COLS * TMI_ROWS; // 42
+static int getTmiCols(const GuiContainer *gui)
+{
+    if (gui != nullptr && gui->width <= 360)
+        return 4; // 480p (320x240 scaled): fits beside inventory without overlapping slots
+    return 6;     // 720p / PC
+}
+
+static int getTmiRows(const GuiContainer *gui)
+{
+    if (gui != nullptr && gui->height < 200)
+        return 5; // Split-screen compact height
+    return 7;
+}
+
+static int getTmiLeftWidth(const GuiContainer *gui)
+{
+    if (gui != nullptr && gui->width <= 360)
+        return 64;
+    return 74;
+}
 
 void TooManyItems::init()
 {
@@ -148,7 +167,7 @@ void TooManyItems::populateItems()
         }
     }
 
-    s_totalPages = (static_cast<int>(s_items.size()) + TMI_ITEMS_PER_PAGE - 1) / TMI_ITEMS_PER_PAGE;
+    s_totalPages = (static_cast<int>(s_items.size()) + 41) / 42;
     if (s_totalPages < 1) s_totalPages = 1;
 }
 
@@ -237,7 +256,14 @@ void TooManyItems::loadInventory(EntityPlayer *player, int slot)
 
 void TooManyItems::updateInput(GuiContainer *gui)
 {
-    (void)gui;
+    const int cols = getTmiCols(gui);
+    const int rows = getTmiRows(gui);
+    const int perPage = cols * rows;
+    s_totalPages = (static_cast<int>(s_items.size()) + perPage - 1) / perPage;
+    if (s_totalPages < 1) s_totalPages = 1;
+    if (s_currentPage >= s_totalPages) s_currentPage = s_totalPages - 1;
+    if (s_currentPage < 0) s_currentPage = 0;
+
 #if PLATFORM_PS2
     const Ps2PadSnapshot &pad = ps2PadGetSnapshot(0);
     if (pad.pressed & PS2_PAD_R3)
@@ -255,6 +281,30 @@ void TooManyItems::updateInput(GuiContainer *gui)
                 gui->mc->sndManager->playSoundFX("random.click", 1.0f, 1.0f);
         }
         else if (pad.pressed & PS2_PAD_R1)
+        {
+            s_currentPage = (s_currentPage + 1) % s_totalPages;
+            if (gui && gui->mc && gui->mc->sndManager)
+                gui->mc->sndManager->playSoundFX("random.click", 1.0f, 1.0f);
+        }
+    }
+#elif PLATFORM_XBOX
+    const int padIdx = (gui && gui->mc && gui->mc->inPlayer2Context()) ? 1 : 0;
+    const XboxPadSnapshot &pad = XboxPad::playerSnapshot(padIdx);
+    if (pad.pressed & XBOX_PAD_RIGHT_THUMB)
+    {
+        toggle();
+        if (gui && gui->mc && gui->mc->sndManager)
+            gui->mc->sndManager->playSoundFX("random.click", 1.0f, 1.0f);
+    }
+    if (s_enabled)
+    {
+        if (pad.pressed & XBOX_PAD_WHITE)
+        {
+            s_currentPage = (s_currentPage - 1 + s_totalPages) % s_totalPages;
+            if (gui && gui->mc && gui->mc->sndManager)
+                gui->mc->sndManager->playSoundFX("random.click", 1.0f, 1.0f);
+        }
+        else if (pad.pressed & XBOX_PAD_BLACK)
         {
             s_currentPage = (s_currentPage + 1) % s_totalPages;
             if (gui && gui->mc && gui->mc->sndManager)
@@ -296,7 +346,7 @@ void TooManyItems::draw(GuiContainer *gui, int_t mouseX, int_t mouseY)
     // =========================================================================
     // 1. PANEL IZQUIERDO: HERRAMIENTAS Y CHEATS
     // =========================================================================
-    int leftW = 74;
+    int leftW = getTmiLeftWidth(gui);
     int leftH = 158;
     int leftX = gui->guiLeft - leftW - 4;
     if (leftX < 2) leftX = 2;
@@ -356,20 +406,24 @@ void TooManyItems::draw(GuiContainer *gui, int_t mouseX, int_t mouseY)
     gui->drawCenteredString(gui->fontRenderer, "States", leftX + leftW / 2, btnY, 0xcccccc);
     btnY += 10;
 
-    drawTmiButton(leftX + 4, btnY, halfW, btnH, "Save 1", 0x80384838, 0xa0486848);
-    drawTmiButton(leftX + 6 + halfW, btnY, halfW, btnH, s_stateSaved[0] ? "Load 1" : "-", 
+    const bool compact = (leftW < 70);
+    drawTmiButton(leftX + 4, btnY, halfW, btnH, compact ? "Sv 1" : "Save 1", 0x80384838, 0xa0486848);
+    drawTmiButton(leftX + 6 + halfW, btnY, halfW, btnH, s_stateSaved[0] ? (compact ? "Ld 1" : "Load 1") : "-",
                   s_stateSaved[0] ? 0x80383858 : 0x40202020, 0xa0484878);
     btnY += btnH + btnSpacing;
 
-    drawTmiButton(leftX + 4, btnY, halfW, btnH, "Save 2", 0x80384838, 0xa0486848);
-    drawTmiButton(leftX + 6 + halfW, btnY, halfW, btnH, s_stateSaved[1] ? "Load 2" : "-", 
+    drawTmiButton(leftX + 4, btnY, halfW, btnH, compact ? "Sv 2" : "Save 2", 0x80384838, 0xa0486848);
+    drawTmiButton(leftX + 6 + halfW, btnY, halfW, btnH, s_stateSaved[1] ? (compact ? "Ld 2" : "Load 2") : "-",
                   s_stateSaved[1] ? 0x80383858 : 0x40202020, 0xa0484878);
 
     // =========================================================================
     // 2. PANEL DERECHO: GRILLA DE ITEMS PAGINADA
     // =========================================================================
-    int panelW = TMI_COLS * 18 + 4; // 112
-    int panelH = TMI_ROWS * 18 + 22; // 148
+    const int tmiCols = getTmiCols(gui);
+    const int tmiRows = getTmiRows(gui);
+    const int tmiPerPage = tmiCols * tmiRows;
+    int panelW = tmiCols * 18 + 4;
+    int panelH = tmiRows * 18 + 22;
     int panelX = gui->guiLeft + gui->xSize + 4;
     if (panelX + panelW > gui->width - 2)
         panelX = gui->width - panelW - 2;
@@ -392,13 +446,13 @@ void TooManyItems::draw(GuiContainer *gui, int_t mouseX, int_t mouseY)
     int gridStartY = panelY + 18;
     ItemStack *hoveredStack = nullptr;
 
-    for (int r = 0; r < TMI_ROWS; ++r)
+    for (int r = 0; r < tmiRows; ++r)
     {
-        for (int c = 0; c < TMI_COLS; ++c)
+        for (int c = 0; c < tmiCols; ++c)
         {
             int slotX = gridStartX + c * 18;
             int slotY = gridStartY + r * 18;
-            int idx = s_currentPage * TMI_ITEMS_PER_PAGE + (r * TMI_COLS + c);
+            int idx = s_currentPage * tmiPerPage + (r * tmiCols + c);
 
             bool isSlotHovered = (mouseX >= slotX && mouseX < slotX + 18 && 
                                   mouseY >= slotY && mouseY < slotY + 18);
@@ -475,7 +529,7 @@ bool TooManyItems::mouseClicked(GuiContainer *gui, int_t x, int_t y, int_t butto
     // =========================================================================
     // Click en Panel Izquierdo (Cheats)
     // =========================================================================
-    int leftW = 74;
+    int leftW = getTmiLeftWidth(gui);
     int leftH = 158;
     int leftX = gui->guiLeft - leftW - 4;
     if (leftX < 2) leftX = 2;
@@ -589,8 +643,11 @@ bool TooManyItems::mouseClicked(GuiContainer *gui, int_t x, int_t y, int_t butto
     // =========================================================================
     // Click en Panel Derecho (Grilla de Ítems)
     // =========================================================================
-    int panelW = TMI_COLS * 18 + 4;
-    int panelH = TMI_ROWS * 18 + 22;
+    const int tmiCols = getTmiCols(gui);
+    const int tmiRows = getTmiRows(gui);
+    const int tmiPerPage = tmiCols * tmiRows;
+    int panelW = tmiCols * 18 + 4;
+    int panelH = tmiRows * 18 + 22;
     int panelX = gui->guiLeft + gui->xSize + 4;
     if (panelX + panelW > gui->width - 2)
         panelX = gui->width - panelW - 2;
@@ -616,16 +673,16 @@ bool TooManyItems::mouseClicked(GuiContainer *gui, int_t x, int_t y, int_t butto
         int gridStartX = panelX + 2;
         int gridStartY = panelY + 18;
 
-        for (int r = 0; r < TMI_ROWS; ++r)
+        for (int r = 0; r < tmiRows; ++r)
         {
-            for (int c = 0; c < TMI_COLS; ++c)
+            for (int c = 0; c < tmiCols; ++c)
             {
                 int slotX = gridStartX + c * 18;
                 int slotY = gridStartY + r * 18;
 
                 if (x >= slotX && x < slotX + 18 && y >= slotY && y < slotY + 18)
                 {
-                    int idx = s_currentPage * TMI_ITEMS_PER_PAGE + (r * TMI_COLS + c);
+                    int idx = s_currentPage * tmiPerPage + (r * tmiCols + c);
                     if (idx < static_cast<int>(s_items.size()) && s_items[idx] != nullptr)
                     {
                         ItemStack *src = s_items[idx];

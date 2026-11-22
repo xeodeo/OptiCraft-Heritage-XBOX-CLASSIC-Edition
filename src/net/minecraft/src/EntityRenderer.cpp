@@ -36,6 +36,7 @@
 #include "Material.h"
 #include "EntityPlayer.h"
 #include "Block.h"
+#include "XRayMode.h"
 #include "BlockLeaves.h"
 #include "EntityPlayerSP.h"
 #include "MouseHelper.h"
@@ -1965,6 +1966,8 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
             renderglobal->drawBlockBreaking(entityplayer, mc->objectMouseOver, 0, 
                                            entityplayer->inventory->getCurrentItem(), partialTicks);
 #if !PLATFORM_SKIP_BLOCK_SELECTION_BOX
+            if (!XRayMode::active() || mc->objectMouseOver->typeOfHit != EnumMovingObjectType::TILE ||
+                (mc->theWorld != nullptr && XRayMode::isVisibleBlock(mc->theWorld->getBlockId(mc->objectMouseOver->blockX, mc->objectMouseOver->blockY, mc->objectMouseOver->blockZ))))
             renderglobal->drawSelectionBox(entityplayer, mc->objectMouseOver, 0,
                                           entityplayer->inventory->getCurrentItem(), partialTicks);
 #endif
@@ -2136,6 +2139,8 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
             renderglobal->drawBlockBreaking(entityplayer1, mc->objectMouseOver, 0,
                                            entityplayer1->inventory->getCurrentItem(), partialTicks);
 #if !PLATFORM_SKIP_BLOCK_SELECTION_BOX
+            if (!XRayMode::active() || mc->objectMouseOver->typeOfHit != EnumMovingObjectType::TILE ||
+                (mc->theWorld != nullptr && XRayMode::isVisibleBlock(mc->theWorld->getBlockId(mc->objectMouseOver->blockX, mc->objectMouseOver->blockY, mc->objectMouseOver->blockZ))))
             renderglobal->drawSelectionBox(entityplayer1, mc->objectMouseOver, 0,
                                           entityplayer1->inventory->getCurrentItem(), partialTicks);
 #endif

@@ -1,6 +1,7 @@
 #include "BlockFire.h"
 
 #include "BlockPortal.h"
+#include "mods/herobrine/HerobrineMod.h"
 #include "IBlockAccess.h"
 #include "Material.h"
 #include "World.h"
@@ -281,6 +282,8 @@ void BlockFire::onBlockAdded(World *world, int_t i, int_t j, int_t k)
 	{
 		return;
 	}
+
+	HerobrineMod::onFirePlaced(world, i, j, k);
 
 	if (!world->isBlockNormalCube(i, j - 1, k) && !hasFlammableNeighbor(world, i, j, k))
 	{

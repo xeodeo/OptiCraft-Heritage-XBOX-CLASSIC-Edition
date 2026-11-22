@@ -5,9 +5,7 @@
 
 #include "GuiMultiplayer.h"
 #include "ServerNBTStorage.h"
-#ifdef PS2_PLATFORM
 #include "java/System.h"
-#endif
 
 void ThreadPollServers::start(const std::shared_ptr<ServerNBTStorage> &server)
 {
@@ -51,8 +49,12 @@ void ThreadPollServers::run(std::shared_ptr<ServerNBTStorage> server)
             server->pollRetryCount = 0;
         }
 #else
-        server->lag = latency;
+        if (server->lag != -1)
+            server->lag = latency;
 #endif
+        server->activity.push_back({ System::currentTimeMillis(), server->lag, server->playerCount });
+        if (server->activity.size() > ServerNBTStorage::kMaxActivityEntries)
+            server->activity.erase(server->activity.begin());
     }
     catch (...)
     {
@@ -60,6 +62,9 @@ void ThreadPollServers::run(std::shared_ptr<ServerNBTStorage> server)
         server->lag = -1;
         server->motd = "\xC2\xA7" "4Can't reach server";
         server->playerCount.clear();
+        server->activity.push_back({ System::currentTimeMillis(), -1, "" });
+        if (server->activity.size() > ServerNBTStorage::kMaxActivityEntries)
+            server->activity.erase(server->activity.begin());
 #ifdef PS2_PLATFORM
         if (server->pollRetryCount < 3)
         {

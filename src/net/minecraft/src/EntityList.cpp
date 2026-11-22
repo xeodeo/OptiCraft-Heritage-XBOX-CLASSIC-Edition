@@ -48,6 +48,8 @@
 #include "EntityTNTPrimed.h"
 #include "EntityWolf.h"
 #include "EntityZombie.h"
+#include "mods/herobrine/EntityHerobrine.h"
+#include "mods/chococraft/EntityChocobo.h"
 #include "NBTTagCompound.h"
 #include "World.h"
 
@@ -214,6 +216,10 @@ static struct EntityListInit
         EntityList::addMapping<EntityFallingSand>("FallingSand", 21);
         EntityList::addMapping<EntityMinecart>("Minecart", 40);
         EntityList::addMapping<EntityBoat>("Boat", 41);
+
+        // Built-in mod entities (Herobrine Classic & ChocoCraft)
+        EntityList::addMapping<EntityHerobrine>("Herobrine", 105);
+        EntityList::addMapping<EntityChocobo>("Chocobo", 106);
 
         // Register EntityLiving subclasses with SpawnerAnimals so performSpawning can instantiate them.
         // Java used reflection (Class.getConstructor().newInstance()); here we register lambdas.
