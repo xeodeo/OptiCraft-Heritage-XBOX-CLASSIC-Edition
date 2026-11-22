@@ -33,3 +33,10 @@ Capturas de cada pantalla (480/720p, Java y Legacy), superplano de 3 preajustes 
 lateral con 2 objetivos y equipos, 5 tipos de muerte con su mensaje, flecha en llamas. 60 fps y `freeKB`
 antes/después; `nan`/`[X87]` = 0. Capturas en `buzon-xbox\105-capturas\`. Informe `buzon-xbox\105-INFORME-agy.md`;
 la señal de fin es la palabra CIENTOCINCO-LISTO seguida del commit.
+
+## TRASPASO (Claude, 22-11 16:00)
+agy-1 se quedó sin cuota (vuelve ~19:05) a mitad del encargo: **54 ficheros SIN COMMIT en `wt-152-rend`** sobre
+`7c3909d` (superplano: ChunkProviderFlat/GuiCreateWorld/presets, combate: DamageSource/Explosion/TNT/creeper/flechas,
+marcador: GuiIngame, comandos…) + sonda temporal `XboxProbe105.cpp` que hay que quitar antes del commit; capturas
+01–10 del superplano ya hechas en `105-capturas\`. NO hacer reset: al volver la cuota, seguir desde ese árbol,
+terminar, quitar la sonda, commit e informe.

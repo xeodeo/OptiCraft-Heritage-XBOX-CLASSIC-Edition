@@ -31,3 +31,7 @@ de color § en carteles/chat/nombres.
 Lista por fila de lo hecho / ya estaba / no aplica. Capturas en `buzon-xbox\108-capturas\`. 60 fps y `freeKB`;
 `nan`/`[X87]` = 0. Informe `buzon-xbox\108-INFORME-agy.md`; la señal de fin es la palabra CIENTOOCHO-LISTO seguida
 del commit.
+
+## TRASPASO (Claude, 22-11 15:57)
+agy-2 se quedó sin cuota (vuelve ~19:07) leyendo las clases Java (BlockLog, BlockSnow, ItemSnow…); no escribió nada:
+`wt-152-mods` limpio en `ac018fe` (rama `port152-blq`). Al volver: empezar el encargo desde el principio.

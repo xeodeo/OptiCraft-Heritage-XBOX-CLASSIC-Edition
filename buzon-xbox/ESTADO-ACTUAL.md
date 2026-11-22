@@ -220,3 +220,7 @@ Mods/skins/texturas: encargos 101, 103 y conversor `texturas\`.
 - En marcha: agy-1 encargo 105 (superplano/marcador/combate, `wt-152-rend`), agy-2 encargo 108
   (bloques/mobs/inventario/pantalla, `wt-152-mods` rama `port152-blq`), subagente de Claude: skins 3D como la 1.8
   (`wt-152-skin`/`wt-125-skin`, informe 107). Cuando acaben: juntar en `port152-int`/`opti30-erluza`.
+
+## 22-11 16:10 (hibernado)
+Ver `TRASPASO-hibernado.md`: 1.5.2 buena = `port152-int` `ad160f2`, 1.2.5 `opti30-erluza` `83278cd` (con skins 3D 1.8,
+informe 107), sin subir. agy-1 105 a medias (sin commit), agy-2 108 sin empezar.
