@@ -19,6 +19,7 @@
 #ifdef XBOX_PLATFORM
 
 #include "client/Minecraft.h"
+#include "xbox/input/XboxInput.h"
 #include "net/minecraft/src/EntityPlayerSP.h"
 #include "net/minecraft/src/World.h"
 #include "net/minecraft/src/WorldInfo.h"
@@ -178,7 +179,14 @@ void leavePlayer2(Minecraft *mc)
     if (mc->thePlayer2 != nullptr)
     {
         if (mc->theWorld != nullptr)
+        {
+            for (Entity *ent : mc->theWorld->loadedEntityList)
+            {
+                if (auto *living = dynamic_cast<EntityLiving *>(ent))
+                    living->clearEntityReferences(mc->thePlayer2);
+            }
             mc->theWorld->detachEntityForWorldChange(mc->thePlayer2);
+        }
         delete mc->thePlayer2;
         mc->thePlayer2 = nullptr;
     }
@@ -220,10 +228,24 @@ void tick(Minecraft *mc)
         return;
     }
 
-    // Controller unplugged, Back while playing, or "Leave Game": player 2 leaves.
-    if (!pad2.connected || s_leaveRequested ||
-        ((pressed & XBOX_PAD_BACK) && mc->player2Screen() == nullptr))
+    // Back + D-pad for P2 minimap/waypoints; Back alone on release still leaves.
+    static bool s_p2BackCombo = false;
+    const bool backHeld = (held & XBOX_PAD_BACK) != 0;
+    if (pressed & XBOX_PAD_BACK)
+        s_p2BackCombo = false;
+    if (backHeld && mc->player2Screen() == nullptr)
     {
+        if (pressed & XBOX_PAD_DPAD_UP)    { XboxInput::setWaypointRequest(1, 1); s_p2BackCombo = true; }
+        else if (pressed & XBOX_PAD_DPAD_DOWN)  { XboxInput::setWaypointRequest(1, 2); s_p2BackCombo = true; }
+        else if (pressed & XBOX_PAD_DPAD_LEFT)  { XboxInput::setWaypointRequest(1, 3); s_p2BackCombo = true; }
+        else if (pressed & XBOX_PAD_DPAD_RIGHT) { XboxInput::setWaypointRequest(1, 4); s_p2BackCombo = true; }
+    }
+
+    // Controller unplugged, Back released without combo while playing, or "Leave Game": player 2 leaves.
+    if (!pad2.connected || s_leaveRequested ||
+        ((released & XBOX_PAD_BACK) && !s_p2BackCombo && mc->player2Screen() == nullptr))
+    {
+        s_p2BackCombo = false;
         leavePlayer2(mc);
         chat(mc, "\xc2\xa7" "e[J2] Jugador 2 salio.", "\xc2\xa7" "e[P2] Player 2 left.");
         return;

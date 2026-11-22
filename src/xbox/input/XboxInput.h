@@ -13,9 +13,13 @@ void poll(bool inMenu, bool specializedMenuNavigation);
 void setMenuCursor(int x, int y);
 // Stick deadzone applied to every analog read (0.05 .. 0.35).
 float applyDeadzone(float value);
-// Player 1's Back + D-pad combo since the last call: 0 none, 1 save a
-// waypoint here (Up), 2 open the waypoint manager (Down).
-int consumeWaypointRequest();
+// Back + D-pad combo per player since the last call:
+// 0 none, 1 save waypoint (Up), 2 waypoint manager (Down),
+// 3 cycle zoom (Left), 4 minimap options menu (Right).
+int consumeWaypointRequest(int playerIndex = 0);
+void setWaypointRequest(int playerIndex, int request);
+// Back + Y combo for Village Locator mod.
+bool consumeVillageLocatorRequest();
 }
 
 #endif // XBOX_PLATFORM

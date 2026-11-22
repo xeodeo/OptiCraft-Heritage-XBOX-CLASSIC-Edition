@@ -135,6 +135,10 @@
 #include "EntityExpBottle.h"
 #include "EntitySmallFireball.h"
 #include "EntityFireworkRocket.h"
+#include "mods/herobrine/EntityHerobrine.h"
+#include "mods/herobrine/RenderHerobrine.h"
+#include "mods/chococraft/EntityChocobo.h"
+#include "mods/chococraft/RenderChocobo.h"
 #include "OpenGlHelper.h"
 #include <unordered_set>
 
@@ -237,6 +241,8 @@ void RenderManager::registerRenderers() {
     entityRenderMap[std::type_index(typeid(EntityFish))] = new RenderFish();
     entityRenderMap[std::type_index(typeid(EntityLightningBolt))] = new RenderLightningBolt();
     entityRenderMap[std::type_index(typeid(EntityEnderCrystal))] = new RenderEnderCrystal();
+    entityRenderMap[std::type_index(typeid(EntityHerobrine))] = new RenderHerobrine();
+    entityRenderMap[std::type_index(typeid(EntityChocobo))] = new RenderChocobo();
 
     for (auto& pair : entityRenderMap) {
         pair.second->setRenderManager(this);

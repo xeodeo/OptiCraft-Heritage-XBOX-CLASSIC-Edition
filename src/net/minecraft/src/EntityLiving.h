@@ -191,6 +191,18 @@ public:
 	void faceEntity(Entity *entity, float f, float f1);
 	bool hasCurrentTarget();
 	Entity *getCurrentTarget();
+	void clearEntityReferences(Entity *deadEntity)
+	{
+		if (currentTarget == deadEntity)
+			currentTarget = nullptr;
+#if PLATFORM_CACHE_NEAREST_PLAYER
+		if (static_cast<const void *>(cachedNearestPlayer) == static_cast<const void *>(deadEntity))
+		{
+			cachedNearestPlayer = nullptr;
+			cachedNearestPlayerTick = -1;
+		}
+#endif
+	}
 
 private:
 	float updateRotation(float f, float f1, float f2);

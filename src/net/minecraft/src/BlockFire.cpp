@@ -10,6 +10,7 @@
 #include "BlockLeaves.h"
 #include "BlockTallGrass.h"
 #include "BlockVine.h"
+#include "mods/herobrine/HerobrineMod.h"
 
 BlockFire::BlockFire(int_t i, int_t j) :
 	Block(i, j, Material::fire)
@@ -292,6 +293,8 @@ void BlockFire::onBlockAdded(World *world, int_t i, int_t j, int_t k)
 	{
 		return;
 	}
+
+	HerobrineMod::onFirePlaced(world, i, j, k);
 
 	if (!world->isBlockNormalCube(i, j - 1, k) && !hasFlammableNeighbor(world, i, j, k))
 	{

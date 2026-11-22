@@ -31,6 +31,7 @@ public:
     void initGuiControls();
     void joinServer(int_t index);
     void joinServer(const std::shared_ptr<ServerNBTStorage> &server);
+    void openServerInfo(int_t index);
 
     const std::vector<std::shared_ptr<ServerNBTStorage>> &getServerList() const;
     int_t getSelectedServer() const;

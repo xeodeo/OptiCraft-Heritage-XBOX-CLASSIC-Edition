@@ -6,6 +6,7 @@
 class Minecraft;
 class GuiContainer;
 class GuiIngame;
+class GuiScreen;
 
 // Base interface for all OptiCraft mods
 class IMod
@@ -25,6 +26,10 @@ public:
     // Toggle state
     virtual bool isEnabled() const = 0;
     virtual void setEnabled(bool enabled) = 0;
+
+    // Optional configuration screen opened from GuiMods
+    virtual bool hasConfigScreen() const { return false; }
+    virtual GuiScreen *createConfigScreen(GuiScreen *parent) { (void)parent; return nullptr; }
 
     // Package path & removability
     virtual std::string getPackPath() const { return packPath; }

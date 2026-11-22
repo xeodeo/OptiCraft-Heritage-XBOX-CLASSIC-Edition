@@ -107,6 +107,7 @@
 #include "WorldHeight.h"
 
 #include "WorldRenderer.h"
+#include "XRayMode.h"
 #if PLATFORM_PS2
 #include "java/System.h"
 #endif
@@ -776,7 +777,7 @@ void RenderGlobal::renderEntities(Vec3D *vec3d, ICamera *icamera, float f)
 			const int_t rendererIndex = ps2RendererIndexAtSection(sectionX, sectionY, sectionZ);
 			WorldRenderer *terrainRenderer = rendererIndex >= 0 ? worldRenderers[rendererIndex] : nullptr;
 			if (terrainRenderer == nullptr || !terrainRenderer->hasPublishedTerrain() ||
-				(PLATFORM_CPU_SECTION_OCCLUSION && !terrainRenderer->ps2CpuVisible))
+				(PLATFORM_CPU_SECTION_OCCLUSION && !terrainRenderer->ps2CpuVisible && !XRayMode::active()))
 			{
 				reportEntity(entity1, "terrain");
 				continue;
@@ -1617,10 +1618,11 @@ int_t RenderGlobal::renderSortedRenderers(int_t i, int_t j, int_t k, double d)
 	for (int_t i1 = i; i1 < j; i1++)
 	{
 		WorldRenderer *sortedRenderer = sortedWorldRenderers[i1];
+		const bool xrayVisible = XRayMode::active();
 #if PLATFORM_SECTION_VISIBILITY_CULL
-		const bool cpuOccluded = !sortedRenderer->pcLegacyCpuVisible;
+		const bool cpuOccluded = !sortedRenderer->pcLegacyCpuVisible && !xrayVisible;
 #elif PLATFORM_PS2
-		const bool cpuOccluded = PLATFORM_CPU_SECTION_OCCLUSION && !sortedRenderer->ps2CpuVisible;
+		const bool cpuOccluded = PLATFORM_CPU_SECTION_OCCLUSION && !sortedRenderer->ps2CpuVisible && !xrayVisible;
 #else
 		const bool cpuOccluded = false;
 #endif

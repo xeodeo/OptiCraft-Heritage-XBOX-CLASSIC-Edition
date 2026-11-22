@@ -6,6 +6,7 @@
 
 #include "net/minecraft/src/BiomeGenBase.h"
 #include "net/minecraft/src/Block.h"
+#include "net/minecraft/src/XRayMode.h"
 #include "net/minecraft/src/ChunkCache.h"
 #include "net/minecraft/src/ExtendedBlockStorage.h"
 #include "net/minecraft/src/Material.h"
@@ -105,14 +106,22 @@ void PcLegacySectionCache::preloadBlockIds()
 
 void PcLegacySectionCache::precomputeSectionData()
 {
+    const bool xrayActive = XRayMode::active();
     std::array<std::uint8_t, Block::BLOCK_REGISTRY_SIZE> opaqueById{};
     for (int_t id = 1; id < Block::BLOCK_REGISTRY_SIZE; ++id)
     {
         Block *block = Block::blocksList[id];
         if (block == nullptr)
             continue;
-        opaqueById[static_cast<std::size_t>(id)] =
-            (Block::staticOpaqueCubeLookupSafe[id] ? Block::opaqueCubeLookup[id] : block->isOpaqueCube()) ? 1u : 0u;
+        if (xrayActive)
+        {
+            opaqueById[static_cast<std::size_t>(id)] = XRayMode::isVisibleBlock(id) ? 1u : 0u;
+        }
+        else
+        {
+            opaqueById[static_cast<std::size_t>(id)] =
+                (Block::staticOpaqueCubeLookupSafe[id] ? Block::opaqueCubeLookup[id] : block->isOpaqueCube()) ? 1u : 0u;
+        }
     }
 
     std::array<std::uint8_t, kSectionBlockCount> opaqueCells{};
@@ -129,6 +138,8 @@ void PcLegacySectionCache::precomputeSectionData()
             {
                 const int_t blockId = static_cast<int_t>(blockIds[static_cast<std::size_t>(index)]);
                 if (blockId <= 0 || blockId >= Block::BLOCK_REGISTRY_SIZE || Block::blocksList[blockId] == nullptr)
+                    continue;
+                if (xrayActive && !XRayMode::isVisibleBlock(blockId))
                     continue;
 
                 const int_t localBlockIndex = (localY << 8) | (localZ << 4) | localX;
@@ -238,6 +249,8 @@ TileEntity *PcLegacySectionCache::getBlockTileEntity(int_t x, int_t y, int_t z)
 
 int_t PcLegacySectionCache::getLightBrightnessForSkyBlocks(int_t x, int_t y, int_t z, int_t minimumBlockLight)
 {
+    if (XRayMode::active())
+        return (15 << 20) | (15 << 4);
     const int index = cellIndex(x, y, z);
     if (index < 0 || source == nullptr)
         return source != nullptr ? source->getLightBrightnessForSkyBlocks(x, y, z, minimumBlockLight) : 0;
@@ -276,6 +289,8 @@ int_t PcLegacySectionCache::getCachedLightValue(int_t x, int_t y, int_t z, int i
 
 float PcLegacySectionCache::getBrightness(int_t x, int_t y, int_t z, int_t minimumLight)
 {
+    if (XRayMode::active())
+        return 1.0f;
     if (world == nullptr || world->worldProvider == nullptr)
         return source != nullptr ? source->getBrightness(x, y, z, minimumLight) : 0.0f;
 
@@ -372,6 +387,8 @@ std::uint8_t PcLegacySectionCache::getExposedFaceMask(int_t x, int_t y, int_t z)
 
 int_t PcLegacySectionCache::getFacePackedBrightness(int_t x, int_t y, int_t z, int_t side, int_t minimumBlockLight)
 {
+    if (XRayMode::active())
+        return (15 << 20) | (15 << 4);
     switch (side)
     {
     case 0: --y; break;

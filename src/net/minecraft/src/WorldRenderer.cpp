@@ -1,4 +1,5 @@
 #include "WorldRenderer.h"
+#include "XRayMode.h"
 #include "java/Arithmetic.h"
 
 #include "platform/RenderAPI.h"
@@ -427,6 +428,8 @@ void WorldRenderer::updateRenderer()
 				{
 					int_t id = chunkcache.getBlockId(x, y, z);
 					if (id <= 0)
+						continue;
+					if (XRayMode::active() && !XRayMode::isVisibleBlock(id))
 						continue;
 
 					if (!listOpen)

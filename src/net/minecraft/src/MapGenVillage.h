@@ -5,12 +5,15 @@
 #include "MapGenStructure.h"
 
 class BiomeGenBase;
+class ChunkPosition;
 
 // net.minecraft.src.MapGenVillage
 class MapGenVillage : public MapGenStructure
 {
 public:
 	explicit MapGenVillage(int_t terrainType);
+
+	ChunkPosition *findNearestVillage(World *world, int_t x, int_t y, int_t z, int_t maxRegionRadius);
 
 	static std::vector<BiomeGenBase *> villageSpawnBiomes;
 

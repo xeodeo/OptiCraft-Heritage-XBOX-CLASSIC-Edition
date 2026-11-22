@@ -23,7 +23,7 @@
 
 StrongholdLocatorMod::StrongholdLocatorMod()
     : m_mc(nullptr)
-    , m_enabled(true)
+    , m_enabled(false)
     , m_comboWasPressed(false)
 {
 }

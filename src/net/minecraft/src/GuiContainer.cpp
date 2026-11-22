@@ -388,6 +388,12 @@ void GuiContainer::mouseClicked(int_t x, int_t y, int_t button)
 #else
 	const bool pointerActive = platformMenuPointerActive();
 #endif
+	// Allow mod container panels outside the vanilla inventory bounds (e.g. TooManyItems)
+	// to receive controller A/X clicks even when Legacy slot navigation is active.
+	if ((x < guiLeft || x >= guiLeft + xSize || y < guiTop || y >= guiTop + ySize) &&
+	    ModManager::getInstance().onContainerMouseClicked(this, x, y, button))
+		return;
+
 	// Console confirm buttons are exposed both as controller input and mouse
 	// clicks. When D-pad selection owns the inventory (and the user is not pointing
 	// with a hardware pointer like the Wii remote IR sensor), ignore the synthesized

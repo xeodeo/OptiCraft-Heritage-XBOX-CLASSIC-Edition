@@ -1,4 +1,5 @@
 #include "RenderBlocks.h"
+#include "XRayMode.h"
 #include "BlockWall.h"
 #include "BlockFlowerPot.h"
 #include "BlockCocoa.h"
@@ -343,6 +344,8 @@ bool RenderBlocks::shouldRenderFace(Block *block, int_t i, int_t j, int_t k, int
 		return false;
 	}
 #endif
+	if (block != nullptr && XRayMode::active() && XRayMode::isVisibleBlock(block->blockID))
+		return !XRayMode::isVisibleBlock(accessGetBlockId(i, j, k));
 	if (!Block::usesDefaultFaceCullingLookup[block->blockID])
 		return block->shouldSideBeRendered(blockAccess, i, j, k, side);
 
@@ -720,6 +723,8 @@ void RenderBlocks::renderBlockAllFaces(Block *block, int_t i, int_t j, int_t k)
 
 bool RenderBlocks::renderBlockByRenderType(Block *block, int_t i, int_t j, int_t k)
 {
+	if (XRayMode::active() && !XRayMode::isVisibleBlock(block->blockID))
+		return false;
 #if PLATFORM_INCREMENTAL_TERRAIN_BUILD
 	const PcLegacyBlockRenderInfo &legacyInfo = pcLegacyGetBlockRenderInfo(block->blockID);
 	int_t l = legacyInfo.renderType;
