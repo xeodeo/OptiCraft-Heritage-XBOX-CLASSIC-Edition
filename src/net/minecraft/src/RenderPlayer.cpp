@@ -2,6 +2,9 @@
 #include "EntityPlayer.h"
 #include "EntityPlayerSP.h"
 #include "ModelBiped.h"
+#include "ModelPlayer.h"
+#include "RenderEngine.h"
+#include "skin/SkinManager.h"
 #include "ItemStack.h"
 #include "Item.h"
 #include "ItemArmor.h"
@@ -24,6 +27,9 @@
 
 RenderPlayer::RenderPlayer() : RenderLiving(new ModelBiped(0.0f), 0.5f) {
     modelBipedMain = (ModelBiped*)mainModel;
+    modelClassic = modelBipedMain;
+    modelPlayerWide = new ModelPlayer(0.0f, false);
+    modelPlayerSlim = new ModelPlayer(0.0f, true);
     modelArmorChestplate = new ModelBiped(1.0f);
     modelArmor = new ModelBiped(0.5f);
     field_208_f = 0;
@@ -31,6 +37,13 @@ RenderPlayer::RenderPlayer() : RenderLiving(new ModelBiped(0.0f), 0.5f) {
 
 RenderPlayer::~RenderPlayer()
 {
+    // RenderLiving deletes mainModel: make sure it is the classic one.
+    mainModel = modelClassic;
+    modelBipedMain = modelClassic;
+    delete modelPlayerWide;
+    delete modelPlayerSlim;
+    modelPlayerWide = nullptr;
+    modelPlayerSlim = nullptr;
     delete modelArmorChestplate;
     delete modelArmor;
     modelArmorChestplate = nullptr;
@@ -101,7 +114,26 @@ void RenderPlayer::renderArmorOverlay(EntityLiving* entityLiving, int i, float)
     renderColor3f(1.0f, 1.0f, 1.0f);
 }
 
+ModelBiped* RenderPlayer::selectSkinModel(EntityPlayer* entityPlayer)
+{
+    if (entityPlayer == nullptr || renderManager == nullptr || renderManager->renderEngine == nullptr)
+        return modelClassic;
+    RenderEngine* re = renderManager->renderEngine;
+    const char* tex = entityPlayer->getEntityTexture();
+    skinPathScratch.assign(tex != nullptr ? tex : ""); // reuses its buffer, no per-frame allocation
+    // The same texture RenderLiving binds for this player.
+    const int_t texId = re->getTextureForDownloadableImage(entityPlayer->skinUrl, skinPathScratch);
+    int_t w = 0, h = 0;
+    if (texId < 0 || !re->getTextureDimensions(texId, &w, &h) || w <= 0 || w != h)
+        return modelClassic; // 64x32 skin (or still loading): classic ModelBiped
+    if (!entityPlayer->skinUrl.empty() && texId != re->getTexture(skinPathScratch))
+        return modelPlayerWide; // downloaded skin URL image
+    return SkinManager::isSlimSkinTexture(skinPathScratch) ? modelPlayerSlim : modelPlayerWide;
+}
+
 void RenderPlayer::renderPlayer(EntityPlayer* entityPlayer, double d, double d1, double d2, float f, float f1) {
+    modelBipedMain = selectSkinModel(entityPlayer);
+    mainModel = modelBipedMain;
     ItemStack* itemStack = entityPlayer->inventory->getCurrentItem();
     int heldItemRight = itemStack != nullptr ? 1 : 0;
     bool aimedBow = false;
@@ -127,13 +159,19 @@ void RenderPlayer::renderPlayer(EntityPlayer* entityPlayer, double d, double d1,
     modelArmorChestplate->aimedBow = modelArmor->aimedBow = modelBipedMain->aimedBow = false;
     modelArmorChestplate->isSneak = modelArmor->isSneak = modelBipedMain->isSneak = false;
     modelArmorChestplate->heldItemRight = modelArmor->heldItemRight = modelBipedMain->heldItemRight = 0;
+    modelBipedMain = modelClassic;
+    mainModel = modelClassic;
 }
 
-void RenderPlayer::drawFirstPersonHand()
+void RenderPlayer::drawFirstPersonHand(EntityPlayer* player)
 {
-	modelBipedMain->onGround = 0.0f;
-	modelBipedMain->setRotationAngles(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
-	modelBipedMain->bipedRightArm->render(0.0625f);
+	ModelBiped* model = player != nullptr ? selectSkinModel(player) : modelClassic;
+	model->onGround = 0.0f;
+	model->setRotationAngles(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
+	if (model != modelClassic)
+		static_cast<ModelPlayer*>(model)->renderRightArm(0.0625f);
+	else
+		model->bipedRightArm->render(0.0625f);
 }
 
 void RenderPlayer::doRenderLiving(EntityLiving* entityLiving, double d, double d1, double d2, float f, float f1) {

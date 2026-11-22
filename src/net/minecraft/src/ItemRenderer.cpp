@@ -340,7 +340,7 @@ void ItemRenderer::renderItemInFirstPerson(float partialTick) {
             Render* render = RenderManager::instance->getEntityRenderObject(player);
             RenderPlayer* playerRenderer = dynamic_cast<RenderPlayer*>(render);
             if (playerRenderer != nullptr) {
-                playerRenderer->drawFirstPersonHand();
+                playerRenderer->drawFirstPersonHand(player);
             }
             renderPopMatrix();
         }
@@ -494,7 +494,7 @@ void ItemRenderer::renderItemInFirstPerson(float partialTick) {
         Render* render = RenderManager::instance->getEntityRenderObject(player);
         RenderPlayer* playerRenderer = dynamic_cast<RenderPlayer*>(render);
         if (playerRenderer != nullptr) {
-            playerRenderer->drawFirstPersonHand();
+            playerRenderer->drawFirstPersonHand(player);
         }
         renderPopMatrix();
     }

@@ -7,6 +7,7 @@
 
 class GuiButton;
 class ModelBiped;
+class ModelPlayer;
 
 class GuiSkinSelector : public GuiScreen
 {
@@ -63,7 +64,8 @@ private:
 
     // 3D character preview state for LCE mode
     ModelBiped *previewModel32;
-    ModelBiped *previewModel64;
+    ModelPlayer *previewModel64;      // 64x64 skins, wide arms
+    ModelPlayer *previewModel64Slim;  // 64x64 skins, slim arms
     float previewYaw;
     float previewPitch;
     bool previewAutoRotate;

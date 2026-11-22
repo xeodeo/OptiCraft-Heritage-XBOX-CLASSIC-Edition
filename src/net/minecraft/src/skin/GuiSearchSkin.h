@@ -10,6 +10,7 @@
 class GuiButton;
 class GuiTextField;
 class ModelBiped;
+class ModelPlayer;
 
 class GuiSearchSkin : public GuiScreen
 {
@@ -46,7 +47,7 @@ private:
     bool isSpanish() const;
     void startSearch();
     void releasePreviewTexture();
-    void uploadPreviewTexture(const std::vector<unsigned char> &rgba64x32);
+    void uploadPreviewTexture(const std::vector<unsigned char> &rgba64x64);
     void updateButtonStates();
     void applyPopularIndex(int delta, bool autoSearch);
     void drawPreviewCharacter3D(float centerX, float feetY, float scale, float partialTick);
@@ -84,7 +85,10 @@ private:
     int_t statusColor;
 
     // 3D preview state
-    ModelBiped *previewModel;
+    ModelBiped *previewModel;          // 64x32 fallback texture
+    ModelPlayer *previewModelWide;     // 64x64 textures (the download preview)
+    ModelPlayer *previewModelSlim;
+    bool previewTexSlim;
     int_t previewTexId;
     float previewYaw;
     float previewWalkPos;
