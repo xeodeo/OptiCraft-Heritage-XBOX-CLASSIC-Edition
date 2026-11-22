@@ -21,6 +21,7 @@ public:
     void mouseClicked(int_t mouseX, int_t mouseY, int_t button) override;
     void actionPerformed(GuiButton *button) override;
     bool doesGuiPauseGame() override;
+    void focusCustomSkin(const std::string &skinId);
 
 protected:
     bool allowsPlatformPointerInput() const override { return !isLegacyMode(); }
@@ -105,6 +106,7 @@ private:
     // Interactive GUI buttons
     std::vector<GuiButton*> packButtons;
     GuiButton *buttonPlayer2Skin;
+    GuiButton *buttonSearchSkin;
     GuiButton *buttonLoadSkins;
     GuiButton *buttonDeleteSkin;
 

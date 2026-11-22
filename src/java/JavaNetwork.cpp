@@ -13,6 +13,13 @@ namespace JavaNetwork
 std::unique_ptr<Socket> createSocket()                                    { return nullptr; }
 std::unique_ptr<std::istream> createInputStream(Socket &)                 { return nullptr; }
 std::unique_ptr<std::ostream> createOutputStream(Socket &)                { return nullptr; }
+HttpResult httpGetUrl(const std::string &, std::vector<unsigned char> &outData, int *outStatusCode,
+                      std::size_t, int)
+{
+    outData.clear();
+    if (outStatusCode != nullptr) *outStatusCode = -1;
+    return HttpResult::NoConnection;
+}
 bool readUrl(const std::string &, std::vector<unsigned char> &)           { return false; }
 int  getResponseCode(const std::string &)                                 { return -1; }
 bool postUrl(const std::string &, const std::string &, const std::string &,
@@ -506,6 +513,31 @@ int httpPost(const std::string &url, const std::string &contentType,
     return status;
 }
 
+}
+
+HttpResult httpGetUrl(const std::string &url, std::vector<unsigned char> &outData, int *outStatusCode,
+                      std::size_t maxBytes, int)
+{
+    outData.clear();
+    if (outStatusCode != nullptr)
+        *outStatusCode = -1;
+    if (url.rfind("http://", 0) != 0)
+        return HttpResult::InvalidResponse;
+    const int status = httpGet(url, outData);
+    if (outStatusCode != nullptr)
+        *outStatusCode = status;
+    if (status < 0)
+        return HttpResult::NoConnection;
+    if (status == 404 || status == 400 || status == 410 || status == 422)
+        return HttpResult::NotFound;
+    if (status < 200 || status >= 300)
+        return HttpResult::InvalidResponse;
+    if (maxBytes > 0 && outData.size() > maxBytes)
+    {
+        outData.clear();
+        return HttpResult::TooLarge;
+    }
+    return HttpResult::Ok;
 }
 
 bool readUrl(const std::string &url, std::vector<unsigned char> &data)

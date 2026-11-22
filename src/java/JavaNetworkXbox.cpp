@@ -17,8 +17,11 @@
 
 #include "java/JavaNetwork.h"
 
+#include <algorithm>
 #include <atomic>
+#include <cctype>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <istream>
 #include <memory>
@@ -264,14 +267,333 @@ std::unique_ptr<std::istream> createInputStream(Socket &socket) { return std::ma
 std::unique_ptr<std::ostream> createOutputStream(Socket &socket) { return std::make_unique<SocketOutputStream>(socket); }
 #endif
 
-bool readUrl(const std::string &, std::vector<unsigned char> &)
+#ifdef NO_NETWORK
+HttpResult httpGetUrl(const std::string &, std::vector<unsigned char> &outData, int *outStatusCode,
+                      std::size_t, int)
 {
-	return false;
+	outData.clear();
+	if (outStatusCode != nullptr)
+		*outStatusCode = -1;
+	return HttpResult::NoConnection;
+}
+#else
+namespace
+{
+struct ParsedHttpUrl
+{
+	std::string host;
+	int port = 80;
+	std::string path;
+};
+
+bool parseHttpUrl(const std::string &url, ParsedHttpUrl &out)
+{
+	const std::string prefix = "http://";
+	if (url.size() <= prefix.size() || url.compare(0, prefix.size(), prefix) != 0)
+		return false;
+
+	const std::size_t hostStart = prefix.size();
+	const std::size_t pathPos = url.find('/', hostStart);
+	std::string authority = (pathPos == std::string::npos) ? url.substr(hostStart) : url.substr(hostStart, pathPos - hostStart);
+	out.path = (pathPos == std::string::npos) ? "/" : url.substr(pathPos);
+	out.port = 80;
+
+	const std::size_t colonPos = authority.rfind(':');
+	if (colonPos != std::string::npos)
+	{
+		out.host = authority.substr(0, colonPos);
+		const int p = std::atoi(authority.substr(colonPos + 1).c_str());
+		if (p <= 0 || p > 65535)
+			return false;
+		out.port = p;
+	}
+	else
+	{
+		out.host = authority;
+	}
+	return !out.host.empty();
 }
 
-int getResponseCode(const std::string &)
+std::string toLowerAscii(std::string s)
 {
-	return -1;
+	for (char &c : s)
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	return s;
+}
+
+bool decodeChunkedBody(const std::vector<unsigned char> &in, std::vector<unsigned char> &out, std::size_t maxBytes)
+{
+	out.clear();
+	std::size_t pos = 0;
+	const std::size_t n = in.size();
+	while (pos < n)
+	{
+		std::size_t lineEnd = pos;
+		while (lineEnd + 1 < n && !(in[lineEnd] == '\r' && in[lineEnd + 1] == '\n'))
+			++lineEnd;
+		if (lineEnd + 1 >= n)
+			return false;
+
+		std::size_t chunkSize = 0;
+		bool anyHex = false;
+		for (std::size_t i = pos; i < lineEnd; ++i)
+		{
+			const unsigned char c = in[i];
+			if (c == ';')
+				break;
+			if (c >= '0' && c <= '9') { chunkSize = (chunkSize << 4) | (c - '0'); anyHex = true; }
+			else if (c >= 'a' && c <= 'f') { chunkSize = (chunkSize << 4) | (c - 'a' + 10); anyHex = true; }
+			else if (c >= 'A' && c <= 'F') { chunkSize = (chunkSize << 4) | (c - 'A' + 10); anyHex = true; }
+			else if (c == ' ' || c == '\t') continue;
+			else return false;
+		}
+		if (!anyHex)
+			return false;
+		pos = lineEnd + 2;
+		if (chunkSize == 0)
+			return true;
+		if (pos + chunkSize > n)
+			return false;
+		if (out.size() + chunkSize > maxBytes)
+			return false;
+		out.insert(out.end(), in.begin() + static_cast<std::ptrdiff_t>(pos),
+		           in.begin() + static_cast<std::ptrdiff_t>(pos + chunkSize));
+		pos += chunkSize;
+		if (pos + 2 <= n && in[pos] == '\r' && in[pos + 1] == '\n')
+			pos += 2;
+	}
+	return true;
+}
+} // namespace
+
+HttpResult httpGetUrl(const std::string &url, std::vector<unsigned char> &outData, int *outStatusCode,
+                      std::size_t maxBytes, int timeoutMs)
+{
+	outData.clear();
+	if (outStatusCode != nullptr)
+		*outStatusCode = -1;
+
+	if (timeoutMs < 1000) timeoutMs = 1000;
+	if (timeoutMs > 8000) timeoutMs = 8000;
+	if (maxBytes == 0) maxBytes = 64 * 1024;
+
+	const unsigned int startMs = XboxNetwork::tickMs();
+	auto remainingMs = [&]() -> int {
+		const unsigned int elapsed = XboxNetwork::tickMs() - startMs;
+		return (elapsed >= static_cast<unsigned int>(timeoutMs)) ? 0 : (timeoutMs - static_cast<int>(elapsed));
+	};
+
+	std::string currentUrl = url;
+	for (int redirect = 0; redirect < 4; ++redirect)
+	{
+		ParsedHttpUrl parsed;
+		if (!parseHttpUrl(currentUrl, parsed))
+			return HttpResult::InvalidResponse;
+
+		int rem = remainingMs();
+		if (rem <= 0)
+			return HttpResult::NoConnection;
+
+		const intptr_t sock = XboxNetwork::tcpConnectTimeout(parsed.host.c_str(), parsed.port, rem);
+		if (sock == XboxNetwork::kInvalidSocket)
+		{
+			MC_LOG_INFO("network", "httpGetUrl connect failed: %s:%d (wsa=%d)\n",
+			            parsed.host.c_str(), parsed.port, XboxNetwork::lastError());
+			return HttpResult::NoConnection;
+		}
+
+		std::string req;
+		req.reserve(256 + parsed.path.size());
+		req += "GET ";
+		req += parsed.path;
+		req += " HTTP/1.0\r\nHost: ";
+		req += parsed.host;
+		if (parsed.port != 80)
+		{
+			req += ":";
+			req += std::to_string(parsed.port);
+		}
+		req += "\r\nUser-Agent: OptiCraft-Xbox/1.0\r\nAccept: image/png,*/*\r\nConnection: close\r\n\r\n";
+
+		std::size_t sent = 0;
+		bool sendOk = true;
+		while (sent < req.size())
+		{
+			rem = remainingMs();
+			if (rem <= 0)
+			{
+				sendOk = false;
+				break;
+			}
+			const int n = XboxNetwork::tcpSendTimeout(sock, req.data() + sent,
+			                                          static_cast<int>(req.size() - sent), rem);
+			if (n <= 0)
+			{
+				sendOk = false;
+				break;
+			}
+			sent += static_cast<std::size_t>(n);
+		}
+
+		if (!sendOk)
+		{
+			XboxNetwork::tcpShutdown(sock, false);
+			XboxNetwork::tcpClose(sock);
+			return HttpResult::NoConnection;
+		}
+
+		constexpr std::size_t kMaxHeaderBytes = 8192;
+		const std::size_t maxRawBytes = maxBytes + kMaxHeaderBytes;
+		std::vector<unsigned char> raw;
+		raw.reserve(4096);
+		char chunk[2048];
+		bool tooLarge = false;
+		bool timedOut = false;
+
+		for (;;)
+		{
+			rem = remainingMs();
+			if (rem <= 0)
+			{
+				timedOut = true;
+				break;
+			}
+			const int n = XboxNetwork::tcpRecvTimeout(sock, chunk, sizeof(chunk), rem);
+			if (n == 0)
+				break;
+			if (n < 0)
+			{
+				if (raw.empty())
+					timedOut = true;
+				break;
+			}
+			if (raw.size() + static_cast<std::size_t>(n) > maxRawBytes)
+			{
+				tooLarge = true;
+				break;
+			}
+			raw.insert(raw.end(), reinterpret_cast<unsigned char *>(chunk),
+			           reinterpret_cast<unsigned char *>(chunk + n));
+		}
+
+		XboxNetwork::tcpShutdown(sock, false);
+		XboxNetwork::tcpClose(sock);
+
+		if (tooLarge)
+			return HttpResult::TooLarge;
+		if (timedOut && raw.empty())
+			return HttpResult::NoConnection;
+
+		// Locate end of HTTP header (\r\n\r\n)
+		std::size_t headerEnd = std::string::npos;
+		for (std::size_t i = 0; i + 3 < raw.size(); ++i)
+		{
+			if (raw[i] == '\r' && raw[i + 1] == '\n' && raw[i + 2] == '\r' && raw[i + 3] == '\n')
+			{
+				headerEnd = i;
+				break;
+			}
+		}
+		if (headerEnd == std::string::npos)
+			return timedOut ? HttpResult::NoConnection : HttpResult::InvalidResponse;
+
+		std::string headerStr(reinterpret_cast<const char *>(raw.data()), headerEnd);
+		const std::size_t firstLineEnd = headerStr.find("\r\n");
+		const std::string statusLine = (firstLineEnd == std::string::npos) ? headerStr : headerStr.substr(0, firstLineEnd);
+
+		int statusCode = -1;
+		const std::size_t sp1 = statusLine.find(' ');
+		if (sp1 != std::string::npos)
+			statusCode = std::atoi(statusLine.c_str() + sp1 + 1);
+		if (outStatusCode != nullptr)
+			*outStatusCode = statusCode;
+
+		// Parse headers for Location and Transfer-Encoding
+		std::string location;
+		bool isChunked = false;
+		if (firstLineEnd != std::string::npos)
+		{
+			std::size_t pos = firstLineEnd + 2;
+			while (pos < headerStr.size())
+			{
+				std::size_t next = headerStr.find("\r\n", pos);
+				std::string line = (next == std::string::npos) ? headerStr.substr(pos) : headerStr.substr(pos, next - pos);
+				const std::size_t colon = line.find(':');
+				if (colon != std::string::npos)
+				{
+					std::string key = toLowerAscii(line.substr(0, colon));
+					std::string val = line.substr(colon + 1);
+					while (!val.empty() && (val.front() == ' ' || val.front() == '\t'))
+						val.erase(val.begin());
+					while (!val.empty() && (val.back() == ' ' || val.back() == '\t' || val.back() == '\r'))
+						val.pop_back();
+					if (key == "location")
+						location = val;
+					else if (key == "transfer-encoding" && toLowerAscii(val).find("chunked") != std::string::npos)
+						isChunked = true;
+				}
+				if (next == std::string::npos)
+					break;
+				pos = next + 2;
+			}
+		}
+
+		if ((statusCode == 301 || statusCode == 302 || statusCode == 303 || statusCode == 307 || statusCode == 308) &&
+		    !location.empty())
+		{
+			if (location.rfind("http://", 0) == 0)
+			{
+				currentUrl = location;
+				continue;
+			}
+			if (location[0] == '/')
+			{
+				currentUrl = "http://" + parsed.host + (parsed.port != 80 ? (":" + std::to_string(parsed.port)) : "") + location;
+				continue;
+			}
+			return HttpResult::InvalidResponse;
+		}
+
+		if (statusCode == 404 || statusCode == 400 || statusCode == 410 || statusCode == 422)
+			return HttpResult::NotFound;
+
+		if (statusCode < 200 || statusCode >= 300)
+			return HttpResult::InvalidResponse;
+
+		const std::size_t bodyStart = headerEnd + 4;
+		if (bodyStart > raw.size())
+			return HttpResult::InvalidResponse;
+
+		std::vector<unsigned char> body(raw.begin() + static_cast<std::ptrdiff_t>(bodyStart), raw.end());
+		if (isChunked)
+		{
+			if (!decodeChunkedBody(body, outData, maxBytes))
+				return HttpResult::InvalidResponse;
+		}
+		else
+		{
+			if (body.size() > maxBytes)
+				return HttpResult::TooLarge;
+			outData = std::move(body);
+		}
+		return HttpResult::Ok;
+	}
+
+	return HttpResult::InvalidResponse;
+}
+#endif
+
+bool readUrl(const std::string &url, std::vector<unsigned char> &data)
+{
+	return httpGetUrl(url, data, nullptr, 256 * 1024, 8000) == HttpResult::Ok;
+}
+
+int getResponseCode(const std::string &url)
+{
+	std::vector<unsigned char> data;
+	int status = -1;
+	httpGetUrl(url, data, &status, 64 * 1024, 8000);
+	return status;
 }
 
 bool postUrl(const std::string &, const std::string &, const std::string &, std::vector<unsigned char> &)

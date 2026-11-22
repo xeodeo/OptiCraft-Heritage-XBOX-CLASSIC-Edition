@@ -19,15 +19,21 @@ bool initialize();
 // host is a dotted IPv4 address or a DNS name (resolved with XNetDnsLookup).
 // Writes the address in network byte order.
 bool resolveIPv4(const char* host, unsigned long* address);
+bool resolveIPv4Timeout(const char* host, unsigned long* address, int timeoutMs);
 
 const intptr_t kInvalidSocket = -1;
 
 // Blocking-style TCP over a non-blocking socket, so one thread may send while
 // another waits in tcpRecv. tcpConnect returns kInvalidSocket on failure.
 intptr_t tcpConnect(const char* host, int port);
+intptr_t tcpConnectTimeout(const char* host, int port, int timeoutMs);
 int tcpRecv(intptr_t socket, char* buffer, int length);          // > 0 bytes, <= 0 closed/error
+int tcpRecvTimeout(intptr_t socket, char* buffer, int length, int timeoutMs);
 int tcpSend(intptr_t socket, const char* buffer, int length);    // bytes sent, <= 0 error
+int tcpSendTimeout(intptr_t socket, const char* buffer, int length, int timeoutMs);
 void tcpShutdown(intptr_t socket, bool receiveOnly);
 void tcpClose(intptr_t socket);
 int lastError();
+unsigned int tickMs();
+bool hasLink();
 }

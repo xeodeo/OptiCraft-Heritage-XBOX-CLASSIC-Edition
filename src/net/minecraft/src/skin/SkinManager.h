@@ -39,6 +39,17 @@ public:
 
     // Custom skin management
     static std::string getSkinsDir();
+    static int getCustomPackIndex();
+    static bool convertSkinToRetro32(const unsigned char *pngBytes, std::size_t pngLen,
+                                     std::vector<unsigned char> &outRgba64x32,
+                                     int &outSrcW, int &outSrcH, bool &outWasSlim,
+                                     std::string &outError);
+    static bool saveDownloadedSkin(const std::string &username,
+                                   const std::vector<unsigned char> &rawPng,
+                                   bool applyImmediately,
+                                   bool forPlayer2,
+                                   std::string &outSkinId,
+                                   std::string &outError);
     static bool installCustomSkin(const std::string &sourcePath, const std::string &skinName, std::string &outError);
     static bool deleteCustomSkin(const std::string &id);
     static const std::vector<SkinEntry>& getCustomSkins();
