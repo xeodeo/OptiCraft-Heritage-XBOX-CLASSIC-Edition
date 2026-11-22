@@ -31,6 +31,7 @@
 
 #ifndef NO_NETWORK
 #include "platform/Log.h"
+#include "xbox/system/XboxTls.h"
 #include "xbox/system/XboxNetwork.h"
 #endif
 
@@ -284,19 +285,33 @@ struct ParsedHttpUrl
 	std::string host;
 	int port = 80;
 	std::string path;
+	bool secure = false;
 };
 
 bool parseHttpUrl(const std::string &url, ParsedHttpUrl &out)
 {
-	const std::string prefix = "http://";
-	if (url.size() <= prefix.size() || url.compare(0, prefix.size(), prefix) != 0)
+	const std::string httpPrefix = "http://";
+	const std::string httpsPrefix = "https://";
+	std::size_t hostStart = 0;
+	if (url.size() > httpsPrefix.size() && url.compare(0, httpsPrefix.size(), httpsPrefix) == 0)
+	{
+		out.secure = true;
+		hostStart = httpsPrefix.size();
+	}
+	else if (url.size() > httpPrefix.size() && url.compare(0, httpPrefix.size(), httpPrefix) == 0)
+	{
+		out.secure = false;
+		hostStart = httpPrefix.size();
+	}
+	else
+	{
 		return false;
+	}
 
-	const std::size_t hostStart = prefix.size();
 	const std::size_t pathPos = url.find('/', hostStart);
 	std::string authority = (pathPos == std::string::npos) ? url.substr(hostStart) : url.substr(hostStart, pathPos - hostStart);
 	out.path = (pathPos == std::string::npos) ? "/" : url.substr(pathPos);
-	out.port = 80;
+	out.port = out.secure ? 443 : 80;
 
 	const std::size_t colonPos = authority.rfind(':');
 	if (colonPos != std::string::npos)
@@ -403,13 +418,38 @@ HttpResult httpGetUrl(const std::string &url, std::vector<unsigned char> &outDat
 			return HttpResult::NoConnection;
 		}
 
+		// HTTPS: relaxed TLS (encrypted, no certificate check) on the same socket.
+		XboxTls::Session *tls = nullptr;
+		if (parsed.secure)
+		{
+			char tlsError[160];
+			tls = XboxTls::open(sock, parsed.host.c_str(), remainingMs(), tlsError, sizeof(tlsError));
+			if (tls == nullptr)
+			{
+				MC_LOG_INFO("network", "httpGetUrl %s
+", tlsError);
+				XboxNetwork::tcpShutdown(sock, false);
+				XboxNetwork::tcpClose(sock);
+				return HttpResult::NoConnection;
+			}
+		}
+		auto closeConnection = [&]() {
+			if (tls != nullptr)
+			{
+				XboxTls::close(tls);
+				tls = nullptr;
+			}
+			XboxNetwork::tcpShutdown(sock, false);
+			XboxNetwork::tcpClose(sock);
+		};
+
 		std::string req;
 		req.reserve(256 + parsed.path.size());
 		req += "GET ";
 		req += parsed.path;
 		req += " HTTP/1.0\r\nHost: ";
 		req += parsed.host;
-		if (parsed.port != 80)
+		if (parsed.port != (parsed.secure ? 443 : 80))
 		{
 			req += ":";
 			req += std::to_string(parsed.port);
@@ -426,8 +466,9 @@ HttpResult httpGetUrl(const std::string &url, std::vector<unsigned char> &outDat
 				sendOk = false;
 				break;
 			}
-			const int n = XboxNetwork::tcpSendTimeout(sock, req.data() + sent,
-			                                          static_cast<int>(req.size() - sent), rem);
+			const int n = tls != nullptr
+				? XboxTls::send(tls, req.data() + sent, static_cast<int>(req.size() - sent), rem)
+				: XboxNetwork::tcpSendTimeout(sock, req.data() + sent, static_cast<int>(req.size() - sent), rem);
 			if (n <= 0)
 			{
 				sendOk = false;
@@ -438,8 +479,7 @@ HttpResult httpGetUrl(const std::string &url, std::vector<unsigned char> &outDat
 
 		if (!sendOk)
 		{
-			XboxNetwork::tcpShutdown(sock, false);
-			XboxNetwork::tcpClose(sock);
+			closeConnection();
 			return HttpResult::NoConnection;
 		}
 
@@ -459,7 +499,8 @@ HttpResult httpGetUrl(const std::string &url, std::vector<unsigned char> &outDat
 				timedOut = true;
 				break;
 			}
-			const int n = XboxNetwork::tcpRecvTimeout(sock, chunk, sizeof(chunk), rem);
+			const int n = tls != nullptr ? XboxTls::recv(tls, chunk, sizeof(chunk), rem)
+			                             : XboxNetwork::tcpRecvTimeout(sock, chunk, sizeof(chunk), rem);
 			if (n == 0)
 				break;
 			if (n < 0)
@@ -477,8 +518,7 @@ HttpResult httpGetUrl(const std::string &url, std::vector<unsigned char> &outDat
 			           reinterpret_cast<unsigned char *>(chunk + n));
 		}
 
-		XboxNetwork::tcpShutdown(sock, false);
-		XboxNetwork::tcpClose(sock);
+		closeConnection();
 
 		if (tooLarge)
 			return HttpResult::TooLarge;
@@ -542,14 +582,16 @@ HttpResult httpGetUrl(const std::string &url, std::vector<unsigned char> &outDat
 		if ((statusCode == 301 || statusCode == 302 || statusCode == 303 || statusCode == 307 || statusCode == 308) &&
 		    !location.empty())
 		{
-			if (location.rfind("http://", 0) == 0)
+			if (location.rfind("http://", 0) == 0 || location.rfind("https://", 0) == 0)
 			{
 				currentUrl = location;
 				continue;
 			}
 			if (location[0] == '/')
 			{
-				currentUrl = "http://" + parsed.host + (parsed.port != 80 ? (":" + std::to_string(parsed.port)) : "") + location;
+				const int defaultPort = parsed.secure ? 443 : 80;
+				currentUrl = std::string(parsed.secure ? "https://" : "http://") + parsed.host +
+				             (parsed.port != defaultPort ? (":" + std::to_string(parsed.port)) : "") + location;
 				continue;
 			}
 			return HttpResult::InvalidResponse;
