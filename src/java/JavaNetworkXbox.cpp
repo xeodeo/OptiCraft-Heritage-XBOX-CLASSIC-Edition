@@ -426,8 +426,7 @@ HttpResult httpGetUrl(const std::string &url, std::vector<unsigned char> &outDat
 			tls = XboxTls::open(sock, parsed.host.c_str(), remainingMs(), tlsError, sizeof(tlsError));
 			if (tls == nullptr)
 			{
-				MC_LOG_INFO("network", "httpGetUrl %s
-", tlsError);
+				MC_LOG_INFO("network", "httpGetUrl %s\n", tlsError);
 				XboxNetwork::tcpShutdown(sock, false);
 				XboxNetwork::tcpClose(sock);
 				return HttpResult::NoConnection;
