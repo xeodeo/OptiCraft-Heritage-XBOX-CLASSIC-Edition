@@ -224,3 +224,8 @@ Mods/skins/texturas: encargos 101, 103 y conversor `texturas\`.
 ## 22-11 16:10 (hibernado)
 Ver `TRASPASO-hibernado.md`: 1.5.2 buena = `port152-int` `ad160f2`, 1.2.5 `opti30-erluza` `83278cd` (con skins 3D 1.8,
 informe 107), sin subir. agy-1 105 a medias (sin commit), agy-2 108 sin empezar.
+
+## 22-11 17:55
+**Lista completa de pendientes: `PENDIENTES-TODO.md`.** En consola: 1.5.2 `2ff4078` (`port152-int`) y 1.2.5 `a0addaf`
+con HTTPS relajado hecho por Claude (`src/xbox/system/XboxTls.*`, `external/mbedtls`, `mbedtls_config.h` de la
+Classic Xbox Store; `httpGetUrl` acepta https; skins reintentan por HTTPS).

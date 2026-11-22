@@ -9,7 +9,7 @@ Página de estado: `ESTADO-OPTICRAFT.html`. Ramas: `ESTADO-ACTUAL.md`.
   `port152-int` (1.5.2 con los mods). Todo se compila en `wt-build-152` / `wt-build-125` con `build88.ps1`.
 - **Hecho y en consola**: 1.5.2 (plan 69 filas 1–9 y casi todo lo demás), mods (catálogo, minimapa Rei+Xaero, X-Ray,
   luces dinámicas, Herobrine de tkelly, ChocoCraft, localizadores, TMI, info de servidores), skins por usuario
-  (HTTP plano a minotar + DNS de respaldo 8.8.8.8/1.1.1.1), texturas `.zip` y conversor de packs en el PC.
+  (HTTP plano a minotar + DNS de respaldo 8.8.8.8/1.1.1.1 + HTTPS relajado con mbedTLS, como la Classic Xbox Store), texturas `.zip` y conversor de packs en el PC.
 - **En marcha**: superplano/marcador/combate (105), bloques/mobs/inventario/pantalla (108), skins con relieve 3D
   como la 1.8 (107). **Falta**: Nether con cuevas de 1.5.2 (fila 16), portal del End 4 capas por pasada (idea),
   historial de skins (solo con programa en el PC). Después: 1.6.4 (ya descompilada con su OptiFine) y 1.7.10 (techo).
@@ -27,7 +27,8 @@ Página de estado: `ESTADO-OPTICRAFT.html`. Ramas: `ESTADO-ACTUAL.md`.
   4. X-Ray en el mallado PS2 (`Ps2GreedyMesh`, `WorldRendererPs2`).
   5. Texturas `.zip` en USB con tope 16x (256 px), miniaturas pequeñas.
   6. Skins: liberar texturas de la rueda (VRAM, 256 texturas máx.), guardar en USB; red: `httpGetUrl` en
-     `JavaNetwork_ps2.cpp` + DNS de respaldo, solo desde el menú principal.
+     `JavaNetwork_ps2.cpp` + DNS de respaldo, solo desde el menú principal. HTTPS: mbedTLS ya existe para PS2
+     (fork ramide1); traer `XboxTls` como `Ps2Tls` sobre `Ps2Socket` (RAM: ~60 KB por conexión).
   7. 1.5.2: revisar los 27 bloques nuevos en el mallado/VU1 y aplicar recortes de RAM; medir en PCSX2 y PS2 real.
 - **No viable en PS2**: 720p, packs 32x o más, autoguardado cada minuto en Memory Card (congela), pantalla partida
   en mundos infinitos, carga de chunks en segundo plano.

@@ -1,0 +1,1 @@
+{"version": "ambas", "estado": "por_probar", "area": "Red", "nombre": "HTTPS en OptiCraft reutilizando el de nuestra Classic Xbox Store (mbedTLS)", "nota": "Hecho por Claude (1.2.5 03aa6ed/a0addaf, 1.5.2 cab3d31/2ff4078): mbedTLS de la Classic Xbox Store, TLS 1.2 con SNI sin verificar certificados; las skins reintentan por HTTPS. Subido.", "ref": "110", "orden": 25}

@@ -239,3 +239,4 @@ Estado al día en `ESTADO-ACTUAL.md` (sección «21-11») y `ESTADO-OPTICRAFT.ht
 ## 22-11 tarde
 Qué rehacer por consola en `PLATAFORMAS-QUE-HACER.md`. Auditoría PS2 completa en `106-INFORME-agy-auditoria-ps2.md`
 (compila; 1.5.2 viable con recortes). Estado al día en `ESTADO-ACTUAL.md` y `ESTADO-OPTICRAFT.html`.
+Pendientes completos: `PENDIENTES-TODO.md` (22-11 17:55).
