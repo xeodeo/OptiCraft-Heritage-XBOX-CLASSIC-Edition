@@ -400,7 +400,7 @@ void GuiSearchSkin::startSearchFor(const std::string &username)
 void GuiSearchSkin::startSearch()
 {
     const bool es = isSpanish();
-    const std::string query = trimWhitespace(usernameField != nullptr ? usernameField->getText() : initialInputText);
+    const std::string query = trimWhitespace(usernameField != nullptr ? std::string(usernameField->getText()) : initialInputText);
     if (query.empty())
     {
         statusMessage = es ? "Escribe un nombre de usuario" : "Enter a username first";
