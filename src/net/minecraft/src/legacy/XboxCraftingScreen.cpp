@@ -33,6 +33,7 @@
 #include "net/minecraft/src/RenderEngine.h"
 #include "net/minecraft/src/RenderHelper.h"
 #include "net/minecraft/src/RenderItem.h"
+#include "net/minecraft/src/RecipesMapExtending.h"
 #include "net/minecraft/src/ShapedRecipes.h"
 #include "net/minecraft/src/ShapelessRecipes.h"
 #include "net/minecraft/src/Slot.h"
@@ -160,6 +161,12 @@ void XboxCraftingScreen::buildEntries()
     for (IRecipe *recipe : recipes)
     {
         if (recipe == nullptr || recipe->getRecipeOutput() == nullptr)
+            continue;
+        // RecipesMapExtending is a ShapedRecipes whose real result is the zoomed
+        // copy of the map in the grid, not its placeholder output (an empty
+        // map). LCE TU19 leaves map cloning/extending out of the console menu
+        // (commented out in Recipes.cpp); they stay in the Java crafting grid.
+        if (dynamic_cast<RecipesMapExtending *>(recipe) != nullptr)
             continue;
 
         Entry entry;

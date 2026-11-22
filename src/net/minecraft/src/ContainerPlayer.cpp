@@ -22,6 +22,7 @@ ContainerPlayer::ContainerPlayer(InventoryPlayer *inventoryplayer, bool_t flag)
 	craftResult = new InventoryCraftResult();
 	isSinglePlayer = false;
 	isSinglePlayer = flag;
+	thePlayer = inventoryplayer->player;
 	addSlot(new SlotCrafting(inventoryplayer->player, craftMatrix, craftResult, 0, 144, 36));
 	for(int_t i = 0; i < 2; i++)
 	{
@@ -57,7 +58,7 @@ ContainerPlayer::~ContainerPlayer()
 
 void ContainerPlayer::onCraftMatrixChanged(IInventory *iinventory)
 {
-	ItemStack *newResult = CraftingManager::getInstance()->findMatchingRecipe(craftMatrix);
+	ItemStack *newResult = CraftingManager::getInstance()->findMatchingRecipe(craftMatrix, thePlayer != nullptr ? thePlayer->worldObj : nullptr);
 	craftResult->setInventorySlotContents(0, newResult);
 }
 

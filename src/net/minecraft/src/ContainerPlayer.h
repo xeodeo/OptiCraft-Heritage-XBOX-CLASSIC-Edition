@@ -24,4 +24,5 @@ public:
 	InventoryCrafting *craftMatrix;
 	IInventory *craftResult;
 	bool isSinglePlayer;
+	EntityPlayer *thePlayer; // Java 1.5.2: gives the recipes the world
 };

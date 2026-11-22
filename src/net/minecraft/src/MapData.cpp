@@ -10,14 +10,18 @@
 #include "InventoryPlayer.h"
 #include "NBTTagCompound.h"
 #include "MathHelper.h"
+#include "EntityItemFrame.h"
+#include "World.h"
+#include "WorldInfo.h"
+#include <cmath>
+#include <string>
 
 MapData::MapData(const std::string &s) :
 	MapDataBase(s),
 	xCenter(0),
 	zCenter(0),
 	dimension(0),
-	scale(0),
-	achievementParent(0)
+	scale(0)
 {
 	for (int_t i = 0; i < 16384; i++)
 		colors[i] = 0;
@@ -25,14 +29,12 @@ MapData::MapData(const std::string &s) :
 
 MapData::~MapData()
 {
-	for (MapCoord *coord : playersVisibleOnMap)
-		delete coord;
-	playersVisibleOnMap.clear();
+	clearVisible();
 
-	for (MapInfo *info : playersOnMap)
+	for (MapInfo *info : playersArrayList)
 		delete info;
-	playersOnMap.clear();
-	playerMapInfo.clear();
+	playersArrayList.clear();
+	playersHashMap.clear();
 }
 
 void MapData::readFromNBT(NBTTagCompound *nbttagcompound)
@@ -89,63 +91,156 @@ void MapData::writeToNBT(NBTTagCompound *nbttagcompound)
 	nbttagcompound->setByteArray("colors", std::vector<byte_t>(colors, colors + 16384));
 }
 
-void MapData::updateMapData(EntityPlayer *entityplayer, ItemStack *itemstack)
+void MapData::putVisible(const std::string &name, MapCoord *coord)
 {
-	auto it = playerMapInfo.find(entityplayer);
-	if (it == playerMapInfo.end())
+	for (auto &entry : playersVisibleOnMap)
+	{
+		if (entry.first == name)
+		{
+			delete entry.second;
+			entry.second = coord;
+			return;
+		}
+	}
+	playersVisibleOnMap.emplace_back(name, coord);
+}
+
+void MapData::removeVisible(const std::string &name)
+{
+	for (auto it = playersVisibleOnMap.begin(); it != playersVisibleOnMap.end(); ++it)
+	{
+		if (it->first == name)
+		{
+			delete it->second;
+			playersVisibleOnMap.erase(it);
+			return;
+		}
+	}
+}
+
+void MapData::clearVisible()
+{
+	for (auto &entry : playersVisibleOnMap)
+		delete entry.second;
+	playersVisibleOnMap.clear();
+}
+
+void MapData::updateVisiblePlayers(EntityPlayer *entityplayer, ItemStack *itemstack)
+{
+	if (entityplayer == nullptr || itemstack == nullptr)
+		return;
+
+	if (playersHashMap.find(entityplayer) == playersHashMap.end())
 	{
 		MapInfo *mapinfo = new MapInfo(this, entityplayer);
-		playerMapInfo[entityplayer] = mapinfo;
-		playersOnMap.push_back(mapinfo);
+		playersHashMap[entityplayer] = mapinfo;
+		playersArrayList.push_back(mapinfo);
 	}
-	for (MapCoord *coord : playersVisibleOnMap)
-		delete coord;
-	playersVisibleOnMap.clear();
-	for (auto itInfo = playersOnMap.begin(); itInfo != playersOnMap.end(); )
-	{
-		MapInfo *mapinfo1 = *itInfo;
-		if (mapinfo1 == nullptr || mapinfo1->entityplayerObj == nullptr ||
-			mapinfo1->entityplayerObj->isDead ||
-			!mapinfo1->entityplayerObj->inventory->doesXZShowFog(itemstack))
-		{
-			if (mapinfo1 != nullptr && mapinfo1->entityplayerObj != nullptr)
-				playerMapInfo.erase(mapinfo1->entityplayerObj);
-			delete mapinfo1;
-			itInfo = playersOnMap.erase(itInfo);
-			continue;
-		}
-		++itInfo;
-		float f = (float)(mapinfo1->entityplayerObj->posX - (double)xCenter) / (float)JavaArithmetic::intShl(1, scale);
-		float f1 = (float)(mapinfo1->entityplayerObj->posZ - (double)zCenter) / (float)JavaArithmetic::intShl(1, scale);
-		int_t j = 64;
-		int_t k = 64;
-		if (f < (float)(-j) || f1 < (float)(-k) || f > (float)j || f1 > (float)k)
-			continue;
 
-		byte_t byte0 = 0;
-		byte_t byte1 = JavaArithmetic::byteFromBits(static_cast<ubyte_t>(JavaArithmetic::doubleToInt(static_cast<double>(f * 2.0f) + 0.5)));
-		byte_t byte2 = JavaArithmetic::byteFromBits(static_cast<ubyte_t>(JavaArithmetic::doubleToInt(static_cast<double>(f1 * 2.0f) + 0.5)));
-		byte_t byte3 = JavaArithmetic::byteFromBits(static_cast<ubyte_t>(JavaArithmetic::doubleToInt(static_cast<double>((entityplayer->rotationYaw * 16.0f) / 360.0f) + 0.5)));
-		if (dimension < 0)
+	if (!entityplayer->inventory->hasItemStack(itemstack))
+		removeVisible(entityplayer->username);
+
+	for (size_t index = 0; index < playersArrayList.size(); )
+	{
+		MapInfo *mapinfo = playersArrayList[index];
+		EntityPlayer *player = mapinfo->entityplayerObj;
+		// Java only checks isDead. Here a respawned player is a new object and
+		// the old one gets deleted, so a player no longer in the world's list
+		// is dropped by pointer, before anything reads it.
+		bool inWorld = false;
+		if (entityplayer->worldObj != nullptr)
 		{
-			int32_t l = achievementParent / 10;
-			// Java int multiplication wraps at 32 bits. Do it explicitly here so
-			// long-running map updates cannot trigger signed-overflow UB in C++.
-			uint32_t lu = static_cast<uint32_t>(l);
-			uint32_t mixed = lu * lu * 34187121u + lu * 121u;
-			byte3 = (byte_t)((JavaArithmetic::intFromBits(mixed) >> 15) & 0xf);
+			for (EntityPlayer *worldPlayer : entityplayer->worldObj->playerEntities)
+			{
+				if (worldPlayer == player)
+				{
+					inWorld = true;
+					break;
+				}
+			}
 		}
-		if (mapinfo1->entityplayerObj->dimension == dimension)
+		if (player != nullptr && inWorld && !player->isDead &&
+			(player->inventory->hasItemStack(itemstack) || itemstack->isOnItemFrame()))
 		{
-			playersVisibleOnMap.push_back(new MapCoord(this, byte0, byte1, byte2, byte3));
+			if (!itemstack->isOnItemFrame() && player->dimension == dimension)
+				func_82567_a(0, player->worldObj, player->username, player->posX, player->posZ, (double)player->rotationYaw);
+			++index;
+		}
+		else
+		{
+			playersHashMap.erase(player);
+			playersArrayList.erase(playersArrayList.begin() + index);
+			delete mapinfo;
 		}
 	}
+
+	if (itemstack->isOnItemFrame())
+	{
+		// Java 1.5.2: the green marker of the item frame holding this map.
+		EntityItemFrame *frame = itemstack->getItemFrame();
+		func_82567_a(1, entityplayer->worldObj, "frame-" + std::to_string(frame->entityId),
+			(double)frame->xPosition, (double)frame->zPosition, (double)(frame->hangingDirection * 90));
+	}
+}
+
+void MapData::func_82567_a(int_t iconType, World *world, const std::string &name, double x, double z, double rotation)
+{
+	const int_t blocksPerPixel = JavaArithmetic::intShl(1, scale);
+	const float relX = (float)(x - (double)xCenter) / (float)blocksPerPixel;
+	const float relZ = (float)(z - (double)zCenter) / (float)blocksPerPixel;
+	byte_t iconX = JavaArithmetic::byteFromBits(static_cast<ubyte_t>(JavaArithmetic::doubleToInt((double)(relX * 2.0f) + 0.5)));
+	byte_t iconZ = JavaArithmetic::byteFromBits(static_cast<ubyte_t>(JavaArithmetic::doubleToInt((double)(relZ * 2.0f) + 0.5)));
+	const int_t edge = 63;
+	byte_t iconRotation;
+	if (relX >= (float)(-edge) && relZ >= (float)(-edge) && relX <= (float)edge && relZ <= (float)edge)
+	{
+		rotation += rotation < 0.0 ? -8.0 : 8.0;
+		iconRotation = JavaArithmetic::byteFromBits(static_cast<ubyte_t>(JavaArithmetic::doubleToInt(rotation * 16.0 / 360.0)));
+		if (dimension < 0 && world != nullptr && world->getWorldInfo() != nullptr)
+		{
+			// Java int arithmetic wraps at 32 bits.
+			const uint32_t t = static_cast<uint32_t>(static_cast<int_t>(world->getWorldInfo()->getWorldTime() / 10LL));
+			const int_t mixed = JavaArithmetic::intFromBits(t * t * 34187121u + t * 121u);
+			iconRotation = static_cast<byte_t>((mixed >> 15) & 15);
+		}
+	}
+	else
+	{
+		if (!(std::fabs(relX) < 320.0f) || !(std::fabs(relZ) < 320.0f))
+		{
+			removeVisible(name);
+			return;
+		}
+		iconType = 6;
+		iconRotation = 0;
+		if (relX <= (float)(-edge))
+			iconX = static_cast<byte_t>(JavaArithmetic::doubleToInt((double)(edge * 2) + 2.5));
+		if (relZ <= (float)(-edge))
+			iconZ = static_cast<byte_t>(JavaArithmetic::doubleToInt((double)(edge * 2) + 2.5));
+		if (relX >= (float)edge)
+			iconX = static_cast<byte_t>(edge * 2 + 1);
+		if (relZ >= (float)edge)
+			iconZ = static_cast<byte_t>(edge * 2 + 1);
+	}
+
+	putVisible(name, new MapCoord(this, static_cast<byte_t>(iconType), iconX, iconZ, iconRotation));
+}
+
+MapInfo *MapData::func_82568_a(EntityPlayer *entityplayer)
+{
+	auto it = playersHashMap.find(entityplayer);
+	if (it != playersHashMap.end())
+		return it->second;
+	MapInfo *mapinfo = new MapInfo(this, entityplayer);
+	playersHashMap[entityplayer] = mapinfo;
+	playersArrayList.push_back(mapinfo);
+	return mapinfo;
 }
 
 void MapData::setColumnDirty(int_t i, int_t j, int_t k)
 {
 	MapDataBase::markDirty();
-	for (auto *mapinfo : playersOnMap)
+	for (auto *mapinfo : playersArrayList)
 	{
 		if (mapinfo->minVisibleY[i] < 0 || mapinfo->minVisibleY[i] > j)
 			mapinfo->minVisibleY[i] = j;
@@ -154,7 +249,7 @@ void MapData::setColumnDirty(int_t i, int_t j, int_t k)
 	}
 }
 
-void MapData::handleMapPacket(const std::vector<byte_t> &data)
+void MapData::updateMPMapData(const std::vector<byte_t> &data)
 {
 	if (data.empty())
 		return;
@@ -173,16 +268,18 @@ void MapData::handleMapPacket(const std::vector<byte_t> &data)
 	}
 	else if (data[0] == 1)
 	{
-		for (MapCoord *coord : playersVisibleOnMap)
-			delete coord;
-		playersVisibleOnMap.clear();
-		for (size_t offset = 1; offset + 2 < data.size(); offset += 3)
+		clearVisible();
+		for (size_t i = 0; i < (data.size() - 1) / 3; i++)
 		{
-			byte_t byte0 = (byte_t)(data[offset] % 16);
-			byte_t byte1 = data[offset + 1];
-			byte_t byte2 = data[offset + 2];
-			byte_t byte3 = (byte_t)(data[offset] / 16);
-			playersVisibleOnMap.push_back(new MapCoord(this, byte0, byte1, byte2, byte3));
+			byte_t iconSize = static_cast<byte_t>(data[i * 3 + 1] >> 4);
+			byte_t centerX = data[i * 3 + 2];
+			byte_t centerZ = data[i * 3 + 3];
+			byte_t rotation = static_cast<byte_t>(data[i * 3 + 1] & 15);
+			playersVisibleOnMap.emplace_back("icon-" + std::to_string(i), new MapCoord(this, iconSize, centerX, centerZ, rotation));
 		}
+	}
+	else if (data[0] == 2 && data.size() >= 2)
+	{
+		scale = data[1];
 	}
 }

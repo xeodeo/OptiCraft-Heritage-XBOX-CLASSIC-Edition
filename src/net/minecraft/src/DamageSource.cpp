@@ -65,6 +65,13 @@ DamageSource DamageSource::causeIndirectMagicDamage(Entity *sourceEntity, Entity
 	return source.setDamageBypassesArmor().setMagicDamage();
 }
 
+DamageSource DamageSource::causeThornsDamage(Entity *entity)
+{
+	// Java 1.5.2: new EntityDamageSource("thorns", entity).setMagicDamage()
+	DamageSource source("thorns", entity, entity);
+	return source.setMagicDamage();
+}
+
 bool DamageSource::isProjectile() const
 {
 	return projectile;

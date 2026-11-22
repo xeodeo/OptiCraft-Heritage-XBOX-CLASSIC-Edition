@@ -10,6 +10,8 @@
 #include "NBTTagList.h"
 #include "Enchantment.h"
 #include "EnchantmentHelper.h"
+#include "EnchantmentDurability.h"
+#include "java/Random.h"
 #include "java/Arithmetic.h"
 
 namespace
@@ -196,19 +198,39 @@ int ItemStack::getMaxDamage() {
     return item ? item->getMaxDamage() : 0;
 }
 
-void ItemStack::damageItem(int i, Entity* entity) {
+bool ItemStack::attemptDamageItem(int i, Random& random) {
+    // Java 1.5.2: each point of damage is rolled against this stack's own Unbreaking.
     if (!isItemStackDamageable()) {
-        return;
+        return false;
     }
-    EntityPlayer* player = dynamic_cast<EntityPlayer*>(entity);
-    if (i > 0 && player != nullptr) {
-        const int unbreaking = EnchantmentHelper::getUnbreakingModifier(player->inventory);
-        if (unbreaking > 0 && entity->worldObj != nullptr && entity->worldObj->rand.nextInt(unbreaking + 1) > 0)
-            return;
+    if (i > 0) {
+        const int unbreaking = Enchantment::unbreaking != nullptr ? EnchantmentHelper::getEnchantmentLevel(Enchantment::unbreaking->effectId, this) : 0;
+        int negated = 0;
+        for (int j = 0; unbreaking > 0 && j < i; j++) {
+            if (EnchantmentDurability::negateDamage(this, unbreaking, random))
+                negated++;
+        }
+        i -= negated;
+        if (i <= 0)
+            return false;
     }
     itemDamage += i;
-    if (itemDamage > getMaxDamage()) {
-        EntityLiving* living = dynamic_cast<EntityLiving*>(entity);
+    return itemDamage > getMaxDamage();
+}
+
+void ItemStack::damageItem(int i, Entity* entity) {
+    EntityPlayer* player = dynamic_cast<EntityPlayer*>(entity);
+    if (player != nullptr && player->capabilities.isCreativeMode) {
+        return;
+    }
+    if (!isItemStackDamageable() || entity == nullptr) {
+        return;
+    }
+    EntityLiving* living = dynamic_cast<EntityLiving*>(entity);
+    if (living == nullptr && entity->worldObj == nullptr) {
+        return;
+    }
+    if (attemptDamageItem(i, living != nullptr ? living->getRNG() : entity->worldObj->rand)) {
         if (living != nullptr)
             living->renderBrokenItemStack(this);
         if (player != nullptr)

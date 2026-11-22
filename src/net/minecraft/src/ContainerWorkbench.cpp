@@ -50,7 +50,7 @@ ContainerWorkbench::~ContainerWorkbench()
 
 void ContainerWorkbench::onCraftMatrixChanged(IInventory *iinventory)
 {
-	ItemStack *newResult = CraftingManager::getInstance()->findMatchingRecipe(craftMatrix);
+	ItemStack *newResult = CraftingManager::getInstance()->findMatchingRecipe(craftMatrix, world);
 	craftResult->setInventorySlotContents(0, newResult);
 }
 

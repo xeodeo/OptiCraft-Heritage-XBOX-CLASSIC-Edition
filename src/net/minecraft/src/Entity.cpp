@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include "EnchantmentProtection.h"
 #include "java/Arithmetic.h"
 
 #include <cmath>
@@ -1090,7 +1091,8 @@ bool Entity::isWet()
 
 void Entity::setFire(int_t seconds)
 {
-	const int_t ticks = seconds * 20;
+	int_t ticks = seconds * 20;
+	ticks = EnchantmentProtection::func_92093_a(this, ticks);
 	if (fire < ticks)
 		fire = ticks;
 }

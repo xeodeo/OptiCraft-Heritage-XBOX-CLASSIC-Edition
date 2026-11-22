@@ -7,6 +7,8 @@
 #include "ICrafting.h"
 #include "IInventory.h"
 #include "InventoryPlayer.h"
+#include "Item.h"
+#include "ItemEnchantedBook.h"
 #include "ItemStack.h"
 #include "Slot.h"
 #include "SlotEnchantment.h"
@@ -121,11 +123,27 @@ bool ContainerEnchantment::enchantItem(EntityPlayer *player, int_t option)
 	if (!worldPointer->multiplayerWorld)
 	{
 		std::vector<EnchantmentData> enchantments = EnchantmentHelper::buildEnchantmentList(rand, stack, enchantLevels[option]);
+		// Java 1.5.2: a book becomes an enchanted book that stores ONE of the rolled enchantments.
+		const bool isBook = Item::book != nullptr && stack->itemID == Item::book->shiftedIndex;
+		ItemEnchantedBook *enchantedBook = dynamic_cast<ItemEnchantedBook *>(Item::enchantedBook);
 		if (!enchantments.empty())
 		{
-			player->removeExperience(enchantLevels[option]);
-			for (const EnchantmentData &entry : enchantments)
-				stack->addEnchantment(entry.enchantmentobj, entry.enchantmentLevel);
+			player->addExperienceLevel(-enchantLevels[option]);
+			if (isBook && enchantedBook != nullptr)
+				stack->itemID = enchantedBook->shiftedIndex;
+
+			const int_t chosen = isBook ? rand.nextInt(static_cast<int_t>(enchantments.size())) : -1;
+			for (int_t i = 0; i < static_cast<int_t>(enchantments.size()); ++i)
+			{
+				const EnchantmentData &entry = enchantments[static_cast<size_t>(i)];
+				if (!isBook || i == chosen)
+				{
+					if (isBook && enchantedBook != nullptr)
+						enchantedBook->func_92115_a(stack, entry);
+					else
+						stack->addEnchantment(entry.enchantmentobj, entry.enchantmentLevel);
+				}
+			}
 			onCraftMatrixChanged(tableInventory);
 		}
 	}
@@ -161,10 +179,33 @@ ItemStack *ContainerEnchantment::getStackInSlot(int_t slotIndex)
 
 	ItemStack *source = slot->getStack();
 	ItemStack *result = source->copy();
-	if (slotIndex != 0 || !mergeItemStack(source, 1, 37, true))
+	if (slotIndex == 0)
 	{
-		delete result;
-		return nullptr;
+		if (!mergeItemStack(source, 1, 37, true))
+		{
+			delete result;
+			return nullptr;
+		}
+	}
+	else
+	{
+		// Java 1.5.2: shift-click moves ONE item from the inventory into the empty table slot.
+		Slot *tableSlot = slots.empty() ? nullptr : slots[0];
+		if (tableSlot == nullptr || tableSlot->getHasStack() || !tableSlot->isItemValid(source))
+		{
+			delete result;
+			return nullptr;
+		}
+		if (source->hasTagCompound() && source->stackSize == 1)
+		{
+			tableSlot->putStack(source->copy());
+			source->stackSize = 0;
+		}
+		else if (source->stackSize >= 1)
+		{
+			tableSlot->putStack(new ItemStack(source->itemID, 1, source->getItemDamage()));
+			source->stackSize--;
+		}
 	}
 
 	ItemStack *orphaned = nullptr;

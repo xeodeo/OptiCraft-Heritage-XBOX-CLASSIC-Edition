@@ -1,4 +1,5 @@
 #include "EntityArrow.h"
+#include "EnchantmentThorns.h"
 #include "java/Math.h"
 #include "java/Arithmetic.h"
 
@@ -296,6 +297,8 @@ void EntityArrow::onUpdate()
 							hit->entityHit->addVelocity(motionX * (double)knockbackStrength * static_cast<double>(0.6f) / (double)horizontal, 0.1,
 								motionZ * (double)knockbackStrength * static_cast<double>(0.6f) / (double)horizontal);
 					}
+					if (shooter != nullptr)
+						EnchantmentThorns::func_92096_a(shooter, living, rand);
 				}
 				worldObj->playSoundAtEntity(this, "random.bowhit", 1.0f, 1.2f / (rand.nextFloat() * 0.2f + 0.9f));
 				setEntityDead();

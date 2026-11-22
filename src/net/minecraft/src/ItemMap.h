@@ -17,7 +17,8 @@ public:
     MapData* getMapData(ItemStack* itemstack, World* world);
     // Legacy readable-name alias retained for existing renderer callers.
     MapData* getAverageGroundLevel(ItemStack* itemstack, World* world) { return getMapData(itemstack, world); }
-    void initDimension(World* world, Entity* entity, MapData* mapdata);
+    void updateMapData(World* world, Entity* entity, MapData* mapdata);
+    void initDimension(World* world, Entity* entity, MapData* mapdata) { updateMapData(world, entity, mapdata); }
     void onUpdate(ItemStack* itemstack, World* world, Entity* entity, int i, bool flag) override;
     void onCreated(ItemStack* itemstack, World* world, EntityPlayer* entityplayer) override;
 };

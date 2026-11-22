@@ -15,6 +15,7 @@
 #include "EnchantmentLootBonus.h"
 #include "EnchantmentOxygen.h"
 #include "EnchantmentProtection.h"
+#include "EnchantmentThorns.h"
 #include "EnchantmentUntouching.h"
 #include "EnchantmentWaterWorker.h"
 #include "StatCollector.h"
@@ -28,6 +29,7 @@ Enchantment *Enchantment::blastProtection = nullptr;
 Enchantment *Enchantment::projectileProtection = nullptr;
 Enchantment *Enchantment::respiration = nullptr;
 Enchantment *Enchantment::aquaAffinity = nullptr;
+Enchantment *Enchantment::thorns = nullptr;
 Enchantment *Enchantment::sharpness = nullptr;
 Enchantment *Enchantment::smite = nullptr;
 Enchantment *Enchantment::baneOfArthropods = nullptr;
@@ -82,6 +84,7 @@ void Enchantment::initEnchantments()
     projectileProtection = (new EnchantmentProtection(4, 5, 4))->setName("projectileProtection");
     respiration = new EnchantmentOxygen(5, 2);
     aquaAffinity = new EnchantmentWaterWorker(6, 2);
+    thorns = new EnchantmentThorns(7, 1);
     sharpness = (new EnchantmentDamage(16, 10, 0))->setName("sharpness");
     smite = (new EnchantmentDamage(17, 5, 1))->setName("smite");
     baneOfArthropods = (new EnchantmentDamage(18, 5, 2))->setName("baneOfArthropods");
@@ -113,7 +116,7 @@ void Enchantment::cleanup() {
         entry = nullptr;
     }
     protection = fireProtection = featherFalling = blastProtection = projectileProtection = nullptr;
-    respiration = aquaAffinity = nullptr;
+    respiration = aquaAffinity = thorns = nullptr;
     sharpness = smite = baneOfArthropods = knockback = fireAspect = looting = nullptr;
     efficiency = silkTouch = unbreaking = fortune = nullptr;
     power = punch = flame = infinity = nullptr;

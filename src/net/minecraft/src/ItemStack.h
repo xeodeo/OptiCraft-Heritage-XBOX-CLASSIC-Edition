@@ -6,6 +6,7 @@
 #include "java/Type.h"
 
 class Item;
+class Random;
 class Block;
 class NBTBase;
 class EntityItemFrame;
@@ -53,6 +54,7 @@ public:
     int getItemDamage();
     void setItemDamage(int damage);
     int getMaxDamage();
+    bool attemptDamageItem(int damage, Random& random);
     void damageItem(int damage, Entity* entity);
     void hitEntity(EntityLiving* entityliving, EntityPlayer* entityplayer);
     void onDestroyBlock(int i, int j, int k, int l, EntityPlayer* entityplayer);

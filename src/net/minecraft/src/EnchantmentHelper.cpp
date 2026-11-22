@@ -8,6 +8,8 @@
 #include "Enchantment.h"
 #include "EnchantmentModifierDamage.h"
 #include "EnchantmentModifierLiving.h"
+#include "EntityLiving.h"
+#include "EntityPlayer.h"
 #include "EnumEnchantmentType.h"
 #include "InventoryPlayer.h"
 #include "Item.h"
@@ -168,26 +170,83 @@ int EnchantmentHelper::getFortuneModifier(InventoryPlayer *inventory) { return i
 int EnchantmentHelper::getLootingModifier(InventoryPlayer *inventory) { return inventory != nullptr && Enchantment::looting != nullptr ? getEnchantmentLevel(Enchantment::looting->effectId, inventory->getCurrentItem()) : 0; }
 bool EnchantmentHelper::getAquaAffinityModifier(InventoryPlayer *inventory) { return inventory != nullptr && Enchantment::aquaAffinity != nullptr && getMaxEnchantmentLevel(Enchantment::aquaAffinity->effectId, inventory->armorInventory, 4) > 0; }
 
+int EnchantmentHelper::getLastActiveItems(Entity *entity, ItemStack **out)
+{
+    if (EntityPlayer *player = dynamic_cast<EntityPlayer *>(entity))
+    {
+        if (player->inventory == nullptr)
+            return 0;
+        for (int i = 0; i < 4; ++i)
+            out[i] = player->inventory->armorInventory[i];
+        return 4;
+    }
+    if (EntityLiving *living = dynamic_cast<EntityLiving *>(entity))
+    {
+        out[0] = living->getHeldItem();
+        return 1;
+    }
+    return 0;
+}
+
+int EnchantmentHelper::getMaxEnchantmentLevel(int effectId, Entity *entity)
+{
+    ItemStack *items[5] = { nullptr };
+    const int count = getLastActiveItems(entity, items);
+    return getMaxEnchantmentLevel(effectId, items, count);
+}
+
+int EnchantmentHelper::func_92098_i(EntityLiving *living)
+{
+    return Enchantment::thorns != nullptr ? getMaxEnchantmentLevel(Enchantment::thorns->effectId, living) : 0;
+}
+
+ItemStack *EnchantmentHelper::func_92099_a(Enchantment *enchantment, EntityLiving *living)
+{
+    if (enchantment == nullptr)
+        return nullptr;
+    ItemStack *items[5] = { nullptr };
+    const int count = getLastActiveItems(living, items);
+    for (int i = 0; i < count; ++i)
+    {
+        if (items[i] != nullptr && getEnchantmentLevel(enchantment->effectId, items[i]) > 0)
+            return items[i];
+    }
+    return nullptr;
+}
+
 int EnchantmentHelper::calcItemStackEnchantability(Random &random, int slot, int bookshelves, ItemStack *stack)
 {
+    // Java 1.5.2.
     if (stack == nullptr || stack->getItem() == nullptr)
         return 0;
     const int itemEnchantability = stack->getItem()->getItemEnchantability();
     if (itemEnchantability <= 0)
         return 0;
-    bookshelves = std::min(bookshelves, 30);
-    bookshelves = 1 + (bookshelves >> 1) + random.nextInt(bookshelves + 1);
-    const int value = random.nextInt(5) + bookshelves;
-    if (slot == 0) return (value >> 1) + 1;
+    if (bookshelves > 15)
+        bookshelves = 15;
+    const int value = random.nextInt(8) + 1 + (bookshelves >> 1) + random.nextInt(bookshelves + 1);
+    if (slot == 0) return std::max(value / 3, 1);
     if (slot == 1) return value * 2 / 3 + 1;
-    return value;
+    return std::max(value, bookshelves * 2);
 }
 
 void EnchantmentHelper::addRandomEnchantment(Random &random, ItemStack *stack, int level)
 {
+    if (stack == nullptr)
+        return;
     std::vector<EnchantmentData> list = buildEnchantmentList(random, stack, level);
+    // Java 1.5.2: a plain book turns into an enchanted book holding the enchantments.
+    const bool isBook = Item::book != nullptr && stack->itemID == Item::book->shiftedIndex;
+    ItemEnchantedBook *enchantedBook = dynamic_cast<ItemEnchantedBook *>(Item::enchantedBook);
+    if (isBook && enchantedBook != nullptr)
+        stack->itemID = enchantedBook->shiftedIndex;
     for (const EnchantmentData &entry : list)
-        stack->addEnchantment(entry.enchantmentobj, entry.enchantmentLevel);
+    {
+        if (isBook && enchantedBook != nullptr)
+            enchantedBook->func_92115_a(stack, entry);
+        else
+            stack->addEnchantment(entry.enchantmentobj, entry.enchantmentLevel);
+    }
 }
 
 std::vector<EnchantmentData> EnchantmentHelper::buildEnchantmentList(Random &random, ItemStack *stack, int level)
@@ -199,10 +258,14 @@ std::vector<EnchantmentData> EnchantmentHelper::buildEnchantmentList(Random &ran
     if (itemEnchantability <= 0)
         return result;
 
+    // Java 1.5.2 (1.2.5 used the full enchantability and a 0.25 spread).
+    itemEnchantability /= 2;
     itemEnchantability = 1 + random.nextInt((itemEnchantability >> 1) + 1) + random.nextInt((itemEnchantability >> 1) + 1);
     int adjusted = itemEnchantability + level;
-    const float variance = (random.nextFloat() + random.nextFloat() - 1.0f) * 0.25f;
+    const float variance = (random.nextFloat() + random.nextFloat() - 1.0f) * 0.15f;
     adjusted = JavaArithmetic::floatToInt(static_cast<float>(adjusted) * (1.0f + variance) + 0.5f);
+    if (adjusted < 1)
+        adjusted = 1;
 
     std::vector<EnchantmentData> candidates = mapEnchantmentData(adjusted, stack);
     if (candidates.empty())
@@ -213,7 +276,7 @@ std::vector<EnchantmentData> EnchantmentHelper::buildEnchantmentList(Random &ran
         return result;
     result.push_back(*selected);
 
-    for (int threshold = adjusted >> 1; random.nextInt(50) <= threshold; threshold >>= 1)
+    for (int threshold = adjusted; random.nextInt(50) <= threshold; threshold >>= 1)
     {
         candidates.erase(std::remove_if(candidates.begin(), candidates.end(), [&result](const EnchantmentData &candidate) {
             for (const EnchantmentData &existing : result)
@@ -239,9 +302,11 @@ std::vector<EnchantmentData> EnchantmentHelper::mapEnchantmentData(int enchantab
     Item *item = stack != nullptr ? stack->getItem() : nullptr;
     if (item == nullptr)
         return result;
+    // Java 1.5.2: a book accepts every enchantment.
+    const bool isBook = Item::book != nullptr && stack->itemID == Item::book->shiftedIndex;
     for (Enchantment *enchantment : Enchantment::enchantmentsList)
     {
-        if (enchantment == nullptr || !EnumEnchantmentTypeHelper::canEnchantItem(enchantment->type, item))
+        if (enchantment == nullptr || (!EnumEnchantmentTypeHelper::canEnchantItem(enchantment->type, item) && !isBook))
             continue;
 
         int selectedLevel = 0;

@@ -21,6 +21,7 @@ public:
 	static DamageSource causeFireballDamage(EntityFireball *fireball, Entity *shooter);
 	static DamageSource causeThrownDamage(Entity *projectile, Entity *thrower);
 	static DamageSource causeIndirectMagicDamage(Entity *source, Entity *indirectEntity);
+	static DamageSource causeThornsDamage(Entity *entity);
 
 	bool isProjectile() const;
 	DamageSource &setProjectile();

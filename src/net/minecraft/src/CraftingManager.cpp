@@ -232,7 +232,7 @@ void CraftingManager::addShapelessRecipe(ItemStack *itemstack, std::initializer_
 	recipes.push_back(new ShapelessRecipes(itemstack, ingredients));
 }
 
-ItemStack *CraftingManager::findMatchingRecipe(InventoryCrafting *inventorycrafting)
+ItemStack *CraftingManager::findMatchingRecipe(InventoryCrafting *inventorycrafting, World *world)
 {
 	int_t occupiedSlots = 0;
 	ItemStack *first = nullptr;
@@ -277,7 +277,7 @@ ItemStack *CraftingManager::findMatchingRecipe(InventoryCrafting *inventorycraft
 
 	for (IRecipe *irecipe : recipes)
 	{
-		if (irecipe->matches(inventorycrafting))
+		if (irecipe->matches(inventorycrafting, world))
 		{
 			return irecipe->getCraftingResult(inventorycrafting);
 		}

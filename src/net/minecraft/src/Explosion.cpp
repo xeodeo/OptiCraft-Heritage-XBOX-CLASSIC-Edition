@@ -1,4 +1,5 @@
 ﻿#include "Explosion.h"
+#include "EnchantmentProtection.h"
 #include "java/Arithmetic.h"
 #include "DamageSource.h"
 
@@ -232,7 +233,7 @@ void Explosion::doExplosionA()
             double d13 = (1.0 - d4) * d12;
             entity->attackEntityFrom(DamageSource::explosion,
                 JavaArithmetic::doubleToInt(((d13 * d13 + d13) / 2.0) * 8.0 * (double)explosionSize + 1.0));
-            double d14 = d13;
+            double d14 = EnchantmentProtection::func_92092_a(entity, d13);
             entity->motionX += d6  * d14;
             entity->motionY += d8  * d14;
             entity->motionZ += d10 * d14;

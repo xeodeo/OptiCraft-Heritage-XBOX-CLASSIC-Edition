@@ -4,7 +4,8 @@ MapInfo::MapInfo(MapData *mapdata, EntityPlayer *entityplayer) :
 	mapDataObj(mapdata),
 	entityplayerObj(entityplayer),
 	hasSkyLight(0),
-	isHellWorld(0)
+	isHellWorld(0),
+	field_82569_d(0)
 {
 	for (int_t i = 0; i < 128; i++)
 	{
