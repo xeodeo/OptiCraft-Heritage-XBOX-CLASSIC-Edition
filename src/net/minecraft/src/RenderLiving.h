@@ -27,6 +27,7 @@ protected:
     virtual void renderModel(EntityLiving* entityliving, float f, float f1, float f2, float f3, float f4, float f5);
     virtual int inheritRenderPass(EntityLiving* entityliving, int i, float f);
     virtual int shouldRenderPass(EntityLiving* entityliving, int i, float f);
+    virtual void renderArmorOverlay(EntityLiving* entityliving, int i, float f) { (void)entityliving; (void)i; (void)f; }
     virtual float getDeathMaxRotation(EntityLiving* entityliving);
     virtual int getColorMultiplier(EntityLiving* entityliving, float f, float f1);
     virtual void preRenderCallback(EntityLiving* entityliving, float f);

@@ -3545,6 +3545,9 @@ void RenderGlobal::playAuxSFX(EntityPlayer *entityplayer, int_t i, int_t j, int_
 	case 1008:
 		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.ghast.fireball", 10.0f, random.nextFloatDifference() * 0.2f + 1.0f);
 		break;
+	case 1009:
+		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.ghast.fireball", 1.0f, random.nextFloatDifference() * 0.2f + 1.0f);
+		break;
 	case 1010:
 		worldObj->playSoundEffect((double)j + 0.5, (double)k + 0.5, (double)l + 0.5, "mob.zombie.wood", 2.0f, random.nextFloatDifference() * 0.2f + 1.0f);
 		break;
@@ -3600,19 +3603,33 @@ void RenderGlobal::playAuxSFX(EntityPlayer *entityplayer, int_t i, int_t j, int_
 
 	case 2000:
 	{
-		int_t xDir = i1 % 3 - 1;
-		int_t zDir = (i1 / 3) % 3 - 1;
+		int_t xDir = 0;
+		int_t yDir = 0;
+		int_t zDir = 0;
+		if (i1 == 9)
+		{
+			yDir = -1;
+		}
+		else if (i1 == 10)
+		{
+			yDir = 1;
+		}
+		else
+		{
+			xDir = i1 % 3 - 1;
+			zDir = (i1 / 3) % 3 - 1;
+		}
 		double baseX = (double)j + (double)xDir * 0.6 + 0.5;
-		double baseY = (double)k + 0.5;
+		double baseY = (double)k + (double)yDir * 0.6 + 0.5;
 		double baseZ = (double)l + (double)zDir * 0.6 + 0.5;
 		for (int_t n = 0; n < 10; ++n)
 		{
 			double speed = random.nextDouble() * 0.2 + 0.01;
-			double px = baseX + (double)xDir * 0.01 + (random.nextDouble() - 0.5) * (double)zDir * 0.5;
-			double py = baseY + (random.nextDouble() - 0.5) * 0.5;
-			double pz = baseZ + (double)zDir * 0.01 + (random.nextDouble() - 0.5) * (double)xDir * 0.5;
+			double px = baseX + (double)xDir * 0.01 + (random.nextDouble() - 0.5) * (double)(zDir != 0 ? zDir : (yDir != 0 ? 1 : 0)) * 0.5;
+			double py = baseY + (double)yDir * 0.01 + (random.nextDouble() - 0.5) * (yDir == 0 ? 0.5 : 0.1);
+			double pz = baseZ + (double)zDir * 0.01 + (random.nextDouble() - 0.5) * (double)(xDir != 0 ? xDir : (yDir != 0 ? 1 : 0)) * 0.5;
 			double vx = (double)xDir * speed + random.nextGaussian() * 0.01;
-			double vy = -0.03 + random.nextGaussian() * 0.01;
+			double vy = (yDir != 0 ? (double)yDir * speed : -0.03) + random.nextGaussian() * 0.01;
 			double vz = (double)zDir * speed + random.nextGaussian() * 0.01;
 			spawnParticle("smoke", px, py, pz, vx, vy, vz);
 		}
@@ -3734,6 +3751,41 @@ void RenderGlobal::playAuxSFX(EntityPlayer *entityplayer, int_t i, int_t j, int_
 			worldObj->spawnParticle("flame", px, py, pz, 0.0, 0.0, 0.0);
 		}
 		break;
+
+	case 2005:
+	{
+		const int_t count = i1 == 0 ? 15 : i1;
+		const int_t blockId = worldObj->getBlockId(j, k, l);
+		Block *block = (blockId > 0 && blockId < Block::BLOCK_REGISTRY_SIZE) ? Block::blocksList[blockId] : nullptr;
+		if (block != nullptr)
+		{
+			block->setBlockBoundsBasedOnState(worldObj, j, k, l);
+			for (int_t n = 0; n < count; ++n)
+			{
+				const double vx = random.nextGaussian() * 0.02;
+				const double vy = random.nextGaussian() * 0.02;
+				const double vz = random.nextGaussian() * 0.02;
+				const double px = (double)j + (double)random.nextFloat();
+				const double py = (double)k + (double)random.nextFloat() * block->maxY;
+				const double pz = (double)l + (double)random.nextFloat();
+				worldObj->spawnParticle("happyVillager", px, py, pz, vx, vy, vz);
+			}
+		}
+		else
+		{
+			for (int_t n = 0; n < count; ++n)
+			{
+				const double vx = random.nextGaussian() * 0.02;
+				const double vy = random.nextGaussian() * 0.02;
+				const double vz = random.nextGaussian() * 0.02;
+				const double px = (double)j + (double)random.nextFloat();
+				const double py = (double)k + (double)random.nextFloat();
+				const double pz = (double)l + (double)random.nextFloat();
+				worldObj->spawnParticle("happyVillager", px, py, pz, vx, vy, vz);
+			}
+		}
+		break;
+	}
 	}
 }
 

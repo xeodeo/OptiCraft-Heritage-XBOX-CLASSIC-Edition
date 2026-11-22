@@ -57,19 +57,36 @@ ItemStack* TileEntityDispenser::decrStackSize(int_t i, int_t j) {
     }
 }
 
-ItemStack* TileEntityDispenser::getRandomStackFromInventory() {
-    int_t i = -1;
-    int_t j = 1;
+int_t TileEntityDispenser::getRandomSlotFromInventory() {
+    int_t slot = -1;
+    int_t count = 1;
     for (int_t k = 0; k < (int_t)(sizeof(dispenserContents) / sizeof(dispenserContents[0])); k++) {
-        if (dispenserContents[k] != nullptr && dispenserRandom.nextInt(j++) == 0) {
-            i = k;
+        if (dispenserContents[k] != nullptr && dispenserRandom.nextInt(count++) == 0) {
+            slot = k;
         }
     }
-    if (i >= 0) {
-        return decrStackSize(i, 1);
+    return slot;
+}
+
+ItemStack* TileEntityDispenser::getRandomStackFromInventory() {
+    int_t slot = getRandomSlotFromInventory();
+    if (slot >= 0) {
+        return decrStackSize(slot, 1);
     } else {
         return nullptr;
     }
+}
+
+int_t TileEntityDispenser::addItem(ItemStack* stack) {
+    if (stack == nullptr)
+        return -1;
+    for (int_t i = 0; i < getSizeInventory(); ++i) {
+        if (dispenserContents[i] == nullptr || dispenserContents[i]->itemID == 0) {
+            setInventorySlotContents(i, stack);
+            return i;
+        }
+    }
+    return -1;
 }
 
 void TileEntityDispenser::setInventorySlotContents(int_t i, ItemStack* itemstack) {
@@ -87,7 +104,15 @@ void TileEntityDispenser::setInventorySlotContents(int_t i, ItemStack* itemstack
 }
 
 std::string TileEntityDispenser::getInvName() {
-    return "container.dispenser";
+    return isInvNameLocalized() ? customName : "container.dispenser";
+}
+
+bool TileEntityDispenser::isInvNameLocalized() const {
+    return !customName.empty();
+}
+
+void TileEntityDispenser::setCustomName(const std::string &name) {
+    customName = name;
 }
 
 int_t TileEntityDispenser::getInventoryStackLimit() {
@@ -118,6 +143,11 @@ void TileEntityDispenser::readFromNBT(NBTTagCompound* nbttagcompound) {
             dispenserContents[j] = loaded;
         }
     }
+    if (nbttagcompound->hasKey("CustomName")) {
+        customName = nbttagcompound->getString("CustomName");
+    } else {
+        customName.clear();
+    }
 }
 
 void TileEntityDispenser::writeToNBT(NBTTagCompound* nbttagcompound) {
@@ -132,4 +162,7 @@ void TileEntityDispenser::writeToNBT(NBTTagCompound* nbttagcompound) {
         }
     }
     nbttagcompound->setTag("Items", nbttaglist);
+    if (isInvNameLocalized()) {
+        nbttagcompound->setString("CustomName", customName);
+    }
 }

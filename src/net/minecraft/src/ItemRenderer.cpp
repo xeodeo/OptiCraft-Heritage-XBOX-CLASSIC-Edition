@@ -453,13 +453,15 @@ void ItemRenderer::renderItemInFirstPerson(float partialTick) {
         }
 
         if (heldItem->func_46058_c()) {
-            renderItem(player, itemstack, 0);
-            int color = heldItem->getColorFromItemStack(itemstack, 1);
-            float red = static_cast<float>(color >> 16 & 0xff) / 255.0f;
-            float green = static_cast<float>(color >> 8 & 0xff) / 255.0f;
-            float blue = static_cast<float>(color & 0xff) / 255.0f;
-            renderColor4f(brightness * red, brightness * green, brightness * blue, 1.0f);
-            renderItem(player, itemstack, 1);
+            for (int renderPass = 0; renderPass <= 1; ++renderPass) {
+                int color = heldItem->getColorFromItemStack(itemstack, renderPass);
+                float red = static_cast<float>(color >> 16 & 0xff) / 255.0f;
+                float green = static_cast<float>(color >> 8 & 0xff) / 255.0f;
+                float blue = static_cast<float>(color & 0xff) / 255.0f;
+                renderColor4f(brightness * red, brightness * green, brightness * blue, 1.0f);
+                renderItem(player, itemstack, renderPass);
+            }
+            renderColor4f(brightness, brightness, brightness, 1.0f);
         } else {
             renderItem(player, itemstack, 0);
         }

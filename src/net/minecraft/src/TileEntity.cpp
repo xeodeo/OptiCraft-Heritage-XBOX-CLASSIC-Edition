@@ -27,6 +27,7 @@
 #include "TileEntityComparator.h"
 #include "TileEntityHopper.h"
 #include "TileEntityDropper.h"
+#include "TileEntityCommandBlock.h"
 #include "Block.h"
 
 std::map<std::string, std::function<TileEntity *()>> TileEntity::nameToClassMap;
@@ -58,6 +59,7 @@ namespace
 			TileEntity::addMapping<TileEntityComparator>("Comparator");
 			TileEntity::addMapping<TileEntityHopper>("Hopper");
 			TileEntity::addMapping<TileEntityDropper>("Dropper");
+			TileEntity::addMapping<TileEntityCommandBlock>("Control");
 		}
 	};
 	TileEntityMappingInit tileEntityMappingInit;

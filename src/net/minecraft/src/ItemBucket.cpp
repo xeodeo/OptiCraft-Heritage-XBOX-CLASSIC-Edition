@@ -77,18 +77,7 @@ ItemStack* ItemBucket::onItemRightClick(ItemStack* itemstack, World* world, Enti
             if (!entityplayer->canPlayerEdit(i, j, k)) {
                 return itemstack;
             }
-            if (world->isAirBlock(i, j, k) || !world->getBlockMaterial(i, j, k)->isSolid()) {
-                if (world->worldProvider->isHellWorld && isFull == Block::waterMoving->blockID) {
-                    world->playSoundEffect(d + 0.5, d1 + 0.5, d2 + 0.5, "random.fizz", 0.5f, 2.6f + world->rand.nextFloatDifference() * 0.8f);
-                    for (int l = 0; l < 8; l++) {
-                        const double particleX = (double)i + Math::random();
-                        const double particleY = (double)j + Math::random();
-                        const double particleZ = (double)k + Math::random();
-                        world->spawnParticle("largesmoke", particleX, particleY, particleZ, 0.0, 0.0, 0.0);
-                    }
-                } else {
-                    world->setBlockAndMetadataWithNotify(i, j, k, isFull, 0);
-                }
+            if (tryPlaceContainedLiquid(world, d, d1, d2, i, j, k)) {
                 if (entityplayer->capabilities.isCreativeMode) {
                     return itemstack;
                 }
@@ -104,4 +93,25 @@ ItemStack* ItemBucket::onItemRightClick(ItemStack* itemstack, World* world, Enti
         return new ItemStack(Item::bucketMilk);
     }
     return itemstack;
+}
+
+bool ItemBucket::tryPlaceContainedLiquid(World* world, double px, double py, double pz, int x, int y, int z) {
+    if (isFull <= 0) {
+        return false;
+    }
+    if (!world->isAirBlock(x, y, z) && world->getBlockMaterial(x, y, z)->isSolid()) {
+        return false;
+    }
+    if (world->worldProvider->isHellWorld && isFull == Block::waterMoving->blockID) {
+        world->playSoundEffect(px + 0.5, py + 0.5, pz + 0.5, "random.fizz", 0.5f, 2.6f + world->rand.nextFloatDifference() * 0.8f);
+        for (int l = 0; l < 8; l++) {
+            const double particleX = (double)x + Math::random();
+            const double particleY = (double)y + Math::random();
+            const double particleZ = (double)z + Math::random();
+            world->spawnParticle("largesmoke", particleX, particleY, particleZ, 0.0, 0.0, 0.0);
+        }
+    } else {
+        world->setBlockAndMetadataWithNotify(x, y, z, isFull, 0);
+    }
+    return true;
 }

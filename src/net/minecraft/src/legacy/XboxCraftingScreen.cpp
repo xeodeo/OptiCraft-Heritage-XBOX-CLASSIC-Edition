@@ -21,8 +21,10 @@
 #include "net/minecraft/src/IRecipe.h"
 #include "net/minecraft/src/InventoryPlayer.h"
 #include "net/minecraft/src/Item.h"
+#include "net/minecraft/src/ItemArmor.h"
 #include "net/minecraft/src/ItemDye.h"
 #include "net/minecraft/src/ItemStack.h"
+#include "net/minecraft/src/RecipesArmorDyes.h"
 #include "net/minecraft/src/Minecraft.h"
 #include "net/minecraft/src/NBTTagCompound.h"
 #include "net/minecraft/src/NBTTagList.h"
@@ -130,14 +132,19 @@ void XboxCraftingScreen::initGui()
     tabs.clear();
     for (const TabInfo &info : kTabs)
     {
-        // The inventory's 2x2 grid cannot fit any armour piece.
-        if (gridSize == 2 && info.group == LEGACY_CRAFT_ARMOUR)
-            continue;
         tabs.push_back(info.group);
     }
     tab = std::min<int_t>(tab, static_cast<int_t>(tabs.size()) - 1);
 
     buildEntries();
+    buildColumns();
+}
+
+void XboxCraftingScreen::selectTab(int_t index)
+{
+    if (tabs.empty())
+        return;
+    tab = std::max<int_t>(0, std::min<int_t>(index, static_cast<int_t>(tabs.size()) - 1));
     buildColumns();
 }
 
@@ -160,6 +167,7 @@ void XboxCraftingScreen::buildEntries()
         entry.output = recipe->getRecipeOutput();
         entry.defaultDyeDamage = 1;
         entry.isFadeStar = false;
+        entry.isArmorDye = false;
         entry.canMake = false;
         entry.missingCells = 0;
         for (int_t i = 0; i < 9; ++i)
@@ -224,6 +232,55 @@ void XboxCraftingScreen::buildEntries()
     }
 
     addDynamicFireworkEntries();
+    addDynamicArmorDyeEntries();
+}
+
+void XboxCraftingScreen::addDynamicArmorDyeEntries()
+{
+    if (Item::dyePowder == nullptr)
+        return;
+
+    Item *leatherPieces[4] = {
+        Item::helmetLeather,
+        Item::plateLeather,
+        Item::legsLeather,
+        Item::bootsLeather
+    };
+    const int_t idDye = Item::dyePowder->shiftedIndex;
+
+    for (Item *piece : leatherPieces)
+    {
+        if (piece == nullptr)
+            continue;
+        ItemArmor *armor = dynamic_cast<ItemArmor *>(piece);
+        if (armor == nullptr)
+            continue;
+
+        ItemStack *preview = new ItemStack(piece, 1, 0);
+        armor->setColor(preview, RecipesArmorDyes::computeBlendedColor(nullptr, 1));
+        ownedOutputs.push_back(preview);
+
+        Entry entry;
+        entry.recipe = nullptr;
+        entry.output = preview;
+        entry.defaultDyeDamage = 1;
+        entry.isFadeStar = false;
+        entry.isArmorDye = true;
+        entry.canMake = false;
+        entry.missingCells = 0;
+        for (int_t i = 0; i < 9; ++i)
+        {
+            entry.cellId[i] = 0;
+            entry.cellDamage[i] = -1;
+        }
+        entry.cellId[0] = piece->shiftedIndex;
+        entry.cellDamage[0] = -1;
+        entry.cellId[1] = idDye;
+        entry.cellDamage[1] = -1;
+        entry.needs.push_back({ piece->shiftedIndex, -1, 1 });
+        entry.needs.push_back({ idDye, -1, 1 });
+        entries.push_back(entry);
+    }
 }
 
 void XboxCraftingScreen::addDynamicFireworkEntries()
@@ -247,6 +304,7 @@ void XboxCraftingScreen::addDynamicFireworkEntries()
         entry.output = output;
         entry.defaultDyeDamage = defaultDyeDamage;
         entry.isFadeStar = isFadeStar;
+        entry.isArmorDye = false;
         entry.canMake = false;
         entry.missingCells = 0;
         for (int_t i = 0; i < 9; ++i)
@@ -456,6 +514,12 @@ ItemStack *XboxCraftingScreen::displayStackFor(const Entry *entry, int_t id, int
                     return e.output;
             }
         }
+        if (entry != nullptr && entry->isArmorDye)
+        {
+            ItemStack *invArmor = firstInventoryStack(id, -1);
+            if (invArmor != nullptr)
+                return invArmor;
+        }
     }
     return iconStack(id, damage);
 }
@@ -532,6 +596,25 @@ void XboxCraftingScreen::refreshFireworkPreviews()
     }
 }
 
+void XboxCraftingScreen::refreshArmorDyePreviews()
+{
+    if (Item::dyePowder == nullptr)
+        return;
+
+    const int_t dyeDmg = firstMatchingDyeDamage(1);
+    for (Entry &entry : entries)
+    {
+        if (!entry.isArmorDye || entry.output == nullptr)
+            continue;
+        ItemArmor *armor = dynamic_cast<ItemArmor *>(entry.output->getItem());
+        if (armor == nullptr)
+            continue;
+        ItemStack *invArmor = firstInventoryStack(entry.output->itemID, -1);
+        const int_t blended = RecipesArmorDyes::computeBlendedColor(invArmor, dyeDmg);
+        armor->setColor(entry.output, blended);
+    }
+}
+
 unsigned int XboxCraftingScreen::inventorySignature() const
 {
     unsigned int hash = 2166136261u;
@@ -539,9 +622,18 @@ unsigned int XboxCraftingScreen::inventorySignature() const
     for (int_t i = 0; i < INVENTORY_SLOTS; ++i)
     {
         ItemStack *stack = inventory->mainInventory[i];
-        const unsigned int value = stack == nullptr ? 0u :
-            static_cast<unsigned int>(stack->itemID) * 31u + static_cast<unsigned int>(stack->getItemDamage()) * 7u +
-            static_cast<unsigned int>(stack->stackSize);
+        unsigned int value = 0u;
+        if (stack != nullptr)
+        {
+            value = static_cast<unsigned int>(stack->itemID) * 31u +
+                    static_cast<unsigned int>(stack->getItemDamage()) * 7u +
+                    static_cast<unsigned int>(stack->stackSize);
+            if (ItemArmor *armor = dynamic_cast<ItemArmor *>(stack->getItem()))
+            {
+                if (armor->hasColor(stack))
+                    value ^= static_cast<unsigned int>(armor->getColor(stack)) * 131u;
+            }
+        }
         hash = (hash ^ value) * 16777619u;
     }
     return hash | 1u;   // never 0, the "rebuild" marker
@@ -554,6 +646,7 @@ void XboxCraftingScreen::refreshAvailability()
         return;
     lastSignature = signature;
     refreshFireworkPreviews();
+    refreshArmorDyePreviews();
 
     for (const Column &col : columns)
     {

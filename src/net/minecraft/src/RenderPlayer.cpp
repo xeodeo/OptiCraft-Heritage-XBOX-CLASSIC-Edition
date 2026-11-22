@@ -63,13 +63,42 @@ int RenderPlayer::setArmorModel(EntityPlayer* entityPlayer, int i, float)
     model->bipedLeftArm->showModel = i == 1;
     model->bipedRightLeg->showModel = i == 2 || i == 3;
     model->bipedLeftLeg->showModel = i == 2 || i == 3;
+    model->onGround = mainModel->onGround;
+    model->isRiding = mainModel->isRiding;
+    model->isChild = mainModel->isChild;
     setRenderPassModel(model);
+    if (armor->material == EnumArmorMaterial::CLOTH)
+    {
+        const int color = armor->getColor(stack);
+        const float r = static_cast<float>((color >> 16) & 255) / 255.0f;
+        const float g = static_cast<float>((color >> 8) & 255) / 255.0f;
+        const float b = static_cast<float>(color & 255) / 255.0f;
+        renderColor3f(r, g, b);
+        return stack->isItemEnchanted() ? 31 : 16;
+    }
+    renderColor3f(1.0f, 1.0f, 1.0f);
     return stack->isItemEnchanted() ? 15 : 1;
 }
 
 int RenderPlayer::shouldRenderPass(EntityLiving* entityLiving, int i, float f)
 {
     return setArmorModel(static_cast<EntityPlayer*>(entityLiving), i, f);
+}
+
+void RenderPlayer::renderArmorOverlay(EntityLiving* entityLiving, int i, float)
+{
+    EntityPlayer* entityPlayer = static_cast<EntityPlayer*>(entityLiving);
+    if (entityPlayer == nullptr || entityPlayer->inventory == nullptr || i < 0 || i > 3)
+        return;
+    ItemStack* stack = entityPlayer->inventory->armorItemInSlot(3 - i);
+    if (stack == nullptr)
+        return;
+    ItemArmor* armor = dynamic_cast<ItemArmor*>(stack->getItem());
+    if (armor == nullptr || armor->material != EnumArmorMaterial::CLOTH)
+        return;
+    std::string overlayTex = std::string("/armor/cloth_") + (i != 2 ? "1" : "2") + "_b.png";
+    loadTexture(overlayTex);
+    renderColor3f(1.0f, 1.0f, 1.0f);
 }
 
 void RenderPlayer::renderPlayer(EntityPlayer* entityPlayer, double d, double d1, double d2, float f, float f1) {

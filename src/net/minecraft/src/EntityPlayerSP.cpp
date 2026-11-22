@@ -32,6 +32,7 @@
 #include "GuiEnchantment.h"
 #include "GuiRepair.h"
 #include "GuiBeacon.h"
+#include "GuiCommandBlock.h"
 #include "GuiScreenBook.h"
 #include "GuiEditSign.h"
 #include "GuiFurnace.h"
@@ -387,6 +388,16 @@ void EntityPlayerSP::displayGUIBeacon(TileEntityBeacon *beacon)
 {
     if (mc != nullptr && mc->isSplitScreenActive()) { mc->displayPlayerScreen(this == mc->thePlayer2 ? 1 : 0, new GuiBeacon(inventory, beacon, this)); return; }
     mc->displayGuiScreen(new GuiBeacon(inventory, beacon, this));
+}
+
+void EntityPlayerSP::displayGUICommandBlock(TileEntityCommandBlock *tile)
+{
+    if (mc != nullptr && mc->isSplitScreenActive())
+    {
+        mc->displayPlayerScreen(this == mc->thePlayer2 ? 1 : 0, new GuiCommandBlock(tile));
+        return;
+    }
+    mc->displayGuiScreen(new GuiCommandBlock(tile));
 }
 
 void EntityPlayerSP::displayGUIEditSign(TileEntitySign *tileentitysign)

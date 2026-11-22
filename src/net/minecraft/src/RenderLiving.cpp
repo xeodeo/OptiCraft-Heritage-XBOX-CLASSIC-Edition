@@ -108,12 +108,20 @@ void RenderLiving::doRenderLiving(EntityLiving* entityliving, double d, double d
         for (int pass = 0; pass < 4; ++pass) {
             int passResult = shouldRenderPass(entityliving, pass, f1);
             if (passResult > 0 && renderPassModel != nullptr) {
+                renderPassModel->onGround = mainModel->onGround;
+                renderPassModel->isRiding = mainModel->isRiding;
+                renderPassModel->isChild = mainModel->isChild;
                 renderPassModel->setLivingAnimations(entityliving, limbSwing, limbAmount, f1);
                 renderPassModel->render(entityliving, limbSwing, limbAmount, age, headYaw - bodyYaw, pitch, scale);
 
+                if ((passResult & 240) == 16) {
+                    renderArmorOverlay(entityliving, pass, f1);
+                    renderPassModel->render(entityliving, limbSwing, limbAmount, age, headYaw - bodyYaw, pitch, scale);
+                }
+
 #ifndef PS2_PLATFORM
                 // Enchanted armor glint, see RenderItem::renderItemIntoGUI.
-                if (passResult == 15) {
+                if ((passResult & 15) == 15) {
                     float glintTime = static_cast<float>(entityliving->ticksExisted) + f1;
                     loadTexture("%blur%/misc/glint.png");
                     renderEnable(RenderCapability::Blend);
@@ -148,6 +156,7 @@ void RenderLiving::doRenderLiving(EntityLiving* entityliving, double d, double d
                 }
 #endif
 
+                renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 renderDisable(RenderCapability::Blend);
                 renderEnable(RenderCapability::AlphaTest);
             }

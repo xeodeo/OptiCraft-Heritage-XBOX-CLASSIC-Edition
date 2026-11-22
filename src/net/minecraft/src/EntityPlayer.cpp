@@ -875,6 +875,7 @@ void EntityPlayer::displayGUIHopper(TileEntityHopper *tileentityhopper) { (void)
 void EntityPlayer::displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper) { (void)entityminecarthopper; }
 void EntityPlayer::displayGUIRepair(int_t, int_t, int_t) {}
 void EntityPlayer::displayGUIBeacon(TileEntityBeacon *) {}
+void EntityPlayer::displayGUICommandBlock(TileEntityCommandBlock *) {}
 void EntityPlayer::displayGUIBook(ItemStack *) {}
 void EntityPlayer::displayGUIMerchant(IMerchant *, const std::string &) {}
 void EntityPlayer::displayGUIMerchant(IMerchant *merchant, MerchantRecipeList *) { displayGUIMerchant(merchant, ""); }

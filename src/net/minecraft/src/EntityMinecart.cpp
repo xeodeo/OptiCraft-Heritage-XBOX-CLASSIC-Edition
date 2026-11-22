@@ -4,6 +4,7 @@
 #include "EntityMinecartFurnace.h"
 #include "EntityMinecartTNT.h"
 #include "EntityMinecartHopper.h"
+#include "EntityMinecartMobSpawner.h"
 #include "java/Arithmetic.h"
 #include "DamageSource.h"
 #include "DataWatcher.h"
@@ -92,6 +93,7 @@ EntityMinecart *EntityMinecart::createMinecart(World *world, double x, double y,
     case 1: return new EntityMinecartChest(world, x, y, z);
     case 2: return new EntityMinecartFurnace(world, x, y, z);
     case 3: return new EntityMinecartTNT(world, x, y, z);
+    case 4: return new EntityMinecartMobSpawner(world, x, y, z);
     case 5: return new EntityMinecartHopper(world, x, y, z);
     default: return new EntityMinecartEmpty(world, x, y, z);
     }

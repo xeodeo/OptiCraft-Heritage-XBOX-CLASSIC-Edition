@@ -87,6 +87,7 @@
 #include "ItemAnvilBlock.h"
 #include "BlockEnderChest.h"
 #include "BlockBeacon.h"
+#include "BlockCommandBlock.h"
 #include "BlockRail.h"
 #include "BlockRailPowered.h"
 #include "BlockRedstoneOre.h"
@@ -336,6 +337,7 @@ Block *Block::redstoneComparatorIdle = nullptr;
 Block *Block::redstoneComparatorActive = nullptr;
 Block *Block::hopperBlock = nullptr;
 Block *Block::dropper = nullptr;
+Block *Block::commandBlock = nullptr;
 
 static TileEntity *createTileEntitySign()
 {
@@ -1160,6 +1162,7 @@ void Block::initialize()
 	woodSingleSlab = (new BlockWoodSlab(126, false))->setHardness(2.0f)->setResistance(5.0f)->setStepSound(soundWoodFootstep)->setBlockName("woodSlab")->setRequiresSelfNotify();
 	cocoaPlant = (new BlockCocoa(127))->setHardness(0.2f)->setResistance(5.0f)->setStepSound(soundWoodFootstep)->setBlockName("cocoa")->setRequiresSelfNotify();
 	enderChest = (new BlockEnderChest(130))->setHardness(22.5f)->setResistance(1000.0f)->setStepSound(soundStoneFootstep)->setBlockName("enderChest")->setLightValue(0.5f)->setRequiresSelfNotify();
+	commandBlock = (new BlockCommandBlock(137))->setBlockUnbreakable()->setResistance(6000000.0f)->setBlockName("commandBlock")->setRequiresSelfNotify();
 	beacon = (new BlockBeacon(138))->setBlockName("beacon")->setLightValue(1.0f)->setRequiresSelfNotify();
 	cobblestoneWall = (new BlockWall(139, cobblestone))->setBlockName("cobbleWall")->setRequiresSelfNotify();
 	flowerPot = (new BlockFlowerPot(140))->setHardness(0.0f)->setStepSound(soundPowderFootstep)->setBlockName("flowerPot")->setRequiresSelfNotify();
@@ -1438,6 +1441,7 @@ void Block::cleanup()
 	redstoneComparatorActive = nullptr;
 	hopperBlock = nullptr;
 	dropper = nullptr;
+	commandBlock = nullptr;
 	stairsCobblestone = nullptr;
 	stairsWoodOak = nullptr;
 	stairsStoneBrick = nullptr;

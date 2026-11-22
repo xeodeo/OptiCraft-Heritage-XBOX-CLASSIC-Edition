@@ -4,10 +4,12 @@
 #include <cmath>
 #include <cstdint>
 #include "EntityMinecart.h"
+#include "EntityMinecartMobSpawner.h"
 #include "ModelMinecart.h"
 #include "MathHelper.h"
 #include "Vec3D.h"
 #include "RenderBlocks.h"
+#include "TileEntityMobSpawnerRenderer.h"
 #include "Block.h"
 #include "platform/RenderAPI.h"
 
@@ -107,6 +109,24 @@ void RenderMinecart::renderMinecart(EntityMinecart* entityMinecart, double d, do
             renderTranslate(0.0f, 5.0f / 16.0f, 0.0f);
             renderRotate(90.0f, 0.0f, 1.0f, 0.0f);
             renderBlockInMinecart(entityMinecart, f1, Block::tnt, 0);
+            renderRotate(-90.0f, 0.0f, 1.0f, 0.0f);
+            renderTranslate(0.0f, -(5.0f / 16.0f), 0.0f);
+            renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        } else if (entityMinecart->getMinecartType() == 4) {
+            renderTranslate(0.0f, 5.0f / 16.0f, 0.0f);
+            renderRotate(90.0f, 0.0f, 1.0f, 0.0f);
+            renderBlocks->renderBlockAsItem(Block::mobSpawner, 0, entityMinecart->getEntityBrightness(f1));
+            if (EntityMinecartMobSpawner *spawnerCart = dynamic_cast<EntityMinecartMobSpawner *>(entityMinecart)) {
+                renderPushMatrix();
+                renderTranslate(0.0f, -0.5f, 0.0f);
+                TileEntityMobSpawnerRenderer::renderMobSpawnerLogic(
+                    spawnerCart->getSpawnerLogic(),
+                    entityMinecart->posX,
+                    entityMinecart->posY,
+                    entityMinecart->posZ,
+                    f1);
+                renderPopMatrix();
+            }
             renderRotate(-90.0f, 0.0f, 1.0f, 0.0f);
             renderTranslate(0.0f, -(5.0f / 16.0f), 0.0f);
             renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);

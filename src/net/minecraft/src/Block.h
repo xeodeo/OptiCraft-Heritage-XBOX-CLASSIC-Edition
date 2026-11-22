@@ -400,6 +400,7 @@ public:
 	static Block *redstoneComparatorActive;
 	static Block *hopperBlock;
 	static Block *dropper;
+	static Block *commandBlock;
 
 	int_t blockIndexInTexture = 0;
 	const int_t blockID;

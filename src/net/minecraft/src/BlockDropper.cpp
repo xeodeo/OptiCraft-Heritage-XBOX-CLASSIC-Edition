@@ -98,47 +98,64 @@ void BlockDropper::dispenseItem(World *world, int_t i, int_t j, int_t k, Random 
 		return;
 	}
 
-	ItemStack *stack = tile->getRandomStackFromInventory();
-	if (stack == nullptr)
+	const int_t slot = tile->getRandomSlotFromInventory();
+	if (slot < 0)
 	{
-		world->isTrapdoorOpen(1001, i, j, k, 0);
+		world->playAuxSFX(1001, i, j, k, 0);
 		return;
 	}
 
-	int_t meta = world->getBlockMetadata(i, j, k) & 7;
-	int_t targetX = i + FacingUtil::offsetsXForSide[meta];
-	int_t targetY = j + FacingUtil::offsetsYForSide[meta];
-	int_t targetZ = k + FacingUtil::offsetsZForSide[meta];
+	ItemStack *slotStack = tile->getStackInSlot(slot);
+	if (slotStack == nullptr || slotStack->stackSize <= 0)
+	{
+		world->playAuxSFX(1001, i, j, k, 0);
+		return;
+	}
+
+	const int_t meta = world->getBlockMetadata(i, j, k) & 7;
+	const int_t safeMeta = (meta >= 0 && meta < 6) ? meta : 3;
+	const int_t dx = FacingUtil::offsetsXForSide[safeMeta];
+	const int_t dy = FacingUtil::offsetsYForSide[safeMeta];
+	const int_t dz = FacingUtil::offsetsZForSide[safeMeta];
+	const int_t targetX = i + dx;
+	const int_t targetY = j + dy;
+	const int_t targetZ = k + dz;
 
 	IInventory *targetInv = TileEntityHopper::getInventoryAtLocation(world, (double)targetX, (double)targetY, (double)targetZ);
 	if (targetInv != nullptr)
 	{
-		ItemStack *leftover = TileEntityHopper::insertStack(targetInv, stack, FacingUtil::oppositeSide[meta]);
-		if (leftover != nullptr)
+		ItemStack *one = slotStack->copy();
+		one->stackSize = 1;
+		ItemStack *leftover = TileEntityHopper::insertStack(targetInv, one, FacingUtil::oppositeSide[safeMeta]);
+		if (leftover == nullptr)
 		{
-			TileEntityHopper::insertStack(tile, leftover, -1);
+			ItemStack *consumed = tile->decrStackSize(slot, 1);
+			delete consumed;
+			tile->onInventoryChanged();
+		}
+		else
+		{
+			delete leftover;
 		}
 	}
 	else
 	{
-		double x = (double)i + (double)FacingUtil::offsetsXForSide[meta] * 0.6 + 0.5;
-		double y = (double)j + (double)FacingUtil::offsetsYForSide[meta] * 0.6 + 0.5;
-		double z = (double)k + (double)FacingUtil::offsetsZForSide[meta] * 0.6 + 0.5;
-		if (FacingUtil::offsetsYForSide[meta] == 0)
-		{
-			y -= 0.1;
-		}
+		ItemStack *popped = tile->decrStackSize(slot, 1);
+		if (popped == nullptr)
+			return;
+		double x = (double)i + (double)dx * 0.7 + 0.5;
+		double y = (double)j + (double)dy * 0.7 + 0.5;
+		double z = (double)k + (double)dz * 0.7 + 0.5;
+		if (dy == 0)
+			y -= 0.15625;
+		else
+			y -= 0.125;
 
-		EntityItem *entityItem = new EntityItem(world, x, y, z, stack);
-		double speed = random.nextDouble() * 0.1 + 0.2;
-		entityItem->motionX = (double)FacingUtil::offsetsXForSide[meta] * speed;
-		entityItem->motionY = 0.2;
-		entityItem->motionZ = (double)FacingUtil::offsetsZForSide[meta] * speed;
-		if (FacingUtil::offsetsYForSide[meta] != 0)
-		{
-			entityItem->motionY = (double)FacingUtil::offsetsYForSide[meta] * speed;
-		}
-
+		EntityItem *entityItem = new EntityItem(world, x, y, z, popped);
+		const double speed = random.nextDouble() * 0.1 + 0.2;
+		entityItem->motionX = (double)dx * speed;
+		entityItem->motionY = (dy == 0) ? 0.2 : ((double)dy * speed);
+		entityItem->motionZ = (double)dz * speed;
 		entityItem->motionX += random.nextGaussian() * 0.0075 * 6.0;
 		entityItem->motionY += random.nextGaussian() * 0.0075 * 6.0;
 		entityItem->motionZ += random.nextGaussian() * 0.0075 * 6.0;
@@ -147,6 +164,8 @@ void BlockDropper::dispenseItem(World *world, int_t i, int_t j, int_t k, Random 
 		{
 			delete entityItem;
 		}
-		world->isTrapdoorOpen(1000, i, j, k, 0);
+		world->playAuxSFX(1000, i, j, k, 0);
+		const int_t smokeParam = (safeMeta == 0) ? 9 : ((safeMeta == 1) ? 10 : (dx + 1 + (dz + 1) * 3));
+		world->playAuxSFX(2000, i, j, k, smokeParam);
 	}
 }

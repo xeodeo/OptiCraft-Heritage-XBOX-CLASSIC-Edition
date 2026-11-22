@@ -26,6 +26,7 @@ protected:
     int setArmorModel(EntityPlayer* entityPlayer, int i, float f);
 
     int shouldRenderPass(EntityLiving* entityLiving, int i, float f) override;
+    void renderArmorOverlay(EntityLiving* entityLiving, int i, float f) override;
 
     virtual void renderSpecials(EntityPlayer* entityPlayer, float f);
 

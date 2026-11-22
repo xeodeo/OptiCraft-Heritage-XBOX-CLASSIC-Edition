@@ -4,8 +4,10 @@
 
 #include "EntityItem.h"
 #include "EntityPlayer.h"
+#include "EnumArmorMaterial.h"
 #include "InventoryPlayer.h"
 #include "Item.h"
+#include "ItemArmor.h"
 #include "ItemStack.h"
 #include "Material.h"
 #include "World.h"
@@ -78,6 +80,7 @@ bool BlockCauldron::blockActivated(World *world, int_t x, int_t y, int_t z, Enti
                 player->inventory->setInventorySlotContents(player->inventory->currentItem, new ItemStack(Item::bucketEmpty));
             }
             world->setBlockMetadataWithNotify(x, y, z, 3);
+            world->func_96440_m(x, y, z, blockID);
         }
         return true;
     }
@@ -98,13 +101,50 @@ bool BlockCauldron::blockActivated(World *world, int_t x, int_t y, int_t z, Enti
             player->inventory->setInventorySlotContents(player->inventory->currentItem, nullptr);
         }
         world->setBlockMetadataWithNotify(x, y, z, level - 1);
+        world->func_96440_m(x, y, z, blockID);
         return true;
+    }
+
+    if (level > 0)
+    {
+        ItemArmor *armor = dynamic_cast<ItemArmor *>(held->getItem());
+        if (armor != nullptr && armor->material == EnumArmorMaterial::CLOTH && armor->hasColor(held))
+        {
+            armor->removeColor(held);
+            world->setBlockMetadataWithNotify(x, y, z, level - 1);
+            world->func_96440_m(x, y, z, blockID);
+            return true;
+        }
     }
 
     return true;
 }
 
+void BlockCauldron::fillWithRain(World *world, int_t x, int_t y, int_t z)
+{
+    if (world->rand.nextInt(20) == 1)
+    {
+        const int_t level = world->getBlockMetadata(x, y, z);
+        if (level < 3)
+        {
+            world->setBlockMetadataWithNotify(x, y, z, level + 1);
+            world->func_96440_m(x, y, z, blockID);
+        }
+    }
+}
+
 int_t BlockCauldron::idDropped(int_t, Random &)
 {
     return Item::cauldron != nullptr ? Item::cauldron->shiftedIndex : 0;
+}
+
+bool BlockCauldron::hasComparatorInputOverride()
+{
+    return true;
+}
+
+int_t BlockCauldron::getComparatorInputOverride(World *world, int_t x, int_t y, int_t z, int_t side)
+{
+    (void)side;
+    return world->getBlockMetadata(x, y, z);
 }

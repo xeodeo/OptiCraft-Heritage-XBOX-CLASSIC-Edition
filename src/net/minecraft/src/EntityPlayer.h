@@ -25,6 +25,7 @@ class TileEntityDispenser;
 class TileEntitySign;
 class TileEntityHopper;
 class TileEntityBeacon;
+class TileEntityCommandBlock;
 class IMerchant;
 class MerchantRecipeList;
 class EntityMinecartHopper;
@@ -128,6 +129,7 @@ public:
 	virtual void displayGUIHopperMinecart(EntityMinecartHopper *entityminecarthopper);
 	virtual void displayGUIRepair(int_t x, int_t y, int_t z);
 	virtual void displayGUIBeacon(TileEntityBeacon *beacon);
+	virtual void displayGUICommandBlock(TileEntityCommandBlock *tile);
 	virtual void displayGUIBook(ItemStack *book);
 	virtual void displayGUIMerchant(IMerchant *merchant, const std::string &title = "");
 	virtual void displayGUIMerchant(IMerchant *merchant, MerchantRecipeList *recipes);

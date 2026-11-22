@@ -39,6 +39,7 @@
 #include "EntityMinecartFurnace.h"
 #include "EntityMinecartTNT.h"
 #include "EntityMinecartHopper.h"
+#include "EntityMinecartMobSpawner.h"
 #include "EntityOcelot.h"
 #include "EntityMob.h"
 #include "EntityPainting.h"
@@ -236,6 +237,7 @@ static struct EntityListInit
         EntityList::addMapping<EntityMinecartFurnace>("MinecartFurnace", 44);
         EntityList::addMapping<EntityMinecartTNT>("MinecartTNT", 45);
         EntityList::addMapping<EntityMinecartHopper>("MinecartHopper", 46);
+        EntityList::addMapping<EntityMinecartMobSpawner>("MinecartSpawner", 47);
         EntityList::addMapping<EntityBoat>("Boat", 41);
 
         // 1.5.2 Mobs: Bat, Witch

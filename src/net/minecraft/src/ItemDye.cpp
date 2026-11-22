@@ -69,7 +69,20 @@ bool ItemDye::onItemUse(ItemStack* itemstack, EntityPlayer* entityplayer, World*
         }
         return false;
     }
-    if (itemstack->getItemDamage() != 15) {
+    if (itemstack->getItemDamage() == 15) {
+        if (applyBonemeal(itemstack, world, i, j, k)) {
+            if (!world->multiplayerWorld) {
+                world->playAuxSFX(2005, i, j, k, 0);
+            }
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
+
+bool ItemDye::applyBonemeal(ItemStack* itemstack, World* world, int i, int j, int k) {
+    if (itemstack == nullptr || itemstack->stackSize <= 0 || world == nullptr) {
         return false;
     }
 
@@ -102,6 +115,9 @@ bool ItemDye::onItemUse(ItemStack* itemstack, EntityPlayer* entityplayer, World*
         return true;
     }
     if (blockId == Block::melonStem->blockID || blockId == Block::pumpkinStem->blockID) {
+        if (world->getBlockMetadata(i, j, k) == 7) {
+            return false;
+        }
         if (!world->multiplayerWorld) {
             static_cast<BlockStem*>(Block::blocksList[blockId])->fertilizeStem(world, i, j, k);
             --itemstack->stackSize;

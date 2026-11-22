@@ -7,5 +7,5 @@ TileEntityDropper::TileEntityDropper()
 
 std::string TileEntityDropper::getInvName()
 {
-	return "container.dropper";
+	return isInvNameLocalized() ? customName : "container.dropper";
 }

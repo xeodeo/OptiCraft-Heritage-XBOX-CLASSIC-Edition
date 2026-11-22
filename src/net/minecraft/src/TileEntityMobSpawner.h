@@ -1,34 +1,41 @@
 #pragma once
 
+#include "MobSpawnerBaseLogic.h"
 #include "TileEntity.h"
-#include "platform/PlatformTuning.h"
 #include <string>
 
 class NBTTagCompound;
+class TileEntityMobSpawner;
 
-class TileEntityMobSpawner : public TileEntity {
+class TileEntityMobSpawnerLogic : public MobSpawnerBaseLogic
+{
 public:
-    TileEntityMobSpawner();
+	explicit TileEntityMobSpawnerLogic(TileEntityMobSpawner *owner);
 
-    std::string getMobID();
-    void setMobID(const std::string &s);
-    bool anyPlayerInRange();
-
-    void readFromNBT(NBTTagCompound* nbttagcompound) override;
-    void writeToNBT(NBTTagCompound* nbttagcompound) override;
-    void updateEntity() override;
-
-    int_t delay;
-#if PLATFORM_FLOAT_VERTEX_MATH
-    float yaw;
-    float yaw2;
-#else
-    double yaw;
-    double yaw2;
-#endif
+	void broadcastEvent(int_t eventId) override;
+	World *getSpawnerWorld() override;
+	int_t getSpawnerX() override;
+	int_t getSpawnerY() override;
+	int_t getSpawnerZ() override;
 
 private:
-    void updateDelay();
+	TileEntityMobSpawner *mobSpawnerEntity;
+};
 
-    std::string mobID;
+class TileEntityMobSpawner : public TileEntity
+{
+public:
+	TileEntityMobSpawner();
+
+	std::string getMobID();
+	void setMobID(const std::string &s);
+	bool anyPlayerInRange();
+	MobSpawnerBaseLogic *getSpawnerLogic() { return &spawnerLogic; }
+
+	void readFromNBT(NBTTagCompound *nbttagcompound) override;
+	void writeToNBT(NBTTagCompound *nbttagcompound) override;
+	void updateEntity() override;
+
+private:
+	TileEntityMobSpawnerLogic spawnerLogic;
 };

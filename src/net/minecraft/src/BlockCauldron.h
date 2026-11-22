@@ -16,5 +16,8 @@ public:
     int_t getRenderType() override;
     bool renderAsNormalBlock() override;
     bool blockActivated(World *world, int_t x, int_t y, int_t z, EntityPlayer *player) override;
+    void fillWithRain(World *world, int_t x, int_t y, int_t z) override;
     int_t idDropped(int_t metadata, Random &random) override;
+    bool hasComparatorInputOverride() override;
+    int_t getComparatorInputOverride(World *world, int_t x, int_t y, int_t z, int_t side) override;
 };

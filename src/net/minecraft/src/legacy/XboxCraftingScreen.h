@@ -30,6 +30,7 @@ public:
     ~XboxCraftingScreen() override;
 
     void initGui() override;
+    void selectTab(int_t index);
     void updateScreen() override;
     void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
     bool usesSpecializedMenuNavigation() const override { return true; }
@@ -58,6 +59,7 @@ private:
         std::vector<Ingredient> needs;
         int_t defaultDyeDamage;   // fallback dye damage for wildcard -1 display (never Ink Sac)
         bool isFadeStar;          // true for star + dye fade preset
+        bool isArmorDye;          // true for leather armor + dye preset
         bool canMake;
         unsigned short missingCells;   // bit per grid cell short of items
     };
@@ -71,9 +73,11 @@ private:
 
     void buildEntries();
     void addDynamicFireworkEntries();
+    void addDynamicArmorDyeEntries();
     void buildColumns();
     void refreshAvailability();
     void refreshFireworkPreviews();
+    void refreshArmorDyePreviews();
     unsigned int inventorySignature() const;
     int_t countInInventory(int_t id, int_t damage) const;
     int_t firstMatchingDyeDamage(int_t fallbackDamage) const;

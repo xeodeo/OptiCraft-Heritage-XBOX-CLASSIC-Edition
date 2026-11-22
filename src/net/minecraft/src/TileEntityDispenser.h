@@ -19,6 +19,8 @@ public:
     ItemStack* decrStackSize(int_t i, int_t j) override;
     void setInventorySlotContents(int_t i, ItemStack* itemstack) override;
     std::string getInvName() override;
+    bool isInvNameLocalized() const;
+    void setCustomName(const std::string &name);
     int_t getInventoryStackLimit() override;
 
     // Bridge methods so the IInventory pure-virtual is satisfied by
@@ -29,7 +31,12 @@ public:
     void readFromNBT(NBTTagCompound* nbttagcompound) override;
     void writeToNBT(NBTTagCompound* nbttagcompound) override;
 
+    int_t getRandomSlotFromInventory();
     ItemStack* getRandomStackFromInventory();
+    int_t addItem(ItemStack* stack);
+
+protected:
+    std::string customName;
 
 private:
     ItemStack* dispenserContents[9];

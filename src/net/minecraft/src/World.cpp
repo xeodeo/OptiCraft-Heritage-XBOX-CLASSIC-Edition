@@ -5663,6 +5663,13 @@ void World::updateBlocksAndPlayCaveSounds()
 
             if (isRaining() && canSnowAt(worldX, snowY, worldZ))
                 setBlockWithNotify(worldX, snowY, worldZ, Block::snow->blockID);
+
+            if (isRaining() && canLightningStrikeAt(worldX, snowY, worldZ))
+            {
+                const int_t rainBlockId = getBlockId(worldX, belowSnowY, worldZ);
+                if (rainBlockId > 0 && rainBlockId < Block::BLOCK_REGISTRY_SIZE && Block::blocksList[rainBlockId] != nullptr)
+                    Block::blocksList[rainBlockId]->fillWithRain(this, worldX, belowSnowY, worldZ);
+            }
 #if PLATFORM_RANDOM_TICK_PROFILE_INTERVAL > 0
             profSnowNs += System::nanoTime() - profMark;
 #endif
