@@ -7,6 +7,7 @@
 #include "java/String.h"
 #include "platform/RenderAPI.h"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 
@@ -116,4 +117,58 @@ std::istream *TexturePackFolder::getResourceAsStream(const std::string &path)
     }
 
     return TexturePackBase::getResourceAsStream(path);
+}
+
+// /anim/*.properties and the like: walks the pack's subfolder named by the
+// prefix (and the folders under it) and returns "/relative/path" for every
+// file ending in the suffix (case-insensitive, FATX does not keep case
+// reliably).
+std::vector<std::string> TexturePackFolder::listResources(const std::string &prefix, const std::string &suffix)
+{
+    std::vector<std::string> result;
+    if (packDirectory == nullptr)
+        return result;
+    std::string relative = prefix;
+    while (!relative.empty() && (relative.front() == '/' || relative.front() == '\\'))
+        relative.erase(relative.begin());
+    while (!relative.empty() && (relative.back() == '/' || relative.back() == '\\'))
+        relative.pop_back();
+    std::unique_ptr<File> root(relative.empty() ? File::open(packDirectory->toString()) : File::open(*packDirectory, relative));
+    if (root == nullptr || !root->isDirectory())
+        return result;
+
+    std::string wantSuffix = suffix;
+    for (char &c : wantSuffix)
+        if (c >= 'A' && c <= 'Z')
+            c = static_cast<char>(c - 'A' + 'a');
+    // Explicit stack instead of recursion; packs nest anim/ one level at most.
+    std::vector<std::pair<std::unique_ptr<File>, std::string>> pending;
+    pending.emplace_back(std::move(root), relative.empty() ? std::string() : relative + "/");
+    while (!pending.empty())
+    {
+        std::unique_ptr<File> directory = std::move(pending.back().first);
+        const std::string base = pending.back().second;
+        pending.pop_back();
+        for (std::unique_ptr<File> &entry : directory->listFiles())
+        {
+            if (entry == nullptr)
+                continue;
+            const std::string name = entry->getName();
+            if (entry->isDirectory())
+            {
+                if (pending.size() < 8)
+                    pending.emplace_back(std::move(entry), base + name + "/");
+                continue;
+            }
+            std::string lowerName = name;
+            for (char &c : lowerName)
+                if (c >= 'A' && c <= 'Z')
+                    c = static_cast<char>(c - 'A' + 'a');
+            if (lowerName.size() < wantSuffix.size() || lowerName.compare(lowerName.size() - wantSuffix.size(), wantSuffix.size(), wantSuffix) != 0)
+                continue;
+            result.push_back('/' + base + name);
+        }
+    }
+    std::sort(result.begin(), result.end());
+    return result;
 }
