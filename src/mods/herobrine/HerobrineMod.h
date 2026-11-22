@@ -18,7 +18,7 @@ struct HerobrineConfig
 {
     bool altarRitual = true;    // Exact tkelly altar sequence: nightfall, torch break, Herobrine summon + chat
     bool ghostEvent = true;     // iLoveYou GhostEvent: spawns ~17 blocks away with redstone torch
-    bool altarCurse = false;    // OFF by default: iLoveYou altar fire curse & deleteAltar()
+    bool altarCurse = true;     // ON like the original iLoveYou: fire curse & deleteAltar() (user 22-11)
     bool diggerEvent = false;   // OFF by default: iLoveYou HeroDigger (digs tunnel + underground room)
     bool diamondEvent = false;  // OFF by default: iLoveYou DiamondEvent (digs & restores shaft to diamond ore)
     bool thiefEvent = false;    // OFF by default: iLoveYou ThiefEvent (drops/steals items from distant chests)

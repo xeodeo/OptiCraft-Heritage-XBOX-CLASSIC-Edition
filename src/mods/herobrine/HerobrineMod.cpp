@@ -304,8 +304,8 @@ void HerobrineMod::tickAltarRitual(World *world, EntityPlayer *player)
     //   t=160 (+1s): break torches radius 10
     //   t=180 (+1s): break torches radius 20
     //   t=240 (+3s): spawn Herobrine atop altar with Redstone Torch + HeroLanguage appearance chat
-    //   t=340 (+5s): optional curse fire (OFF by default!)
-    //   t=540 (+10s): vanish Herobrine & optional deleteAltar() (OFF by default!)
+    //   t=340 (+5s): curse: fire 200 ticks, re-lit while the player moves (option, ON)
+    //   t=540 (+10s): vanish Herobrine & deleteAltar() (with the curse option)
     if (t == 100)
     {
         world->setWorldTime(14000);
@@ -343,10 +343,18 @@ void HerobrineMod::tickAltarRitual(World *world, EntityPlayer *player)
             delete hb;
         }
     }
-    else if (t == 340)
+    else if (t >= 340 && t < 540)
     {
+        // Original AltarEvent: setFireTicks(200) when the curse starts, and again every
+        // time the cursed player moves (stalkPlayer) until the altar is deleted.
         if (m_config.altarCurse)
-            player->fire = 100;
+        {
+            const bool moved = t == 340 ||
+                std::fabs(player->posX - player->prevPosX) > 0.01 ||
+                std::fabs(player->posZ - player->prevPosZ) > 0.01;
+            if (moved && player->fire < 200)
+                player->fire = 200;
+        }
     }
     else if (t >= 540)
     {
@@ -1203,6 +1211,7 @@ void HerobrineMod::saveConfig()
     out += "altarRitual:" + std::string(m_config.altarRitual ? "1" : "0") + "\n";
     out += "ghostEvent:" + std::string(m_config.ghostEvent ? "1" : "0") + "\n";
     out += "altarCurse:" + std::string(m_config.altarCurse ? "1" : "0") + "\n";
+    out += "altarCurseDefault2:1\n";
     out += "diggerEvent:" + std::string(m_config.diggerEvent ? "1" : "0") + "\n";
     out += "diamondEvent:" + std::string(m_config.diamondEvent ? "1" : "0") + "\n";
     out += "thiefEvent:" + std::string(m_config.thiefEvent ? "1" : "0") + "\n";
@@ -1219,6 +1228,7 @@ void HerobrineMod::loadConfig()
     if (!PlatformStorage::readFile(path, bytes) || bytes.empty())
         return;
     std::string content(bytes.begin(), bytes.end());
+    bool sawCurseDefault2 = false;
     size_t start = 0;
     while (start < content.size())
     {
@@ -1237,9 +1247,14 @@ void HerobrineMod::loadConfig()
         if (key == "altarRitual") m_config.altarRitual = val;
         else if (key == "ghostEvent") m_config.ghostEvent = val;
         else if (key == "altarCurse") m_config.altarCurse = val;
+        else if (key == "altarCurseDefault2") sawCurseDefault2 = true;
         else if (key == "diggerEvent") m_config.diggerEvent = val;
         else if (key == "diamondEvent") m_config.diamondEvent = val;
         else if (key == "thiefEvent") m_config.thiefEvent = val;
         else if (key == "legendExtras") m_config.legendExtras = val;
     }
+    // Worlds saved before the curse became ON by default (22-11) stored it as 0
+    // without the user choosing it: switch them to the original behaviour once.
+    if (!sawCurseDefault2)
+        m_config.altarCurse = true;
 }
