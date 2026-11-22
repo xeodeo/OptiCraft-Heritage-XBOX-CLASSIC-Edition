@@ -24,6 +24,7 @@ public:
     void getResourceAsStream(Minecraft *minecraft) override;
     void bindThumbnailTexture(Minecraft *minecraft) override;
     std::istream *getResourceAsStream(const std::string &path) override;
+    std::vector<std::string> listResources(const std::string &prefix, const std::string &suffix) override;
 
 private:
     std::string truncateDescription(const std::string &value) const;

@@ -20,6 +20,9 @@ public:
 	virtual void bindThumbnailTexture(Minecraft *minecraft);
 	virtual std::istream* getResourceAsStream(const std::string &s);
 	virtual std::vector<std::string> listResources(const std::string &prefix, const std::string &suffix);
+	// False for a pack listed only to say why it cannot be used (a 64x zip, a
+	// 1.5-format zip): TexturePackList never selects it.
+	virtual bool isUsable() const { return true; }
 
 	jstring texturePackFileName;
 	jstring firstDescriptionLine;

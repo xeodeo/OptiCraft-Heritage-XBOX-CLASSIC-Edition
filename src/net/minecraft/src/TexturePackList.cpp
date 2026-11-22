@@ -12,6 +12,7 @@
 #if defined(XBOX_PLATFORM)
 #include "TexturePackFolder.h"
 #include "TexturePackPak.h"
+#include "TexturePackZip.h"
 #include "java/File.h"
 #include <memory>
 #endif
@@ -55,7 +56,7 @@ TexturePackList::~TexturePackList()
 
 bool TexturePackList::setTexturePack(TexturePackBase *texturepackbase)
 {
-	if (texturepackbase == selectedTexturePack)
+	if (texturepackbase == selectedTexturePack || !texturepackbase->isUsable())
 	{
 		return false;
 	}
@@ -118,8 +119,11 @@ void TexturePackList::updateAvailableTexturePacks()
 #elif defined(XBOX_PLATFORM)
 	// Xbox: packs in texturepacks\ next to the game's XBE, either one .pak
 	// file each (scripts/make_pak.py on the pack's folder; one file to copy
-	// and open) or an unzipped folder (D:\texturepacks\<name>\terrain.png,
-	// gui\items.png, ...). What a pack lacks comes from the game's own data.
+	// and open), an unzipped folder (D:\texturepacks\<name>\terrain.png,
+	// gui\items.png, ...) or a Java pack's .zip as downloaded (indexed once,
+	// files inflated on demand; 64x and 1.5-style zips are listed with the
+	// reason but cannot be picked). What a pack lacks comes from the game's
+	// own data.
 	std::unique_ptr<File> packRoot(File::open(jstring("D:\\texturepacks")));
 	if (packRoot != nullptr && packRoot->isDirectory())
 	{
@@ -130,9 +134,11 @@ void TexturePackList::updateAvailableTexturePacks()
 			const std::string name = entry->getName();
 			const jstring lowerName = String::toLowerCaseJava(jstring(name));
 			const bool isPak = lowerName.size() > 4 && lowerName.compare(lowerName.size() - 4, 4, ".pak") == 0;
-			if (!entry->isDirectory() && !isPak)
+			const bool isZip = lowerName.size() > 4 && lowerName.compare(lowerName.size() - 4, 4, ".zip") == 0;
+			const bool isFolder = entry->isDirectory();
+			if (!isFolder && !isPak && !isZip)
 				continue;
-			const std::string key = (isPak ? "pak:" : "folder:") + name;
+			const std::string key = (isFolder ? "folder:" : isPak ? "pak:" : "zip:") + name;
 			auto it = soundPool.find(key);
 			if (it == soundPool.end())
 			{
@@ -147,6 +153,16 @@ void TexturePackList::updateAvailableTexturePacks()
 					}
 					pack = pakPack;
 				}
+				else if (isZip)
+				{
+					TexturePackZip *zipPack = new TexturePackZip(entry->toString());
+					if (!zipPack->isValid())
+					{
+						delete zipPack;
+						continue;
+					}
+					pack = zipPack;
+				}
 				else
 				{
 					pack = new TexturePackFolder(entry.release());
@@ -155,7 +171,7 @@ void TexturePackList::updateAvailableTexturePacks()
 				pack->getTexturePackFolder(mc);
 				it = soundPool.emplace(key, pack).first;
 			}
-			if (it->second->texturePackFileName == currentTexturePack)
+			if (it->second->texturePackFileName == currentTexturePack && it->second->isUsable())
 				selectedTexturePack = it->second;
 			arraylist.push_back(it->second);
 		}

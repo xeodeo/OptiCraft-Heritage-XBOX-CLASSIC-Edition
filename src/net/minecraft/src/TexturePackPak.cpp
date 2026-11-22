@@ -7,6 +7,7 @@
 #include "platform/RenderAPI.h"
 #include "platform/storage/PakArchive.h"
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 
@@ -103,4 +104,35 @@ std::istream *TexturePackPak::getResourceAsStream(const std::string &path)
         }
     }
     return TexturePackBase::getResourceAsStream(path);
+}
+
+// /anim/*.properties and the like: every entry whose key starts with the
+// prefix and ends with the suffix, as "/key". Keys match case-insensitively,
+// like find().
+std::vector<std::string> TexturePackPak::listResources(const std::string &prefix, const std::string &suffix)
+{
+    std::vector<std::string> result;
+    if (pak == nullptr)
+        return result;
+    auto lower = [](std::string value)
+    {
+        for (char &c : value)
+            if (c >= 'A' && c <= 'Z')
+                c = static_cast<char>(c - 'A' + 'a');
+        return value;
+    };
+    const std::string wantPrefix = lower(PakArchive::normalizeKey(prefix));
+    const std::string wantSuffix = lower(suffix);
+    for (std::size_t i = 0; i < pak->entryCount(); ++i)
+    {
+        const std::string name = pak->name(pak->entryAt(i));
+        const std::string key = lower(name);
+        if (key.compare(0, wantPrefix.size(), wantPrefix) != 0)
+            continue;
+        if (key.size() < wantSuffix.size() || key.compare(key.size() - wantSuffix.size(), wantSuffix.size(), wantSuffix) != 0)
+            continue;
+        result.push_back('/' + name);
+    }
+    std::sort(result.begin(), result.end());
+    return result;
 }
