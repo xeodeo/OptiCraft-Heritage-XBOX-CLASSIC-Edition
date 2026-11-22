@@ -13,6 +13,7 @@
 #include "RenderEngine.h"
 #include "RenderHelper.h"
 #include "ModelBiped.h"
+#include "ModelPlayer.h"
 #include "ModelRenderer.h"
 #include "SoundManager.h"
 #include "Tessellator.h"
@@ -71,6 +72,7 @@ GuiSkinSelector::GuiSkinSelector(GuiScreen *parent, bool isPlayer2)
     , scrollOffset(0.0f)
     , previewModel32(nullptr)
     , previewModel64(nullptr)
+    , previewModel64Slim(nullptr)
     , previewYaw(0.0f)
     , previewPitch(0.0f)
     , previewAutoRotate(true)
@@ -164,6 +166,8 @@ GuiSkinSelector::~GuiSkinSelector()
     previewModel32 = nullptr;
     delete previewModel64;
     previewModel64 = nullptr;
+    delete previewModel64Slim;
+    previewModel64Slim = nullptr;
 }
 
 bool GuiSkinSelector::isLegacyMode() const
@@ -1297,9 +1301,28 @@ void GuiSkinSelector::drawLegacyCharacter3D(const SkinEntry *skin, float centerX
     mc->renderEngine->getTextureDimensions(texId, &tw, &th);
 
     ModelBiped *model = nullptr;
-    if (previewModel32 == nullptr)
-        previewModel32 = new ModelBiped(0.0f, 0.0f);
-    model = previewModel32;
+    if (tw > 0 && tw == th)
+    {
+        // Same model as in game: second layer on every part, slim arms.
+        if (SkinManager::isSlimSkinTexture(texPath))
+        {
+            if (previewModel64Slim == nullptr)
+                previewModel64Slim = new ModelPlayer(0.0f, true);
+            model = previewModel64Slim;
+        }
+        else
+        {
+            if (previewModel64 == nullptr)
+                previewModel64 = new ModelPlayer(0.0f, false);
+            model = previewModel64;
+        }
+    }
+    else
+    {
+        if (previewModel32 == nullptr)
+            previewModel32 = new ModelBiped(0.0f, 0.0f);
+        model = previewModel32;
+    }
 
     mc->renderEngine->bindTexture(texId);
     renderEnable(RenderCapability::Texture2D);
