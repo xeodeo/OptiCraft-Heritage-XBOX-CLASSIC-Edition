@@ -1,4 +1,5 @@
 #include "GuiCompiledMods.h"
+#include "legacy/LegacySceneState.h"
 #include "GuiLoadModsMenu.h"
 #include "GuiTexturePacks.h"
 #include "ModManager.h"
@@ -281,10 +282,15 @@ void GuiCompiledMods::initGui()
         controlList.push_back(configBtn);
         controlList.push_back(filterBtn);
 
-        searchBtn = new GuiButton(13, x0, btnY2, w3, 20, es ? "Buscar" : "Search");
+        // Second row: the texture packs screen lives here again (it was reached from the
+        // old Mods screen this catalog replaced).
+        const int_t w4 = std::min<int_t>(76, (width - 24) / 4);
+        const int_t x4 = width / 2 - (w4 * 4 + 12) / 2;
+        searchBtn = new GuiButton(13, x4, btnY2, w4, 20, es ? "Buscar" : "Search");
         controlList.push_back(searchBtn);
-        controlList.push_back(new GuiButton(14, x0 + w3 + 4, btnY2, w3, 20, es ? "Cargar .och" : "Load .och"));
-        controlList.push_back(new GuiButton(200, x0 + (w3 + 4) * 2, btnY2, w3, 20, es ? "Hecho" : "Done"));
+        controlList.push_back(new GuiButton(15, x4 + (w4 + 4), btnY2, w4, 20, es ? "Texturas" : "Textures"));
+        controlList.push_back(new GuiButton(14, x4 + (w4 + 4) * 2, btnY2, w4, 20, es ? "Cargar .och" : "Load .och"));
+        controlList.push_back(new GuiButton(200, x4 + (w4 + 4) * 3, btnY2, w4, 20, es ? "Hecho" : "Done"));
     }
 
     rebuildFilteredList();
@@ -407,6 +413,7 @@ void GuiCompiledMods::actionPerformed(GuiButton *button)
     else if (button->id == 12) cycleFilter(1);
     else if (button->id == 13) beginSearch();
     else if (button->id == 14 && mc != nullptr) mc->displayGuiScreen(new GuiLoadModsMenu(this));
+    else if (button->id == 15 && mc != nullptr) mc->displayGuiScreen(new GuiTexturePacks(this));
     else if (button->id == 200 && mc != nullptr)
     {
         ModManager::getInstance().save();
@@ -517,6 +524,11 @@ void GuiCompiledMods::handleSpecializedMenuInput()
     if (pad.pressed & PLATFORM_TEXT_BACK)       { beginSearch(); return; }
     if (pad.pressed & PLATFORM_TEXT_TAB_LEFT)   { cycleFilter(-1); return; }
     if (pad.pressed & PLATFORM_TEXT_TAB_RIGHT)  { cycleFilter(1);  return; }
+    if ((pad.pressed & PLATFORM_TEXT_ENTER) && mc != nullptr)   // Start: texture packs
+    {
+        mc->displayGuiScreen(new GuiTexturePacks(this));
+        return;
+    }
 #endif
 }
 
@@ -530,7 +542,7 @@ void GuiCompiledMods::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick
     // 1. Background
     if (legacy)
     {
-        if (!inWorld && mc != nullptr && legacyDrawPanorama(mc, width, height, 0, partialTick, zLevel))
+        if (!inWorld && mc != nullptr && legacyDrawPanorama(mc, width, height, legacyScenePanoramaTimer(), partialTick, zLevel))
         {
         }
         else
@@ -544,11 +556,15 @@ void GuiCompiledMods::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick
     }
 
     const int_t hintY = legacyHintRowY(height, isSplit);
-    const int_t topY = legacy ? 8 : 6;
     const int_t bottomLimit = legacy ? (hintY - 6) : (height - 52);
     const int_t panelW = std::min<int_t>(width - 12, legacy ? 460 : 520);
     const int_t panelX = (width - panelW) / 2;
-    const int_t panelH = std::max<int_t>(110, bottomLimit - topY);
+    // Legacy: a panel of reasonable height centred above the hint row (it used to
+    // stretch from the very top of the screen).
+    const int_t available = bottomLimit - 8;
+    const int_t panelH = legacy ? std::max<int_t>(110, std::min<int_t>(available, 300))
+                                : std::max<int_t>(110, bottomLimit - 6);
+    const int_t topY = legacy ? 8 + std::max<int_t>(0, (available - panelH) / 2) : 6;
 
     if (legacy)
     {
@@ -746,24 +762,24 @@ void GuiCompiledMods::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick
 #if PLATFORM_XBOX
         if (hasCfg)
         {
-            const std::string btns[] = {"A", "X", "Y", "White", "B"};
+            const std::string btns[] = {"A", "X", "Y", "Start", "B"};
             const std::string acts[] = {
                 es ? "Instalar" : "Toggle",
                 es ? "Buscar" : "Search",
                 es ? "Opciones" : "Opts",
-                es ? "Filtro" : "Filter",
+                es ? "Texturas" : "Textures",
                 es ? "Volver" : "Back"
             };
             drawControlHintRow(mc, width, hintY, btns, acts, 5);
         }
         else
         {
-            const std::string btns[] = {"D-Pad", "A", "X", "White", "B"};
+            const std::string btns[] = {"D-Pad", "A", "X", "Start", "B"};
             const std::string acts[] = {
                 es ? "Mover" : "Move",
                 es ? "Instalar" : "Toggle",
                 es ? "Buscar" : "Search",
-                es ? "Filtro" : "Filter",
+                es ? "Texturas" : "Textures",
                 es ? "Volver" : "Back"
             };
             drawControlHintRow(mc, width, hintY, btns, acts, 5);
