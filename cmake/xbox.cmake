@@ -119,6 +119,10 @@ else()
     )
     file(GLOB XBOX_ZLIB_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/external/zlib/*.c")
     list(APPEND XBOX_SOURCES ${XBOX_ZLIB_SOURCES})
+    # mbedTLS (Apache 2.0) for HTTPS downloads (skins, texture packs), same library and
+    # configuration as the Classic Xbox Store: src/xbox/system/mbedtls_config.h.
+    file(GLOB XBOX_MBEDTLS_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/external/mbedtls/library/*.c")
+    list(APPEND XBOX_SOURCES ${XBOX_MBEDTLS_SOURCES})
     # zlib's zconf.h is generated at configure time (the desktop build gets it
     # from external/zlib's own CMakeLists; consoles use a portlib instead).
     configure_file("${CMAKE_SOURCE_DIR}/external/zlib/zconf.h.cmakein"
@@ -194,6 +198,7 @@ target_compile_definitions(OptiCraft PRIVATE
     "_M_FP_FAST"
     # libcpmt's vectorized algorithms are SSE2+; keep the STL scalar on the P3.
     "_USE_STD_VECTOR_ALGORITHMS=0"
+    "MBEDTLS_CONFIG_FILE=\"xbox/system/mbedtls_config.h\""
 )
 if(NOT XBOX_ENABLE_SOUND)
     target_compile_definitions(OptiCraft PRIVATE "NO_SOUND")
@@ -211,6 +216,7 @@ target_include_directories(OptiCraft PRIVATE
     "${CMAKE_SOURCE_DIR}/external/stb"
     "${CMAKE_SOURCE_DIR}/external/zlib"
     "${CMAKE_SOURCE_DIR}/external/zlib/contrib/minizip"
+    "${CMAKE_SOURCE_DIR}/external/mbedtls/include"
     "${CMAKE_BINARY_DIR}/zlib"
     ${XBOX_STL_INCLUDES}
 )
