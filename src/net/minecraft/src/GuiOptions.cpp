@@ -7,6 +7,7 @@
 #include "GuiControls.h"
 #include "GuiLanguage.h"
 #include "GuiOptiCraftOptions.h"
+#include "mods/GuiMods.h"
 #include "GameSettings.h"
 #include "StringTranslate.h"
 #include "Minecraft.h"
@@ -57,7 +58,8 @@ void GuiOptions::initGui()
 		i++;
 	}
 	controlList.push_back(new GuiButton(101, width / 2 - 100, height / 6 + 90, tr->translateKey("options.video")));
-	controlList.push_back(new GuiButton(100, width / 2 - 100, height / 6 + 114, tr->translateKey("options.controls")));
+	controlList.push_back(new GuiButton(100, width / 2 - 100, height / 6 + 114, 98, 20, tr->translateKey("options.controls")));
+	controlList.push_back(new GuiButton(104, width / 2 + 2, height / 6 + 114, 98, 20, uiText("Mods")));
 	controlList.push_back(new GuiButton(103, width / 2 - 100, height / 6 + 138, 98, 20, tr->translateKey("options.language")));
 	controlList.push_back(new GuiButton(102, width / 2 + 2, height / 6 + 138, 98, 20, uiText("OptiCraft Options...")));
 	controlList.push_back(new GuiButton(200, width / 2 - 100, height / 6 + 168, tr->translateKey("gui.done")));
@@ -91,6 +93,11 @@ void GuiOptions::actionPerformed(GuiButton *button)
 	{
 		mc->gameSettings->saveOptions();
 		mc->displayGuiScreen(new GuiOptiCraftOptions(this, options));
+	}
+	if (button->id == 104)
+	{
+		mc->gameSettings->saveOptions();
+		mc->displayGuiScreen(new GuiMods(this));
 	}
 	if (button->id == 200)
 	{

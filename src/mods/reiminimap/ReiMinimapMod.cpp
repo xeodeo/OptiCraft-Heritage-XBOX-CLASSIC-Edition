@@ -1,5 +1,6 @@
 #include "ReiMinimapMod.h"
 #include "ReiMinimap.h"
+#include "GuiMinimapMenu.h"
 
 ReiMinimapMod::ReiMinimapMod()
     : m_enabled(false)
@@ -15,6 +16,11 @@ void ReiMinimapMod::setEnabled(bool state)
 {
     m_enabled = state;
     ReiMinimap::getInstance().setEnabled(state);
+}
+
+GuiScreen *ReiMinimapMod::createConfigScreen(GuiScreen *parent)
+{
+    return new GuiMinimapMenu(parent, 0);
 }
 
 void ReiMinimapMod::onInit(Minecraft *mc)

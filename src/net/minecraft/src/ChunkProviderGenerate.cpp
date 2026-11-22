@@ -1139,5 +1139,7 @@ ChunkPosition *ChunkProviderGenerate::findClosestStructure(World *world, const j
 {
     if (name == "Stronghold" && strongholdGenerator != nullptr)
         return strongholdGenerator->getNearestInstance(world, x, y, z);
+    if (name == "Village" && villageGenerator != nullptr)
+        return villageGenerator->findNearestVillage(world, x, y, z, 8);
     return nullptr;
 }

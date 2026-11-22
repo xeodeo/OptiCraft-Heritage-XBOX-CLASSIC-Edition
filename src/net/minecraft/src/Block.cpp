@@ -1,4 +1,5 @@
 #include "Block.h"
+#include "XRayMode.h"
 
 #include "AxisAlignedBB.h"
 #include "BlockBed.h"
@@ -427,6 +428,8 @@ int_t Block::getMixedBrightnessForBlock(IBlockAccess *iblockaccess, int_t i, int
 
 bool Block::shouldSideBeRendered(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k, int_t l)
 {
+	if (XRayMode::active() && XRayMode::isVisibleBlock(blockID))
+		return !XRayMode::isVisibleBlock(iblockaccess->getBlockId(i, j, k));
 	if (l == 0 && minY > 0.0) return true;
 	if (l == 1 && maxY < 1.0) return true;
 	if (l == 2 && minZ > 0.0) return true;

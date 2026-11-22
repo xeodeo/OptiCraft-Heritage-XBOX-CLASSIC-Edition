@@ -46,6 +46,7 @@
 #include "NBTTagList.h"
 #include "StatBase.h"
 #include "StatList.h"
+#include "mods/reiminimap/ReiMinimap.h"
 #include "TileEntityDispenser.h"
 #include "TileEntityFurnace.h"
 #include "TileEntitySign.h"
@@ -502,6 +503,7 @@ void EntityPlayer::onDeath(Entity *entity)
 	}
 	yOffset = 0.1f;
 	addStat(StatList::deathsStat, 1);
+	ReiMinimap::getInstance().onPlayerDeath(this);
 }
 
 void EntityPlayer::onDeath(const DamageSource &source)
@@ -518,6 +520,7 @@ void EntityPlayer::onDeath(const DamageSource &source)
 	motionZ = -MathHelper::sin(((attackedAtYaw + rotationYaw) * 3.1415927f) / 180.0f) * 0.1f;
 	yOffset = 0.1f;
 	addStat(StatList::deathsStat, 1);
+	ReiMinimap::getInstance().onPlayerDeath(this);
 }
 
 void EntityPlayer::addToPlayerScore(Entity *entity, int_t i)
