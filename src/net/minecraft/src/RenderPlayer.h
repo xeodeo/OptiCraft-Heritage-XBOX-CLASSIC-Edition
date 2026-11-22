@@ -5,6 +5,7 @@
 
 class EntityPlayer;
 class ModelBiped;
+class ModelPlayer;
 
 class RenderPlayer : public RenderLiving {
 public:
@@ -16,7 +17,8 @@ public:
     virtual void doRenderLiving(EntityLiving* entityLiving, double d, double d1, double d2, float f, float f1) override;
 
     virtual void doRender(Entity* entity, double d, double d1, double d2, float f, float f1) override;
-	void drawFirstPersonHand();
+	// player: whose skin is bound (picks the 64x64/slim arm); null = classic arm.
+	void drawFirstPersonHand(EntityPlayer* player = nullptr);
 
 protected:
     void renderName(EntityPlayer* entityPlayer, double d, double d1, double d2);
@@ -38,7 +40,15 @@ protected:
     void rotateCorpse(EntityLiving* entityLiving, float f, float f1, float f2) override;
 
 private:
+    // Model for the skin this player is drawn with: the classic 64x32
+    // ModelBiped, or the 1.8 ModelPlayer (wide or slim arms) for 64x64 skins.
+    ModelBiped* selectSkinModel(EntityPlayer* entityPlayer);
+
     ModelBiped* modelBipedMain;
+    ModelBiped* modelClassic;
+    ModelPlayer* modelPlayerWide;
+    ModelPlayer* modelPlayerSlim;
+    std::string skinPathScratch;
     ModelBiped* modelArmorChestplate;
     ModelBiped* modelArmor;
     int field_208_f;

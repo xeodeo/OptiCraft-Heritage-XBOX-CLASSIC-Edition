@@ -213,7 +213,7 @@ void GuiLoadSkinsList::scanSkins()
             if (lower.compare(lower.size() - 4, 4, ".png") != 0)
                 continue;
 
-            if (lower.find("_32.png") != std::string::npos || lower.find("_front.png") != std::string::npos)
+            if (lower.find("_32.png") != std::string::npos || lower.find("_64.png") != std::string::npos || lower.find("_front.png") != std::string::npos)
                 continue;
 
             std::string baseName = entry.substr(0, entry.size() - 4);
