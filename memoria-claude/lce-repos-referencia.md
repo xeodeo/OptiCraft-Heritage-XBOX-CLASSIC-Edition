@@ -34,3 +34,5 @@ toroho/opticrafthorotege (copia de erluza + rasterizador software, no sirve), ra
 Relacionado: [[legacy-lce-permitido]], [[que-es-de-cada-version]].
 
 **Herobrine original (confirmado por el usuario 22-11):** plugin de tkelly → https://github.com/darkdiplomat/iLoveYou (GPL v3), bajado en `mcp-diff\herobrine-iloveyou\`. Altar: netherrack encendido sobre piedra musgosa rodeada de 8 oros, 4 antorchas de redstone alrededor del netherrack.
+
+**ChocoCraft:** no hay copias de 1.2.5/1.5.2; referencia = ChocoCraft4 (github.com/Mrbysco/ChocoCraft4, código MIT, texturas CC-BY-SA 4.0, citar) en `mcp-diff\chococraft4-ref\`. El usuario quiere los mods «descompilados y portados», no hechos a mano.

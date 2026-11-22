@@ -1,0 +1,1 @@
+[MC][I][xbox.spike] frame=1544ms ticks=1536.3ms(1) world=1536.0ms {worldTick=1532.9 chunkUnload=1532.2 entities=2.0} gen=0.0ms pop=0.0ms load=0.0ms save=1531.8ms light=0.0ms render=7.2ms [build=0.3 opaque=3.2 ent=1.0 hud=0.7 sky=0.5 transl=0.0 hand=0.2 particles=0.1 weather=0.0 clouds=0.4 screen=0.0] display=0.6ms

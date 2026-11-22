@@ -26,6 +26,18 @@ Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-
 - **A vigilar**: RAM al volver a zonas ya cargadas (en xemu bajó de 24 a 11 MB); memoria en el End (isla residente).
 
 ## 2. Trabajo de agy (cuota vuelve ~19:05)
+- **111 (URGENTE, del usuario 22-11 18:00)**: (1) volvió a desaparecer la entrada «Texture Packs» (no hay dónde
+  cambiar texturas); (2) menú de mods: fondo quieto y contenido muy arriba, revisar TODAS las pantallas nuevas en
+  480p/720p; (3) descargar packs de Modrinth desde la consola (≈244 para 1.2.5, ≈266 para 1.5.2) con montaje del
+  formato 1.5 en la consola; (4) HTTPS sin gasto dentro del juego (`XboxTls::shutdown`, sección XBE a demanda).
+- **Tirón de 1,5 s guardando un chunk al descargarlo** (consola 22-11 18:01): encargo 111 punto 5.
+- **Cuelgue en consola 22-11 ~18:00**: el receptor del log estaba apagado (se cayó al hibernar); reproducir con
+  `escuchar_log.py` encendido o leer `E:\TDATA\FFFF4F43\debug.log` por FTP.
+- **113 (chocobos, usuario 22-11 18:20)**: cría con la cabeza despegada; no parece un chocobo (usar modelo y
+  texturas de ChocoCraft4, MIT/CC-BY-SA, bajado en `mcp-diff\chococraft4-ref`); el dorado no vuela; montado se mueve
+  solo y monta sin silla; daño por caída al planear/aterrizar.
+- **114 (minimapa)**: funciona, pero a veces se redibuja entero (usuario 22-11 18:25).
+- **112 (subagente de Claude, en marcha)**: todas las pantallas nuevas con aspecto LCE de Xbox (parecían Bedrock).
 - **105** (agy-1, A MEDIAS, 54 ficheros sin commit + sonda `XboxProbe105.cpp`): superplano personalizable, marcador
   (scoreboard), combate 1.5.2 (mensajes de muerte, flechas en llamas). NO reset.
 - **108** (agy-2, sin empezar): bloques (puertas, cama Nether, troncos, nieve capas, vallas, cacao, hojas), mobs

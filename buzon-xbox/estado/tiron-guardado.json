@@ -1,0 +1,1 @@
+{"version": "ambas", "estado": "fallo", "area": "Rendimiento", "nombre": "Tirón de 1,5 s al guardar un chunk que se descarga", "nota": "Visto en consola 22-11 18:01 (save=1532 ms en un fotograma). Encargo 111 punto 5.", "ref": "111", "orden": 2}
