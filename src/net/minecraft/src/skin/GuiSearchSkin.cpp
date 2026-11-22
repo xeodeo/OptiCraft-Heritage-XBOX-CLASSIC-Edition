@@ -450,6 +450,16 @@ void GuiSearchSkin::startSearch()
         int httpCode = -1;
         JavaNetwork::HttpResult res = JavaNetwork::httpGetUrl(job->url, png, &httpCode,
                                                               kMaxSkinDownloadBytes, kSkinDownloadTimeoutMs);
+        // Plain HTTP failed (blocked, or the site now forces HTTPS): try the same
+        // address over the relaxed-TLS client.
+        if ((res == JavaNetwork::HttpResult::NoConnection || res == JavaNetwork::HttpResult::InvalidResponse) &&
+            job->url.rfind("http://", 0) == 0 && !job->cancelled.load(std::memory_order_acquire))
+        {
+            png.clear();
+            httpCode = -1;
+            res = JavaNetwork::httpGetUrl("https://" + job->url.substr(7), png, &httpCode,
+                                          kMaxSkinDownloadBytes, kSkinDownloadTimeoutMs);
+        }
         if (job->cancelled.load(std::memory_order_acquire))
             return;
 
