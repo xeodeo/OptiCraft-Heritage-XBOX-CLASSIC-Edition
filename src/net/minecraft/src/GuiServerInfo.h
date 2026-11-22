@@ -22,6 +22,7 @@ protected:
     void keyTyped(char_t c, int_t key) override;
 
 private:
+    void drawLegacyScreen(float_t partialTick);
     GuiScreen *parentScreen;
     std::shared_ptr<ServerNBTStorage> server;
     bool openLatch = true;

@@ -13,6 +13,8 @@
 #include "StringTranslate.h"
 #include "ControlIcon.h"
 #include "legacy/LegacyMenuHints.h"
+#include "net/minecraft/src/legacy/LegacyMenuWidgets.h"
+#include "net/minecraft/src/legacy/LegacyOptionText.h"
 #include "legacy/LegacyOptionsLayout.h"
 #include "legacy/LegacyOptionsPanel.h"
 #include "legacy/LegacyPanorama.h"
@@ -532,8 +534,217 @@ void GuiCompiledMods::handleSpecializedMenuInput()
 #endif
 }
 
+// LCE look for the catalog: grey bevelled panel, dark title, filter tabs and
+// mod entries as stone buttons (selected = yellow label), a TickBox for
+// "enabled" instead of coloured pills, details in a recessed list well.
+void GuiCompiledMods::drawLegacyScreen(float_t partialTick)
+{
+    const bool es = catalogIsSpanish();
+    legacyDrawMenuBackdrop(mc, width, height, partialTick);
+
+    const bool wide = (width >= 420);
+    const bool compact = (height < 180);
+    const int_t count = static_cast<int_t>(filteredEntries.size());
+    const int_t rowH = compact ? 18 : (height >= 330 ? 24 : 22);
+    const int_t headerH = 42;
+    const int_t footerH = compact ? 0 : (wide ? 14 : 40);
+    const LegacyMenuLayout l = legacyMenuLayout(mc, width, height, wide ? 470 : 300,
+        std::max<int_t>(count, 3), headerH, footerH, rowH);
+    legacyDrawMenuPanel(l.panelX, l.panelY, l.panelW, l.panelH);
+    clampSelection(l.visibleRows);
+
+    // Header: title on the left, filter tabs on the right.
+    const int_t headY = l.panelY + 6;
+    legacyDrawPanelText(fontRenderer, es ? "Catalogo de mods" : "Mod Catalog", l.contentX, headY + 3);
+    const char *tabNames[3] = {
+        es ? "Todos" : "All",
+        es ? "Activos" : "Active",
+        es ? "Disp." : "Avail."
+    };
+    int_t tabRight = l.contentX + l.contentW;
+    for (int t = 2; t >= 0; --t)
+    {
+        const int_t tw = fontRenderer->getStringWidth(tabNames[t]) + 12;
+        const int_t tx = tabRight - tw;
+        legacyDrawMenuTab(mc, tx, headY, tw, 14, tabNames[t], static_cast<int>(filterTab) == t);
+        tabRight = tx - 2;
+    }
+
+    // Search box (black field like the Create World seed box).
+    const int_t barY = headY + 19;
+    const std::string qText = searchField ? searchField->getText() : "";
+    legacyDrawTextFieldBox(l.contentX + 1, barY, l.contentW - 2, 12, searching);
+    std::string searchLabel;
+    if (qText.empty())
+        searchLabel = searching ? (es ? "Escribe para buscar..._" : "Type to search..._")
+                                : (es ? "Buscar mod por nombre (X)" : "Search mod by name (X)");
+    else
+        searchLabel = (es ? "Buscar: " : "Search: ") + qText + (searching ? "_" : "");
+    drawString(fontRenderer, legacyFitText(fontRenderer, searchLabel, l.contentW - 10),
+        l.contentX + 4, barY + 2, qText.empty() && !searching ? 0x909090 : 0xFFFFFF);
+
+    const int_t listX = l.contentX;
+    const int_t listW = wide ? (l.contentW * 58 / 100) : l.contentW;
+    const int_t listH = l.visibleRows * l.rowH + (l.visibleRows - 1) * l.rowGap;
+    const int_t rowW = listW - 7;
+
+    if (count == 0)
+    {
+        const std::string none = es ? "Ningun mod coincide con la busqueda." : "No mods match your search.";
+        legacyDrawPanelText(fontRenderer, legacyFitText(fontRenderer, none, listW),
+            listX + (listW - std::min<int_t>(listW, fontRenderer->getStringWidth(none))) / 2,
+            l.firstRowY + listH / 2 - 4);
+    }
+    else
+    {
+        const int_t rowsToDraw = std::min<int_t>(l.visibleRows, count - scrollOffset);
+        for (int_t r = 0; r < rowsToDraw; ++r)
+        {
+            const int_t idx = scrollOffset + r;
+            const CompiledModInfo &entry = filteredEntries[idx];
+            const int_t ry = l.rowY(r);
+            const bool sel = (idx == selectedIndex);
+            const int_t labelColor = legacyDrawMenuButtonFrame(mc, listX, ry, rowW, l.rowH, sel, entry.installed);
+
+            const int_t iconSize = (l.rowH >= 20) ? 16 : 12;
+            drawModIcon(this, entry.id, listX + 5, ry + (l.rowH - iconSize) / 2, iconSize);
+
+            // Enabled = ticked box on the right (LCE checkbox), nothing for "not installed".
+            const int_t tickX = listX + rowW - 17;
+            if (entry.installed)
+                legacyDrawTickBox(mc, tickX, ry + (l.rowH - 12) / 2, entry.enabled, sel);
+
+            const int_t txtX = listX + 5 + iconSize + 6;
+            const int_t txtMaxW = tickX - 4 - txtX;
+            const std::string name = legacyFitText(fontRenderer, entry.name, txtMaxW);
+            if (l.rowH >= 20)
+            {
+                const int_t top = ry + (l.rowH - 18) / 2;
+                legacyDrawOptionText(fontRenderer, name, txtX, top, labelColor);
+                const int_t nameW = fontRenderer->getStringWidth(name) + 4;
+                if (nameW + fontRenderer->getStringWidth(entry.version) <= txtMaxW)
+                    legacyDrawOptionText(fontRenderer, entry.version, txtX + nameW, top, static_cast<int_t>(0xffb8b8b8u));
+                legacyDrawOptionText(fontRenderer, legacyFitText(fontRenderer, entry.description, txtMaxW), txtX, top + 10,
+                    sel ? static_cast<int_t>(0xffe8e8e8u) : static_cast<int_t>(0xffc8c8c8u));
+            }
+            else
+            {
+                legacyDrawOptionText(fontRenderer, name, txtX, ry + (l.rowH - 7) / 2, labelColor);
+            }
+        }
+        legacyDrawMenuScrollbar(listX + listW - 5, l.firstRowY, listH, scrollOffset, l.visibleRows, count);
+
+        if (selectedIndex >= 0 && selectedIndex < count)
+        {
+            const CompiledModInfo &selEntry = filteredEntries[selectedIndex];
+            if (wide)
+            {
+                // Detail card on the right, in the recessed dark well.
+                const int_t detX = listX + listW + 4;
+                const int_t detW = l.contentX + l.contentW - detX;
+                const int_t detY = l.firstRowY;
+                const int_t detH = listH;
+                legacyDrawInsetBox(detX, detY, detW, detH, true);
+
+                drawModIcon(this, selEntry.id, detX + 7, detY + 7, 32);
+                const int_t infoX = detX + 46;
+                const int_t infoW = detW - 52;
+                drawString(fontRenderer, legacyFitText(fontRenderer, selEntry.name, infoW), infoX, detY + 8, 0xFFFF88);
+                drawString(fontRenderer, legacyFitText(fontRenderer, selEntry.version + " - " + selEntry.author, infoW),
+                    infoX, detY + 19, 0xAAAAAA);
+                drawString(fontRenderer,
+                    !selEntry.installed ? (es ? "No instalado" : "Not installed")
+                        : (selEntry.enabled ? (es ? "Instalado y activo" : "Installed & active")
+                                            : (es ? "Desactivado" : "Disabled")),
+                    infoX, detY + 30, selEntry.enabled ? 0x55FF55 : 0xCCCCCC);
+
+                const int_t btnH = 16;
+                const int_t btnY = detY + detH - btnH - 5;
+                int_t dy = detY + 46;
+                std::string rem = selEntry.description;
+                while (!rem.empty() && dy + 9 < btnY - 2)
+                {
+                    std::string line = fontRenderer->trimStringToWidth(rem, detW - 14);
+                    if (line.empty()) break;
+                    if (line.size() < rem.size())
+                    {
+                        size_t sp = line.rfind(' ');
+                        if (sp != std::string::npos && sp > 4)
+                            line = line.substr(0, sp);
+                    }
+                    drawString(fontRenderer, line, detX + 7, dy, 0xDDDDDD);
+                    rem.erase(0, line.size());
+                    while (!rem.empty() && rem.front() == ' ') rem.erase(rem.begin());
+                    dy += 10;
+                }
+
+                // What A does, as a stone button (not focusable: A acts on the list).
+                legacyDrawMenuButton(mc, detX + 6, btnY, detW - 12, btnH,
+                    selEntry.enabled ? (es ? "Desactivar" : "Disable")
+                                     : (es ? "Instalar / Activar" : "Install / Enable"),
+                    false, selEntry.installed);
+            }
+            else if (!compact)
+            {
+                // 480p: two-line strip under the list.
+                const int_t fy = l.footerY;
+                legacyDrawInsetBox(listX, fy, l.contentW, 24, true);
+                drawString(fontRenderer, legacyFitText(fontRenderer, selEntry.name + ": " + selEntry.description, l.contentW - 8),
+                    listX + 4, fy + 3, 0xEEEEEE);
+                const std::string st = (es ? "Autor: " : "Author: ") + selEntry.author +
+                    (selEntry.hasConfig ? (es ? "  |  Y: opciones" : "  |  Y: options") : "");
+                drawString(fontRenderer, legacyFitText(fontRenderer, st, l.contentW - 8), listX + 4, fy + 13, 0x88DDFF);
+            }
+        }
+    }
+
+#if PLATFORM_XBOX
+    // The bottom row takes four prompts; tabs and texture packs go on the panel.
+    if (!compact)
+    {
+        const std::string ib[] = {"White", "Black", "Start"};
+        const std::string ia[] = {
+            "",
+            es ? "Pestanas" : "Tabs",
+            es ? "Texturas" : "Textures"
+        };
+        legacyDrawInlineHints(mc, l.panelX + l.panelW / 2, l.panelY + l.panelH - 13, ib, ia, 3);
+    }
+
+    const bool hasCfg = (selectedIndex >= 0 && selectedIndex < count && filteredEntries[selectedIndex].hasConfig);
+    if (hasCfg)
+    {
+        const std::string btns[] = {"A", "X", "Y", "B"};
+        const std::string acts[] = {
+            es ? "Activar" : "Toggle",
+            es ? "Buscar" : "Search",
+            es ? "Opciones" : "Options",
+            es ? "Volver" : "Back"
+        };
+        drawControlHintRow(mc, width, l.hintY, btns, acts, 4);
+    }
+    else
+    {
+        const std::string btns[] = {"D-Pad", "A", "X", "B"};
+        const std::string acts[] = {
+            es ? "Mover" : "Move",
+            es ? "Activar" : "Toggle",
+            es ? "Buscar" : "Search",
+            es ? "Volver" : "Back"
+        };
+        drawControlHintRow(mc, width, l.hintY, btns, acts, 4);
+    }
+#endif
+}
+
 void GuiCompiledMods::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 {
+    if (isLegacyMode())
+    {
+        drawLegacyScreen(partialTick);
+        return;
+    }
+
     const bool es = catalogIsSpanish();
     const bool legacy = isLegacyMode();
     const bool inWorld = (mc != nullptr && mc->theWorld != nullptr);

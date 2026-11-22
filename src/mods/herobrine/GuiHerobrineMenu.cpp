@@ -10,6 +10,7 @@
 #include "net/minecraft/src/StringTranslate.h"
 #include "net/minecraft/src/ControlIcon.h"
 #include "net/minecraft/src/legacy/LegacyMenuHints.h"
+#include "net/minecraft/src/legacy/LegacyMenuWidgets.h"
 #include "net/minecraft/src/legacy/LegacyOptionsLayout.h"
 #include "net/minecraft/src/legacy/LegacyOptionsPanel.h"
 #include "net/minecraft/src/legacy/LegacyPanorama.h"
@@ -282,63 +283,41 @@ void GuiHerobrineMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTic
         return;
     }
 
-    const bool inWorld = (mc != nullptr && mc->theWorld != nullptr);
-    if (!inWorld && mc != nullptr)
-        legacyDrawPanorama(mc, width, height, legacyScenePanoramaTimer(), partialTick, zLevel);
-    else
-        drawGradientRect(0, 0, width, height, static_cast<int_t>(0xC0101010u), static_cast<int_t>(0xD8101010u));
+    // LCE look: grey bevelled panel, one TickBox per event (like the in-game
+    // Options checkboxes), description of the selected one under the list.
+    legacyDrawMenuBackdrop(mc, width, height, partialTick);
+    (void)isSplit;
 
-    const int_t hintY = legacyHintRowY(height, isSplit);
-    const int_t panelW = std::min<int_t>(292, width - 14);
-    const int_t panelH = std::min<int_t>(182, hintY - 12);
-    const int_t panelX = (width - panelW) / 2;
-    const int_t panelY = std::max<int_t>(8, (hintY - panelH) / 2);
+    const int_t count = getItemCount();
+    const bool compact = (height < 180);
+    const int_t headerH = compact ? 24 : 32;
+    const LegacyMenuLayout l = legacyMenuLayout(mc, width, height, 280, count, headerH, compact ? 12 : 22);
+    legacyDrawMenuPanel(l.panelX, l.panelY, l.panelW, l.panelH);
 
-    LegacyOptionsLayout layout{};
-    layout.panelX = panelX;
-    layout.panelY = panelY;
-    layout.panelWidth = panelW;
-    layout.panelHeight = panelH;
-    LegacyOptionsPanel panelRenderer;
-    panelRenderer.draw(layout);
-
-    drawCenteredString(fontRenderer, title, panelX + panelW / 2, panelY + 7, 0xFFFFFF);
-    drawCenteredString(fontRenderer,
+    legacyDrawPanelTitle(fontRenderer, title, l.panelX + l.panelW / 2, l.titleY);
+    const std::string altar = legacyFitText(fontRenderer,
         es ? "Altar: 8 oro + musgosa + netherrack + 4 redstone"
-           : "Altar: 8 gold + mossy + netherrack + 4 redstone",
-        panelX + panelW / 2, panelY + 18, 0xFFDD88);
-    drawRect(panelX + 8, panelY + 29, panelX + panelW - 8, panelY + 30, static_cast<int_t>(0xFF777777u));
+           : "Altar: 8 gold + mossy + netherrack + 4 redstone", l.contentW);
+    legacyDrawPanelText(fontRenderer, altar, l.panelX + (l.panelW - fontRenderer->getStringWidth(altar)) / 2,
+        l.titleY + (compact ? 9 : 12), static_cast<int_t>(0xff606060u));
 
-    const int_t listX = panelX + 10;
-    const int_t listY = panelY + 34;
-    const int_t listW = panelW - 20;
-    const int_t rowH = 18;
-    const int_t availH = std::max<int_t>(rowH, panelH - 58);
-    const int_t visibleRows = std::min<int_t>(getItemCount(), std::max<int_t>(1, availH / rowH));
-    ensureSelectionVisible(visibleRows);
-
-    for (int_t vi = 0; vi < visibleRows; ++vi)
+    ensureSelectionVisible(l.visibleRows);
+    HerobrineMod *mod = HerobrineMod::getInstance();
+    for (int_t vi = 0; vi < l.visibleRows; ++vi)
     {
         const int_t idx = m_scrollOffset + vi;
-        if (idx >= getItemCount())
+        if (idx >= count)
             break;
-        const int_t ry = listY + vi * rowH;
-        const bool sel = (idx == m_selectedIndex);
-        drawRect(listX, ry, listX + listW, ry + rowH - 2,
-            sel ? static_cast<int_t>(0xD83A5288u) : static_cast<int_t>(0x90222222u));
-        if (sel)
-            drawRect(listX, ry, listX + 3, ry + rowH - 2, static_cast<int_t>(0xFFFFDD44u));
-
-        const int_t labelColor = sel ? 0xFFFFAA : (isDestructiveItem(idx) ? 0xFFCC99 : 0xFFFFFF);
-        drawString(fontRenderer, getItemLabel(idx), listX + 7, ry + 4, labelColor);
-        std::string val = getItemValue(idx);
-        drawString(fontRenderer, val, listX + listW - fontRenderer->getStringWidth(val) - 6, ry + 4,
-            val == "OFF" ? 0xFF8888 : 0xAAFFAA);
+        const bool on = (mod != nullptr) && getItemValue(idx) != "OFF";
+        legacyDrawMenuCheckbox(mc, l.contentX + 4, l.rowY(vi), l.contentW - 12, l.rowH,
+            getItemLabel(idx), on, idx == m_selectedIndex);
     }
+    const int_t listH = l.visibleRows * l.rowH + (l.visibleRows - 1) * l.rowGap;
+    legacyDrawMenuScrollbar(l.panelX + l.panelW - 10, l.firstRowY, listH, m_scrollOffset, l.visibleRows, count);
 
-    drawCenteredString(fontRenderer, getItemDesc(m_selectedIndex),
-        panelX + panelW / 2, panelY + panelH - 16,
-        isDestructiveItem(m_selectedIndex) ? 0xFFAA66 : 0xCCCCCC);
+    legacyDrawPanelTextWrapped(fontRenderer, getItemDesc(m_selectedIndex), l.panelX + l.panelW / 2, l.footerY + 1,
+        l.contentW, isDestructiveItem(m_selectedIndex) ? static_cast<int_t>(0xff8a2010u) : static_cast<int_t>(0xff404040u),
+        compact ? 1 : 2);
 
 #if PLATFORM_XBOX
     const std::string btns[] = {"D-Pad", "A", "B"};
@@ -347,6 +326,6 @@ void GuiHerobrineMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTic
         es ? "Cambiar" : "Toggle",
         es ? "Volver" : "Back"
     };
-    drawControlHintRow(mc, width, hintY, btns, acts, 3);
+    drawControlHintRow(mc, width, l.hintY, btns, acts, 3);
 #endif
 }
