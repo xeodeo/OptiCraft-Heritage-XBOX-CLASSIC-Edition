@@ -2,6 +2,7 @@
 #include "platform/Log.h"
 
 #include "GameSettings.h"
+#include "EntityPlayer.h"
 #include "KeyBinding.h"
 #include "Minecraft.h"
 
@@ -48,7 +49,9 @@ void MovementInputFromOptions::resetKeyState()
 
 bool MovementInputFromOptions::applySneak(bool rawDown, bool inScreen)
 {
-    if (gameSettings == nullptr || !gameSettings->toggleSneak)
+    // Flying or riding: sneak is "go down" / "get off", so it is always held, never
+    // latched (user 23-11: with toggle sneak on, flying sank all the way down).
+    if (gameSettings == nullptr || !gameSettings->toggleSneak || sneakHoldOnly)
     {
         sneakToggled = false;
         sneakKeyWasDown = rawDown;
@@ -63,7 +66,8 @@ bool MovementInputFromOptions::applySneak(bool rawDown, bool inScreen)
 
 void MovementInputFromOptions::updatePlayerMoveState(EntityPlayer *entityplayer)
 {
-    (void)entityplayer;
+    sneakHoldOnly = entityplayer != nullptr &&
+        (entityplayer->capabilities.isFlying || entityplayer->ridingEntity != nullptr);
     moveStrafe = 0.0f;
     moveForward = 0.0f;
 

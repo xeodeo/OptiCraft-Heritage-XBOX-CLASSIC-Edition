@@ -22,6 +22,7 @@ private:
 	int padPort;
 	// Toggle-sneak state; a new MovementInputFromOptions on respawn/world change resets it.
 	bool sneakToggled = false;
+	bool sneakHoldOnly = false; // flying or riding this tick
 	bool sneakKeyWasDown = false;
 	bool applySneak(bool rawDown, bool inScreen);
 };
