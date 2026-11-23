@@ -1,5 +1,6 @@
 #include "SaveHandler.h"
 #include "platform/Log.h"
+#include "java/System.h"
 
 #include "platform/PlatformConfig.h"
 #include "platform/Storage.h"
@@ -120,6 +121,15 @@ void SaveHandler::checkSessionLock()
 {
     if (readOnly || !PlatformStorage::supportsSessionLocks())
         return;
+#if PLATFORM_XBOX
+    // Every chunk save used to re-read session.lock on the main thread. On FATX that read
+    // waits behind the IO thread's region writes (1.5 s hitch seen on the real console when
+    // a modified chunk was unloaded). Nothing else can open the save on a console, so check
+    // at most every 30 s.
+    const long_t nowMs = System::currentTimeMillis();
+    if (lastSessionCheckMs != 0 && nowMs - lastSessionCheckMs >= 0 && nowMs - lastSessionCheckMs < 30000)
+        return;
+#endif
 
     try
     {
@@ -132,6 +142,9 @@ void SaveHandler::checkSessionLock()
             throw MinecraftException("Failed to check session lock, aborting");
         if (timestamp != sessionTime)
             throw MinecraftException("The save is being accessed from another location, aborting");
+#if PLATFORM_XBOX
+        lastSessionCheckMs = System::currentTimeMillis();
+#endif
     }
     catch (const MinecraftException&)
     {
