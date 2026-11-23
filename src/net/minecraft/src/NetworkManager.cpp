@@ -16,6 +16,7 @@
 
 #include "NetHandler.h"
 #include "Packet.h"
+#include "ProtocolTranslator340IO.h"
 #include "java/JavaNetwork.h"
 #include "java/Arithmetic.h"
 #include "java/System.h"
@@ -26,7 +27,8 @@ std::atomic<int_t> NetworkManager::numReadThreads{0};
 std::atomic<int_t> NetworkManager::numWriteThreads{0};
 std::mutex NetworkManager::threadSyncObject;
 
-NetworkManager::NetworkManager(const std::string &host, int_t port, const std::string &s, NetHandler *nethandler)
+NetworkManager::NetworkManager(const std::string &host, int_t port, const std::string &s, NetHandler *nethandler,
+                               int_t protocolVersion)
 	: networkSocket(JavaNetwork::createSocket())
 	, running(true)
 	, serverTerminating(false)
@@ -42,6 +44,8 @@ NetworkManager::NetworkManager(const std::string &host, int_t port, const std::s
 {
 	if (networkSocket == nullptr || !networkSocket->connect(host, port))
 		throw std::runtime_error("Connection refused: " + host + ":" + std::to_string(port));
+	if (protocolVersion == translator340::kTargetProtocol)
+		translatorConn.reset(new Translator340Connection(host, static_cast<int>(port)));
 
 	remoteSocketAddress = networkSocket->getRemoteSocketAddress();
 	socketInputStream = JavaNetwork::createInputStream(*networkSocket);
@@ -136,9 +140,14 @@ bool NetworkManager::sendPacket()
 				sendQueueByteLength -= packet->getPacketSize() + 1;
 			}
 		}
+		if (translatorConn != nullptr && translatorConn->flushInjected(*socketOutputStream))
+			flag = true;
 		if (packet != nullptr)
 		{
-			Packet::writePacket(packet.get(), *socketOutputStream);
+			if (translatorConn != nullptr)
+				translatorConn->writeTranslated(packet.get(), *socketOutputStream);
+			else
+				Packet::writePacket(packet.get(), *socketOutputStream);
 			if (!socketOutputStream->good())
 				throw std::runtime_error("Failed to write network packet");
 			field_28144_e[packet->getPacketId()] += packet->getPacketSize() + 1;
@@ -157,7 +166,10 @@ bool NetworkManager::sendPacket()
 		}
 		if (packet1 != nullptr)
 		{
-			Packet::writePacket(packet1.get(), *socketOutputStream);
+			if (translatorConn != nullptr)
+				translatorConn->writeTranslated(packet1.get(), *socketOutputStream);
+			else
+				Packet::writePacket(packet1.get(), *socketOutputStream);
 			if (!socketOutputStream->good())
 				throw std::runtime_error("Failed to write chunk packet");
 			field_28144_e[packet1->getPacketId()] += packet1->getPacketSize() + 1;
@@ -191,6 +203,11 @@ bool NetworkManager::readPacket()
 	#elif defined(WII_PLATFORM)
 	constexpr std::size_t MAX_READ_QUEUE_BYTES = 4 * 1024 * 1024;
 	constexpr std::size_t MAX_READ_QUEUE_PACKETS = 2048;
+	#elif defined(XBOX_PLATFORM)
+	// 64 MB console: 1.12.2 columns arrive already decoded (~50 KB each, see
+	// ProtocolTranslator340), so bound the backlog; TCP backpressure does the rest.
+	constexpr std::size_t MAX_READ_QUEUE_BYTES = 6 * 1024 * 1024;
+	constexpr std::size_t MAX_READ_QUEUE_PACKETS = 4096;
 	#else
 	constexpr std::size_t MAX_READ_QUEUE_BYTES = 32 * 1024 * 1024;
 	constexpr std::size_t MAX_READ_QUEUE_PACKETS = 8192;
@@ -201,7 +218,9 @@ bool NetworkManager::readPacket()
 		if (socketInputStream == nullptr)
 			return false;
 
-		std::unique_ptr<Packet> packet = Packet::readPacket(*socketInputStream, serverHandler);
+		std::unique_ptr<Packet> packet = translatorConn != nullptr
+			? translatorConn->readOneTranslated(*socketInputStream)
+			: Packet::readPacket(*socketInputStream, serverHandler);
 		if (packet != nullptr)
 		{
 			const int_t packetBytesSigned = packet->getPacketSize() + 1;

@@ -16,6 +16,8 @@
 #include "legacy/LegacyLanguageOptions.h"
 #include "GuiSelectWorld.h"
 #include "GuiMultiplayer.h"
+#include "GuiConnecting.h"
+#include <cstdio>
 #include "GuiTexturePacks.h"
 #include "mods/GuiMods.h"
 #include "StringTranslate.h"
@@ -166,6 +168,27 @@ GuiMainMenu::~GuiMainMenu()
 void GuiMainMenu::updateScreen()
 {
     ++panoramaTimer;
+#if XBOX_AUTOPILOT
+    // Test builds: D:\autoconnect.txt ("host port version") joins a server
+    // straight from the title screen, so multiplayer runs unattended in xemu.
+    static bool autoConnectTried = false;
+    if (!autoConnectTried && panoramaTimer > 40 && mc != nullptr)
+    {
+        autoConnectTried = true;
+        if (FILE *f = std::fopen("D:\\autoconnect.txt", "r"))
+        {
+            char host[128] = {0};
+            int port = 25565, version = 0;
+            const int fields = std::fscanf(f, "%127s %d %d", host, &port, &version);
+            std::fclose(f);
+            if (fields >= 1)
+            {
+                mc->displayGuiScreen(new GuiConnecting(mc, host, port, version));
+                return;
+            }
+        }
+    }
+#endif
     if (mc == nullptr || mc->gameSettings == nullptr || !mc->gameSettings->legacyUI)
         return;
 

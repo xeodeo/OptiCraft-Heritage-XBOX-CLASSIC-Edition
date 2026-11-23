@@ -118,6 +118,123 @@ bool queryPublicDns(const char *host, unsigned long resolverIp, unsigned long *a
     closesocket(s);
     return ok;
 }
+
+// DNS name at resp[p] (labels and compression pointers) -> dotted text.
+bool readDnsName(const unsigned char *resp, int got, int p, char *out, int outLen)
+{
+    int n = 0;
+    int jumps = 0;
+    while (p < got)
+    {
+        const int len = resp[p];
+        if (len == 0)
+        {
+            if (n > 0)
+                --n; // drop the trailing dot
+            out[n] = '\0';
+            return n > 0;
+        }
+        if ((len & 0xC0) == 0xC0)
+        {
+            if (p + 1 >= got || ++jumps > 16)
+                return false;
+            p = ((len & 0x3F) << 8) | resp[p + 1];
+            continue;
+        }
+        if (p + 1 + len > got || n + len + 2 > outLen)
+            return false;
+        memcpy(out + n, resp + p + 1, len);
+        n += len;
+        out[n++] = '.';
+        p += 1 + len;
+    }
+    return false;
+}
+
+// SRV query (_minecraft._tcp.<host>) to a public resolver.
+bool queryPublicSrv(const char *name, unsigned long resolverIp, char *target, int targetLen, int *port, int timeoutMs)
+{
+    unsigned char pkt[300];
+    int n = 0;
+    const unsigned short id = static_cast<unsigned short>((GetTickCount() * 7) & 0xFFFF);
+    pkt[n++] = static_cast<unsigned char>(id >> 8); pkt[n++] = static_cast<unsigned char>(id & 0xFF);
+    pkt[n++] = 0x01; pkt[n++] = 0x00;
+    pkt[n++] = 0; pkt[n++] = 1;
+    for (int i = 0; i < 6; ++i) pkt[n++] = 0;
+    const char *label = name;
+    while (*label != '\0')
+    {
+        const char *dot = strchr(label, '.');
+        const int len = dot != nullptr ? static_cast<int>(dot - label) : static_cast<int>(strlen(label));
+        if (len <= 0 || len > 63 || n + len + 6 >= static_cast<int>(sizeof(pkt)))
+            return false;
+        pkt[n++] = static_cast<unsigned char>(len);
+        memcpy(pkt + n, label, len);
+        n += len;
+        label += len;
+        if (*label == '.')
+            ++label;
+    }
+    pkt[n++] = 0;
+    pkt[n++] = 0; pkt[n++] = 33;                 // type SRV
+    pkt[n++] = 0; pkt[n++] = 1;
+
+    SOCKET s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (s == INVALID_SOCKET)
+        return false;
+    sockaddr_in to;
+    memset(&to, 0, sizeof(to));
+    to.sin_family = AF_INET;
+    to.sin_port = htons(53);
+    to.sin_addr.s_addr = resolverIp;
+    bool ok = false;
+    if (sendto(s, reinterpret_cast<const char *>(pkt), n, 0, reinterpret_cast<sockaddr *>(&to), sizeof(to)) == n)
+    {
+        fd_set rd;
+        FD_ZERO(&rd);
+        FD_SET(s, &rd);
+        timeval tv;
+        tv.tv_sec = timeoutMs / 1000;
+        tv.tv_usec = (timeoutMs % 1000) * 1000;
+        unsigned char resp[512];
+        if (select(0, &rd, nullptr, nullptr, &tv) > 0)
+        {
+            const int got = recv(s, reinterpret_cast<char *>(resp), sizeof(resp), 0);
+            if (got > 12 && resp[0] == pkt[0] && resp[1] == pkt[1] && (resp[3] & 0x0F) == 0)
+            {
+                const int answers = (resp[6] << 8) | resp[7];
+                int p = 12;
+                while (p < got && resp[p] != 0)
+                    p += (resp[p] & 0xC0) == 0xC0 ? 1 : resp[p] + 1;
+                p += 5;
+                for (int a = 0; a < answers && p + 10 <= got && !ok; ++a)
+                {
+                    if ((resp[p] & 0xC0) == 0xC0)
+                        p += 2;
+                    else
+                    {
+                        while (p < got && resp[p] != 0)
+                            p += resp[p] + 1;
+                        ++p;
+                    }
+                    if (p + 10 > got)
+                        break;
+                    const int type = (resp[p] << 8) | resp[p + 1];
+                    const int rdlen = (resp[p + 8] << 8) | resp[p + 9];
+                    p += 10;
+                    if (type == 33 && rdlen > 6 && p + rdlen <= got)
+                    {
+                        *port = (resp[p + 4] << 8) | resp[p + 5];
+                        ok = readDnsName(resp, got, p + 6, target, targetLen) && *port > 0;
+                    }
+                    p += rdlen;
+                }
+            }
+        }
+    }
+    closesocket(s);
+    return ok;
+}
 } // namespace
 
 namespace XboxNetwork
@@ -225,6 +342,25 @@ bool resolveIPv4Timeout(const char* host, unsigned long* address, int timeoutMs)
         }
     }
     s_lastResolveError = "sin DNS: ni el de la consola ni 8.8.8.8/1.1.1.1 respondieron";
+    return false;
+}
+
+bool resolveMinecraftSrv(const char *host, char *target, int targetLen, int *port)
+{
+    if (host == nullptr || target == nullptr || port == nullptr || targetLen < 8 || !initialize())
+        return false;
+    if (inet_addr(host) != INADDR_NONE || strchr(host, '.') == nullptr)
+        return false;
+    char name[300];
+    const int len = static_cast<int>(strlen(host));
+    if (len > 250)
+        return false;
+    memcpy(name, "_minecraft._tcp.", 16);
+    memcpy(name + 16, host, len + 1);
+    const unsigned long resolvers[] = { inet_addr("8.8.8.8"), inet_addr("1.1.1.1") };
+    for (unsigned long r : resolvers)
+        if (queryPublicSrv(name, r, target, targetLen, port, 1500))
+            return true;
     return false;
 }
 
@@ -396,6 +532,7 @@ namespace XboxNetwork
 {
 bool initialize() { return false; }
 bool resolveIPv4(const char*, unsigned long*) { return false; }
+bool resolveMinecraftSrv(const char*, char*, int, int*) { return false; }
 bool resolveIPv4Timeout(const char*, unsigned long*, int) { return false; }
 intptr_t tcpConnect(const char*, int) { return kInvalidSocket; }
 intptr_t tcpConnectTimeout(const char*, int, int) { return kInvalidSocket; }
