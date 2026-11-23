@@ -1,4 +1,6 @@
 #pragma once
+#include <utility>
+#include <vector>
 
 #include "GuiScreen.h"
 #include <string>
@@ -42,6 +44,8 @@ protected:
     bool hardcore;
     bool createClicked;
     bool moreOptions;
+    // LCE "Game Options" (GuiWorldGameOptions), applied to the new world's rules.
+    std::vector<std::pair<std::string, bool>> gameOptions;
     GuiButton *gameModeButton;
     GuiButton *moreWorldOptionsButton;
     GuiButton *generateStructuresButton;

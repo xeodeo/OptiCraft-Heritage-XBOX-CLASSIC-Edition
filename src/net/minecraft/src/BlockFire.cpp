@@ -1,4 +1,5 @@
 #include "BlockFire.h"
+#include "GameRules.h"
 
 #include "BlockPortal.h"
 #include "mods/herobrine/HerobrineMod.h"
@@ -74,6 +75,8 @@ int_t BlockFire::tickRate()
 
 void BlockFire::updateTick(World *world, int_t i, int_t j, int_t k, Random &random)
 {
+	if (!world->getGameRules().getGameRuleBooleanValue("doFireTick"))
+		return;
 	bool eternalFire = world->getBlockId(i, j - 1, k) == Block::netherrack->blockID;
 	if (dynamic_cast<WorldProviderEnd *>(world->worldProvider) != nullptr &&
 	    world->getBlockId(i, j - 1, k) == Block::bedrock->blockID)

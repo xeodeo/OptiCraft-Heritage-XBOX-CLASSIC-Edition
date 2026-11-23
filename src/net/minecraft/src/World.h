@@ -35,6 +35,7 @@
 
 class WorldProvider;
 class WorldInfo;
+class GameRules;
 class WorldSettings;
 class MapStorage;
 class ISaveHandler;
@@ -459,6 +460,7 @@ public:
 	void playAuxSFX(int_t type, int_t x, int_t y, int_t z, int_t data);
 	void playAuxSFXAtEntity(EntityPlayer *player, int_t type, int_t x, int_t y, int_t z, int_t data);
 	WorldInfo *getWorldInfo();
+	GameRules &getGameRules();
 	bool isLimitedWorld() const;
 	bool isIslandWorld() const;
 	void updateAllPlayersSleepingFlag();

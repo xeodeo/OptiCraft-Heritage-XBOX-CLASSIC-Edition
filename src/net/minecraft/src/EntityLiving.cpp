@@ -1,4 +1,5 @@
 #include "EntityLiving.h"
+#include "GameRules.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -1240,7 +1241,8 @@ void EntityLiving::onDeath(const DamageSource &source)
 		int_t looting = 0;
 		if (EntityPlayer *player = dynamic_cast<EntityPlayer *>(attacker))
 			looting = EnchantmentHelper::getLootingModifier(player->inventory);
-		if (!isChild())
+		if (!isChild() && (dynamic_cast<EntityPlayer *>(this) != nullptr ||
+		                   worldObj->getGameRules().getGameRuleBooleanValue("doMobLoot")))
 		{
 			dropFewItems(recentlyHit > 0, looting);
 			if (recentlyHit > 0)

@@ -1,4 +1,5 @@
 #include "EntityEnderman.h"
+#include "GameRules.h"
 #include "java/Arithmetic.h"
 
 #include <algorithm>
@@ -115,7 +116,7 @@ void EntityEnderman::onLivingUpdate()
 	isAttacking = target != nullptr;
 	moveSpeed = target != nullptr ? 6.5f : 0.3f;
 
-	if (!worldObj->multiplayerWorld)
+	if (!worldObj->multiplayerWorld && worldObj->getGameRules().getGameRuleBooleanValue("mobGriefing"))
 	{
 		if (getCarried() == 0)
 		{

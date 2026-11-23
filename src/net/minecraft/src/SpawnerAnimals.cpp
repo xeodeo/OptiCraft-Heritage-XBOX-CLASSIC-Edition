@@ -1,4 +1,5 @@
 #include "SpawnerAnimals.h"
+#include "GameRules.h"
 #include "java/Arithmetic.h"
 
 #include "platform/PlatformTuning.h"
@@ -136,6 +137,8 @@ ChunkPosition SpawnerAnimals::getRandomSpawningPointInChunk(World *world, int_t 
 int_t SpawnerAnimals::performSpawning(World *world, bool spawnHostiles, bool spawnPeaceful)
 {
     if (!spawnHostiles && !spawnPeaceful)
+        return 0;
+    if (!world->getGameRules().getGameRuleBooleanValue("doMobSpawning"))
         return 0;
 
 #if PLATFORM_MOB_SPAWN_INTERVAL_TICKS > 1 || PLATFORM_MAX_LIVE_MOBS < 0x7fffffff

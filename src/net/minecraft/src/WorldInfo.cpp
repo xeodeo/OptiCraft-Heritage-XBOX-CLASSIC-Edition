@@ -37,6 +37,8 @@ WorldInfo::WorldInfo(NBTTagCompound *nbttagcompound)
 	lastTimePlayed = nbttagcompound->getLong("LastPlayed");
 	sizeOnDisk = nbttagcompound->getLong("SizeOnDisk");
 	levelName = nbttagcompound->getString("LevelName");
+	if (nbttagcompound->hasKey("GameRules"))
+		theGameRules.readGameRulesFromNBT(nbttagcompound->getCompoundTag("GameRules"));
 	if (nbttagcompound->hasKey("OptiCraftVersion"))
 	{
 		optiCraftVersion = nbttagcompound->getString("OptiCraftVersion");
@@ -110,6 +112,9 @@ WorldInfo::WorldInfo(WorldSettings *settings, const jstring &s)
 	hardcore = settings != nullptr && settings->getHardcoreEnabled();
 	worldSizeType = settings != nullptr ? settings->getWorldSizeType() : 0;
 	limitedWorld = (worldSizeType != 0);
+	if (settings != nullptr)
+		for (const auto &rule : settings->gameRuleOverrides)
+			theGameRules.setOrCreateGameRule(rule.first, rule.second);
 	levelName = s;
 	spawnX = 0;
 	spawnY = 0;
@@ -150,6 +155,7 @@ WorldInfo::WorldInfo(WorldInfo *worldinfo)
 		: nullptr;
 	dimension = worldinfo->dimension;
 	levelName = worldinfo->levelName;
+	theGameRules = worldinfo->theGameRules;
 	optiCraftMods = worldinfo->optiCraftMods;
 	optiCraftVersion = worldinfo->optiCraftVersion;
 	saveVersion = worldinfo->saveVersion;
@@ -227,6 +233,7 @@ void WorldInfo::updateTagCompound(NBTTagCompound *nbttagcompound, NBTTagCompound
 	nbttagcompound->setLong("SizeOnDisk", sizeOnDisk);
 	nbttagcompound->setLong("LastPlayed", System::currentTimeMillis());
 	nbttagcompound->setString("LevelName", levelName);
+	nbttagcompound->setCompoundTag("GameRules", theGameRules.writeGameRulesToNBT());
 	if (gameVersionProvider != nullptr)
 	{
 		nbttagcompound->setString("OptiCraftVersion", gameVersionProvider());

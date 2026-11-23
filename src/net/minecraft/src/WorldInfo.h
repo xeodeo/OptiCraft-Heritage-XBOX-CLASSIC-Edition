@@ -4,6 +4,7 @@
 #include <vector>
 #include "java/Type.h"
 #include "java/String.h"
+#include "GameRules.h"
 
 class EntityPlayer;
 class NBTTagCompound;
@@ -19,6 +20,9 @@ public:
 	WorldInfo(WorldSettings *settings, const jstring &s);
 	WorldInfo(WorldInfo *worldinfo);
 	~WorldInfo();
+
+	GameRules &getGameRulesInstance() { return theGameRules; }
+	GameRules theGameRules;
 
 	// Per-world mod detector (encargo 115). Filled from level.dat; written back with the
 	// providers below (set by ModManager) so the world remembers the mods/version it used.

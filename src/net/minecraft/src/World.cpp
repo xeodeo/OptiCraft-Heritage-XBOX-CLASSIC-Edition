@@ -96,6 +96,8 @@
 #include "BlockFire.h"
 #include "BlockFluid.h"
 #include "Explosion.h"
+#include "GameRules.h"
+#include "EntityFireball.h"
 #include "MetadataChunkBlock.h"
 #include "SpawnerAnimals.h"
 #include "EntityMob.h"
@@ -4376,6 +4378,12 @@ bool World::isAABBInMaterial(AxisAlignedBB* aabb, Material* material)
     return false;
 }
 
+GameRules &World::getGameRules()
+{
+    static GameRules fallback;
+    return worldInfo != nullptr ? worldInfo->getGameRulesInstance() : fallback;
+}
+
 Explosion *World::createExplosion(Entity* entity, double x, double y, double z, float strength)
 {
     return newExplosion(entity, x, y, z, strength, false);
@@ -4386,6 +4394,12 @@ Explosion *World::newExplosion(Entity* entity, double x, double y, double z, flo
     Explosion *explosion = new Explosion(this, entity, x, y, z, strength);
     explosion->isFlaming = isFlaming;
     explosion->doExplosionA();
+    // Game rule mobGriefing (LCE "Mob Griefing"): creepers and ghast fireballs
+    // still hurt, but break no blocks.
+    if (!getGameRules().getGameRuleBooleanValue("mobGriefing") && entity != nullptr &&
+        ((dynamic_cast<EntityLiving *>(entity) != nullptr && dynamic_cast<EntityPlayer *>(entity) == nullptr) ||
+         dynamic_cast<EntityFireball *>(entity) != nullptr))
+        explosion->destroyedBlockPositions.clear();
     explosion->doExplosionB(true);
     return explosion;
 }

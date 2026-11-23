@@ -268,6 +268,8 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
         }
 
         WorldSettings settings(worldSeed, gameType, generateStructures, hardcore, type, worldSizeType);
+        for (const auto &option : gameOptions)
+            settings.gameRuleOverrides.emplace_back(option.first, option.second ? "true" : "false");
         mc->startWorld(folderName, textboxWorldName->getText(), &settings);
         mc->displayGuiScreen(nullptr);
     }

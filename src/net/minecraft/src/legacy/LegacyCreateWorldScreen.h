@@ -42,6 +42,7 @@ private:
     LegacyOptionsPanel panelRenderer;
     LegacyDifficultySlider *difficultySlider;
     LegacyGuiButton *legacyWorldSizeButton;
+    LegacyGuiButton *gameOptionsButton = nullptr;
     int_t textFieldHeight;
     int_t labelOffsetY;
     int_t selectedControlIndex;

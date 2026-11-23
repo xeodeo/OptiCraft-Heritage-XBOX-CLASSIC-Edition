@@ -1,4 +1,7 @@
 #pragma once
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "java/Type.h"
 
@@ -26,5 +29,8 @@ private:
 	bool hardcoreEnabled;
 	WorldType *terrainType;
 	int_t worldSizeType;
+public:
+	// LCE game options chosen when creating the world (rule name, value).
+	std::vector<std::pair<std::string, std::string>> gameRuleOverrides;
 };
 

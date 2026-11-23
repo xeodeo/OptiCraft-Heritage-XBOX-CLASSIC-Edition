@@ -2540,6 +2540,8 @@ bool Minecraft::isMultiplayerWorld()
 
 bool Minecraft::isDebugKeepInventoryEnabled()
 {
+    if (theWorld != nullptr && !isMultiplayerWorld() && theWorld->getGameRules().getGameRuleBooleanValue("keepInventory"))
+        return true;
     return gameSettings != nullptr && gameSettings->debugKeepInventory && !isMultiplayerWorld();
 }
 

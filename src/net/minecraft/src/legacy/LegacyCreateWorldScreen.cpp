@@ -1,4 +1,5 @@
 #include "LegacyCreateWorldScreen.h"
+#include "../GuiWorldGameOptions.h"
 
 #include <algorithm>
 
@@ -35,10 +36,11 @@ enum LegacyCreateButtonId
     BUTTON_GENERATE_STRUCTURES = 4,
     BUTTON_WORLD_TYPE = 5,
     BUTTON_DIFFICULTY = 6,
-    BUTTON_WORLD_SIZE = 7
+    BUTTON_WORLD_SIZE = 7,
+    BUTTON_GAME_OPTIONS = 11
 };
 
-constexpr int_t CREATE_SELECTION_COUNT = 6;
+constexpr int_t CREATE_SELECTION_COUNT = 7;
 bool pointInside(int_t x, int_t y, int_t left, int_t top, int_t width, int_t height)
 {
     return x >= left && y >= top && x < left + width && y < top + height;
@@ -79,7 +81,7 @@ void LegacyCreateWorldScreen::initGui()
     panoramaAvailable = mc != nullptr && mc->renderEngine != nullptr &&
         mc->renderEngine->hasResource(legacyPanoramaResourcePath());
 
-    controlList.push_back(new LegacyGuiButton(BUTTON_CREATE_WORLD, layout.contentX, layout.rowY(5),
+    controlList.push_back(new LegacyGuiButton(BUTTON_CREATE_WORLD, layout.contentX, layout.rowY(6),
         layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.create")));
     controlList.push_back(gameModeButton = new LegacyGuiButton(BUTTON_GAME_MODE, layout.contentX, layout.rowY(1),
         layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.gameMode")));
@@ -88,8 +90,13 @@ void LegacyCreateWorldScreen::initGui()
     controlList.push_back(legacyWorldSizeButton = new LegacyGuiButton(BUTTON_WORLD_SIZE, layout.contentX,
         layout.rowY(3), layout.contentWidth, layout.rowHeight, ""));
     worldSizeButton = legacyWorldSizeButton;
+    if (gameOptions.empty())
+        gameOptions = GuiWorldGameOptions::defaultRules();
+    controlList.push_back(gameOptionsButton = new LegacyGuiButton(BUTTON_GAME_OPTIONS, layout.contentX,
+        layout.rowY(4), layout.contentWidth, layout.rowHeight,
+        tr->getCurrentLanguage().rfind("es_", 0) == 0 ? "Opciones de juego..." : "Game Options..."));
     controlList.push_back(moreWorldOptionsButton = new LegacyGuiButton(BUTTON_MORE_OPTIONS, layout.contentX,
-        layout.rowY(4), layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.moreWorldOptions")));
+        layout.rowY(5), layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.moreWorldOptions")));
     controlList.push_back(generateStructuresButton = new LegacyGuiButton(BUTTON_GENERATE_STRUCTURES,
         layout.contentX, layout.rowY(1), layout.contentWidth, layout.rowHeight,
         tr->translateKey("selectWorld.mapFeatures")));
@@ -144,8 +151,9 @@ GuiButton *LegacyCreateWorldScreen::buttonForSelection(int_t index) const
     case 1: return moreOptions ? generateStructuresButton : gameModeButton;
     case 2: return moreOptions ? worldTypeButton : static_cast<GuiButton *>(difficultySlider);
     case 3: return worldSizeButton;
-    case 4: return moreWorldOptionsButton;
-    case 5: return !controlList.empty() ? controlList[0] : nullptr;
+    case 4: return gameOptionsButton;
+    case 5: return moreWorldOptionsButton;
+    case 6: return !controlList.empty() ? controlList[0] : nullptr;
     default: return nullptr;
     }
 }
@@ -160,10 +168,12 @@ int_t LegacyCreateWorldScreen::selectionForButton(const GuiButton *button) const
         return 2;
     if (button == worldSizeButton)
         return 3;
-    if (button == moreWorldOptionsButton)
+    if (button == gameOptionsButton)
         return 4;
-    if (!controlList.empty() && button == controlList[0])
+    if (button == moreWorldOptionsButton)
         return 5;
+    if (!controlList.empty() && button == controlList[0])
+        return 6;
     return -1;
 }
 
@@ -386,6 +396,11 @@ void LegacyCreateWorldScreen::actionPerformed(GuiButton *button)
     }
 
     const int_t id = button->id;
+    if (id == BUTTON_GAME_OPTIONS)
+    {
+        mc->displayGuiScreen(new GuiWorldGameOptions(this, &gameOptions));
+        return;
+    }
     GuiCreateWorld::actionPerformed(button);
     if (id == BUTTON_MORE_OPTIONS)
     {

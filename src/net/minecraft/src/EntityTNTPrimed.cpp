@@ -1,4 +1,5 @@
 #include "EntityTNTPrimed.h"
+#include "GameRules.h"
 #include "java/Arithmetic.h"
 #include "java/Math.h"
 
@@ -84,6 +85,9 @@ void EntityTNTPrimed::onUpdate()
 void EntityTNTPrimed::explode()
 {
 	float f = 4.0f;
+	// LCE host option "TNT Explodes": off = the fuse burns out harmlessly.
+	if (worldObj != nullptr && !worldObj->getGameRules().getGameRuleBooleanValue("tntExplodes"))
+		return;
 	delete worldObj->createExplosion(nullptr, posX, posY, posZ, f);
 }
 

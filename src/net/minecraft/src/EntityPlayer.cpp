@@ -1,4 +1,5 @@
 #include "EntityPlayer.h"
+#include "GameRules.h"
 #include "java/Math.h"
 #include "java/Arithmetic.h"
 
@@ -721,6 +722,13 @@ bool EntityPlayer::attackEntityFrom(Entity *entity, int_t damage)
 
 bool EntityPlayer::attackEntityFrom(const DamageSource &source, int_t damage)
 {
+	// LCE host option "Player vs Player" (split screen players hitting each other).
+	if (worldObj != nullptr && !worldObj->getGameRules().getGameRuleBooleanValue("pvp"))
+	{
+		Entity *attacker = source.getEntity();
+		if (attacker != nullptr && attacker != this && dynamic_cast<EntityPlayer *>(attacker) != nullptr)
+			return false;
+	}
 	if (capabilities.disableDamage && !source.canHarmInCreative())
 		return false;
 	entityAge = 0;

@@ -1,4 +1,5 @@
 #include "Block.h"
+#include "GameRules.h"
 #include "XRayMode.h"
 
 #include "AxisAlignedBB.h"
@@ -564,7 +565,7 @@ void Block::dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, i
 
 void Block::dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, int_t l, float f, int_t fortune)
 {
-	if (world->multiplayerWorld)
+	if (world->multiplayerWorld || !world->getGameRules().getGameRuleBooleanValue("doTileDrops"))
 	{
 		return;
 	}
