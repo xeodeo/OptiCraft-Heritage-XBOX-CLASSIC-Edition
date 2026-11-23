@@ -1,5 +1,6 @@
 #include "ChocoCraftItems.h"
 #include "EntityChocobo.h"
+#include "GuiChocopedia.h"
 #include "mods/ModManager.h"
 
 #include "net/minecraft/src/Block.h"
@@ -14,6 +15,9 @@
 #include "net/minecraft/src/EntityItem.h"
 #include "net/minecraft/src/IBlockAccess.h"
 #include "net/minecraft/src/StringTranslate.h"
+#include "net/minecraft/src/StepSound.h"
+#include "net/minecraft/src/BlockTallGrass.h"
+#include "net/minecraft/src/BlockDeadBush.h"
 #include "platform/Log.h"
 
 #include <cmath>
@@ -126,6 +130,37 @@ void BlockGysahlGreens::dropBlockAsItemWithChance(World *world, int_t x, int_t y
 }
 
 // ============================================================================
+// BlockGysahlGreenBush (ChocoCraft 4.1.5 BlockGysahlGreen, a BlockBush)
+// ============================================================================
+
+BlockGysahlGreenBush::BlockGysahlGreenBush(int_t id, int_t texIndex)
+    : BlockFlower(id, texIndex)
+{
+    // BlockGysahlGreen: bounds 0..1 x 0..0.25, grass sound, instant break, random ticks.
+    setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 0.25f, 1.0f);
+    setHardness(0.0f);
+    setStepSound(Block::soundGrassFootstep);
+    setBlockName("gysahlGreenBlock");
+}
+
+int_t BlockGysahlGreenBush::idDropped(int_t meta, Random &random)
+{
+    (void)meta;
+    (void)random;
+    // The original drops its own ItemBlock; here that is the Gysahl Green item.
+    if (!ModManager::getInstance().isModEnabled("chococraft") || ChocoCraftItems::gysahlGreens == nullptr)
+        return -1;
+    return ChocoCraftItems::gysahlGreens->shiftedIndex;
+}
+
+void BlockGysahlGreenBush::updateTick(World *world, int_t x, int_t y, int_t z, Random &random)
+{
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return;
+    BlockFlower::updateTick(world, x, y, z, random);
+}
+
+// ============================================================================
 // BlockChocoboStraw (ChocoCraft 4.1.5 BlockStraw)
 // ============================================================================
 
@@ -226,6 +261,123 @@ ItemGysahlSeeds::ItemGysahlSeeds(int id, int cropBlockId)
     setItemName("gysahlSeeds");
 }
 
+ItemGysahlGreen::ItemGysahlGreen(int id)
+    : ItemChocoIcon(id, 0x78EE44, "/chococraft/textures/blocks/gysahl_green.png", "Gysahl Green", "Verdura de Gysahl")
+{
+}
+
+// Same placement as ItemReed / ItemBlock: the Gysahl Green item is the bush's ItemBlock
+// in ChocoCraft 4.1.5.
+bool ItemGysahlGreen::onItemUse(ItemStack *itemstack, EntityPlayer *player, World *world, int x, int y, int z, int side)
+{
+    if (itemstack == nullptr || player == nullptr || world == nullptr || !ModManager::getInstance().isModEnabled("chococraft"))
+        return false;
+    Block *bush = ChocoCraftItems::blockGysahlGreen;
+    if (bush == nullptr)
+        return false;
+
+    const int_t clicked = world->getBlockId(x, y, z);
+    if (Block::snow != nullptr && clicked == Block::snow->blockID)
+    {
+        side = 1;
+    }
+    else if (!(Block::tallGrass != nullptr && clicked == Block::tallGrass->blockID) &&
+             !(Block::deadBush != nullptr && clicked == Block::deadBush->blockID))
+    {
+        if (side == 0) y--;
+        if (side == 1) y++;
+        if (side == 2) z--;
+        if (side == 3) z++;
+        if (side == 4) x--;
+        if (side == 5) x++;
+    }
+
+    if (!player->canPlayerEdit(x, y, z) || itemstack->stackSize == 0)
+        return false;
+    if (!world->canBlockBePlacedAt(bush->blockID, x, y, z, false, side))
+        return false;
+    if (world->setBlockWithNotify(x, y, z, bush->blockID))
+    {
+        if (world->getBlockId(x, y, z) == bush->blockID)
+        {
+            bush->onBlockPlaced(world, x, y, z, side);
+            bush->onBlockPlacedBy(world, x, y, z, player);
+        }
+        world->playSoundEffect(x + 0.5f, y + 0.5f, z + 0.5f, bush->stepSound->getStepSound(),
+                               (bush->stepSound->getVolume() + 1.0f) / 2.0f, bush->stepSound->getPitch() * 0.8f);
+        if (!player->capabilities.isCreativeMode)
+            itemstack->stackSize--;
+    }
+    return true;
+}
+
+ItemChocoboFeather::ItemChocoboFeather(int id)
+    : ItemChocoIcon(id, 0xFFE844, "/chococraft/textures/items/chocoboFeather.png", "Chocobo Feather", "Pluma de Chocobo")
+{
+}
+
+// ChocoCraftEventCommon.onFeatherRightClick: a Chocobo Feather used on a bookshelf
+// takes the bookshelf and one feather and leaves a Chocopedia.
+bool ItemChocoboFeather::onItemUse(ItemStack *itemstack, EntityPlayer *player, World *world, int x, int y, int z, int side)
+{
+    (void)side;
+    if (itemstack == nullptr || player == nullptr || world == nullptr || !ModManager::getInstance().isModEnabled("chococraft"))
+        return false;
+    if (Block::bookShelf == nullptr || world->getBlockId(x, y, z) != Block::bookShelf->blockID ||
+        ChocoCraftItems::chocopedia == nullptr)
+        return false;
+    if (world->multiplayerWorld)
+        return true;
+    world->setBlockWithNotify(x, y, z, 0);
+    if (!player->capabilities.isCreativeMode)
+        itemstack->stackSize--;
+    EntityItem *book = new EntityItem(world, static_cast<double>(x), static_cast<double>(y), static_cast<double>(z),
+                                      new ItemStack(ChocoCraftItems::chocopedia, 1, 0));
+    world->entityJoinedWorld(book);
+    return true;
+}
+
+ItemChocopedia::ItemChocopedia(int id)
+    : ItemChocoIcon(id, 0xC08040, "/chococraft/textures/items/chocopedia.png", "Chocopedia", "Chocopedia")
+{
+}
+
+ItemStack *ItemChocopedia::onItemRightClick(ItemStack *itemstack, World *world, EntityPlayer *player)
+{
+    (void)world;
+    if (player == nullptr || !ModManager::getInstance().isModEnabled("chococraft"))
+        return itemstack;
+    // A click on a chocobo already opened its page (the item use follows the entity
+    // click in this engine): only open the book when no screen is up for this player.
+    if (!GuiChocopedia::isScreenOpenFor(player))
+        GuiChocopedia::open(player, nullptr);
+    return itemstack;
+}
+
+ItemChocoDisguise::ItemChocoDisguise(int id, int armorType, const char *customTex, const char *enName, const char *esName)
+    : ItemArmor(id, EnumArmorMaterial::GOLD, 4, armorType)
+    , m_customTex(customTex)
+    , m_enName(enName)
+    , m_esName(esName)
+{
+    // ChocoboArmourMaterial.CHOCOFEATHER: no protection, durability 1, not enchantable.
+    damageReduceAmount = 0;
+    setMaxDamage(1);
+    maxStackSize = 1;
+}
+
+const char *ItemChocoDisguise::getCustomArmorTexture(int layer) const
+{
+    // Helmet, body and boots use chocoDisguise_1, the leggings chocoDisguise_2.
+    return layer == 2 ? "/chococraft/textures/armor/chocoDisguise_2.png"
+                      : "/chococraft/textures/armor/chocoDisguise_1.png";
+}
+
+std::string ItemChocoDisguise::getItemDisplayName(ItemStack *)
+{
+    return chocoIsSpanish() ? m_esName : m_enName;
+}
+
 std::string ItemGysahlSeeds::getItemDisplayName(ItemStack *)
 {
     return chocoIsSpanish() ? "Semillas de Gysahl" : "Gysahl Seeds";
@@ -318,11 +470,12 @@ namespace ChocoCraftItems
 {
 BlockGysahlGreens    *blockGysahl = nullptr;
 BlockChocoboStraw    *blockStraw = nullptr;
-ItemChocoIcon        *gysahlGreens = nullptr;
+BlockGysahlGreenBush *blockGysahlGreen = nullptr;
+ItemGysahlGreen      *gysahlGreens = nullptr;
 ItemGysahlSeeds      *gysahlSeeds = nullptr;
 ItemChocoIcon        *chocoboSaddle = nullptr;
 ItemChocoIcon        *chocoboSaddlebags = nullptr;
-ItemChocoIcon        *chocoboFeather = nullptr;
+ItemChocoboFeather   *chocoboFeather = nullptr;
 ItemChocoIcon        *chocoboPackbags = nullptr;
 ItemChocoIcon        *gysahlLoverly = nullptr;
 ItemChocoIcon        *gysahlGolden = nullptr;
@@ -335,6 +488,11 @@ ItemChocoFood        *chocoboLegRaw = nullptr;
 ItemChocoFood        *chocoboLegCooked = nullptr;
 ItemChocoboWhistle   *chocoboWhistle = nullptr;
 ItemPurpleChocoboEgg *purpleChocoboEgg = nullptr;
+ItemChocopedia       *chocopedia = nullptr;
+ItemChocoDisguise    *disguiseHead = nullptr;
+ItemChocoDisguise    *disguiseBody = nullptr;
+ItemChocoDisguise    *disguiseLegs = nullptr;
+ItemChocoDisguise    *disguiseBoots = nullptr;
 
 static bool s_registered = false;
 
@@ -361,8 +519,8 @@ void registerAll()
 
     if (Block::blocksList[BLOCK_STRAW_ID] == nullptr)
     {
-        // Wheat (ripe) tinted straw-yellow: closest vanilla terrain tile to strawBlock.
-        blockStraw = new BlockChocoboStraw(BLOCK_STRAW_ID, 95);
+        // Own texture: spare terrain tile filled from blocks/chocoboStraw.png (ChocoCraftTileFX).
+        blockStraw = new BlockChocoboStraw(BLOCK_STRAW_ID, TILE_STRAW);
         Block::opaqueCubeLookup[BLOCK_STRAW_ID] = false;
         Block::lightOpacity[BLOCK_STRAW_ID] = 0;
         Block::canBlockGrass[BLOCK_STRAW_ID] = false;
@@ -371,11 +529,22 @@ void registerAll()
                 "/chococraft/textures/blocks/chocoboStraw.png", "Straw", "Paja");
     }
 
+    if (Block::blocksList[BLOCK_GYSAHL_GREEN_ID] == nullptr)
+    {
+        blockGysahlGreen = new BlockGysahlGreenBush(BLOCK_GYSAHL_GREEN_ID, TILE_GYSAHL_GREEN);
+        Block::opaqueCubeLookup[BLOCK_GYSAHL_GREEN_ID] = false;
+        Block::lightOpacity[BLOCK_GYSAHL_GREEN_ID] = 0;
+        Block::canBlockGrass[BLOCK_GYSAHL_GREEN_ID] = false;
+        if (Item::itemsList[BLOCK_GYSAHL_GREEN_ID] == nullptr)
+            Item::itemsList[BLOCK_GYSAHL_GREEN_ID] = new ItemChocoBlock(BLOCK_GYSAHL_GREEN_ID - 256,
+                "/chococraft/textures/blocks/gysahl_green.png", "Gysahl Green", "Verdura de Gysahl");
+    }
+
     if (Item::itemsList[256 + ITEM_GYSAHL_GREENS_RAW] == nullptr)
     {
-        // In ChocoCraft the Gysahl Green is not food (it is the gysahlGreenBlock item).
-        gysahlGreens = new ItemChocoIcon(ITEM_GYSAHL_GREENS_RAW, 0x78EE44,
-            "/chococraft/textures/blocks/gysahl_green.png", "Gysahl Green", "Verdura de Gysahl");
+        // In ChocoCraft the Gysahl Green is not food: it is the gysahlGreenBlock item
+        // (plants the bush, tames and heals chocobos).
+        gysahlGreens = new ItemGysahlGreen(ITEM_GYSAHL_GREENS_RAW);
         gysahlGreens->setIconCoord(9, 5)->setItemName("gysahlGreens");
     }
 
@@ -398,8 +567,7 @@ void registerAll()
 
     if (Item::itemsList[256 + ITEM_FEATHER_RAW] == nullptr)
     {
-        chocoboFeather = new ItemChocoIcon(ITEM_FEATHER_RAW, 0xFFE844,
-            "/chococraft/textures/items/chocoboFeather.png", "Chocobo Feather", "Pluma de Chocobo");
+        chocoboFeather = new ItemChocoboFeather(ITEM_FEATHER_RAW);
         chocoboFeather->setIconCoord(8, 1)->setItemName("chocoboFeather");
     }
 
@@ -479,6 +647,38 @@ void registerAll()
     if (Item::itemsList[256 + ITEM_PURPLE_EGG_RAW] == nullptr)
         purpleChocoboEgg = new ItemPurpleChocoboEgg(ITEM_PURPLE_EGG_RAW);
 
+    if (Item::itemsList[256 + ITEM_CHOCOPEDIA_RAW] == nullptr)
+    {
+        chocopedia = new ItemChocopedia(ITEM_CHOCOPEDIA_RAW);
+        chocopedia->setMaxStackSize(1)->setIconCoord(11, 3)->setItemName("chocopedia");
+    }
+
+    // Chocodisguise (helmet, body, legs, boots): ChocoboItemDisguise, 4.1.5 icons and armour textures.
+    if (Item::itemsList[256 + ITEM_DISGUISE_HEAD_RAW] == nullptr)
+    {
+        disguiseHead = new ItemChocoDisguise(ITEM_DISGUISE_HEAD_RAW, 0,
+            "/chococraft/textures/items/disguiseHead.png", "Chocodisguise Helmet", "Casco de Chocodisfraz");
+        disguiseHead->setIconCoord(0, 0)->setItemName("disguiseHead");
+    }
+    if (Item::itemsList[256 + ITEM_DISGUISE_BODY_RAW] == nullptr)
+    {
+        disguiseBody = new ItemChocoDisguise(ITEM_DISGUISE_BODY_RAW, 1,
+            "/chococraft/textures/items/disguiseBody.png", "Chocodisguise Body", "Cuerpo de Chocodisfraz");
+        disguiseBody->setIconCoord(0, 1)->setItemName("disguiseBody");
+    }
+    if (Item::itemsList[256 + ITEM_DISGUISE_LEGS_RAW] == nullptr)
+    {
+        disguiseLegs = new ItemChocoDisguise(ITEM_DISGUISE_LEGS_RAW, 2,
+            "/chococraft/textures/items/disguiseLegs.png", "Chocodisguise Legs", "Patas de Chocodisfraz");
+        disguiseLegs->setIconCoord(0, 2)->setItemName("disguiseLegs");
+    }
+    if (Item::itemsList[256 + ITEM_DISGUISE_BOOTS_RAW] == nullptr)
+    {
+        disguiseBoots = new ItemChocoDisguise(ITEM_DISGUISE_BOOTS_RAW, 3,
+            "/chococraft/textures/items/disguiseBoots.png", "Chocodisguise Boots", "Botas de Chocodisfraz");
+        disguiseBoots->setIconCoord(0, 3)->setItemName("disguiseBoots");
+    }
+
     CraftingManager *cm = CraftingManager::getInstance();
     if (cm != nullptr && chocoboSaddle != nullptr && chocoboFeather != nullptr)
     {
@@ -502,6 +702,24 @@ void registerAll()
             cm->addRecipe(new ItemStack(chocoboPackbags, 1),
                 { "-Y-", "C C", "-X-", 'C', Block::cloth, 'X', Item::leather, 'Y', chocoboFeather, '-', Item::silk });
         }
+
+        // Chocopedia: "FGF" / "IBI" / "FLF" (feathers, gold ingot, ink sacs, book, lapis)
+        if (chocopedia != nullptr && Item::book != nullptr && Item::ingotGold != nullptr && Item::dyePowder != nullptr)
+        {
+            cm->addRecipe(new ItemStack(chocopedia, 1),
+                { "FGF", "IBI", "FLF", 'B', Item::book, 'F', chocoboFeather,
+                  'I', new ItemStack(Item::dyePowder, 1, 0), 'L', new ItemStack(Item::dyePowder, 1, 4), 'G', Item::ingotGold });
+        }
+
+        // Chocodisguise from Chocobo Feathers (ChocoCraftRecipes)
+        if (disguiseHead != nullptr)
+            cm->addRecipe(new ItemStack(disguiseHead, 1), { "YYY", "Y Y", 'Y', chocoboFeather });
+        if (disguiseBody != nullptr)
+            cm->addRecipe(new ItemStack(disguiseBody, 1), { "Y Y", "YYY", "YYY", 'Y', chocoboFeather });
+        if (disguiseLegs != nullptr)
+            cm->addRecipe(new ItemStack(disguiseLegs, 1), { "YYY", "Y Y", "Y Y", 'Y', chocoboFeather });
+        if (disguiseBoots != nullptr)
+            cm->addRecipe(new ItemStack(disguiseBoots, 1), { "Y Y", "Y Y", 'Y', chocoboFeather });
 
         if (chocoboWhistle != nullptr && Item::ingotGold != nullptr)
             cm->addShapelessRecipe(new ItemStack(chocoboWhistle, 1), { chocoboFeather, Item::ingotGold });
@@ -541,7 +759,7 @@ void registerAll()
 
     s_registered = true;
     MC_LOG_INFO("mods", "ChocoCraft 4.1.5 items, blocks & recipes registered (blocks=%d..%d, items=%d..%d)\n",
-                static_cast<int>(BLOCK_GYSAHL_ID), static_cast<int>(BLOCK_STRAW_ID),
-                static_cast<int>(256 + ITEM_GYSAHL_GREENS_RAW), static_cast<int>(256 + ITEM_PURPLE_EGG_RAW));
+                static_cast<int>(BLOCK_GYSAHL_ID), static_cast<int>(BLOCK_GYSAHL_GREEN_ID),
+                static_cast<int>(256 + ITEM_FIRST_RAW), static_cast<int>(256 + ITEM_LAST_RAW));
 }
 } // namespace ChocoCraftItems

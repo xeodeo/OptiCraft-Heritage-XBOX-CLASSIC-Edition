@@ -322,7 +322,11 @@ bool ChunkProviderGenerate::populateStep(IChunkProvider *ichunkprovider, int_t i
     else if (populateTask.chunkX != i || populateTask.chunkZ != j)
         return false;
 
-    return advancePopulateTask();
+    if (!advancePopulateTask())
+        return false;
+    if (modPopulateHook != nullptr)
+        modPopulateHook(worldObj, i, j);
+    return true;
 }
 
 #endif // PLATFORM_INCREMENTAL_POPULATE
