@@ -107,6 +107,8 @@ private:
     // pages through them locally.
     std::vector<std::shared_ptr<Hit>> allHits;
     bool localPages = false;
+    int verifyDone = 0;
+    int verifyTotal = 0;
     void showLocalPage();
     int totalHits = 0;
     bool pageLoading = false;
