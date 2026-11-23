@@ -429,6 +429,7 @@ std::string StringTranslate::translateUi(const std::string &english)
     {
         if (english == "Split Screen") return "Pantalla dividida";
         if (english == "Texture Packs") return "Packs de texturas";
+        if (english == "Mods & Textures") return "Mods y texturas";
         if (english == "Horizontal") return "Horizontal";
         if (english == "Vertical") return "Vertical";
         if (english == "Toggle") return "Alternar";

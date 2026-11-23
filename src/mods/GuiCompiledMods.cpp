@@ -555,7 +555,7 @@ void GuiCompiledMods::drawLegacyScreen(float_t partialTick)
 
     // Header: title on the left, filter tabs on the right.
     const int_t headY = l.panelY + 6;
-    legacyDrawPanelText(fontRenderer, es ? "Catalogo de mods" : "Mod Catalog", l.contentX, headY + 3);
+    legacyDrawPanelText(fontRenderer, es ? "Mods y texturas" : "Mods & Textures", l.contentX, headY + 3);
     const char *tabNames[3] = {
         es ? "Todos" : "All",
         es ? "Activos" : "Active",
@@ -790,7 +790,7 @@ void GuiCompiledMods::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick
 
     // 2. Title + Filter Tabs + Search Box
     const int_t headerY = topY + 6;
-    drawString(fontRenderer, es ? "Catalogo de Mods" : "Mod Catalog", panelX + 8, headerY, 0xFFFF88);
+    drawString(fontRenderer, es ? "Mods y texturas" : "Mods & Textures", panelX + 8, headerY, 0xFFFF88);
 
     // Filter tabs on right of header
     const char *tabNames[3] = {

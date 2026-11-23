@@ -470,6 +470,20 @@ bool parseSearch(const char *data, std::size_t size, SearchPage &out)
                     else if (field == "icon_url") r.readStringOrNull(hit.iconUrl);
                     else if (field == "downloads") r.readInt64(hit.downloads);
                     else if (field == "follows") r.readInt64(hit.follows);
+                    else if (field == "versions" && r.peek() == '[')
+                    {
+                        r.beginArray();
+                        bool firstGv = true;
+                        std::string gv;
+                        while (r.nextElement(firstGv))
+                        {
+                            r.readStringOrNull(gv);
+                            int parts[3];
+                            splitVersion(gv, parts);
+                            if (parts[0] > 1 || (parts[0] == 1 && (parts[1] > 5 || (parts[1] == 5 && parts[2] > 2))))
+                                hit.newerThanConsole = true;
+                        }
+                    }
                     else r.skipValue();
                 }
                 if (!r.good())

@@ -57,7 +57,7 @@ const char *const kGameVersion = TEXDL_GAME_152 ? "1.5.2" : "1.2.5";
 const char *const kPackDir = "D:\\texturepacks";
 const int kPageSize = 10;
 const int kIconSize = 32;
-const std::size_t kMaxIcons = 12;
+const std::size_t kMaxIcons = 24;
 const std::size_t kMaxJsonBytes = 512 * 1024;
 const std::size_t kMaxIconBytes = 384 * 1024;
 // A 32x pack is a few MB; 1.5 packs at 512x reach ~100 MB, still convertible
@@ -206,6 +206,7 @@ struct GuiTexturePackDownload::PageJob
     std::mutex mtx;
     JavaNetwork::HttpResult result = JavaNetwork::HttpResult::NoConnection;
     bool parsed = false;
+    bool fetchAll = false;
     TexDl::SearchPage page;
     std::vector<Icon> iconsOut;
 };
@@ -453,12 +454,17 @@ bool GuiTexturePackDownload::usesSpecializedMenuNavigation() const
 
 int GuiTexturePackDownload::tabCount() const
 {
-    return query.empty() ? 4 : 5;
+    return query.empty() ? 5 : 6;
 }
 
 std::string GuiTexturePackDownload::tabLabel(int t, bool shortLabel) const
 {
     const bool es = isSpanish();
+    // Tab 0: only packs made for this version; 1..4 the full Modrinth lists.
+    if (t == 0)
+        return shortLabel ? (es ? "Para " : "For ") + std::string(kGameVersion)
+                          : (es ? "Hechos para " : "Made for ") + std::string(kGameVersion);
+    --t;
     switch (t)
     {
     case 0: return shortLabel ? (es ? "Populares" : "Popular") : (es ? "M\xC3\xA1s descargados" : "Most downloaded");
@@ -533,12 +539,24 @@ void GuiTexturePackDownload::requestPage()
         pageJob->cancel.store(true);
     auto job = std::make_shared<PageJob>();
     const std::string facets = std::string("[[\"project_type:resourcepack\"],[\"versions:") + kGameVersion + "\"]]";
-    std::string url = "https://api.modrinth.com/v2/search?limit=" + std::to_string(kPageSize) +
-        "&offset=" + std::to_string(page * kPageSize) + "&facets=" + TexDl::urlEncode(facets);
-    if (tab >= 4)
-        url += "&index=relevance&query=" + TexDl::urlEncode(query);
+    std::string url;
+    if (tab == 0)
+    {
+        // Every hit at once (~250 for each version), filtered on the worker.
+        job->fetchAll = true;
+        url = "https://api.modrinth.com/v2/search?limit=100&index=downloads&facets=" + TexDl::urlEncode(facets);
+    }
     else
-        url += std::string("&index=") + kSortIndex[tab];
+    {
+        url = "https://api.modrinth.com/v2/search?limit=" + std::to_string(kPageSize) +
+            "&offset=" + std::to_string(page * kPageSize) + "&facets=" + TexDl::urlEncode(facets);
+        if (tab >= 5)
+            url += "&index=relevance&query=" + TexDl::urlEncode(query);
+        else
+            url += std::string("&index=") + kSortIndex[tab - 1];
+    }
+    allHits.clear();
+    localPages = false;
     job->url = url;
     for (const IconEntry &e : icons)
         job->cachedIcons.push_back(e.projectId);
@@ -552,12 +570,38 @@ void GuiTexturePackDownload::requestPage()
     std::thread([job]() {
         std::vector<unsigned char> body;
         int status = -1;
-        const JavaNetwork::HttpResult result =
+        JavaNetwork::HttpResult result =
             JavaNetwork::httpGetToMemory(job->url, body, kMaxJsonBytes, &status, apiOptions(&job->cancel));
         TexDl::SearchPage page;
-        const bool parsed = result == JavaNetwork::HttpResult::Ok &&
+        bool parsed = result == JavaNetwork::HttpResult::Ok &&
             TexDl::parseSearch(reinterpret_cast<const char *>(body.data()), body.size(), page);
         std::vector<unsigned char>().swap(body);
+        if (job->fetchAll && parsed)
+        {
+            // Old-format packs only; the rest of the pages one after another.
+            std::vector<TexDl::SearchHit> kept;
+            const int total = page.totalHits;
+            for (int offset = 0;;)
+            {
+                for (TexDl::SearchHit &h : page.hits)
+                    if (!h.newerThanConsole)
+                        kept.push_back(std::move(h));
+                offset += 100;
+                if (offset >= total || offset >= 1000 || job->cancel.load())
+                    break;
+                page = TexDl::SearchPage();
+                result = JavaNetwork::httpGetToMemory(job->url + "&offset=" + std::to_string(offset), body,
+                                                      kMaxJsonBytes, &status, apiOptions(&job->cancel));
+                parsed = result == JavaNetwork::HttpResult::Ok &&
+                    TexDl::parseSearch(reinterpret_cast<const char *>(body.data()), body.size(), page);
+                std::vector<unsigned char>().swap(body);
+                if (!parsed)
+                    break;
+            }
+            page.hits = std::move(kept);
+            page.totalHits = static_cast<int>(page.hits.size());
+            parsed = true;
+        }
         MC_LOG_INFO("texdl", "search %s -> %d (http %d) parsed %d, %u hits of %d\n", job->url.c_str(),
             static_cast<int>(result), status, parsed ? 1 : 0, static_cast<unsigned>(page.hits.size()), page.totalHits);
         std::vector<std::pair<std::string, std::string>> wanted;
@@ -652,6 +696,7 @@ void GuiTexturePackDownload::pollJobs()
             if (pageJob->parsed)
             {
                 totalHits = pageJob->page.totalHits;
+                const bool fetchAll = pageJob->fetchAll;
                 for (const TexDl::SearchHit &h : pageJob->page.hits)
                 {
                     auto hit = std::make_shared<Hit>();
@@ -661,7 +706,15 @@ void GuiTexturePackDownload::pollJobs()
                         hit->title = h.slug;
                     hit->author = cleanText(h.author, 40);
                     hit->description = cleanText(h.description, 300);
-                    hits.push_back(hit);
+                    if (fetchAll)
+                        allHits.push_back(hit);
+                    else
+                        hits.push_back(hit);
+                }
+                if (fetchAll)
+                {
+                    localPages = true;
+                    showLocalPage();
                 }
                 if (hits.empty())
                     pageError = es ? "No hay packs aqu\xC3\xAD." : "No packs here.";
@@ -871,7 +924,7 @@ void GuiTexturePackDownload::endSearch(bool run)
     if (!run)
         return;
     query = text;
-    tab = query.empty() ? 0 : 4;
+    tab = query.empty() ? 0 : 5;
     page = 0;
     requestPage();
 }
@@ -893,7 +946,20 @@ void GuiTexturePackDownload::changePage(int delta)
         return;
     page = next;
     play("random.click");
-    requestPage();
+    if (localPages)
+        showLocalPage();
+    else
+        requestPage();
+}
+
+void GuiTexturePackDownload::showLocalPage()
+{
+    hits.clear();
+    const std::size_t first = static_cast<std::size_t>(page) * kPageSize;
+    for (std::size_t i = first; i < allHits.size() && i < first + kPageSize; ++i)
+        hits.push_back(allHits[i]);
+    selected = 0;
+    scroll = 0;
 }
 
 void GuiTexturePackDownload::updateScreen()
@@ -1115,7 +1181,7 @@ void GuiTexturePackDownload::drawBrowse(float_t partialTick)
         int_t tx = l.contentX;
         for (int t = 0; t < count; ++t)
         {
-            const std::string label = t == 4 ? (es ? "Buscar" : "Search") : tabLabel(t, true);
+            const std::string label = t == 5 ? (es ? "Buscar" : "Search") : tabLabel(t, true);
             const int_t tw = fontRenderer->getStringWidth(label) + 10;
             if (legacy)
                 legacyDrawMenuTab(mc, tx, tabY, tw, 14, label, t == tab);

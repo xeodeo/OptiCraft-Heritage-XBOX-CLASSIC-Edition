@@ -60,11 +60,11 @@ void GuiOptions::initGui()
 	}
 	controlList.push_back(new GuiButton(101, width / 2 - 100, height / 6 + 90, tr->translateKey("options.video")));
 	controlList.push_back(new GuiButton(100, width / 2 - 100, height / 6 + 114, 98, 20, tr->translateKey("options.controls")));
-	controlList.push_back(new GuiButton(104, width / 2 + 2, height / 6 + 114, 98, 20, uiText("Mods")));
+	controlList.push_back(new GuiButton(104, width / 2 + 2, height / 6 + 114, 98, 20, uiText("Mods & Textures")));
 	controlList.push_back(new GuiButton(103, width / 2 - 100, height / 6 + 138, 98, 20, tr->translateKey("options.language")));
 	controlList.push_back(new GuiButton(102, width / 2 + 2, height / 6 + 138, 98, 20, uiText("OptiCraft Options...")));
-	controlList.push_back(new GuiButton(105, width / 2 - 100, height / 6 + 162, uiText("Texture Packs")));
-	controlList.push_back(new GuiButton(200, width / 2 - 100, height / 6 + 186, tr->translateKey("gui.done")));
+	// Texture packs now live only inside "Mods & Textures" (user 23-11).
+	controlList.push_back(new GuiButton(200, width / 2 - 100, height / 6 + 168, tr->translateKey("gui.done")));
 }
 
 void GuiOptions::actionPerformed(GuiButton *button)
