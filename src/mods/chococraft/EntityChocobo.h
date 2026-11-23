@@ -13,10 +13,10 @@ class NBTTagCompound;
 enum class ChocoboColor : int
 {
     Yellow = 0, // Classic runner
-    Green  = 1, // Climbs mountains (stepHeight 2.0) & high jump
+    Green  = 1, // Climbs (stepHeight 2.0 when ridden)
     Blue   = 2, // Fast swimmer, floats on water, Water Breathing buff
     White  = 3, // Climbs, swims fast, high jump
-    Black  = 4, // Very fast, climbs, swims, high jump, Night Vision buff, no fall dmg
+    Black  = 4, // Fast, climbs, crosses water, high jump, Night Vision buff
     Gold   = 5, // Flies (A = up, L3 = down in air), climbs, swims, no fall dmg
     Pink   = 6, // Painted Gold: fastest flyer, climbs, swims, no fall dmg
     Red    = 7, // Painted Gold: fastest flyer, climbs, swims, no fall dmg
@@ -74,6 +74,8 @@ public:
     static const char *getColorName(ChocoboColor color, bool spanish);
     static const char *getColorAbility(ChocoboColor color, bool spanish);
     static const char *getColorTextureFile(ChocoboColor color, bool isChicobo);
+    // Riding controls for this colour (menu line, or the longer chat line on mounting).
+    std::string getRideHelp(bool spanish, bool longForm) const;
 
     bool canClimb() const;
     bool canCrossWater() const;
@@ -126,6 +128,13 @@ public:
     bool canBreatheUnderwater() override;
     void updatePlayerActionState() override;
     void onLivingUpdate() override;
+    void moveEntityWithHeading(float strafe, float forward) override;
+    void moveEntity(double x, double y, double z) override;
+    void onUpdate() override;
+    void jump() override;
+    // ChocoCraft 4.1.5 / 1.7.10 Entity.canRiderInteract: the rider cannot aim at
+    // (and so cannot hit or re-click) the chocobo it is sitting on.
+    bool canRiderInteract() override { return false; }
     void updateRiderPosition() override;
     double getMountedYOffset() override { return isChild() ? 0.65 : 1.65; }
     void fall(float dist) override;
@@ -147,10 +156,11 @@ protected:
 
 private:
     static ChocoboColor breedColor(ChocoboColor a, ChocoboColor b, bool bothFedGold, Random &rng);
-    float getRideSpeed() const;
-    float getWaterRideSpeed() const;
-    float getAirRideSpeed() const;
-    float getJumpVelocity() const;
+    // ChocoCraft 4.1.5 Constants: CHOCOBO_<COLOUR>_{LAND,WATER,AIR}SPEEDFACT / 100
+    float getLandSpeedFactor() const;
+    float getWaterSpeedFactor() const;
+    float getAirSpeedFactor() const;
+    void readRiderInput(EntityPlayer *rider);
     void applyMountedStepHeight(bool mounted);
     void applyRiderBuffs(EntityPlayer *rider);
     void doStrawHealing();
@@ -169,7 +179,6 @@ private:
     bool m_wasChild;
     bool m_flying;
     bool m_isHighJumping;
-    bool m_gliding;
     bool m_gearDropped;
     ChocoboAiMode m_aiMode;
     std::string m_ownerName;
@@ -179,6 +188,15 @@ private:
     float m_destPos;
     float m_wingRotDelta;
     int_t m_timeUntilNextFeather;
-    int_t m_mountGraceTicks;
     int_t m_flyParticleCooldown;
+    // Rider input of this tick (ChocoCraft RiderActionState)
+    float m_riderForward;
+    float m_riderStrafe;
+    bool m_riderJump;
+    bool m_riderSneak;
+    // Sneak only dismounts on a fresh press: a sneak still held (or toggled on)
+    // from opening the chocobo menu must not throw the rider off.
+    bool m_sneakArmed;
+    // EntityLivingBase.jumpMovementFactor as ChocoCraft leaves it (air/water factor)
+    float m_jumpMoveFactor;
 };

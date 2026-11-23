@@ -136,6 +136,8 @@ public:
 	virtual bool attackEntityFrom(Entity *entity, int_t i);
 	virtual bool attackEntityFrom(const DamageSource &source, int_t damage);
 	virtual bool canBeCollidedWith();
+	// 1.7.10 Entity.canRiderInteract: false keeps the rider from aiming at its mount.
+	virtual bool canRiderInteract() { return true; }
 	virtual bool func_85031_j(Entity *entity) { return false; }
 	virtual bool canAttackWithItem();
 	virtual bool canBePushed();

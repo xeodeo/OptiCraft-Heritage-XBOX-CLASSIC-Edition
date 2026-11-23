@@ -83,6 +83,28 @@ void RenderLiving::doRenderLiving(EntityLiving* entityliving, double d, double d
 
         float bodyYaw = interpolateRotation(entityliving->prevRenderYawOffset, entityliving->renderYawOffset, f1);
         float headYaw = interpolateRotation(entityliving->prevRotationYawHead, entityliving->rotationYawHead, f1);
+        // 1.7.10 RendererLivingEntity: a rider's body follows its living mount and the
+        // head turns at most 85 degrees from it, so the seated pose lines up with the mount.
+        if (EntityLiving *mount = dynamic_cast<EntityLiving *>(entityliving->ridingEntity)) {
+            bodyYaw = interpolateRotation(mount->prevRenderYawOffset, mount->renderYawOffset, f1);
+            float headOffset = headYaw - bodyYaw;
+            while (headOffset < -180.0f) {
+                headOffset += 360.0f;
+            }
+            while (headOffset >= 180.0f) {
+                headOffset -= 360.0f;
+            }
+            if (headOffset < -85.0f) {
+                headOffset = -85.0f;
+            }
+            if (headOffset >= 85.0f) {
+                headOffset = 85.0f;
+            }
+            bodyYaw = headYaw - headOffset;
+            if (headOffset * headOffset > 2500.0f) {
+                bodyYaw += headOffset * 0.2f;
+            }
+        }
         float pitch = entityliving->prevRotationPitch + (entityliving->rotationPitch - entityliving->prevRotationPitch) * f1;
         translateEntity(entityliving, d, d1, d2);
         float age = getTicksExisted(entityliving, f1);

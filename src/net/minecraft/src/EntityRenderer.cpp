@@ -735,6 +735,8 @@ void EntityRenderer::getMouseOver(float partialTicks)
     {
         if (!entity->canBeCollidedWith())
             continue;
+        if (entity == mc->renderViewEntity->ridingEntity && !entity->canRiderInteract())
+            continue;
 
         const float collisionBorder = entity->getCollisionBorderSize();
         AxisAlignedBB *expandedBB = entity->boundingBox->expand(collisionBorder, collisionBorder, collisionBorder);

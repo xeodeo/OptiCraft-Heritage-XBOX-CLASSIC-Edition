@@ -3,6 +3,7 @@
 #include "net/minecraft/src/Block.h"
 #include "net/minecraft/src/BlockCrops.h"
 #include "net/minecraft/src/Item.h"
+#include "net/minecraft/src/ItemBlock.h"
 #include "net/minecraft/src/ItemFood.h"
 #include "net/minecraft/src/ItemSeeds.h"
 
@@ -54,6 +55,20 @@ public:
 
 private:
     int_t m_tint;
+    const char *m_customTex;
+    const char *m_enName;
+    const char *m_esName;
+};
+
+// Item form of the ChocoCraft blocks: real name (en/es) and the original flat icon.
+class ItemChocoBlock : public ItemBlock
+{
+public:
+    ItemChocoBlock(int id, const char *customTex, const char *enName, const char *esName);
+    const char *getCustomIconTexture() const override { return m_customTex; }
+    std::string getItemDisplayName(ItemStack *stack) override;
+
+private:
     const char *m_customTex;
     const char *m_enName;
     const char *m_esName;
@@ -130,7 +145,7 @@ namespace ChocoCraftItems
 
     extern BlockGysahlGreens    *blockGysahl;
     extern BlockChocoboStraw    *blockStraw;
-    extern ItemChocoFood        *gysahlGreens;
+    extern ItemChocoIcon        *gysahlGreens;
     extern ItemGysahlSeeds      *gysahlSeeds;
     extern ItemChocoIcon        *chocoboSaddle;
     extern ItemChocoIcon        *chocoboSaddlebags;
