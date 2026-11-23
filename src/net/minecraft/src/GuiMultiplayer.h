@@ -18,6 +18,9 @@ class ServerNBTStorage;
 class GuiMultiplayer : public GuiScreen
 {
 public:
+    // Follows a _minecraft._tcp SRV record when no port was given (the
+    // address kept the default 25565), as the Java client does.
+    static void resolveSrvIfDefault(std::string &host, int_t &port);
     explicit GuiMultiplayer(GuiScreen *parent);
     ~GuiMultiplayer() override;
 

@@ -100,7 +100,7 @@ class GuiPlayerInfo;
 class NetClientHandler : public NetHandler
 {
 public:
-    NetClientHandler(Minecraft* minecraft, const std::string& host, int port);
+    NetClientHandler(Minecraft* minecraft, const std::string& host, int port, int protocolVersion = 29);
     ~NetClientHandler();
 
     void processReadPackets();

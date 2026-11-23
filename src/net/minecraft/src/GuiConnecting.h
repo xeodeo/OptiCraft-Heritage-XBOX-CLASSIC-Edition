@@ -11,7 +11,8 @@ class ThreadConnectToServer;
 class GuiConnecting : public GuiScreen
 {
 public:
-	GuiConnecting(Minecraft *minecraft, const std::string &host, int_t port);
+	// protocolVersion: 0 = Auto, 29 = 1.2.5, 340 = 1.12.2 (translated).
+	GuiConnecting(Minecraft *minecraft, const std::string &host, int_t port, int_t protocolVersion = 29);
 	~GuiConnecting() override;
 
 	void updateScreen() override;

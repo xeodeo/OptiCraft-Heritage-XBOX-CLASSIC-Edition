@@ -9,7 +9,8 @@
 #include "pc/lwjgl/Keyboard.h"
 
 GuiScreenAddServer::GuiScreenAddServer(GuiScreen *parent, ServerNBTStorage *server)
-    : parentGui(parent), serverAddress(nullptr), serverName(nullptr), buttonAdd(nullptr), serverNBTStorage(server)
+    : parentGui(parent), serverAddress(nullptr), serverName(nullptr), buttonAdd(nullptr), buttonVersion(nullptr),
+      version(server != nullptr ? server->version : 0), serverNBTStorage(server)
 {
 }
 
@@ -45,6 +46,8 @@ void GuiScreenAddServer::initGui()
     // focus follows the screen instead of skipping directly to Add/Cancel.
     controlList.push_back(new GuiTextFieldSelector(10, width / 2 - 100, 76, 200, 20));
     controlList.push_back(new GuiTextFieldSelector(11, width / 2 - 100, 116, 200, 20));
+    controlList.push_back(buttonVersion = new GuiButton(12, width / 2 - 100, 142, 200, 20, ""));
+    updateVersionButton();
     controlList.push_back(buttonAdd = new GuiButton(0, width / 2 - 100, height / 4 + 108,
                                                     translate->translateKey("addServer.add")));
     controlList.push_back(new GuiButton(1, width / 2 - 100, height / 4 + 132,
@@ -73,6 +76,12 @@ void GuiScreenAddServer::actionPerformed(GuiButton *button)
     {
         if (serverAddress != nullptr) serverAddress->setFocused(true);
     }
+    else if (button->id == 12)
+    {
+        // Auto -> 1.2.5 -> 1.12.2 -> Auto
+        version = version == 0 ? 29 : (version == 29 ? 340 : 0);
+        updateVersionButton();
+    }
     else if (button->id == 1)
     {
         if (parentGui != nullptr) parentGui->confirmClicked(false, 0);
@@ -83,6 +92,7 @@ void GuiScreenAddServer::actionPerformed(GuiButton *button)
         {
             serverNBTStorage->name = serverName != nullptr ? serverName->getText() : "";
             serverNBTStorage->host = serverAddress != nullptr ? serverAddress->getText() : "";
+            serverNBTStorage->version = version;
         }
         if (parentGui != nullptr) parentGui->confirmClicked(true, 0);
     }
@@ -137,6 +147,18 @@ void GuiScreenAddServer::mouseClicked(int_t x, int_t y, int_t button)
     GuiScreen::mouseClicked(x, y, button);
     if (serverAddress != nullptr) serverAddress->mouseClicked(x, y, button);
     if (serverName != nullptr) serverName->mouseClicked(x, y, button);
+}
+
+void GuiScreenAddServer::updateVersionButton()
+{
+    if (buttonVersion == nullptr)
+        return;
+    StringTranslate *translate = StringTranslate::getInstance();
+    std::string label = translate->translateKey("addServer.version");
+    if (label.empty() || label == "addServer.version")
+        label = "Server version";
+    const char *name = version == 29 ? "1.2.5" : (version == 340 ? "1.12.2" : "Auto");
+    buttonVersion->displayString = label + ": " + name;
 }
 
 void GuiScreenAddServer::updateAddButtonState()

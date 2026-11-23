@@ -18,6 +18,9 @@ public:
 
     bool ensureDecompressed();
     std::vector<byte_t> takeCompressedData();
+    // Protocol translators hand over an already decoded column (native
+    // plane-major layout); no zlib round trip, the buffer is moved in.
+    void setDecoded(int_t x, int_t z, bool initialize, int_t primaryMask, std::vector<byte_t> &&data);
 
     int_t xCh = 0;
     int_t zCh = 0;

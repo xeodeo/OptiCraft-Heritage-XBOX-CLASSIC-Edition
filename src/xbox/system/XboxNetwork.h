@@ -22,6 +22,9 @@ bool initialize();
 // Writes the address in network byte order.
 bool resolveIPv4(const char* host, unsigned long* address);
 bool resolveIPv4Timeout(const char* host, unsigned long* address, int timeoutMs);
+// Minecraft SRV record (_minecraft._tcp.<host>) through a public resolver;
+// false when the host has none (or is an IP literal).
+bool resolveMinecraftSrv(const char* host, char* target, int targetLen, int* port);
 
 const intptr_t kInvalidSocket = -1;
 

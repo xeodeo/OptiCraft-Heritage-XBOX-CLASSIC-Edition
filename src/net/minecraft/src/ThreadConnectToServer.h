@@ -16,7 +16,8 @@ class NetClientHandler;
 class ThreadConnectToServer
 {
 public:
-	ThreadConnectToServer(GuiConnecting *guiconnecting, Minecraft *minecraft, const std::string &s, int_t i);
+	ThreadConnectToServer(GuiConnecting *guiconnecting, Minecraft *minecraft, const std::string &s, int_t i,
+	                      int_t protocolVersion = 29);
 	~ThreadConnectToServer();
 
 	void start();
@@ -30,6 +31,7 @@ private:
 	Minecraft *mc;
 	std::string hostName;
 	int_t port;
+	int_t protocol;
 	PlatformMutex resultLock;
 	NetClientHandler *resultHandler = nullptr;
 	std::string resultError;
