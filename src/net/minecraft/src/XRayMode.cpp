@@ -7,17 +7,20 @@ namespace
 {
 bool s_active = false;
 bool s_comboEnabled = false;
+bool s_cave = false;
 }
 
 namespace XRayMode
 {
 bool active()
 {
-    return s_active && s_comboEnabled;
+    return (s_active && s_comboEnabled) || s_cave;
 }
 
 bool isVisibleBlock(int blockID)
 {
+    if (s_cave && !(s_active && s_comboEnabled))
+        return blockID == 1; // stone
     switch (blockID)
     {
     case 10:  // Flowing lava
@@ -66,6 +69,21 @@ void toggle()
 void reset()
 {
     s_active = false;
+}
+
+void setCaveMode(bool on)
+{
+    if (s_cave == on)
+        return;
+    s_cave = on;
+    Minecraft *mc = Minecraft::getMinecraft();
+    if (mc != nullptr && mc->renderGlobal != nullptr)
+        mc->renderGlobal->markAllRenderersDirty();
+}
+
+bool caveMode()
+{
+    return s_cave;
 }
 
 bool comboEnabled()

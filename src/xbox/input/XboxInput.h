@@ -20,6 +20,9 @@ int consumeWaypointRequest(int playerIndex = 0);
 void setWaypointRequest(int playerIndex, int request);
 // Back + Y combo for Village Locator mod.
 bool consumeVillageLocatorRequest();
+// Back + X combo per player: admin mode menu (encargo 122).
+bool consumeAdminMenuRequest(int playerIndex);
+void setAdminMenuRequest(int playerIndex);
 }
 
 #endif // XBOX_PLATFORM

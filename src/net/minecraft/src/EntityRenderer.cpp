@@ -1,4 +1,5 @@
 #include "EntityRenderer.h"
+#include "mods/adminmode/AdminHooks.h"
 #include "BossStatus.h"
 #if PLATFORM_PS2
 #include "ps2/diagnostics/Ps2OptimizationValidation.h"
@@ -490,7 +491,8 @@ void EntityRenderer::updateLightmap()
             blue = blue * (1.0f - nightVision) + blue * inverseBrightness * nightVision;
         }
 
-        const float gamma = mc->gameSettings->ofBrightness;
+        const float gamma = (AdminHooks::on(AdminHooks::FullBright) || AdminHooks::on(AdminHooks::CaveFinder))
+            ? 8.0f : mc->gameSettings->ofBrightness; // admin mode FullBright, as Nodus
         red = std::min(1.0f, red);
         green = std::min(1.0f, green);
         blue = std::min(1.0f, blue);
@@ -848,6 +850,8 @@ void EntityRenderer::hurtCameraEffect(float partialTicks)
     {
         return;
     }
+    if (AdminHooks::onFor(AdminHooks::NoFlinch, entityliving))
+        return;
     
     hurtTime /= entityliving->maxHurtTime;
     hurtTime = MathHelper::sin(hurtTime * hurtTime * hurtTime * hurtTime * 3.1415927f);
@@ -2212,6 +2216,8 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
 #if PLATFORM_PS2 && MC_LOG_LEVEL > 2
         const PlatformDrawSnapshot weatherDrawStart = platformProfileDrawSnapshot();
 #endif
+        if (AdminHooks::g_any)
+            AdminHooks::renderWorldOverlay(partialTicks);
         XBOX_FRAME_SLOT_BEGIN(xboxWeather);
         renderRainSnow(partialTicks);
         XBOX_FRAME_SLOT_END(1, xboxWeather);
@@ -2283,6 +2289,8 @@ void EntityRenderer::renderWorld(float partialTicks, int64_t renderTimeLimitNano
 
 void EntityRenderer::addRainParticles()
 {
+    if (AdminHooks::on(AdminHooks::NoRender))
+        return;
     float rainStrength = mc->theWorld->getRainStrength(1.0f);
 #if PLATFORM_PS2
     const float soundStrength = rainStrength;
@@ -2412,6 +2420,8 @@ void EntityRenderer::addRainParticles()
 
 void EntityRenderer::renderRainSnow(float partialTicks)
 {
+    if (AdminHooks::on(AdminHooks::NoRender))
+        return;
     const float rainStrength = mc->theWorld->getRainStrength(partialTicks);
 #if PLATFORM_PS2 && MC_LOG_LEVEL >= 2
     static unsigned int weatherFrames = 0;

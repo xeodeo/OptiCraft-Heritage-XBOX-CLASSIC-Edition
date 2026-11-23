@@ -1,4 +1,5 @@
 #include "EntityPlayer.h"
+#include "mods/adminmode/AdminHooks.h"
 #include "EnchantmentThorns.h"
 #include "InventoryEnderChest.h"
 #include "java/Math.h"
@@ -1048,6 +1049,8 @@ double EntityPlayer::getYOffset()
 
 void EntityPlayer::swingItem()
 {
+	if (AdminHooks::onFor(AdminHooks::NoSwing, this))
+		return;
 	if (!isSwinging || swingProgressInt >= getSwingSpeedModifier() / 2 || swingProgressInt < 0)
 	{
 		swingProgressInt = -1;

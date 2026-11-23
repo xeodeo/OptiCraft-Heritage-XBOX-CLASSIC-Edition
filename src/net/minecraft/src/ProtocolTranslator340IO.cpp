@@ -641,6 +641,7 @@ bool Translator340Connection::writeTranslated(Packet *packet, std::ostream &os)
 		os.write(reinterpret_cast<const char *>(ls.data()), static_cast<std::streamsize>(ls.size()));
 		if (!os)
 			throw std::runtime_error("Failed to write 1.12.2 login");
+		translator340::resetLocalOpLevel();
 		session_.stage.store(static_cast<int>(translator340::Session::Stage::Login), std::memory_order_release);
 		MC_LOG_INFO("net340", "login start as %s to %s:%d\n", session_.username.c_str(), host_.c_str(), port_);
 		return true;

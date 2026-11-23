@@ -1,4 +1,5 @@
 #include "World.h"
+#include "mods/adminmode/AdminHooks.h"
 #include "DynamicLights.h"
 #include "EntityList.h"
 #include "NBTTagCompound.h"
@@ -3231,6 +3232,7 @@ void World::removeWorldAccess(IWorldAccess* worldAccess)
 std::vector<AxisAlignedBB*> &World::getCollidingBoundingBoxes(Entity* entity, AxisAlignedBB* aabb)
 {
     collidingBoundingBoxes.clear();
+    AdminHooks::g_collidingEntity = entity;
     
 #if PLATFORM_FAST_BLOCK_COLLISIONS
     platformCollectBlockCollisions(this, aabb, collidingBoundingBoxes);
@@ -3262,6 +3264,7 @@ std::vector<AxisAlignedBB*> &World::getCollidingBoundingBoxes(Entity* entity, Ax
         }
     }
 #endif
+    AdminHooks::g_collidingEntity = nullptr;
     
     double d = 0.25;
     const auto& list = getEntitiesWithinAABBExcludingEntity(entity, aabb->expand(d, d, d));
