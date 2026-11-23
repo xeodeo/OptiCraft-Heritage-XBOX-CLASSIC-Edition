@@ -207,6 +207,11 @@ struct GuiTexturePackDownload::PageJob
     JavaNetwork::HttpResult result = JavaNetwork::HttpResult::NoConnection;
     bool parsed = false;
     bool fetchAll = false;
+    // Tab 0: packs that list newer versions too are checked one by one (their
+    // file for this version may be a real old-format one, like Gerudoku Faithful).
+    std::vector<TexDl::SearchHit> verified;
+    int verifyDone = 0;
+    int verifyTotal = 0;
     TexDl::SearchPage page;
     std::vector<Icon> iconsOut;
 };
@@ -569,9 +574,15 @@ void GuiTexturePackDownload::requestPage()
 
     std::thread([job]() {
         std::vector<unsigned char> body;
+        std::vector<TexDl::SearchHit> candidates;
         int status = -1;
         JavaNetwork::HttpResult result =
             JavaNetwork::httpGetToMemory(job->url, body, kMaxJsonBytes, &status, apiOptions(&job->cancel));
+        if (result != JavaNetwork::HttpResult::Ok && !job->cancel.load())
+        {
+            std::vector<unsigned char>().swap(body);
+            result = JavaNetwork::httpGetToMemory(job->url, body, kMaxJsonBytes, &status, apiOptions(&job->cancel));
+        }
         TexDl::SearchPage page;
         bool parsed = result == JavaNetwork::HttpResult::Ok &&
             TexDl::parseSearch(reinterpret_cast<const char *>(body.data()), body.size(), page);
@@ -581,11 +592,16 @@ void GuiTexturePackDownload::requestPage()
             // Old-format packs only; the rest of the pages one after another.
             std::vector<TexDl::SearchHit> kept;
             const int total = page.totalHits;
+            candidates.clear();
             for (int offset = 0;;)
             {
                 for (TexDl::SearchHit &h : page.hits)
+                {
                     if (!h.newerThanConsole)
                         kept.push_back(std::move(h));
+                    else
+                        candidates.push_back(std::move(h));
+                }
                 offset += 100;
                 if (offset >= total || offset >= 1000 || job->cancel.load())
                     break;
@@ -613,6 +629,7 @@ void GuiTexturePackDownload::requestPage()
                 if (std::find(job->cachedIcons.begin(), job->cachedIcons.end(), h.projectId) == job->cachedIcons.end())
                     wanted.emplace_back(h.projectId, h.iconUrl);
             job->page = std::move(page);
+            job->verifyTotal = static_cast<int>(candidates.size());
         }
         job->pageDone.store(true);
 
@@ -640,6 +657,62 @@ void GuiTexturePackDownload::requestPage()
             icon.ready = true;
             std::lock_guard<std::mutex> lock(job->mtx);
             job->iconsOut.push_back(std::move(icon));
+        }
+
+        // Tab 0, second pass: ask Modrinth for each multi-version pack's file for
+        // this game version and keep it when that file is an old-format one.
+        for (TexDl::SearchHit &cand : candidates)
+        {
+            if (job->cancel.load())
+                return;
+            const std::string vurl = "https://api.modrinth.com/v2/project/" + cand.projectId +
+                "/version?game_versions=" + TexDl::urlEncode(std::string("[\"") + kGameVersion + "\"]");
+            std::vector<unsigned char> vbody;
+            TexDl::ProjectVersion pv;
+            bool ok = false;
+            if (JavaNetwork::httpGetToMemory(vurl, vbody, kMaxJsonBytes, nullptr, apiOptions(&job->cancel)) ==
+                    JavaNetwork::HttpResult::Ok &&
+                TexDl::parseVersions(reinterpret_cast<const char *>(vbody.data()), vbody.size(), kGameVersion, pv))
+            {
+                int parts[3] = {0, 0, 0};
+                int idx = 0;
+                for (char c : pv.newestGameVersion)
+                {
+                    if (c >= '0' && c <= '9') parts[idx] = parts[idx] * 10 + (c - '0');
+                    else if (c == '.' && idx < 2) ++idx;
+                    else break;
+                }
+                const bool newer = parts[0] > 1 || (parts[0] == 1 && (parts[1] > 5 || (parts[1] == 5 && parts[2] > 2)));
+                ok = !pv.listsModernVersions && !newer;
+            }
+            std::vector<unsigned char>().swap(vbody);
+            PageJob::Icon icon;
+            if (ok && !cand.iconUrl.empty())
+            {
+                icon.projectId = cand.projectId;
+                std::vector<unsigned char> bytes;
+                JavaNetwork::HttpStreamOptions o = apiOptions(&job->cancel);
+                o.accept = "image/png,image/jpeg,image/gif,image/webp,*/*";
+                o.connectTimeoutMs = 10000;
+                o.idleTimeoutMs = 10000;
+                if (JavaNetwork::httpGetToMemory(cand.iconUrl, bytes, kMaxIconBytes, nullptr, o) == JavaNetwork::HttpResult::Ok)
+                {
+                    std::string error;
+                    TexDl::decodeIcon(bytes, kIconSize, icon.rgba, error);
+                }
+                icon.ready = true;
+            }
+            if (ok)
+                MC_LOG_INFO("texdl", "verified %s: file for %s is old format (%s)\n", cand.title.c_str(), kGameVersion,
+                            pv.newestGameVersion.c_str());
+            std::lock_guard<std::mutex> lock(job->mtx);
+            ++job->verifyDone;
+            if (ok)
+            {
+                job->verified.push_back(std::move(cand));
+                if (icon.ready)
+                    job->iconsOut.push_back(std::move(icon));
+            }
         }
     }).detach();
 }
@@ -724,6 +797,31 @@ void GuiTexturePackDownload::pollJobs()
             else
                 pageError = es ? "Modrinth no respondi\xC3\xB3 bien. A: reintentar." : "Modrinth gave a bad answer. A: retry.";
         }
+        if (pageJob->fetchAll && pageJob->pageTaken && !pageJob->verified.empty())
+        {
+            for (const TexDl::SearchHit &h : pageJob->verified)
+            {
+                auto hit = std::make_shared<Hit>();
+                hit->raw = h;
+                hit->title = cleanText(h.title, 80);
+                if (hit->title.empty())
+                    hit->title = h.slug;
+                hit->author = cleanText(h.author, 40);
+                hit->description = cleanText(h.description, 300);
+                allHits.push_back(hit);
+            }
+            pageJob->verified.clear();
+            totalHits = static_cast<int>(allHits.size());
+            if (hits.size() < static_cast<std::size_t>(kPageSize))
+            {
+                const int keep = selected;
+                showLocalPage();
+                selected = std::min(keep, std::max(0, static_cast<int>(hits.size()) - 1));
+                pageError.clear();
+            }
+        }
+        verifyDone = pageJob->verifyDone;
+        verifyTotal = pageJob->fetchAll ? pageJob->verifyTotal : 0;
         for (PageJob::Icon &icon : pageJob->iconsOut)
             if (icon.ready && !icon.taken)
             {
@@ -1211,8 +1309,9 @@ void GuiTexturePackDownload::drawBrowse(float_t partialTick)
     {
         std::string msg;
         int_t color = textColor;
-        if (pageLoading)
-            msg = (es ? "Cargando" : "Loading") + std::string(static_cast<std::size_t>(animTicks / 5 % 4), '.');
+        if (pageLoading || verifyDone < verifyTotal)
+            msg = (es ? "Cargando" : "Loading") + std::string(static_cast<std::size_t>(animTicks / 5 % 4), '.') +
+                (verifyDone < verifyTotal ? " " + std::to_string(verifyDone) + "/" + std::to_string(verifyTotal) : std::string());
         else
         {
             msg = pageError;
@@ -1297,7 +1396,9 @@ void GuiTexturePackDownload::drawBrowse(float_t partialTick)
             legacyDrawInsetBox(listX, fy, l.contentW, 24, true);
             drawString(fontRenderer, legacyFitText(fontRenderer, sel.description, l.contentW - 8), listX + 4, fy + 3, 0xEEEEEE);
             drawString(fontRenderer, legacyFitText(fontRenderer, formatCount(sel.raw.follows, es) +
-                (es ? " seguidores" : " followers") + (pageLoading ? (es ? "  \xC2\xB7  cargando..." : "  \xC2\xB7  loading...") : ""),
+                (es ? " seguidores" : " followers") + (pageLoading ? (es ? "  \xC2\xB7  cargando..." : "  \xC2\xB7  loading...") : "") +
+                (verifyDone < verifyTotal ? (es ? "  \xC2\xB7  revisando m\xC3\xA1s " : "  \xC2\xB7  checking more ") +
+                    std::to_string(verifyDone) + "/" + std::to_string(verifyTotal) : std::string()),
                 l.contentW - 8), listX + 4, fy + 13, 0x88DDFF);
         }
     }
