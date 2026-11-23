@@ -1,4 +1,6 @@
 #include "WorldClient.h"
+#include "WorldRenderer.h"
+#include "pc/render/PcLegacyTerrainStaging.h"
 #include "platform/Log.h"
 #include "WorldSettings.h"
 #include "WorldInfo.h"
@@ -332,6 +334,20 @@ void WorldClient::doPreChunk(int_t chunkX, int_t chunkZ, bool load)
 	else
 	{
 		forgetDeferredChunk(chunkX, chunkZ);
+#if PLATFORM_INCREMENTAL_TERRAIN_BUILD
+		// The incremental mesh build keeps raw Chunk pointers across frames. When the
+		// server drops a column (respawn far away, 23-11 crash on a 1.2.5 server),
+		// abandon a build that reads it; it restarts next frame from fresh data.
+		if (WorldRenderer *building = pcLegacyTerrainStagingOwner())
+		{
+			const int_t bx0 = (building->posX - 1) >> 4;
+			const int_t bz0 = (building->posZ - 1) >> 4;
+			const int_t bx1 = (building->posX + building->sizeWidth + 1) >> 4;
+			const int_t bz1 = (building->posZ + building->sizeDepth + 1) >> 4;
+			if (chunkX >= bx0 && chunkX <= bx1 && chunkZ >= bz0 && chunkZ <= bz1)
+				building->abandonTerrainBuild();
+		}
+#endif
 		clientChunkProvider->unloadChunk(chunkX, chunkZ);
 		markBlocksDirty(JavaArithmetic::intMul(chunkX, 16), 0, JavaArithmetic::intMul(chunkZ, 16), JavaArithmetic::intAdd(JavaArithmetic::intMul(chunkX, 16), 15), WorldHeight::HEIGHT, JavaArithmetic::intAdd(JavaArithmetic::intMul(chunkZ, 16), 15));
 	}
