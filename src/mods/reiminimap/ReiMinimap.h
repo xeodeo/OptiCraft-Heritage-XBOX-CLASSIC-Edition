@@ -108,6 +108,9 @@ private:
     int_t m_lastPlayerZ[2];
     int_t m_lastPlayerY[2];
     bool m_lastCaveActive[2];
+    bool m_caveState[2];        // debounced auto cave flag
+    int_t m_caveStableTicks[2]; // ticks the raw flag disagreed with m_caveState
+    int_t m_fastRows[2];        // rows left in a fast re-sweep (cave/large move)
     int_t m_scanRow[2];
     int_t m_uploadCooldown[2];
     bool m_textureDirty[2];

@@ -172,6 +172,9 @@ ReiMinimap::ReiMinimap()
         m_lastPlayerZ[i] = -999999;
         m_lastPlayerY[i] = -999999;
         m_lastCaveActive[i] = false;
+        m_caveState[i] = false;
+        m_caveStableTicks[i] = 0;
+        m_fastRows[i] = 0;
         m_scanRow[i] = 0;
         m_uploadCooldown[i] = 0;
         m_textureDirty[i] = false;
@@ -757,13 +760,31 @@ void ReiMinimap::updatePlayerMapIncremental(int_t playerIndex, EntityPlayer *pla
     const int_t px = (static_cast<int_t>(std::floor(player->posX)) / stepBlocks) * stepBlocks;
     const int_t pz = (static_cast<int_t>(std::floor(player->posZ)) / stepBlocks) * stepBlocks;
     const int_t py = static_cast<int_t>(std::floor(player->posY));
-    const bool useCave = isCaveActiveForPlayer(player);
-
     const bool firstInit = (m_lastPlayerX[playerIndex] == -999999);
+    // Auto cave mode flips at every cave mouth / tree / overhang; only switch the map after the
+    // new state held for ~1.5 s, otherwise the whole map was re-swept again and again.
+    const bool rawCave = isCaveActiveForPlayer(player);
+    if (firstInit || forceFull || m_settings.caveMode != MinimapCaveMode::Auto)
+    {
+        m_caveState[playerIndex] = rawCave;
+        m_caveStableTicks[playerIndex] = 0;
+    }
+    else if (rawCave != m_caveState[playerIndex])
+    {
+        if (++m_caveStableTicks[playerIndex] >= 30)
+        {
+            m_caveState[playerIndex] = rawCave;
+            m_caveStableTicks[playerIndex] = 0;
+        }
+    }
+    else
+        m_caveStableTicks[playerIndex] = 0;
+    const bool useCave = m_caveState[playerIndex];
+
     const int_t dGridX = firstInit ? 999 : (px - m_lastPlayerX[playerIndex]) / stepBlocks;
     const int_t dGridZ = firstInit ? 999 : (pz - m_lastPlayerZ[playerIndex]) / stepBlocks;
     const bool caveChanged = (useCave != m_lastCaveActive[playerIndex]) ||
-                             (useCave && std::abs(py - m_lastPlayerY[playerIndex]) >= 3);
+                             (useCave && std::abs(py - m_lastPlayerY[playerIndex]) >= 4);
 
     if (forceFull || firstInit || caveChanged || std::abs(dGridX) > 12 || std::abs(dGridZ) > 12)
     {
@@ -776,11 +797,14 @@ void ReiMinimap::updatePlayerMapIncremental(int_t playerIndex, EntityPlayer *pla
             for (int_t dy = 0; dy < MAP_RES; ++dy)
                 scanMapRow(playerIndex, player, dy, px, pz, stepBlocks, useCave);
             m_scanRow[playerIndex] = 0;
+            m_fastRows[playerIndex] = 0;
             uploadPlayerTexture(playerIndex);
             return;
         }
-        // Large move or cave height change: sweep incrementally over next ticks
+        // Large move or cave height change: fast re-sweep (16 rows per tick, ~0.2 s) instead of
+        // the idle sweep (1 row every 4 ticks = ~13 s of visible redrawing).
         m_scanRow[playerIndex] = 0;
+        m_fastRows[playerIndex] = MAP_RES;
         m_textureDirty[playerIndex] = true;
     }
     else if (dGridX != 0 || dGridZ != 0)
@@ -900,10 +924,14 @@ void ReiMinimap::updatePlayerMapIncremental(int_t playerIndex, EntityPlayer *pla
 
     // Incremental background sweep: refresh only ROWS_PER_TICK rows every 4 ticks,
     // and only mark texture dirty if at least one pixel actually changed (0 GPU uploads when idle!).
-    if ((m_updateTicks & 3) == 0)
+    const bool fastSweep = m_fastRows[playerIndex] > 0;
+    if (fastSweep || (m_updateTicks & 3) == 0)
     {
         bool rowChanged = false;
-        for (int_t r = 0; r < ROWS_PER_TICK; ++r)
+        const int_t rows = fastSweep ? std::min<int_t>(16, m_fastRows[playerIndex]) : ROWS_PER_TICK;
+        if (fastSweep)
+            m_fastRows[playerIndex] -= rows;
+        for (int_t r = 0; r < rows; ++r)
         {
             if (scanMapRow(playerIndex, player, m_scanRow[playerIndex], m_lastPlayerX[playerIndex], m_lastPlayerZ[playerIndex], stepBlocks, m_lastCaveActive[playerIndex]))
                 rowChanged = true;
