@@ -989,6 +989,8 @@ TerrainNoiseBuffer &ChunkProviderGenerate::initializeNoiseField(TerrainNoiseBuff
 }
 #endif // !PLATFORM_USE_HEIGHTMAP_TERRAIN
 
+IChunkProvider::ModPopulateHook IChunkProvider::modPopulateHook = nullptr;
+
 bool ChunkProviderGenerate::chunkExists(int_t i, int_t j)
 {
 	return true;
@@ -1111,6 +1113,8 @@ void ChunkProviderGenerate::populate(IChunkProvider *ichunkprovider, int_t i, in
 	}
 
 	BlockSand::fallInstantly = false;
+	if (modPopulateHook != nullptr)
+		modPopulateHook(worldObj, i, j);
 #endif
 }
 

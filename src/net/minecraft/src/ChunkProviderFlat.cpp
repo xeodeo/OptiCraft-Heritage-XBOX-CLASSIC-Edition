@@ -199,6 +199,8 @@ void ChunkProviderFlat::populate(IChunkProvider *, int_t x, int_t z)
 	{
 		biome->decorate(worldObj, random, blockX, blockZ);
 	}
+	if (modPopulateHook != nullptr)
+		modPopulateHook(worldObj, x, z);
 }
 
 bool ChunkProviderFlat::saveChunks(bool, IProgressUpdate *)

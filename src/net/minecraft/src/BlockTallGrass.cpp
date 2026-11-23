@@ -61,9 +61,21 @@ int_t BlockTallGrass::colorMultiplier(IBlockAccess *iblockaccess, int_t i, int_t
 	return (red / 9 & 255) << 16 | (green / 9 & 255) << 8 | blue / 9 & 255;
 }
 
+BlockTallGrass::GrassSeedHook BlockTallGrass::grassSeedHook = nullptr;
+
 int_t BlockTallGrass::idDropped(int_t i, Random &random)
 {
-	if (random.nextInt(8) == 0) return Item::seeds->shiftedIndex;
+	if (random.nextInt(8) == 0)
+	{
+		// Not in Java: mods can add their own seeds to tall grass (Forge addGrassSeed).
+		if (grassSeedHook != nullptr)
+		{
+			const int_t modSeed = grassSeedHook(random);
+			if (modSeed > 0)
+				return modSeed;
+		}
+		return Item::seeds->shiftedIndex;
+	}
 	return -1;
 }
 

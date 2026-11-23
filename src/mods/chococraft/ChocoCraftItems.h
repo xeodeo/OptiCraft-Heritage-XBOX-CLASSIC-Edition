@@ -6,6 +6,8 @@
 #include "net/minecraft/src/ItemBlock.h"
 #include "net/minecraft/src/ItemFood.h"
 #include "net/minecraft/src/ItemSeeds.h"
+#include "net/minecraft/src/ItemArmor.h"
+#include "net/minecraft/src/BlockFlower.h"
 
 class BlockGysahlGreens : public BlockCrops
 {
@@ -28,6 +30,17 @@ protected:
     int_t getCropItem() override;
 };
 
+// ChocoCraft 4.1.5 BlockGysahlGreen: the wild Gysahl bush (a BlockBush), generated in the
+// world and placed from the Gysahl Green item. Drawn with its own texture (terrain tile
+// TILE_GYSAHL_GREEN, filled at runtime from blocks/gysahl_green.png).
+class BlockGysahlGreenBush : public BlockFlower
+{
+public:
+    BlockGysahlGreenBush(int_t id, int_t texIndex);
+    int_t idDropped(int_t meta, Random &random) override;
+    void updateTick(World *world, int_t x, int_t y, int_t z, Random &random) override;
+};
+
 class BlockChocoboStraw : public Block
 {
 public:
@@ -38,10 +51,8 @@ public:
     bool renderAsNormalBlock() override { return false; }
     bool canPlaceBlockAt(World *world, int_t x, int_t y, int_t z) override;
     void onNeighborBlockChange(World *world, int_t x, int_t y, int_t z, int_t neighborId) override;
-    int_t getBlockColor() override { return 0xE6C64C; }
-    int_t getRenderColor(int_t meta) override { (void)meta; return 0xE6C64C; }
-    int_t colorMultiplier(IBlockAccess *access, int_t x, int_t y, int_t z) override { (void)access; (void)x; (void)y; (void)z; return 0xE6C64C; }
-    bool usesDefaultColorMultiplier() const override { return false; }
+    // Own texture (terrain tile TILE_STRAW, from blocks/chocoboStraw.png), no tint.
+    int_t quantityDropped(Random &random) override { (void)random; return 1; }
 };
 
 class ItemChocoIcon : public Item
@@ -104,6 +115,46 @@ public:
     bool onItemUse(ItemStack *itemstack, EntityPlayer *player, World *world, int x, int y, int z, int side) override;
 };
 
+// Gysahl Green: feeds/tames chocobos and, like the original ItemBlock, plants the bush.
+class ItemGysahlGreen : public ItemChocoIcon
+{
+public:
+    explicit ItemGysahlGreen(int id);
+    bool onItemUse(ItemStack *itemstack, EntityPlayer *player, World *world, int x, int y, int z, int side) override;
+};
+
+// Chocobo Feather: right-click on a bookshelf turns it into a Chocopedia (ChocoCraftEventCommon).
+class ItemChocoboFeather : public ItemChocoIcon
+{
+public:
+    explicit ItemChocoboFeather(int id);
+    bool onItemUse(ItemStack *itemstack, EntityPlayer *player, World *world, int x, int y, int z, int side) override;
+};
+
+// The Chocopedia: right-click in the air opens the book; on a tamed chocobo, its page.
+class ItemChocopedia : public ItemChocoIcon
+{
+public:
+    explicit ItemChocopedia(int id);
+    ItemStack *onItemRightClick(ItemStack *itemstack, World *world, EntityPlayer *player) override;
+};
+
+// Chocodisguise (ChocoboItemDisguise): feather armour, no protection, durability 1.
+class ItemChocoDisguise : public ItemArmor
+{
+public:
+    ItemChocoDisguise(int id, int armorType, const char *customTex, const char *enName, const char *esName);
+    const char *getCustomIconTexture() const override { return m_customTex; }
+    const char *getCustomArmorTexture(int layer) const override;
+    int getItemEnchantability() override { return 0; }
+    std::string getItemDisplayName(ItemStack *stack) override;
+
+private:
+    const char *m_customTex;
+    const char *m_enName;
+    const char *m_esName;
+};
+
 class ItemChocoboWhistle : public ItemChocoIcon
 {
 public:
@@ -122,14 +173,18 @@ namespace ChocoCraftItems
 {
     static constexpr int_t BLOCK_GYSAHL_ID = 210;
     static constexpr int_t BLOCK_STRAW_ID  = 211;
+    static constexpr int_t BLOCK_GYSAHL_GREEN_ID = 212;
 
-    // Preserved IDs (compatible with existing saves)
+    // Spare terrain.png tiles (empty in 1.2.5 and in the 1.5.2 atlas) that get the
+    // ChocoCraft block textures at runtime (ChocoCraftTileFX).
+    static constexpr int_t TILE_GYSAHL_GREEN = 180;
+    static constexpr int_t TILE_STRAW        = 181;
+
     static constexpr int_t ITEM_GYSAHL_GREENS_RAW  = 1900; // 2156
     static constexpr int_t ITEM_GYSAHL_SEEDS_RAW   = 1901; // 2157
     static constexpr int_t ITEM_SADDLE_RAW         = 1902; // 2158
     static constexpr int_t ITEM_SADDLEBAGS_RAW     = 1903; // 2159
     static constexpr int_t ITEM_FEATHER_RAW        = 1904; // 2160
-    // ChocoCraft 4.1.5 items
     static constexpr int_t ITEM_PACKBAGS_RAW       = 1905; // 2161
     static constexpr int_t ITEM_GYSAHL_LOVERLY_RAW = 1906; // 2162
     static constexpr int_t ITEM_GYSAHL_GOLDEN_RAW  = 1907; // 2163
@@ -142,14 +197,22 @@ namespace ChocoCraftItems
     static constexpr int_t ITEM_LEG_COOKED_RAW     = 1914; // 2170
     static constexpr int_t ITEM_WHISTLE_RAW        = 1915; // 2171
     static constexpr int_t ITEM_PURPLE_EGG_RAW     = 1916; // 2172
+    static constexpr int_t ITEM_CHOCOPEDIA_RAW     = 1917; // 2173
+    static constexpr int_t ITEM_DISGUISE_HEAD_RAW  = 1918; // 2174
+    static constexpr int_t ITEM_DISGUISE_BODY_RAW  = 1919; // 2175
+    static constexpr int_t ITEM_DISGUISE_LEGS_RAW  = 1920; // 2176
+    static constexpr int_t ITEM_DISGUISE_BOOTS_RAW = 1921; // 2177
+    static constexpr int_t ITEM_FIRST_RAW          = ITEM_GYSAHL_GREENS_RAW;
+    static constexpr int_t ITEM_LAST_RAW           = ITEM_DISGUISE_BOOTS_RAW;
 
     extern BlockGysahlGreens    *blockGysahl;
     extern BlockChocoboStraw    *blockStraw;
-    extern ItemChocoIcon        *gysahlGreens;
+    extern BlockGysahlGreenBush *blockGysahlGreen;
+    extern ItemGysahlGreen      *gysahlGreens;
     extern ItemGysahlSeeds      *gysahlSeeds;
     extern ItemChocoIcon        *chocoboSaddle;
     extern ItemChocoIcon        *chocoboSaddlebags;
-    extern ItemChocoIcon        *chocoboFeather;
+    extern ItemChocoboFeather   *chocoboFeather;
     extern ItemChocoIcon        *chocoboPackbags;
     extern ItemChocoIcon        *gysahlLoverly;
     extern ItemChocoIcon        *gysahlGolden;
@@ -162,6 +225,11 @@ namespace ChocoCraftItems
     extern ItemChocoFood        *chocoboLegCooked;
     extern ItemChocoboWhistle   *chocoboWhistle;
     extern ItemPurpleChocoboEgg *purpleChocoboEgg;
+    extern ItemChocopedia       *chocopedia;
+    extern ItemChocoDisguise    *disguiseHead;
+    extern ItemChocoDisguise    *disguiseBody;
+    extern ItemChocoDisguise    *disguiseLegs;
+    extern ItemChocoDisguise    *disguiseBoots;
 
     void registerAll();
     bool isRegistered();
