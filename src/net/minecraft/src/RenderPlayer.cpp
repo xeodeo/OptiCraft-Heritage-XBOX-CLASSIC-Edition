@@ -153,7 +153,9 @@ void RenderPlayer::renderPlayer(EntityPlayer* entityPlayer, double d, double d1,
 
     modelArmorChestplate->heldItemRight = modelArmor->heldItemRight = modelBipedMain->heldItemRight = heldItemRight;
     modelArmorChestplate->aimedBow = modelArmor->aimedBow = modelBipedMain->aimedBow = aimedBow;
-    modelArmorChestplate->isSneak = modelArmor->isSneak = modelBipedMain->isSneak = entityPlayer->isSneaking();
+    // No crouched torso on a mount (1.7.10 sneaking dismounts; here L3 is "go down" in flight).
+    modelArmorChestplate->isSneak = modelArmor->isSneak = modelBipedMain->isSneak =
+        entityPlayer->isSneaking() && entityPlayer->ridingEntity == nullptr;
     double renderY = d1 - static_cast<double>(entityPlayer->yOffset);
     if (entityPlayer->isSneaking() && dynamic_cast<EntityPlayerSP*>(entityPlayer) == nullptr) {
         renderY -= 0.125;
@@ -172,7 +174,15 @@ void RenderPlayer::drawFirstPersonHand(EntityPlayer* player)
 {
 	ModelBiped* model = player != nullptr ? selectSkinModel(player) : modelClassic;
 	model->onGround = 0.0f;
+	// The model keeps the flags of the last third-person render: while riding,
+	// isRiding would tilt the first-person arm 36 degrees and break it in two.
+	const bool wasRiding = model->isRiding;
+	model->isRiding = false;
+	model->isSneak = false;
+	model->heldItemRight = 0;
+	model->aimedBow = false;
 	model->setRotationAngles(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f);
+	model->isRiding = wasRiding;
 	if (model != modelClassic)
 		static_cast<ModelPlayer*>(model)->renderRightArm(0.0625f);
 	else

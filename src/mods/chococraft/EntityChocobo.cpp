@@ -11,6 +11,7 @@
 #include "net/minecraft/src/EntityPlayer.h"
 #include "net/minecraft/src/EntityPlayerSP.h"
 #include "net/minecraft/src/MovementInput.h"
+#include "net/minecraft/src/MovementInputFromOptions.h"
 #include "net/minecraft/src/EntityItem.h"
 #include "net/minecraft/src/InventoryPlayer.h"
 #include "net/minecraft/src/NBTTagCompound.h"
@@ -19,6 +20,9 @@
 #include "net/minecraft/src/Potion.h"
 #include "net/minecraft/src/PotionEffect.h"
 #include "net/minecraft/src/AxisAlignedBB.h"
+#include "net/minecraft/src/GuiIngame.h"
+#include "net/minecraft/src/StringTranslate.h"
+#include "platform/PlatformConfig.h"
 #include "platform/Resources.h"
 
 #include <algorithm>
@@ -195,7 +199,6 @@ EntityChocobo::EntityChocobo(World *world)
     , m_wasChild(false)
     , m_flying(false)
     , m_isHighJumping(false)
-    , m_gliding(false)
     , m_gearDropped(false)
     , m_aiMode(ChocoboAiMode::Wander)
     , m_inventory("Chocobo Saddlebags", InventoryChocoboSaddlebag::SADDLEBAG_SLOTS)
@@ -203,8 +206,13 @@ EntityChocobo::EntityChocobo(World *world)
     , m_destPos(0.0f)
     , m_wingRotDelta(1.0f)
     , m_timeUntilNextFeather(600 + rand.nextInt(600))
-    , m_mountGraceTicks(0)
     , m_flyParticleCooldown(0)
+    , m_riderForward(0.0f)
+    , m_riderStrafe(0.0f)
+    , m_riderJump(false)
+    , m_riderSneak(false)
+    , m_sneakArmed(false)
+    , m_jumpMoveFactor(0.02f)
 {
     ensureEntityInit();
     texture = "/chococraft/textures/entities/Chocobos/Untamed/Male/yellowchocobo.png";
@@ -231,8 +239,8 @@ bool EntityChocobo::canCrossWater() const
 
 bool EntityChocobo::canJumpHigh() const
 {
-    return m_color == ChocoboColor::Green || m_color == ChocoboColor::White ||
-           m_color == ChocoboColor::Black;
+    // Constants.CHOCOBO_<COLOUR>_CANJUMPHIGH: only White and Black.
+    return m_color == ChocoboColor::White || m_color == ChocoboColor::Black;
 }
 
 bool EntityChocobo::canFly() const
@@ -243,8 +251,8 @@ bool EntityChocobo::canFly() const
 
 bool EntityChocobo::canBreatheUnderwater()
 {
-    return m_color == ChocoboColor::Blue || m_color == ChocoboColor::Gold ||
-           m_color == ChocoboColor::Pink || m_color == ChocoboColor::Red;
+    // Only EntityChocoboBlue overrides canBreatheUnderwater (func_70648_aU).
+    return m_color == ChocoboColor::Blue;
 }
 
 void EntityChocobo::setColor(ChocoboColor color)
@@ -318,17 +326,49 @@ const char *EntityChocobo::getColorAbility(ChocoboColor color, bool spanish)
 {
     switch (color)
     {
-    case ChocoboColor::Yellow: return spanish ? "Corredor clasico" : "Classic runner";
-    case ChocoboColor::Green:  return spanish ? "Escala montanas y salta alto" : "Climbs mountains & high jump";
-    case ChocoboColor::Blue:   return spanish ? "Nada rapido + Resp. acuatica" : "Fast swim + Water Breathing";
-    case ChocoboColor::White:  return spanish ? "Escala, nada y gran salto" : "Climbs, swims & high jump";
-    case ChocoboColor::Black:  return spanish ? "Veloz + Vision nocturna" : "Swift + Night Vision";
-    case ChocoboColor::Gold:   return spanish ? "Vuela (A/L3), escala y nada" : "Flies (A/L3), climbs & swims";
-    case ChocoboColor::Pink:   return spanish ? "Vuelo supersonico, escala y nada" : "Fastest flyer, climbs & swims";
-    case ChocoboColor::Red:    return spanish ? "Vuelo supersonico, escala y nada" : "Fastest flyer, climbs & swims";
-    case ChocoboColor::Purple: return spanish ? "Vuela + Inmune fuego/lava" : "Flies + Fire/Lava immune";
+    case ChocoboColor::Yellow: return spanish ? "Corredor clásico" : "Classic runner";
+    case ChocoboColor::Green:  return spanish ? "Escala montañas" : "Climbs mountains";
+    case ChocoboColor::Blue:   return spanish ? "Cruza agua + Resp. acuática" : "Crosses water + Water Breathing";
+    case ChocoboColor::White:  return spanish ? "Escala, cruza agua, salta alto" : "Climbs, crosses water, high jump";
+    case ChocoboColor::Black:  return spanish ? "Veloz, salta alto + Visión nocturna" : "Fast, high jump + Night Vision";
+    case ChocoboColor::Gold:   return spanish ? "Vuela (A sube, L3 baja)" : "Flies (A up, L3 down)";
+    case ChocoboColor::Pink:   return spanish ? "El más rápido, vuela (A/L3)" : "Fastest, flies (A/L3)";
+    case ChocoboColor::Red:    return spanish ? "El más rápido, vuela (A/L3)" : "Fastest, flies (A/L3)";
+    case ChocoboColor::Purple: return spanish ? "Vuela + Inmune al fuego" : "Flies + Fire immune";
     default:                   return "";
     }
+}
+
+std::string EntityChocobo::getRideHelp(bool spanish, bool longForm) const
+{
+#if PLATFORM_XBOX
+    const std::string jumpKey = "A";
+    const std::string sneakKey = "L3";
+#else
+    const std::string jumpKey = spanish ? "Saltar" : "Jump";
+    const std::string sneakKey = spanish ? "Agacharse" : "Sneak";
+#endif
+    std::string s = spanish ? "Montado: " : "Riding: ";
+    if (canFly())
+    {
+        if (spanish)
+            s += longForm ? "mantén " + jumpKey + " para volar y subir, suelta para planear, " + sneakKey +
+                                " para bajar; en el suelo " + sneakKey + " desmonta"
+                          : jumpKey + " volar/subir, " + sneakKey + " bajar/desmontar";
+        else
+            s += longForm ? "hold " + jumpKey + " to fly up, release to glide, " + sneakKey +
+                                " to go down; on the ground " + sneakKey + " dismounts"
+                          : jumpKey + " fly/up, " + sneakKey + " down/dismount";
+    }
+    else
+    {
+        const std::string jump = canJumpHigh() ? (spanish ? " salto alto, " : " high jump, ")
+                                               : (spanish ? " saltar, " : " jump, ");
+        s += jumpKey + jump + sneakKey + (spanish ? " desmontar" : " dismount");
+        if (longForm)
+            s += spanish ? " (al caer, planea)" : " (glides when falling)";
+    }
+    return s;
 }
 
 const char *EntityChocobo::getColorTextureFile(ChocoboColor color, bool isChicobo)
@@ -403,55 +443,47 @@ int_t EntityChocobo::getMaxHealth() const
     }
 }
 
-float EntityChocobo::getRideSpeed() const
+// ChocoCraft 4.1.5 Constants.CHOCOBO_<COLOUR>_{LAND,WATER,AIR}SPEEDFACT / 100
+float EntityChocobo::getLandSpeedFactor() const
 {
     switch (m_color)
     {
-    case ChocoboColor::Pink:
-    case ChocoboColor::Red:    return 0.44f;
-    case ChocoboColor::Gold:   return 0.41f;
-    case ChocoboColor::Black:
-    case ChocoboColor::Purple: return 0.36f;
-    case ChocoboColor::White:  return 0.33f;
     case ChocoboColor::Green:
-    case ChocoboColor::Blue:   return 0.29f;
-    default:                   return 0.25f;
+    case ChocoboColor::Blue:   return 0.27f;
+    case ChocoboColor::White:  return 0.35f;
+    case ChocoboColor::Black:
+    case ChocoboColor::Purple: return 0.40f;
+    case ChocoboColor::Gold:   return 0.50f;
+    case ChocoboColor::Pink:
+    case ChocoboColor::Red:    return 0.55f;
+    default:                   return 0.20f;
     }
 }
 
-float EntityChocobo::getWaterRideSpeed() const
+float EntityChocobo::getWaterSpeedFactor() const
 {
     switch (m_color)
     {
-    case ChocoboColor::Blue:   return 0.44f;
-    case ChocoboColor::White:  return 0.38f;
+    case ChocoboColor::Blue:   return 0.55f;
+    case ChocoboColor::White:  return 0.45f;
+    case ChocoboColor::Black:
+    case ChocoboColor::Gold:   return 0.20f;
     case ChocoboColor::Pink:
-    case ChocoboColor::Red:    return 0.30f;
-    case ChocoboColor::Gold:
-    case ChocoboColor::Black:  return 0.26f;
-    default:                   return 0.14f;
+    case ChocoboColor::Red:    return 0.25f;
+    default:                   return 0.10f;
     }
 }
 
-float EntityChocobo::getAirRideSpeed() const
+float EntityChocobo::getAirSpeedFactor() const
 {
     switch (m_color)
     {
-    case ChocoboColor::Pink:
-    case ChocoboColor::Red:    return 0.46f;
     case ChocoboColor::Gold:
-    case ChocoboColor::Purple: return 0.42f;
-    default:                   return getRideSpeed() * 0.85f;
+    case ChocoboColor::Purple: return 0.55f;
+    case ChocoboColor::Pink:
+    case ChocoboColor::Red:    return 0.60f;
+    default:                   return 0.0f;
     }
-}
-
-float EntityChocobo::getJumpVelocity() const
-{
-    if (canFly())
-        return 0.62f;
-    if (canJumpHigh())
-        return 0.78f;
-    return 0.52f;
 }
 
 void EntityChocobo::applyMountedStepHeight(bool mounted)
@@ -539,9 +571,28 @@ void EntityChocobo::mountChocobo(EntityPlayer *player)
     isJumping = false;
     m_flying = false;
     m_isHighJumping = false;
-    m_mountGraceTicks = 12;
+    m_riderJump = false;
+    m_riderSneak = false;
+    // The sneak that opened the chocobo menu (held, or still on with
+    // "Sneak: Toggle") must not count as the dismount press.
+    m_sneakArmed = false;
+    if (EntityPlayerSP *sp = dynamic_cast<EntityPlayerSP *>(player))
+    {
+        if (MovementInputFromOptions *in = dynamic_cast<MovementInputFromOptions *>(sp->movementInput))
+            in->clearSneakToggle();
+    }
     applyMountedStepHeight(true);
-    player->mountEntity(this);
+    if (player->ridingEntity != this)
+    {
+        player->mountEntity(this);
+        Minecraft *mc = Minecraft::getMinecraft();
+        if (mc != nullptr && mc->ingameGUI != nullptr && dynamic_cast<EntityPlayerSP *>(player) != nullptr)
+        {
+            StringTranslate *tr = StringTranslate::getInstance();
+            const bool es = tr != nullptr && tr->getCurrentLanguage().rfind("es_", 0) == 0;
+            mc->ingameGUI->addChatMessage(getRideHelp(es, true));
+        }
+    }
 }
 
 void EntityChocobo::dismountChocobo(EntityPlayer *player)
@@ -549,8 +600,14 @@ void EntityChocobo::dismountChocobo(EntityPlayer *player)
     isJumping = false;
     m_flying = false;
     m_isHighJumping = false;
-    m_gliding = false;
+    m_riderJump = false;
+    m_riderSneak = false;
     fallDistance = 0.0f;
+    if (EntityPlayerSP *sp = dynamic_cast<EntityPlayerSP *>(player))
+    {
+        if (MovementInputFromOptions *in = dynamic_cast<MovementInputFromOptions *>(sp->movementInput))
+            in->clearSneakToggle();
+    }
     applyMountedStepHeight(false);
     if (player != nullptr)
     {
@@ -624,7 +681,9 @@ void EntityChocobo::fall(float dist)
     if (riddenByEntity != nullptr)
         riddenByEntity->fallDistance = 0.0f;
 
-    if (canFly() || m_color == ChocoboColor::Black || riddenByEntity != nullptr || m_gliding)
+    // Gold, Pink, Red and Purple override fall() with an empty body. A ridden
+    // chocobo is also spared here (console rider safety; the original hurts it).
+    if (canFly() || riddenByEntity != nullptr)
     {
         fallDistance = 0.0f;
         return;
@@ -687,12 +746,33 @@ void EntityChocobo::updatePlayerActionState()
     // The chocobo obeys ONLY the player's controls.
     if (riddenByEntity != nullptr)
     {
+        // ChocoCraft EntityChocobo.updateEntityActionState (func_70626_be), ridden:
+        // the chocobo faces where the rider looks, jumps with the rider's jump key
+        // and its horizontal speed is capped at 0.375 blocks/tick.
         setPathToEntity(nullptr);
         playerToAttack = nullptr;
-        moveForward = 0.0f;
-        moveStrafing = 0.0f;
         randomYawVelocity = 0.0f;
-        isJumping = false;
+        if (dynamic_cast<EntityPlayer *>(riddenByEntity) != nullptr)
+        {
+            prevRotationYaw = rotationYaw = riddenByEntity->rotationYaw;
+            prevRotationPitch = rotationPitch = 0.0f;
+            isJumping = m_riderJump;
+            moveForward = m_riderForward;
+            moveStrafing = m_riderStrafe * 0.5f;
+            const double d = std::sqrt(motionX * motionX + motionZ * motionZ);
+            if (d > 0.375)
+            {
+                const double scale = 0.375 / d;
+                motionX *= scale;
+                motionZ *= scale;
+            }
+        }
+        else
+        {
+            moveForward = 0.0f;
+            moveStrafing = 0.0f;
+            isJumping = false;
+        }
         return;
     }
 
@@ -770,8 +850,6 @@ void EntityChocobo::onLivingUpdate()
             growUpToAdult();
     }
 
-    if (m_mountGraceTicks > 0)
-        --m_mountGraceTicks;
     if (m_flyParticleCooldown > 0)
         --m_flyParticleCooldown;
 
@@ -790,12 +868,6 @@ void EntityChocobo::onLivingUpdate()
     m_wingRotDelta *= 0.9f;
     m_wingRotation += m_wingRotDelta * 2.0f;
 
-    if (onGround)
-    {
-        m_flying = false;
-        m_isHighJumping = false;
-        m_gliding = false;
-    }
 
     // Periodic feather shedding for adult chocobos (ChocoCraft 4.1.5)
     if (!childNow && worldObj != nullptr && !worldObj->multiplayerWorld && --m_timeUntilNextFeather <= 0)
@@ -809,182 +881,152 @@ void EntityChocobo::onLivingUpdate()
     doStrawHealing();
 
     // Water buoyancy for water-crossing chocobos (Blue, White, Black, Gold, Pink, Red)
-    if (canCrossWater() && isInWater())
-    {
-        if (motionY < 0.08)
-            motionY += 0.06;
-    }
-
-    // ========================================================================
-    // RIDER STEERING & FLIGHT (Xbox Controller P1/P2 + PC Keyboard)
-    // ========================================================================
     EntityPlayer *rider = dynamic_cast<EntityPlayer *>(riddenByEntity);
     if (rider != nullptr)
     {
-        // IMPORTANT: World::updateEntityWithOptionalForce calls updateRidden() instead of
-        // EntityPlayerSP::onLivingUpdate() while riding, so movementInput MUST be refreshed here!
-        float fwd = 0.0f;
-        float strafe = 0.0f;
-        bool jumpPressed = false;
-        bool sneakPressed = false;
-
-        if (EntityPlayerSP *sp = dynamic_cast<EntityPlayerSP *>(rider))
-        {
-            if (sp->movementInput != nullptr)
-            {
-                sp->movementInput->updatePlayerMoveState(sp);
-                fwd = sp->movementInput->moveForward;
-                strafe = sp->movementInput->moveStrafe;
-                jumpPressed = sp->movementInput->jump;
-                sneakPressed = sp->movementInput->sneak;
-            }
-        }
-        else
-        {
-            fwd = rider->moveForward;
-            strafe = rider->moveStrafing;
-            jumpPressed = rider->isJumping;
-            sneakPressed = rider->isSneaking();
-        }
-
-        // Prevent any fall damage to either rider or chocobo while mounted!
+        readRiderInput(rider);
         fallDistance = 0.0f;
         rider->fallDistance = 0.0f;
-
-        // Rider potion buffs (Blue=Water Breathing, Black=Night Vision, Purple=Fire Resistance)
         applyRiderBuffs(rider);
 
-        // Dismount with Sneak (L3 / Shift):
-        // - If flying high in air on a flying chocobo, Sneak descends smoothly like Creative flight!
-        // - On ground, in water, or on non-flying chocobos, Sneak dismounts cleanly (after grace ticks).
-        if (sneakPressed && m_mountGraceTicks <= 0)
+        // Sneak (L3) dismounts, as sneaking does in 1.7.10 (EntityPlayer.updateRidden),
+        // but only on a fresh press. A flyer in the air and a Blue chocobo under water
+        // use it to go down instead (moveEntity), so it never drops the rider mid-air.
+        const bool sneakMovesDown = (canFly() && !onGround && !isInWater()) ||
+                                    (isInWater() && canBreatheUnderwater());
+        if (!m_riderSneak)
+            m_sneakArmed = true;
+        else if (sneakMovesDown)
+            m_sneakArmed = false;
+        else if (m_sneakArmed)
         {
-            if (canFly() && m_flying && !onGround && !isInWater())
-            {
-                // Descend smoothly while flying (like Creative flight / ChocoCraft EntityChocoboRideable)
-                motionY = -0.34;
-            }
-            else
-            {
-                dismountChocobo(rider);
-                EntityAnimal::onLivingUpdate();
-                return;
-            }
+            dismountChocobo(rider);
+            EntityAnimal::onLivingUpdate();
+            return;
         }
-
-        // Face rider's look direction
-        rotationYaw = rider->rotationYaw;
-        prevRotationYaw = rotationYaw;
-        rotationYawHead = rotationYaw;
-        renderYawOffset = rotationYaw;
-        rotationPitch = 0.0f;
-
-        // Compute horizontal speed based on medium (air / water / land)
-        const bool inWaterNow = isInWater();
-        float speed = getRideSpeed();
-        if (inWaterNow)
-            speed = getWaterRideSpeed();
-        else if (!onGround && (m_flying || canFly()))
-            speed = getAirRideSpeed();
-
-        // When sneaking in air to descend, undo the 0.3x sneak throttle from MovementInput
-        if (sneakPressed && canFly() && m_flying && !onGround)
-        {
-            fwd = std::clamp(fwd / 0.3f, -1.0f, 1.0f);
-            strafe = std::clamp(strafe / 0.3f, -1.0f, 1.0f);
-        }
-
-        const float yawRad = rotationYaw * 3.14159265f / 180.0f;
-        const float sinY = std::sin(yawRad);
-        const float cosY = std::cos(yawRad);
-        const double moveX = (-sinY * fwd + cosY * strafe) * static_cast<double>(speed);
-        const double moveZ = (cosY * fwd + sinY * strafe) * static_cast<double>(speed);
-
-        // Responsive direct steering with smooth damping (zero AI drift!)
-        if (std::fabs(fwd) > 0.01f || std::fabs(strafe) > 0.01f)
-        {
-            motionX = motionX * 0.35 + moveX;
-            motionZ = motionZ * 0.35 + moveZ;
-        }
-        else
-        {
-            motionX *= 0.45;
-            motionZ *= 0.45;
-            if (std::fabs(motionX) < 0.005) motionX = 0.0;
-            if (std::fabs(motionZ) < 0.005) motionZ = 0.0;
-        }
-
-        // Vertical control: Jump / High-Jump / Glide / Creative-style Flight for Gold, Pink, Red, Purple!
-        if (jumpPressed)
-        {
-            if (onGround)
-            {
-                motionY = static_cast<double>(getJumpVelocity());
-                onGround = false;
-                m_isHighJumping = canJumpHigh();
-                if (canFly())
-                    m_flying = true;
-                if (worldObj != nullptr)
-                    worldObj->playSoundAtEntity(this, getLivingSound(), 0.5f, 1.25f);
-            }
-            else if (canFly())
-            {
-                // Gold / Pink / Red / Purple Chocobo FLIGHT! (Hold A to ascend smoothly)
-                m_flying = true;
-                m_gliding = true;
-                motionY = 0.44; // After EntityLiving's -0.08 gravity -> smooth +0.36 climb
-                if (m_flyParticleCooldown <= 0 && worldObj != nullptr)
-                {
-                    m_flyParticleCooldown = 8;
-                    worldObj->spawnParticle("reddust", posX, posY + 0.25, posZ, 1.0, 0.85, 0.1);
-                }
-            }
-            else if (inWaterNow)
-            {
-                motionY = 0.22;
-            }
-        }
-        else if (!onGround)
-        {
-            if (canFly() && m_flying && !sneakPressed)
-            {
-                // Gentle hover-glide when releasing A in midair
-                m_gliding = true;
-                if (motionY < -0.06)
-                    motionY = -0.06; // After -0.08 gravity -> gentle -0.14 sink
-            }
-            else if (!sneakPressed && motionY < 0.0)
-            {
-                // All chocobos glide gently with wings spread when falling!
-                m_gliding = true;
-                motionY *= 0.72;
-                if (motionY < -0.14)
-                    motionY = -0.14;
-            }
-        }
-
-        // Zero AI fields before EntityLiving physics tick
-        moveForward = 0.0f;
-        moveStrafing = 0.0f;
-        isJumping = false;
 
         EntityAnimal::onLivingUpdate();
 
-        // Keep fallDistance cleared post-physics as well (double guarantee!)
         fallDistance = 0.0f;
         if (riddenByEntity != nullptr)
             riddenByEntity->fallDistance = 0.0f;
         return;
     }
 
-    // Unmounted gentle wing-glide on fall
-    if (!onGround && motionY < 0.0)
-    {
-        m_gliding = true;
-        motionY *= 0.8;
-    }
-
     EntityAnimal::onLivingUpdate();
+}
+
+void EntityChocobo::readRiderInput(EntityPlayer *rider)
+{
+    m_riderForward = 0.0f;
+    m_riderStrafe = 0.0f;
+    m_riderJump = false;
+    m_riderSneak = false;
+    if (rider == nullptr)
+        return;
+    if (EntityPlayerSP *sp = dynamic_cast<EntityPlayerSP *>(rider))
+    {
+        if (sp->movementInput != nullptr)
+        {
+            // Idempotent within a tick (the toggle-sneak edge is kept by the input).
+            sp->movementInput->updatePlayerMoveState(sp);
+            m_riderForward = sp->movementInput->moveForward;
+            m_riderStrafe = sp->movementInput->moveStrafe;
+            m_riderJump = sp->movementInput->jump;
+            m_riderSneak = sp->movementInput->sneak;
+        }
+        return;
+    }
+    m_riderForward = rider->moveForward;
+    m_riderStrafe = rider->moveStrafing;
+    m_riderJump = rider->isJumping;
+    m_riderSneak = rider->isSneaking();
+}
+
+void EntityChocobo::jump()
+{
+    EntityAnimal::jump();
+    // 1.7.10 jump() sets isAirBorne and ChocoCraft then takes the colour's
+    // airborne speed factor as jumpMovementFactor (0 for the non-flyers).
+    if (riddenByEntity != nullptr)
+        m_jumpMoveFactor = getAirSpeedFactor();
+}
+
+void EntityChocobo::moveEntityWithHeading(float strafe, float forward)
+{
+    if (dynamic_cast<EntityPlayer *>(riddenByEntity) != nullptr)
+    {
+        // ChocoCraft EntityChocobo.moveEntityWithHeading (func_70612_e) and
+        // getAIMoveSpeed (func_70689_ay): the rider steers, strafing at half
+        // speed, with the colour's land speed factor on the ground.
+        strafe = m_riderStrafe * 0.5f;
+        forward = m_riderForward;
+        if (isInWater())
+            m_jumpMoveFactor = getWaterSpeedFactor();
+        if (canFly() && m_flying)
+            m_jumpMoveFactor = getAirSpeedFactor();
+        landMovementFactor = getLandSpeedFactor();
+        jumpMovementFactor = m_jumpMoveFactor;
+    }
+    else
+    {
+        jumpMovementFactor = 0.02f;
+    }
+    EntityAnimal::moveEntityWithHeading(strafe, forward);
+}
+
+void EntityChocobo::moveEntity(double x, double y, double z)
+{
+    // ChocoCraft EntityChocoboRideable.moveEntity (func_70091_d). As in the
+    // original, the new motionY applies from the next move on.
+    if (dynamic_cast<EntityPlayer *>(riddenByEntity) != nullptr)
+    {
+        if (m_riderJump)
+        {
+            if (canFly())
+            {
+                motionY = 0.5;
+                m_flying = true;
+            }
+            else if (canJumpHigh() && !m_isHighJumping)
+            {
+                motionY += 0.4;
+                m_isHighJumping = true;
+            }
+        }
+        else
+        {
+            motionY = -0.1;
+        }
+
+        if (m_riderSneak)
+        {
+            if (canFly())
+                motionY = -0.5;
+            if (inWater && canBreatheUnderwater())
+                motionY -= 0.15;
+        }
+    }
+    EntityAnimal::moveEntity(x, y, z);
+}
+
+void EntityChocobo::onUpdate()
+{
+    EntityAnimal::onUpdate();
+    if (isDead || !ModManager::getInstance().isModEnabled("chococraft"))
+        return;
+    // ChocoCraft EntityChocobo.onUpdate (func_70071_h_)
+    if (riddenByEntity == nullptr && m_flying && !onGround)
+        motionY -= 0.25;
+    if (m_flying && onGround)
+        m_flying = false;
+    if (m_isHighJumping && onGround)
+        m_isHighJumping = false;
+    if (isInWater() && canCrossWater())
+    {
+        motionY += 0.04;
+        inWater = false;
+    }
 }
 
 bool EntityChocobo::isWheat(ItemStack *itemstack) const
@@ -1224,6 +1266,19 @@ bool EntityChocobo::interact(EntityPlayer *player)
     }
 
     // 6. Equip Chocobo Saddle (or vanilla Saddle) on tamed adult without pack bags
+    // String (silk): ChocoCraft onSilkUse -> toggleFollowStay
+    if (held != nullptr && Item::silk != nullptr && held->itemID == Item::silk->shiftedIndex)
+    {
+        if (m_tamed)
+        {
+            m_aiMode = (m_aiMode == ChocoboAiMode::Stay) ? ChocoboAiMode::Follow : ChocoboAiMode::Stay;
+            spawnParticles(m_aiMode == ChocoboAiMode::Follow ? "heart" : "smoke", 7);
+            return true;
+        }
+        spawnParticles("smoke", 7);
+        return true;
+    }
+
     const bool isSaddleItem = held != nullptr && (
         (ChocoCraftItems::chocoboSaddle != nullptr && held->itemID == ChocoCraftItems::chocoboSaddle->shiftedIndex) ||
         (Item::saddle != nullptr && held->itemID == Item::saddle->shiftedIndex));
@@ -1297,7 +1352,12 @@ bool EntityChocobo::interact(EntityPlayer *player)
     }
 
     // 10. MOUNT: ONLY if tamed, SADDLED, adult, and NOT packbagged!
-    if (m_tamed && m_saddled && !m_packbags && !isChild() && (riddenByEntity == nullptr || riddenByEntity == player))
+    // The rider cannot aim at its own chocobo (canRiderInteract); never let a
+    // stray click on it toggle the mount off.
+    if (riddenByEntity == player)
+        return true;
+
+    if (m_tamed && m_saddled && !m_packbags && !isChild() && riddenByEntity == nullptr)
     {
         mountChocobo(player);
         return true;

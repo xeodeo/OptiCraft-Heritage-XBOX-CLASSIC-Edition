@@ -380,6 +380,8 @@ void GuiChocoboMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         static_cast<int>(m_chocobo->getMaxHealth()),
         EntityChocobo::getColorAbility(m_chocobo->getColor(), es));
     drawCenteredString(fontRenderer, statBuf, panelX + panelW / 2, panelY + 20, 0xCCCCCC);
+    drawCenteredString(fontRenderer, m_chocobo->getRideHelp(es, false), panelX + panelW / 2,
+        panelY + panelH - 36, 0xAAAAAA);
 
     GuiScreen::drawScreen(mouseX, mouseY, partialTick);
 
@@ -467,9 +469,7 @@ void GuiChocoboMenu::drawLegacyScreen(float_t partialTick)
 
     if (!compact)
     {
-        const std::string tip = legacyFitText(fontRenderer,
-            es ? "Montado: A = saltar / volar (dorado), L3 = bajar"
-               : "Mounted: A = jump / fly (gold), L3 = dismount", l.contentW);
+        const std::string tip = legacyFitText(fontRenderer, m_chocobo->getRideHelp(es, false), l.contentW);
         legacyDrawPanelText(fontRenderer, tip, l.panelX + (l.panelW - fontRenderer->getStringWidth(tip)) / 2,
             l.footerY + 1, static_cast<int_t>(0xff606060u));
     }
