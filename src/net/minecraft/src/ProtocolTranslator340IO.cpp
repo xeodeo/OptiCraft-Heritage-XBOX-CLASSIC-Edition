@@ -327,6 +327,8 @@ void Translator340Connection::emitColumn(int32_t x, int32_t z, Column &col)
 		w.u8(static_cast<uint8_t>(change & 15));
 		pending_.push_back(decodeNative(0x35, w.b));
 	}
+	for (const std::vector<uint8_t> &sign : col.signs)
+		pending_.push_back(decodeNative(0x82, sign));
 	col.live = true;
 }
 
@@ -377,6 +379,7 @@ void Translator340Connection::routeChunk(translator340::ConvertedChunk &chunk)
 		Column &col = columns_[key];
 		col.primary = chunk.primary;
 		col.changes.clear();
+		col.signs.clear();
 		deflateColumn(chunk.data, col.z);
 		col.live = inWindow(chunk.x, chunk.z, radius_);
 		if (!col.live)
@@ -454,6 +457,28 @@ void Translator340Connection::routeNative(translator340::NativePacket &np)
 		auto it = columns_.find(columnKey(cx, cz));
 		if (it != columns_.end() && !it->second.live)
 			return;
+	}
+	else if (np.id == 0x82 && n >= 10) // sign text: kept with its column
+	{
+		const int32_t x = readBE32(p), z = readBE32(p + 6);
+		const int y = (p[4] << 8) | p[5];
+		auto it = columns_.find(columnKey(x >> 4, z >> 4));
+		if (it != columns_.end())
+		{
+			std::vector<std::vector<uint8_t>> &signs = it->second.signs;
+			bool replaced = false;
+			for (std::vector<uint8_t> &sign : signs)
+				if (readBE32(sign.data()) == x && readBE32(sign.data() + 6) == z && ((sign[4] << 8) | sign[5]) == y)
+				{
+					sign = np.payload;
+					replaced = true;
+					break;
+				}
+			if (!replaced && signs.size() < 256)
+				signs.push_back(np.payload);
+			if (!it->second.live)
+				return;
+		}
 	}
 	else if (np.id == 0x32 && n >= 9 && p[8] == 0) // server unload
 	{

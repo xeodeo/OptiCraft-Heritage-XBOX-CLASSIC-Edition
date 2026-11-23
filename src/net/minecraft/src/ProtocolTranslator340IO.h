@@ -46,6 +46,7 @@ private:
 		uint16_t primary = 0;
 		bool live = false;      // present in the native world
 		std::vector<uint32_t> changes; // block changes since the copy was made
+		std::vector<std::vector<uint8_t>> signs; // native sign packets of the column
 	};
 
 	void emitFrame(std::ostream &os, uint32_t id, const std::vector<uint8_t> &payload);
