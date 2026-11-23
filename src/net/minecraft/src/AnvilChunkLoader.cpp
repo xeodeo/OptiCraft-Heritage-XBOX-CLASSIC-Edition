@@ -10,6 +10,7 @@
 
 #include "platform/Diagnostics.h"
 #include "platform/Log.h"
+#include "java/System.h"
 #include "platform/chunks/ChunkMemoryPolicy.h"
 #include "Block.h"
 #include "AnvilChunkLoaderPending.h"
@@ -267,7 +268,13 @@ void AnvilChunkLoader::saveChunk(World *world, Chunk *chunk)
     }
 #endif
 
+#if PLATFORM_XBOX
+    const long_t saveT0 = System::nanoTime();
+#endif
     world->checkSessionLock();
+#if PLATFORM_XBOX
+    const long_t saveT1 = System::nanoTime();
+#endif
 
     try
     {
@@ -275,6 +282,20 @@ void AnvilChunkLoader::saveChunk(World *world, Chunk *chunk)
         NBTTagCompound *level = new NBTTagCompound();
         root->setTag("Level", level);
         writeChunkToLevel(chunk, world, level);
+#if PLATFORM_XBOX
+        const long_t saveT2 = System::nanoTime();
+        struct SaveTrace
+        {
+            long_t t0, t1, t2; int_t x, z;
+            ~SaveTrace()
+            {
+                const long_t t3 = System::nanoTime();
+                if (t3 - t0 > 50000000LL)
+                    MC_LOG_WARN("chunk", "slow chunk save %d,%d: lock=%.1fms nbt=%.1fms queue/compress=%.1fms\n", x, z,
+                                (t1 - t0) / 1e6, (t2 - t1) / 1e6, (t3 - t2) / 1e6);
+            }
+        } saveTrace{saveT0, saveT1, saveT2, chunk->xPosition, chunk->zPosition};
+#endif
 
 #if XBOX_ASYNC_CHUNK_IO
         queueChunkToSaveNBT(ChunkCoordIntPair(chunk->xPosition, chunk->zPosition), std::move(root));

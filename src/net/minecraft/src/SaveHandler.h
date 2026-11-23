@@ -34,5 +34,6 @@ private:
     std::string playersDirectory;
     std::string dataDirectory;
     long_t sessionTime;
+    long_t lastSessionCheckMs = 0; // Xbox: throttle of checkSessionLock() (see .cpp)
     bool readOnly;
 };
