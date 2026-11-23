@@ -34,6 +34,8 @@ WorldInfo::WorldInfo(NBTTagCompound *nbttagcompound)
 				: 0;
 			terrainType = terrainType->func_48629_a(generatorVersion);
 		}
+		if (nbttagcompound->hasKey("generatorOptions"))
+			generatorOptions = nbttagcompound->getString("generatorOptions");
 	}
 	spawnX = nbttagcompound->getInteger("SpawnX");
 	spawnY = nbttagcompound->getInteger("SpawnY");
@@ -112,6 +114,7 @@ WorldInfo::WorldInfo(WorldSettings *settings, const jstring &s)
 	WorldType::initialize();
 	randomSeed = settings != nullptr ? settings->getSeed() : 0;
 	terrainType = settings != nullptr && settings->getTerrainType() != nullptr ? settings->getTerrainType() : WorldType::DEFAULT;
+	generatorOptions = settings != nullptr ? settings->getGeneratorOptions() : jstring("");
 	gameType = settings != nullptr ? settings->getGameType() : 0;
 	mapFeaturesEnabled = settings == nullptr || settings->isMapFeaturesEnabled();
 	hardcore = settings != nullptr && settings->getHardcoreEnabled();
@@ -141,6 +144,7 @@ WorldInfo::WorldInfo(WorldInfo *worldinfo)
 {
 	randomSeed = worldinfo->randomSeed;
 	terrainType = worldinfo->terrainType;
+	generatorOptions = worldinfo->generatorOptions;
 	gameType = worldinfo->gameType;
 	mapFeaturesEnabled = worldinfo->mapFeaturesEnabled;
 	hardcore = worldinfo->hardcore;
@@ -229,6 +233,7 @@ void WorldInfo::updateTagCompound(NBTTagCompound *nbttagcompound, NBTTagCompound
 	{
 		nbttagcompound->setString("generatorName", terrainType->func_48628_a());
 		nbttagcompound->setInteger("generatorVersion", terrainType->getGeneratorVersion());
+		nbttagcompound->setString("generatorOptions", generatorOptions);
 	}
 	nbttagcompound->setInteger("GameType", gameType);
 	nbttagcompound->setBoolean("MapFeatures", mapFeaturesEnabled);

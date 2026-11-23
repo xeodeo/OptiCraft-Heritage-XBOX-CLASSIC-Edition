@@ -28,6 +28,13 @@
 #include "EntityPig.h"
 #include "EntityWolf.h"
 #include "DamageSource.h"
+#include "CombatTracker.h"
+#include "GuiIngame.h"
+#include "scoreboard/Score.h"
+#include "scoreboard/ScoreObjective.h"
+#include "scoreboard/ScoreObjectiveCriteria.h"
+#include "scoreboard/ScorePlayerTeam.h"
+#include "scoreboard/Scoreboard.h"
 #include "EnchantmentHelper.h"
 #include "Potion.h"
 #include "PotionEffect.h"
@@ -262,6 +269,58 @@ void EntityPlayer::onUpdate()
 	}
 	if (!worldObj->multiplayerWorld)
 		foodStats.onUpdate(this);
+
+	// Update Java 1.5.2 scoreboard 'health' objectives when player health changes
+	if (worldObj != nullptr && !worldObj->multiplayerWorld && worldObj->getScoreboard() != nullptr && health != lastScoreboardHealth)
+	{
+		lastScoreboardHealth = health;
+		Scoreboard *board = worldObj->getScoreboard();
+		const auto healthObjs = board->getObjectivesByCriteria(ScoreObjectiveCriteria::HEALTH);
+		if (!healthObjs.empty())
+		{
+			std::vector<EntityPlayer *> selfList{this};
+			for (ScoreObjective *obj : healthObjs)
+			{
+				Score *sc = board->getValueFromObjective(username, obj);
+				if (sc != nullptr)
+					sc->updateFromCriteria(selfList);
+			}
+		}
+	}
+}
+
+std::string EntityPlayer::getEntityName()
+{
+	return username;
+}
+
+std::string EntityPlayer::getTranslatedEntityName()
+{
+	return ScorePlayerTeam::formatPlayerName(getTeam(), username);
+}
+
+ScorePlayerTeam *EntityPlayer::getTeam() const
+{
+	if (worldObj == nullptr || worldObj->getScoreboard() == nullptr)
+		return nullptr;
+	return worldObj->getScoreboard()->getPlayersTeam(username);
+}
+
+bool EntityPlayer::isOnSameTeam(EntityPlayer *other) const
+{
+	if (other == nullptr)
+		return false;
+	ScorePlayerTeam *myTeam = getTeam();
+	return myTeam != nullptr && myTeam == other->getTeam();
+}
+
+bool EntityPlayer::canAttackPlayer(EntityPlayer *other) const
+{
+	if (other == nullptr)
+		return true;
+	ScorePlayerTeam *myTeam = getTeam();
+	ScorePlayerTeam *otherTeam = other->getTeam();
+	return myTeam == nullptr || myTeam != otherTeam || myTeam->getAllowFriendlyFire();
 }
 
 void EntityPlayer::handleHealthUpdate(byte_t state)
@@ -487,29 +546,17 @@ int_t EntityPlayer::getScore()
 
 void EntityPlayer::onDeath(Entity *entity)
 {
-	EntityLiving::onDeath(entity);
-	setSize(0.2f, 0.2f);
-	setPosition(posX, posY, posZ);
-	motionY = 0.10000000149011612;
-	if (username == "Notch")
+	if (entity != nullptr && entity->isPlayer())
 	{
-		dropPlayerItemWithRandomChoice(new ItemStack(Item::appleRed, 1), true);
+		onDeath(DamageSource::causePlayerDamage(static_cast<EntityPlayer *>(entity)));
+		return;
 	}
-	const bool keepInv = isDebugKeepInventoryEnabled() ||
-		(worldObj != nullptr && worldObj->getGameRules().getGameRuleBooleanValue("keepInventory"));
-	if (!keepInv)
-		inventory->dropAllItems();
-	if (entity != nullptr)
+	if (entity != nullptr && entity->isLiving())
 	{
-		motionX = -MathHelper::cos(((attackedAtYaw + rotationYaw) * 3.1415927f) / 180.0f) * 0.1f;
-		motionZ = -MathHelper::sin(((attackedAtYaw + rotationYaw) * 3.1415927f) / 180.0f) * 0.1f;
+		onDeath(DamageSource::causeMobDamage(static_cast<EntityLiving *>(entity)));
+		return;
 	}
-	else
-	{
-		motionX = motionZ = 0.0;
-	}
-	yOffset = 0.1f;
-	addStat(StatList::deathsStat, 1);
+	onDeath(DamageSource::generic);
 }
 
 void EntityPlayer::onDeath(const DamageSource &source)
@@ -528,6 +575,42 @@ void EntityPlayer::onDeath(const DamageSource &source)
 	motionZ = -MathHelper::sin(((attackedAtYaw + rotationYaw) * 3.1415927f) / 180.0f) * 0.1f;
 	yOffset = 0.1f;
 	addStat(StatList::deathsStat, 1);
+
+	if (worldObj != nullptr && !worldObj->multiplayerWorld)
+	{
+		// Increment scoreboard deathCount objectives (Java 1.5.2)
+		if (Scoreboard *board = worldObj->getScoreboard())
+		{
+			for (ScoreObjective *obj : board->getObjectivesByCriteria(ScoreObjectiveCriteria::DEATH_COUNT))
+			{
+				Score *sc = board->getValueFromObjective(username, obj);
+				if (sc != nullptr)
+					sc->incrementScore();
+			}
+			// Sync health objective to 0 on death
+			lastScoreboardHealth = 0;
+			std::vector<EntityPlayer *> selfList{this};
+			for (ScoreObjective *obj : board->getObjectivesByCriteria(ScoreObjectiveCriteria::HEALTH))
+			{
+				Score *sc = board->getValueFromObjective(username, obj);
+				if (sc != nullptr)
+					sc->setScorePoints(0);
+			}
+		}
+
+		// Broadcast Java 1.5.2 CombatTracker death message to chat
+		const std::string deathMsg = (combatTracker != nullptr)
+			? combatTracker->getDeathMessage()
+			: source.getDeathMessage(this);
+		if (!deathMsg.empty())
+		{
+			Minecraft *mcInst = Minecraft::getMinecraft();
+			if (mcInst != nullptr && mcInst->ingameGUI != nullptr)
+				mcInst->ingameGUI->addChatMessage(deathMsg);
+		}
+		if (combatTracker != nullptr)
+			combatTracker->reset();
+	}
 }
 
 void EntityPlayer::addToPlayerScore(Entity *entity, int_t i)
@@ -544,6 +627,31 @@ void EntityPlayer::addToPlayerScore(Entity *entity, int_t i)
 	else
 	{
 		addStat(StatList::mobKillsStat, 1);
+	}
+
+	if (worldObj != nullptr && !worldObj->multiplayerWorld)
+	{
+		if (Scoreboard *board = worldObj->getScoreboard())
+		{
+			ScoreObjectiveCriteria *killCrit = entity->isPlayer()
+				? ScoreObjectiveCriteria::PLAYER_KILL_COUNT
+				: ScoreObjectiveCriteria::TOTAL_KILL_COUNT;
+			for (ScoreObjective *obj : board->getObjectivesByCriteria(killCrit))
+			{
+				Score *sc = board->getValueFromObjective(username, obj);
+				if (sc != nullptr)
+					sc->incrementScore();
+			}
+			if (entity->isPlayer())
+			{
+				for (ScoreObjective *obj : board->getObjectivesByCriteria(ScoreObjectiveCriteria::TOTAL_KILL_COUNT))
+				{
+					Score *sc = board->getValueFromObjective(username, obj);
+					if (sc != nullptr)
+						sc->incrementScore();
+				}
+			}
+		}
 	}
 }
 
@@ -750,7 +858,13 @@ bool EntityPlayer::attackEntityFrom(const DamageSource &source, int_t damage)
 		wakeUpPlayer(true, true, false);
 
 	Entity *attacker = source.getEntity();
-	if (dynamic_cast<EntityMob *>(attacker) != nullptr || dynamic_cast<EntityArrow *>(attacker) != nullptr || dynamic_cast<EntityArrow *>(source.getSourceOfDamage()) != nullptr)
+	if (EntityPlayer *attackerPlayer = dynamic_cast<EntityPlayer *>(attacker))
+	{
+		if (attackerPlayer != this && !attackerPlayer->canAttackPlayer(this))
+			return false;
+	}
+	if (source.isDifficultyScaled() || dynamic_cast<EntityMob *>(attacker) != nullptr ||
+	    dynamic_cast<EntityArrow *>(attacker) != nullptr || dynamic_cast<EntityArrow *>(source.getSourceOfDamage()) != nullptr)
 	{
 		if (worldObj->difficultySetting == 0) damage = 0;
 		if (worldObj->difficultySetting == 1) damage = damage / 2 + 1;
@@ -865,6 +979,9 @@ void EntityPlayer::damageEntity(const DamageSource &source, int_t damage)
 	damage = applyArmorCalculations(source, damage);
 	damage = applyPotionDamageCalculations(source, damage);
 	addExhaustion(source.getHungerDamage());
+	const int_t oldHealth = health;
+	if (combatTracker != nullptr)
+		combatTracker->recordDamage(source, oldHealth, damage);
 	health -= damage;
 }
 

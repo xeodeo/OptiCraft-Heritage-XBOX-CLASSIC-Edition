@@ -36,7 +36,8 @@ enum LegacyCreateButtonId
     BUTTON_WORLD_TYPE = 5,
     BUTTON_ALLOW_COMMANDS = 6,
     BUTTON_WORLD_SIZE = 7,
-    BUTTON_DIFFICULTY = 9
+    BUTTON_DIFFICULTY = 9,
+    BUTTON_CUSTOMIZE_TYPE = 10
 };
 
 bool pointInside(int_t x, int_t y, int_t left, int_t top, int_t width, int_t height)
@@ -57,14 +58,16 @@ void drawPanelTitle(FontRenderer *font, const std::string &text, int_t centerX, 
 
 LegacyCreateWorldScreen::LegacyCreateWorldScreen(GuiScreen *parent)
     : GuiCreateWorld(parent), difficultySlider(nullptr), legacyWorldSizeButton(nullptr), bonusChestButton(nullptr),
-      legacyAllowCommandsButton(nullptr), textFieldHeight(0), labelOffsetY(0), selectedControlIndex(0),
+      legacyAllowCommandsButton(nullptr), legacyCustomizeTypeButton(nullptr), textFieldHeight(0), labelOffsetY(0), selectedControlIndex(0),
       hoveredControlIndex(-1), panoramaAvailable(false)
 {
 }
 
 int_t LegacyCreateWorldScreen::selectionCount() const
 {
-    return moreOptions ? 7 : 6;
+    if (!moreOptions)
+        return 6;
+    return isFlatWorldType() ? 8 : 7;
 }
 
 void LegacyCreateWorldScreen::configureLayout()
@@ -77,24 +80,26 @@ void LegacyCreateWorldScreen::configureLayout()
 void LegacyCreateWorldScreen::repositionControls()
 {
     configureLayout();
-    if (!controlList.empty() && controlList[0] != nullptr)
-        controlList[0]->yPosition = layout.rowY(moreOptions ? 6 : 5);
-    if (gameModeButton != nullptr)
-        gameModeButton->yPosition = layout.rowY(1);
-    if (difficultySlider != nullptr)
-        difficultySlider->yPosition = layout.rowY(2);
-    if (legacyWorldSizeButton != nullptr)
-        legacyWorldSizeButton->yPosition = layout.rowY(3);
-    if (generateStructuresButton != nullptr)
-        generateStructuresButton->yPosition = layout.rowY(1);
-    if (worldTypeButton != nullptr)
-        worldTypeButton->yPosition = layout.rowY(2);
-    if (bonusChestButton != nullptr)
-        bonusChestButton->yPosition = layout.rowY(3);
-    if (legacyAllowCommandsButton != nullptr)
-        legacyAllowCommandsButton->yPosition = layout.rowY(4);
-    if (moreWorldOptionsButton != nullptr)
-        moreWorldOptionsButton->yPosition = layout.rowY(moreOptions ? 5 : 4);
+    const bool flatMore = moreOptions && isFlatWorldType();
+    const int_t shift = flatMore ? 1 : 0;
+    auto placeBtn = [&](GuiButton *btn, int_t row) {
+        if (btn == nullptr)
+            return;
+        btn->xPosition = layout.contentX;
+        btn->yPosition = layout.rowY(row);
+        btn->setButtonSize(layout.contentWidth, layout.rowHeight);
+    };
+    if (!controlList.empty())
+        placeBtn(controlList[0], moreOptions ? (6 + shift) : 5);
+    placeBtn(gameModeButton, 1);
+    placeBtn(difficultySlider, 2);
+    placeBtn(legacyWorldSizeButton, 3);
+    placeBtn(generateStructuresButton, 1);
+    placeBtn(worldTypeButton, 2);
+    placeBtn(legacyCustomizeTypeButton, 3);
+    placeBtn(bonusChestButton, 3 + shift);
+    placeBtn(legacyAllowCommandsButton, 4 + shift);
+    placeBtn(moreWorldOptionsButton, moreOptions ? (5 + shift) : 4);
     const bool nameFocused = textboxWorldName != nullptr && textboxWorldName->getFocused();
     const bool seedFocused = textboxSeed != nullptr && textboxSeed->getFocused();
     delete textboxWorldName;
@@ -133,12 +138,16 @@ void LegacyCreateWorldScreen::initGui()
         layout.rowY(4), layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.allowCommands")));
     allowCommandsButton = legacyAllowCommandsButton;
     controlList.push_back(moreWorldOptionsButton = new LegacyGuiButton(BUTTON_MORE_OPTIONS, layout.contentX,
-        layout.rowY(4), layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.moreWorldOptions")));
+        layout.rowY(4), layout.contentWidth, layout.rowHeight,
+        tr->translateKey(moreOptions ? "gui.done" : "selectWorld.moreWorldOptions")));
     controlList.push_back(generateStructuresButton = new LegacyGuiButton(BUTTON_GENERATE_STRUCTURES,
         layout.contentX, layout.rowY(1), layout.contentWidth, layout.rowHeight,
         tr->translateKey("selectWorld.mapFeatures")));
     controlList.push_back(worldTypeButton = new LegacyGuiButton(BUTTON_WORLD_TYPE, layout.contentX,
         layout.rowY(2), layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.mapType")));
+    controlList.push_back(legacyCustomizeTypeButton = new LegacyGuiButton(BUTTON_CUSTOMIZE_TYPE, layout.contentX,
+        layout.rowY(3), layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.customizeType")));
+    customizeTypeButton = legacyCustomizeTypeButton;
 
     delete textboxWorldName;
     textboxWorldName = new GuiTextField(fontRenderer, layout.contentX, layout.rowY(0), layout.contentWidth, textFieldHeight);
@@ -148,15 +157,17 @@ void LegacyCreateWorldScreen::initGui()
     textboxSeed = new GuiTextField(fontRenderer, layout.contentX, layout.rowY(0), layout.contentWidth, textFieldHeight);
     textboxSeed->setText(seed);
 
+    repositionControls();
     updateFolderName();
     updateButtonText();
     updateDifficultyControl();
     updateControlVisibility();
-    selectControl(0);
+    selectControl(moreOptions ? 2 : 0);
 #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
     // Preserve the console's existing initial text-entry behavior. Once the user
     // closes the keyboard, focus stays off until row 0 is activated again.
-    textboxWorldName->setFocused(true);
+    if (!moreOptions)
+        textboxWorldName->setFocused(true);
 #endif
 }
 
@@ -166,6 +177,8 @@ void LegacyCreateWorldScreen::updateControlVisibility()
     difficultySlider->enabled2 = !moreOptions;
     generateStructuresButton->enabled2 = moreOptions;
     worldTypeButton->enabled2 = moreOptions;
+    if (legacyCustomizeTypeButton != nullptr)
+        legacyCustomizeTypeButton->enabled2 = moreOptions && isFlatWorldType();
     if (legacyWorldSizeButton != nullptr)
         legacyWorldSizeButton->enabled2 = !moreOptions;
     if (bonusChestButton != nullptr)
@@ -193,6 +206,20 @@ GuiButton *LegacyCreateWorldScreen::buttonForSelection(int_t index) const
 {
     if (moreOptions)
     {
+        if (isFlatWorldType())
+        {
+            switch (index)
+            {
+            case 1: return generateStructuresButton;
+            case 2: return worldTypeButton;
+            case 3: return static_cast<GuiButton *>(legacyCustomizeTypeButton);
+            case 4: return static_cast<GuiButton *>(bonusChestButton);
+            case 5: return static_cast<GuiButton *>(legacyAllowCommandsButton);
+            case 6: return moreWorldOptionsButton;
+            case 7: return !controlList.empty() ? controlList[0] : nullptr;
+            default: return nullptr;
+            }
+        }
         switch (index)
         {
         case 1: return generateStructuresButton;
@@ -219,18 +246,23 @@ int_t LegacyCreateWorldScreen::selectionForButton(const GuiButton *button) const
 {
     if (button == nullptr)
         return -1;
+    const int_t shift = (moreOptions && isFlatWorldType()) ? 1 : 0;
     if (button == gameModeButton || button == generateStructuresButton)
         return 1;
     if (button == difficultySlider || button == worldTypeButton)
         return 2;
-    if (button == worldSizeButton || button == bonusChestButton)
+    if (moreOptions && isFlatWorldType() && button == legacyCustomizeTypeButton)
         return 3;
+    if (!moreOptions && button == worldSizeButton)
+        return 3;
+    if (moreOptions && button == bonusChestButton)
+        return 3 + shift;
     if (moreOptions && button == legacyAllowCommandsButton)
-        return 4;
+        return 4 + shift;
     if (button == moreWorldOptionsButton)
-        return moreOptions ? 5 : 4;
+        return moreOptions ? (5 + shift) : 4;
     if (!controlList.empty() && button == controlList[0])
-        return moreOptions ? 6 : 5;
+        return moreOptions ? (6 + shift) : 5;
     return -1;
 }
 
@@ -459,7 +491,13 @@ void LegacyCreateWorldScreen::actionPerformed(GuiButton *button)
     {
         repositionControls();
         updateControlVisibility();
-        selectControl(moreOptions ? 5 : 4);
+        selectControl(moreOptions ? (isFlatWorldType() ? 6 : 5) : 4);
+    }
+    else if (id == BUTTON_WORLD_TYPE)
+    {
+        repositionControls();
+        updateControlVisibility();
+        selectControl(2);
     }
     else if (id == BUTTON_WORLD_SIZE)
     {

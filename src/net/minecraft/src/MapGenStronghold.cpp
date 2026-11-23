@@ -1,6 +1,7 @@
 #include "MapGenStronghold.h"
 
 #include <cmath>
+#include <cstdlib>
 
 #include "BiomeGenBase.h"
 #include "ChunkCoordIntPair.h"
@@ -25,7 +26,7 @@ int_t javaRoundToInt(double value)
 } // namespace
 
 MapGenStronghold::MapGenStronghold()
-	: ranBiomeCheck(false), structureCoords{nullptr, nullptr, nullptr}
+	: ranBiomeCheck(false), structureCoords(3, nullptr), strongholdDistance(32.0), strongholdSpread(3), useCustomParams(false)
 {
 	allowedBiomeGenBases = {
 		BiomeGenBase::desert,
@@ -41,6 +42,39 @@ MapGenStronghold::MapGenStronghold()
 		BiomeGenBase::jungle,
 		BiomeGenBase::jungleHills
 	};
+}
+
+MapGenStronghold::MapGenStronghold(const std::map<std::string, std::string> &options)
+	: MapGenStronghold()
+{
+	useCustomParams = true;
+	for (const auto &entry : options)
+	{
+		if (entry.first == "distance")
+		{
+			char *endPtr = nullptr;
+			const double v = std::strtod(entry.second.c_str(), &endPtr);
+			if (endPtr != entry.second.c_str() && *endPtr == '\0')
+				strongholdDistance = v < 1.0 ? 1.0 : v;
+		}
+		else if (entry.first == "count")
+		{
+			char *endPtr = nullptr;
+			const long v = std::strtol(entry.second.c_str(), &endPtr, 10);
+			if (endPtr != entry.second.c_str() && *endPtr == '\0')
+			{
+				const int_t count = v < 1 ? 1 : (v > 128 ? 128 : static_cast<int_t>(v));
+				structureCoords.assign(static_cast<std::size_t>(count), nullptr);
+			}
+		}
+		else if (entry.first == "spread")
+		{
+			char *endPtr = nullptr;
+			const long v = std::strtol(entry.second.c_str(), &endPtr, 10);
+			if (endPtr != entry.second.c_str() && *endPtr == '\0')
+				strongholdSpread = v < 1 ? 1 : static_cast<int_t>(v);
+		}
+	}
 }
 
 MapGenStronghold::~MapGenStronghold()
@@ -81,10 +115,14 @@ void MapGenStronghold::ensureStructureCoords()
 	}
 
 	double angle = strongholdRandom.nextDouble() * 3.14159265358979323846 * 2.0;
+	int_t ring = 1;
+	int_t spread = strongholdSpread;
 
 	for (std::size_t index = 0; index < structureCoords.size(); ++index)
 	{
-		const double distance = (1.25 + strongholdRandom.nextDouble()) * 32.0;
+		const double distance = useCustomParams
+			? ((1.25 * static_cast<double>(ring) + strongholdRandom.nextDouble()) * strongholdDistance * static_cast<double>(ring))
+			: ((1.25 + strongholdRandom.nextDouble()) * 32.0);
 		int_t chunkX = javaRoundToInt(JavaMath::cos(angle) * distance);
 		int_t chunkZ = javaRoundToInt(JavaMath::sin(angle) * distance);
 
@@ -101,7 +139,19 @@ void MapGenStronghold::ensureStructureCoords()
 
 		delete structureCoords[index];
 		structureCoords[index] = new ChunkCoordIntPair(chunkX, chunkZ);
-		angle += 3.14159265358979323846 * 2.0 / static_cast<double>(structureCoords.size());
+		if (useCustomParams)
+		{
+			angle += 3.14159265358979323846 * 2.0 * static_cast<double>(ring) / static_cast<double>(spread);
+			if (static_cast<int_t>(index) == spread)
+			{
+				ring += 2 + strongholdRandom.nextInt(5);
+				spread += 1 + strongholdRandom.nextInt(2);
+			}
+		}
+		else
+		{
+			angle += 3.14159265358979323846 * 2.0 / static_cast<double>(structureCoords.size());
+		}
 	}
 
 	ranBiomeCheck = true;

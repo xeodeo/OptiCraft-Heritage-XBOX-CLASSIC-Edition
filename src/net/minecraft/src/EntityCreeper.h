@@ -32,9 +32,12 @@ public:
 
 	int_t timeSinceIgnited;
 	int_t lastActiveTime;
+	int_t fuseTime;
+	int_t explosionRadius;
 
 protected:
 	void entityInit() override;
+	void fall(float dist) override;
 	jstring getHurtSound() override;
 	jstring getDeathSound() override;
 	int_t getDropItemId() override;

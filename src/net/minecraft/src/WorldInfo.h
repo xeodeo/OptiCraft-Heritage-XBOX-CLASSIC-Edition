@@ -71,6 +71,8 @@ public:
 	bool isHardcoreModeEnabled();
 	WorldType *getTerrainType();
 	void setTerrainType(WorldType *type);
+	const jstring &getGeneratorOptions() const { return generatorOptions; }
+	void setGeneratorOptions(const jstring &options) { generatorOptions = options; }
 	bool isLimitedWorld() const;
 	void setLimitedWorld(bool flag);
 	int_t getWorldSizeType() const;
@@ -88,6 +90,7 @@ public:
 private:
 	long_t randomSeed;
 	WorldType *terrainType;
+	jstring generatorOptions;
 	int_t spawnX;
 	int_t spawnY;
 	int_t spawnZ;

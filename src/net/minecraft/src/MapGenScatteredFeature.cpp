@@ -7,11 +7,32 @@
 #include "WorldChunkManager.h"
 #include "java/Random.h"
 
+#include <cstdlib>
+
 MapGenScatteredFeature::MapGenScatteredFeature()
 	: maxDistanceBetweenScatteredFeatures(32),
 	  minDistanceBetweenScatteredFeatures(8)
 {
 	scatteredFeatureSpawnList.push_back(SpawnListEntry(typeid(EntityWitch), 1, 1, 1));
+}
+
+MapGenScatteredFeature::MapGenScatteredFeature(const std::map<std::string, std::string> &options)
+	: MapGenScatteredFeature()
+{
+	for (const auto &entry : options)
+	{
+		if (entry.first == "distance")
+		{
+			char *endPtr = nullptr;
+			const long v = std::strtol(entry.second.c_str(), &endPtr, 10);
+			if (endPtr != entry.second.c_str() && *endPtr == '\0')
+			{
+				const int_t parsed = static_cast<int_t>(v);
+				maxDistanceBetweenScatteredFeatures = parsed < (minDistanceBetweenScatteredFeatures + 1)
+					? (minDistanceBetweenScatteredFeatures + 1) : parsed;
+			}
+		}
+	}
 }
 
 std::vector<SpawnListEntry> &MapGenScatteredFeature::getScatteredFeatureSpawnList()

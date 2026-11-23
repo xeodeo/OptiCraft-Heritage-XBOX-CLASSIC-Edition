@@ -14,6 +14,10 @@
 #include "Minecraft.h"
 #include "World.h"
 #include "WorldInfo.h"
+#include "scoreboard/Score.h"
+#include "scoreboard/ScoreObjective.h"
+#include "scoreboard/ScorePlayerTeam.h"
+#include "scoreboard/Scoreboard.h"
 #include "java/Random.h"
 #include "java/String.h"
 
@@ -173,7 +177,37 @@ std::vector<EntityPlayer *> PlayerSelector::matchPlayers(ICommandSender *sender,
 		nameFilter = nameFilter.substr(1);
 	}
 
+	std::string teamFilter;
+	bool hasTeamFilter = false;
+	bool invertTeam = false;
+	if (auto it = args.find("team"); it != args.end())
+	{
+		teamFilter = it->second;
+		hasTeamFilter = true;
+		if (!teamFilter.empty() && teamFilter[0] == '!')
+		{
+			invertTeam = true;
+			teamFilter = teamFilter.substr(1);
+		}
+	}
+
+	// score_<obj>=max and score_<obj>_min=min
+	std::map<std::string, int> scoreMaxFilters;
+	std::map<std::string, int> scoreMinFilters;
+	for (const auto &entry : args)
+	{
+		if (entry.first.rfind("score_", 0) == 0 && entry.first.size() > 6)
+		{
+			std::string rest = entry.first.substr(6);
+			if (rest.size() > 4 && rest.compare(rest.size() - 4, 4, "_min") == 0)
+				scoreMinFilters[rest.substr(0, rest.size() - 4)] = parseIntDefault(entry.second, 0);
+			else
+				scoreMaxFilters[rest] = parseIntDefault(entry.second, 0);
+		}
+	}
+
 	Minecraft *mc = sender != nullptr ? sender->getMinecraft() : nullptr;
+	Scoreboard *board = (mc != nullptr && mc->theWorld != nullptr) ? mc->theWorld->getScoreboard() : nullptr;
 	std::vector<EntityPlayer *> all = CommandBase::getAllPlayers(mc);
 	std::vector<EntityPlayer *> matched;
 
@@ -196,6 +230,42 @@ std::vector<EntityPlayer *> PlayerSelector::matchPlayers(ICommandSender *sender,
 		{
 			const bool eq = (static_cast<std::string>(String::toLowerCaseJava(p->username)) == lowerFilter);
 			if (invertName ? eq : !eq)
+				continue;
+		}
+		if (hasTeamFilter)
+		{
+			ScorePlayerTeam *pt = (board != nullptr) ? board->getPlayersTeam(p->username) : nullptr;
+			const std::string pTeam = (pt != nullptr) ? pt->getRegisteredName() : "";
+			const bool eq = (pTeam == teamFilter);
+			if (invertTeam ? eq : !eq)
+				continue;
+		}
+		if (!scoreMinFilters.empty() || !scoreMaxFilters.empty())
+		{
+			if (board == nullptr)
+				continue;
+			bool scoreOk = true;
+			for (const auto &sf : scoreMinFilters)
+			{
+				ScoreObjective *obj = board->getObjective(sf.first);
+				if (obj == nullptr || board->getValueFromObjective(p->username, obj)->getScorePoints() < sf.second)
+				{
+					scoreOk = false;
+					break;
+				}
+			}
+			if (!scoreOk)
+				continue;
+			for (const auto &sf : scoreMaxFilters)
+			{
+				ScoreObjective *obj = board->getObjective(sf.first);
+				if (obj == nullptr || board->getValueFromObjective(p->username, obj)->getScorePoints() > sf.second)
+				{
+					scoreOk = false;
+					break;
+				}
+			}
+			if (!scoreOk)
 				continue;
 		}
 		if (gameMode != EnumGameType::NOT_SET && effectivePlayerGameType(mc, p) != gameMode)

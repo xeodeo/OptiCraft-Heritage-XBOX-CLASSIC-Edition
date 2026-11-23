@@ -7,11 +7,19 @@ class EntityLiving;
 class EntityPlayer;
 class EntityArrow;
 class EntityFireball;
+class Explosion;
 
 // net.minecraft.src.DamageSource
 class DamageSource
 {
 public:
+	enum class SourceKind
+	{
+		Generic = 0,
+		EntityDirect = 1,
+		EntityIndirect = 2
+	};
+
 	explicit DamageSource(const jstring &type);
 	virtual ~DamageSource() = default;
 
@@ -22,6 +30,7 @@ public:
 	static DamageSource causeThrownDamage(Entity *projectile, Entity *thrower);
 	static DamageSource causeIndirectMagicDamage(Entity *source, Entity *indirectEntity);
 	static DamageSource causeThornsDamage(Entity *entity);
+	static DamageSource setExplosionSource(Explosion *explosion);
 
 	bool isProjectile() const;
 	DamageSource &setProjectile();
@@ -36,9 +45,13 @@ public:
 	bool fireDamage() const;
 	bool isFireDamage() const { return fireDamage(); }
 	bool isExplosion() const;
+	DamageSource &setExplosion();
+	bool isDifficultyScaled() const;
+	DamageSource &setDifficultyScaled();
 	bool isMagicDamage() const;
 	DamageSource &setMagicDamage();
 	const jstring &getDamageType() const;
+	std::string getDeathMessage(EntityLiving *victim) const;
 
 	static DamageSource inFire;
 	static DamageSource onFire;
@@ -53,19 +66,25 @@ public:
 	static DamageSource explosion;
 	static DamageSource magic;
 	static DamageSource wither;
+	static DamageSource anvil;
+	static DamageSource fallingBlock;
 
 protected:
-	DamageSource(const jstring &type, Entity *directSource, Entity *responsibleEntity);
+	DamageSource(const jstring &type, Entity *directSource, Entity *responsibleEntity,
+	             SourceKind kind = SourceKind::Generic);
 
 	Entity *directSource;
 	Entity *responsibleEntity;
 
 private:
+	SourceKind sourceKind;
 	bool unblockable;
 	bool damageAllowedInCreativeMode;
 	float hungerDamage;
 	bool fire;
 	bool projectile;
+	bool difficultyScaled;
+	bool explosionFlag;
 	bool magicDamage = false;
 	jstring damageType;
 };

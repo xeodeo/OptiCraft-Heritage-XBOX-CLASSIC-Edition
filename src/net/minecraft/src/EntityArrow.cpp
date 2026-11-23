@@ -10,9 +10,12 @@
 
 #include "AxisAlignedBB.h"
 #include "Block.h"
+#include "BlockFire.h"
 #include "DamageSource.h"
+#include "EntityEnderman.h"
 #include "EntityLiving.h"
 #include "EntityPlayer.h"
+#include "Material.h"
 #include "InventoryPlayer.h"
 #include "Item.h"
 #include "ItemStack.h"
@@ -271,6 +274,41 @@ void EntityArrow::onUpdate()
 		hit = new MovingObjectPosition(closestEntity);
 	}
 
+	// Java 1.5.2: check friendly fire & creative invulnerability on player hits
+	if (hit != nullptr && hit->entityHit != nullptr && hit->entityHit->isPlayer())
+	{
+		EntityPlayer *targetPlayer = static_cast<EntityPlayer *>(hit->entityHit);
+		EntityPlayer *shooterPlayer = (shooter != nullptr && shooter->isPlayer())
+			? static_cast<EntityPlayer *>(shooter) : nullptr;
+		if (targetPlayer->capabilities.disableDamage ||
+		    (shooterPlayer != nullptr && !shooterPlayer->canAttackPlayer(targetPlayer)))
+		{
+			delete hit;
+			hit = nullptr;
+		}
+	}
+
+	// Ignite arrow if its flight path passes through fire or lava (1.5.2)
+	if (!worldObj->multiplayerWorld && !isBurning())
+	{
+		const int_t steps = 4;
+		for (int_t s = 0; s <= steps; ++s)
+		{
+			const double frac = static_cast<double>(s) / static_cast<double>(steps);
+			const int_t bx = MathHelper::floor_double(start->xCoord + (end->xCoord - start->xCoord) * frac);
+			const int_t by = MathHelper::floor_double(start->yCoord + (end->yCoord - start->yCoord) * frac);
+			const int_t bz = MathHelper::floor_double(start->zCoord + (end->zCoord - start->zCoord) * frac);
+			const int_t bid = worldObj->getBlockId(bx, by, bz);
+			if ((Block::fire != nullptr && bid == Block::fire->blockID) ||
+			    (bid > 0 && bid < Block::BLOCK_REGISTRY_SIZE && Block::blocksList[bid] != nullptr &&
+			     Block::blocksList[bid]->blockMaterial == Material::lava))
+			{
+				setFire(100);
+				break;
+			}
+		}
+	}
+
 	if (hit != nullptr)
 	{
 		if (hit->entityHit != nullptr)
@@ -281,7 +319,7 @@ void EntityArrow::onUpdate()
 				hitDamage += rand.nextInt(hitDamage / 2 + 2);
 
 			DamageSource source = DamageSource::causeArrowDamage(this, shooter != nullptr ? static_cast<Entity *>(shooter) : this);
-			if (isBurning())
+			if (isBurning() && dynamic_cast<EntityEnderman *>(hit->entityHit) == nullptr)
 				hit->entityHit->setFire(5);
 
 			if (hit->entityHit->attackEntityFrom(source, hitDamage))
@@ -301,7 +339,8 @@ void EntityArrow::onUpdate()
 						EnchantmentThorns::func_92096_a(shooter, living, rand);
 				}
 				worldObj->playSoundAtEntity(this, "random.bowhit", 1.0f, 1.2f / (rand.nextFloat() * 0.2f + 0.9f));
-				setEntityDead();
+				if (dynamic_cast<EntityEnderman *>(hit->entityHit) == nullptr)
+					setEntityDead();
 			}
 			else
 			{
@@ -334,6 +373,8 @@ void EntityArrow::onUpdate()
 			inGround = true;
 			arrowShake = 7;
 			arrowCritical = false;
+			if (inTile > 0 && inTile < Block::BLOCK_REGISTRY_SIZE && Block::blocksList[inTile] != nullptr)
+				Block::blocksList[inTile]->onEntityCollidedWithBlock(worldObj, xTile, yTile, zTile, this);
 		}
 		delete hit;
 	}
@@ -375,12 +416,14 @@ void EntityArrow::onUpdate()
 			worldObj->spawnParticle("bubble", posX - motionX * 0.25, posY - motionY * 0.25, posZ - motionZ * 0.25,
 				motionX, motionY, motionZ);
 		drag = 0.8f;
+		extinguish();
 	}
 	motionX *= (double)drag;
 	motionY *= (double)drag;
 	motionZ *= (double)drag;
 	motionY -= (double)gravity;
 	setPosition(posX, posY, posZ);
+	doBlockCollisions();
 }
 
 void EntityArrow::writeEntityToNBT(NBTTagCompound *compound)

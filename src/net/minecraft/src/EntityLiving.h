@@ -26,6 +26,7 @@ class EntitySenses;
 class PathNavigate;
 class PotionEffect;
 class Potion;
+class CombatTracker;
 
 // net.minecraft.src.EntityLiving
 class EntityLiving : public Entity
@@ -58,6 +59,8 @@ public:
 	EntityLiving *getAITarget();
 	EntityLiving *getLastAttackingEntity();
 	void setLastAttackingEntity(Entity *entity);
+	CombatTracker *getCombatTracker() const { return combatTracker; }
+	EntityLiving *func_94060_bK() const;
 	EntityLiving *getAttackTarget();
 	virtual void setAttackTarget(EntityLiving *target);
 	virtual void setRevengeTarget(EntityLiving *target);
@@ -300,6 +303,7 @@ private:
 
 protected:
 	int_t carryoverDamage;
+	CombatTracker *combatTracker;
 
 private:
 	struct PotionIdHash

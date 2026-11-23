@@ -11,6 +11,7 @@
 #include "WorldInfo.h"
 #include "WorldType.h"
 #include "ChunkProviderFlat.h"
+#include "FlatGeneratorInfo.h"
 #include "WorldChunkManagerHell.h"
 #include <cmath>
 #include "java/Arithmetic.h"
@@ -33,6 +34,8 @@ void WorldProvider::registerWorld(World *world)
     worldObj = world;
     terrainType = worldObj != nullptr && worldObj->getWorldInfo() != nullptr
         ? worldObj->getWorldInfo()->getTerrainType() : WorldType::DEFAULT;
+    field_82913_c = worldObj != nullptr && worldObj->getWorldInfo() != nullptr
+        ? worldObj->getWorldInfo()->getGeneratorOptions() : jstring("");
     registerWorldChunkManager();
     generateLightBrightnessTable();
 }
@@ -50,9 +53,18 @@ void WorldProvider::generateLightBrightnessTable()
 void WorldProvider::registerWorldChunkManager()
 {
     if (terrainType == WorldType::FLAT)
-        worldChunkMgr = new WorldChunkManagerHell(BiomeGenBase::plains, 0.5f, 0.5f);
+    {
+        FlatGeneratorInfo flatInfo = FlatGeneratorInfo::createFlatGeneratorFromString(field_82913_c);
+        const int_t biomeId = flatInfo.getBiome();
+        BiomeGenBase *biome = (biomeId >= 0 && biomeId < 256 && BiomeGenBase::biomeList[biomeId] != nullptr)
+            ? BiomeGenBase::biomeList[biomeId]
+            : BiomeGenBase::plains;
+        worldChunkMgr = new WorldChunkManagerHell(biome, 0.5f, 0.5f);
+    }
     else
+    {
         worldChunkMgr = new WorldChunkManager(worldObj);
+    }
 }
 
 IChunkProvider *WorldProvider::getChunkProvider()
@@ -61,7 +73,7 @@ IChunkProvider *WorldProvider::getChunkProvider()
     const bool features = worldObj != nullptr && worldObj->getWorldInfo() != nullptr
         ? worldObj->getWorldInfo()->isMapFeaturesEnabled() : true;
     return flat
-        ? static_cast<IChunkProvider *>(new ChunkProviderFlat(worldObj, worldObj->getRandomSeed(), features))
+        ? static_cast<IChunkProvider *>(new ChunkProviderFlat(worldObj, worldObj->getRandomSeed(), features, field_82913_c))
         : static_cast<IChunkProvider *>(new ChunkProviderGenerate(worldObj, worldObj->getRandomSeed(), features));
 }
 

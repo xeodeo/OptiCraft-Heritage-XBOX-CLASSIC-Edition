@@ -46,6 +46,7 @@ private:
     LegacyGuiButton *legacyWorldSizeButton;
     LegacyGuiButton *bonusChestButton;
     LegacyGuiButton *legacyAllowCommandsButton;
+    LegacyGuiButton *legacyCustomizeTypeButton;
     int_t textFieldHeight;
     int_t labelOffsetY;
     int_t selectedControlIndex;

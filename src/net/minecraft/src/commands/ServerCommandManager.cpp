@@ -31,6 +31,11 @@
 #include "StatCollector.h"
 #include "World.h"
 #include "WorldInfo.h"
+#include "scoreboard/Score.h"
+#include "scoreboard/ScoreObjective.h"
+#include "scoreboard/ScoreObjectiveCriteria.h"
+#include "scoreboard/ScorePlayerTeam.h"
+#include "scoreboard/Scoreboard.h"
 #include "java/Random.h"
 #include "java/String.h"
 #include "platform/Log.h"
@@ -886,6 +891,557 @@ public:
 	}
 };
 
+// ─── /scoreboard ─────────────────────────────────────────────────────────────
+class CommandScoreboard : public CommandBase
+{
+public:
+	std::string getCommandName() const override { return "scoreboard"; }
+	int getRequiredPermissionLevel() const override { return 2; }
+	std::string getCommandUsage(ICommandSender *sender) const override { return sender->translateString("commands.scoreboard.usage"); }
+
+	static std::string colorCodeByName(const std::string &name)
+	{
+		const std::string lower = String::toLowerCaseJava(name);
+		if (lower == "black")        return "\xc2\xa7" "0";
+		if (lower == "dark_blue")    return "\xc2\xa7" "1";
+		if (lower == "dark_green")   return "\xc2\xa7" "2";
+		if (lower == "dark_aqua")    return "\xc2\xa7" "3";
+		if (lower == "dark_red")     return "\xc2\xa7" "4";
+		if (lower == "dark_purple")  return "\xc2\xa7" "5";
+		if (lower == "gold")         return "\xc2\xa7" "6";
+		if (lower == "gray")         return "\xc2\xa7" "7";
+		if (lower == "dark_gray")    return "\xc2\xa7" "8";
+		if (lower == "blue")         return "\xc2\xa7" "9";
+		if (lower == "green")        return "\xc2\xa7" "a";
+		if (lower == "aqua")         return "\xc2\xa7" "b";
+		if (lower == "red")          return "\xc2\xa7" "c";
+		if (lower == "light_purple") return "\xc2\xa7" "d";
+		if (lower == "yellow")       return "\xc2\xa7" "e";
+		if (lower == "white")        return "\xc2\xa7" "f";
+		if (lower == "reset")        return "\xc2\xa7" "r";
+		return "";
+	}
+
+	static std::vector<std::string> validColorNames()
+	{
+		return {
+			"black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
+			"gold", "gray", "dark_gray", "blue", "green", "aqua",
+			"red", "light_purple", "yellow", "white", "reset"
+		};
+	}
+
+	static Scoreboard *getBoard(ICommandSender *sender)
+	{
+		Minecraft *mc = sender != nullptr ? sender->getMinecraft() : nullptr;
+		if (mc == nullptr || mc->theWorld == nullptr)
+			throw CommandException("commands.scoreboard.usage");
+		return mc->theWorld->getScoreboard();
+	}
+
+	static ScoreObjective *requireObjective(ICommandSender *sender, const std::string &name, bool requireWritable)
+	{
+		Scoreboard *board = getBoard(sender);
+		ScoreObjective *obj = board->getObjective(name);
+		if (obj == nullptr)
+			throw CommandException("commands.scoreboard.objectiveNotFound", {name});
+		if (requireWritable && obj->getCriteria() != nullptr && obj->getCriteria()->isReadOnly())
+			throw CommandException("commands.scoreboard.objectiveReadOnly", {name});
+		return obj;
+	}
+
+	static ScorePlayerTeam *requireTeam(ICommandSender *sender, const std::string &name)
+	{
+		Scoreboard *board = getBoard(sender);
+		ScorePlayerTeam *team = board->getTeam(name);
+		if (team == nullptr)
+			throw CommandException("commands.scoreboard.teamNotFound", {name});
+		return team;
+	}
+
+	static std::string resolveTargetName(ICommandSender *sender, const std::string &token)
+	{
+		if (PlayerSelector::hasArguments(token))
+		{
+			EntityPlayer *matched = PlayerSelector::matchOnePlayer(sender, token);
+			if (matched == nullptr)
+				throw PlayerNotFoundException();
+			return matched->username;
+		}
+		return token;
+	}
+
+	void processCommand(ICommandSender *sender, const std::vector<std::string> &args) override
+	{
+		if (args.empty())
+			throw WrongUsageException("commands.scoreboard.usage");
+
+		const std::string sub = String::toLowerCaseJava(args[0]);
+		if (sub == "objectives")
+		{
+			if (args.size() == 1)
+				throw WrongUsageException("commands.scoreboard.objectives.usage");
+			const std::string act = String::toLowerCaseJava(args[1]);
+			if (act == "list")
+			{
+				listObjectives(sender);
+			}
+			else if (act == "add")
+			{
+				if (args.size() < 4)
+					throw WrongUsageException("commands.scoreboard.objectives.add.usage");
+				addObjective(sender, args);
+			}
+			else if (act == "remove")
+			{
+				if (args.size() != 3)
+					throw WrongUsageException("commands.scoreboard.objectives.remove.usage");
+				removeObjective(sender, args[2]);
+			}
+			else if (act == "setdisplay")
+			{
+				if (args.size() != 3 && args.size() != 4)
+					throw WrongUsageException("commands.scoreboard.objectives.setdisplay.usage");
+				setDisplay(sender, args);
+			}
+			else
+			{
+				throw WrongUsageException("commands.scoreboard.objectives.usage");
+			}
+			return;
+		}
+
+		if (sub == "players")
+		{
+			if (args.size() == 1)
+				throw WrongUsageException("commands.scoreboard.players.usage");
+			const std::string act = String::toLowerCaseJava(args[1]);
+			if (act == "list")
+			{
+				if (args.size() > 3)
+					throw WrongUsageException("commands.scoreboard.players.list.usage");
+				listPlayers(sender, args);
+			}
+			else if (act == "add" || act == "remove" || act == "set")
+			{
+				if (args.size() != 5)
+					throw WrongUsageException("commands.scoreboard.players." + act + ".usage");
+				modifyPlayerScore(sender, act, args);
+			}
+			else if (act == "reset")
+			{
+				if (args.size() != 3)
+					throw WrongUsageException("commands.scoreboard.players.reset.usage");
+				const std::string target = resolveTargetName(sender, args[2]);
+				getBoard(sender)->resetPlayerScores(target);
+				notifyAdmins(sender, "commands.scoreboard.players.reset.success", {target});
+			}
+			else
+			{
+				throw WrongUsageException("commands.scoreboard.players.usage");
+			}
+			return;
+		}
+
+		if (sub == "teams")
+		{
+			if (args.size() == 1)
+				throw WrongUsageException("commands.scoreboard.teams.usage");
+			const std::string act = String::toLowerCaseJava(args[1]);
+			if (act == "list")
+			{
+				if (args.size() > 3)
+					throw WrongUsageException("commands.scoreboard.teams.list.usage");
+				listTeams(sender, args);
+			}
+			else if (act == "add")
+			{
+				if (args.size() < 3)
+					throw WrongUsageException("commands.scoreboard.teams.add.usage");
+				addTeam(sender, args);
+			}
+			else if (act == "remove")
+			{
+				if (args.size() != 3)
+					throw WrongUsageException("commands.scoreboard.teams.remove.usage");
+				ScorePlayerTeam *team = requireTeam(sender, args[2]);
+				const std::string name = team->getRegisteredName();
+				getBoard(sender)->removeTeam(team);
+				notifyAdmins(sender, "commands.scoreboard.teams.remove.success", {name});
+			}
+			else if (act == "empty")
+			{
+				if (args.size() != 3)
+					throw WrongUsageException("commands.scoreboard.teams.empty.usage");
+				Scoreboard *board = getBoard(sender);
+				ScorePlayerTeam *team = requireTeam(sender, args[2]);
+				std::vector<std::string> members(team->getMembershipCollection().begin(),
+				                                 team->getMembershipCollection().end());
+				if (members.empty())
+					throw CommandException("commands.scoreboard.teams.empty.alreadyEmpty", {team->getRegisteredName()});
+				for (const std::string &m : members)
+					board->removePlayerFromTeam(m, team);
+				notifyAdmins(sender, "commands.scoreboard.teams.empty.success",
+					{std::to_string(members.size()), team->getRegisteredName()});
+			}
+			else if (act == "join")
+			{
+				if (args.size() < 4 && (args.size() != 3 || sender->getSenderPlayer() == nullptr))
+					throw WrongUsageException("commands.scoreboard.teams.join.usage");
+				joinTeam(sender, args);
+			}
+			else if (act == "leave")
+			{
+				if (args.size() < 3 && sender->getSenderPlayer() == nullptr)
+					throw WrongUsageException("commands.scoreboard.teams.leave.usage");
+				leaveTeam(sender, args);
+			}
+			else if (act == "option")
+			{
+				if (args.size() != 4 && args.size() != 5)
+					throw WrongUsageException("commands.scoreboard.teams.option.usage");
+				setTeamOption(sender, args);
+			}
+			else
+			{
+				throw WrongUsageException("commands.scoreboard.teams.usage");
+			}
+			return;
+		}
+
+		throw WrongUsageException("commands.scoreboard.usage");
+	}
+
+	std::vector<std::string> addTabCompletionOptions(ICommandSender *sender, const std::vector<std::string> &args) const override
+	{
+		if (args.size() == 1)
+			return getListOfStringsMatchingLastWord(args, {"objectives", "players", "teams"});
+		const std::string sub = String::toLowerCaseJava(args[0]);
+		if (sub == "objectives")
+		{
+			if (args.size() == 2)
+				return getListOfStringsMatchingLastWord(args, {"list", "add", "remove", "setdisplay"});
+			const std::string act = String::toLowerCaseJava(args[1]);
+			if (act == "add" && args.size() == 4)
+			{
+				std::vector<std::string> crits;
+				for (const auto &e : ScoreObjectiveCriteria::getCriteriaMap())
+					crits.push_back(e.first);
+				return getListOfStringsMatchingLastWord(args, crits);
+			}
+			if (act == "setdisplay" && args.size() == 3)
+				return getListOfStringsMatchingLastWord(args, {"list", "sidebar", "belowName"});
+		}
+		else if (sub == "players")
+		{
+			if (args.size() == 2)
+				return getListOfStringsMatchingLastWord(args, {"set", "add", "remove", "reset", "list"});
+			if (args.size() == 3)
+				return getListOfStringsMatchingLastWord(args, getAllUsernames(sender->getMinecraft()));
+		}
+		else if (sub == "teams")
+		{
+			if (args.size() == 2)
+				return getListOfStringsMatchingLastWord(args, {"add", "remove", "join", "leave", "empty", "list", "option"});
+			if (String::equalsIgnoreCaseJava(args[1], "option"))
+			{
+				if (args.size() == 4)
+					return getListOfStringsMatchingLastWord(args, {"color", "friendlyfire", "seeFriendlyInvisibles"});
+				if (args.size() == 5)
+				{
+					if (String::equalsIgnoreCaseJava(args[3], "color"))
+						return getListOfStringsMatchingLastWord(args, validColorNames());
+					return getListOfStringsMatchingLastWord(args, {"true", "false"});
+				}
+			}
+		}
+		return {};
+	}
+
+private:
+	static void listObjectives(ICommandSender *sender)
+	{
+		Scoreboard *board = getBoard(sender);
+		const std::vector<ScoreObjective *> objs = board->getScoreObjectives();
+		if (objs.empty())
+			throw CommandException("commands.scoreboard.objectives.list.empty");
+		sender->sendChatToPlayer(kChatDarkGreen + sender->translateString("commands.scoreboard.objectives.list.count", {std::to_string(objs.size())}));
+		for (ScoreObjective *obj : objs)
+		{
+			sender->sendChatToPlayer(sender->translateString("commands.scoreboard.objectives.list.entry",
+				{obj->getName(), obj->getDisplayName(), obj->getCriteria()->getName()}));
+		}
+	}
+
+	static void addObjective(ICommandSender *sender, const std::vector<std::string> &args)
+	{
+		const std::string &name = args[2];
+		const std::string &critName = args[3];
+		Scoreboard *board = getBoard(sender);
+		ScoreObjectiveCriteria *criteria = ScoreObjectiveCriteria::getByName(critName);
+		if (criteria == nullptr)
+		{
+			std::vector<std::string> valid;
+			for (const auto &e : ScoreObjectiveCriteria::getCriteriaMap())
+				valid.push_back(e.first);
+			throw WrongUsageException("commands.scoreboard.objectives.add.wrongType", {joinNiceString(valid)});
+		}
+		if (board->getObjective(name) != nullptr)
+			throw CommandException("commands.scoreboard.objectives.add.alreadyExists", {name});
+		if (name.size() > 16)
+			throw CommandException("commands.scoreboard.objectives.add.tooLong", {name, "16"});
+
+		ScoreObjective *obj = board->addScoreObjective(name, criteria);
+		if (args.size() > 4)
+		{
+			const std::string display = joinArgs(sender, args, 4, false);
+			if (display.size() > 32)
+			{
+				board->removeObjective(obj);
+				throw CommandException("commands.scoreboard.objectives.add.displayTooLong", {display, "32"});
+			}
+			if (!display.empty())
+				obj->setDisplayName(display);
+		}
+		// Seed initial health score for active players
+		if (criteria == ScoreObjectiveCriteria::HEALTH)
+		{
+			for (EntityPlayer *p : getAllPlayers(sender->getMinecraft()))
+			{
+				if (p != nullptr)
+				{
+					Score *sc = board->getValueFromObjective(p->username, obj);
+					if (sc != nullptr)
+						sc->updateFromCriteria({p});
+				}
+			}
+		}
+		notifyAdmins(sender, "commands.scoreboard.objectives.add.success", {name});
+	}
+
+	static void removeObjective(ICommandSender *sender, const std::string &name)
+	{
+		Scoreboard *board = getBoard(sender);
+		ScoreObjective *obj = requireObjective(sender, name, false);
+		board->removeObjective(obj);
+		notifyAdmins(sender, "commands.scoreboard.objectives.remove.success", {name});
+	}
+
+	static void setDisplay(ICommandSender *sender, const std::vector<std::string> &args)
+	{
+		Scoreboard *board = getBoard(sender);
+		const int_t slot = Scoreboard::getObjectiveDisplaySlotNumber(args[2]);
+		if (slot < 0)
+			throw CommandException("commands.scoreboard.objectives.setdisplay.invalidSlot", {args[2]});
+		ScoreObjective *obj = (args.size() == 4) ? requireObjective(sender, args[3], false) : nullptr;
+		board->setObjectiveInDisplaySlot(slot, obj);
+		if (obj != nullptr)
+			notifyAdmins(sender, "commands.scoreboard.objectives.setdisplay.successSet",
+				{Scoreboard::getObjectiveDisplaySlot(slot), obj->getName()});
+		else
+			notifyAdmins(sender, "commands.scoreboard.objectives.setdisplay.successCleared",
+				{Scoreboard::getObjectiveDisplaySlot(slot)});
+	}
+
+	static void listPlayers(ICommandSender *sender, const std::vector<std::string> &args)
+	{
+		Scoreboard *board = getBoard(sender);
+		if (args.size() > 2)
+		{
+			const std::string target = resolveTargetName(sender, args[2]);
+			const auto scores = board->getPlayerScores(target);
+			if (scores.empty())
+				throw CommandException("commands.scoreboard.players.list.player.empty", {target});
+			sender->sendChatToPlayer(kChatDarkGreen + sender->translateString("commands.scoreboard.players.list.player.count",
+				{std::to_string(scores.size()), target}));
+			for (const auto &entry : scores)
+			{
+				Score *s = entry.second;
+				sender->sendChatToPlayer(sender->translateString("commands.scoreboard.players.list.player.entry",
+					{std::to_string(s->getScorePoints()), s->getObjective()->getDisplayName(), s->getObjective()->getName()}));
+			}
+		}
+		else
+		{
+			const auto names = board->getObjectiveNames();
+			if (names.empty())
+				throw CommandException("commands.scoreboard.players.list.empty");
+			sender->sendChatToPlayer(kChatDarkGreen + sender->translateString("commands.scoreboard.players.list.count",
+				{std::to_string(names.size())}));
+			sender->sendChatToPlayer(joinNiceString(names));
+		}
+	}
+
+	static void modifyPlayerScore(ICommandSender *sender, const std::string &act, const std::vector<std::string> &args)
+	{
+		const std::string target = resolveTargetName(sender, args[2]);
+		ScoreObjective *obj = requireObjective(sender, args[3], true);
+		const int val = (act == "set") ? parseInt(sender, args[4]) : parseIntWithMin(sender, args[4], 1);
+		Scoreboard *board = getBoard(sender);
+		Score *score = board->getValueFromObjective(target, obj);
+		if (act == "set")
+			score->setScorePoints(val);
+		else if (act == "add")
+			score->increaseScore(val);
+		else
+			score->decreaseScore(val);
+		notifyAdmins(sender, "commands.scoreboard.players.set.success",
+			{obj->getName(), target, std::to_string(score->getScorePoints())});
+	}
+
+	static void listTeams(ICommandSender *sender, const std::vector<std::string> &args)
+	{
+		Scoreboard *board = getBoard(sender);
+		if (args.size() > 2)
+		{
+			ScorePlayerTeam *team = requireTeam(sender, args[2]);
+			const auto &members = team->getMembershipCollection();
+			if (members.empty())
+				throw CommandException("commands.scoreboard.teams.list.player.empty", {team->getRegisteredName()});
+			sender->sendChatToPlayer(kChatDarkGreen + sender->translateString("commands.scoreboard.teams.list.player.count",
+				{std::to_string(members.size()), team->getRegisteredName()}));
+			sender->sendChatToPlayer(joinNiceString(std::vector<std::string>(members.begin(), members.end())));
+		}
+		else
+		{
+			const auto allTeams = board->getTeams();
+			if (allTeams.empty())
+				throw CommandException("commands.scoreboard.teams.list.empty");
+			sender->sendChatToPlayer(kChatDarkGreen + sender->translateString("commands.scoreboard.teams.list.count",
+				{std::to_string(allTeams.size())}));
+			for (ScorePlayerTeam *team : allTeams)
+			{
+				sender->sendChatToPlayer(sender->translateString("commands.scoreboard.teams.list.entry",
+					{team->getRegisteredName(), team->getTeamName(), std::to_string(team->getMembershipCollection().size())}));
+			}
+		}
+	}
+
+	static void addTeam(ICommandSender *sender, const std::vector<std::string> &args)
+	{
+		const std::string &name = args[2];
+		Scoreboard *board = getBoard(sender);
+		if (board->getTeam(name) != nullptr)
+			throw CommandException("commands.scoreboard.teams.add.alreadyExists", {name});
+		if (name.size() > 16)
+			throw CommandException("commands.scoreboard.teams.add.tooLong", {name, "16"});
+		ScorePlayerTeam *team = board->createTeam(name);
+		if (args.size() > 3)
+		{
+			const std::string display = joinArgs(sender, args, 3, false);
+			if (display.size() > 32)
+			{
+				board->removeTeam(team);
+				throw CommandException("commands.scoreboard.teams.add.displayTooLong", {display, "32"});
+			}
+			if (!display.empty())
+				team->setTeamName(display);
+		}
+		notifyAdmins(sender, "commands.scoreboard.teams.add.success", {name});
+	}
+
+	static void joinTeam(ICommandSender *sender, const std::vector<std::string> &args)
+	{
+		Scoreboard *board = getBoard(sender);
+		ScorePlayerTeam *team = requireTeam(sender, args[2]);
+		std::vector<std::string> joined;
+		if (args.size() == 3 && sender->getSenderPlayer() != nullptr)
+		{
+			const std::string pName = sender->getSenderPlayer()->username;
+			board->addPlayerToTeam(pName, team);
+			joined.push_back(pName);
+		}
+		else
+		{
+			for (std::size_t i = 3; i < args.size(); ++i)
+			{
+				const std::string target = resolveTargetName(sender, args[i]);
+				board->addPlayerToTeam(target, team);
+				joined.push_back(target);
+			}
+		}
+		if (!joined.empty())
+		{
+			notifyAdmins(sender, "commands.scoreboard.teams.join.success",
+				{std::to_string(joined.size()), team->getRegisteredName(), joinNiceString(joined)});
+		}
+	}
+
+	static void leaveTeam(ICommandSender *sender, const std::vector<std::string> &args)
+	{
+		Scoreboard *board = getBoard(sender);
+		std::vector<std::string> ok;
+		std::vector<std::string> fail;
+		if (args.size() == 2 && sender->getSenderPlayer() != nullptr)
+		{
+			const std::string pName = sender->getSenderPlayer()->username;
+			if (board->removePlayerFromTeams(pName))
+				ok.push_back(pName);
+			else
+				fail.push_back(pName);
+		}
+		else
+		{
+			for (std::size_t i = 2; i < args.size(); ++i)
+			{
+				const std::string target = resolveTargetName(sender, args[i]);
+				if (board->removePlayerFromTeams(target))
+					ok.push_back(target);
+				else
+					fail.push_back(target);
+			}
+		}
+		if (!ok.empty())
+			notifyAdmins(sender, "commands.scoreboard.teams.leave.success", {std::to_string(ok.size()), joinNiceString(ok)});
+		if (!fail.empty())
+			throw CommandException("commands.scoreboard.teams.leave.failure", {std::to_string(fail.size()), joinNiceString(fail)});
+	}
+
+	static void setTeamOption(ICommandSender *sender, const std::vector<std::string> &args)
+	{
+		ScorePlayerTeam *team = requireTeam(sender, args[2]);
+		const std::string opt = String::toLowerCaseJava(args[3]);
+		if (opt != "color" && opt != "friendlyfire" && opt != "seefriendlyinvisibles")
+			throw WrongUsageException("commands.scoreboard.teams.option.usage");
+		if (args.size() == 4)
+		{
+			if (opt == "color")
+				throw WrongUsageException("commands.scoreboard.teams.option.noValue", {opt, joinNiceString(validColorNames())});
+			throw WrongUsageException("commands.scoreboard.teams.option.noValue", {opt, "true, false"});
+		}
+		const std::string &val = args[4];
+		if (opt == "color")
+		{
+			const std::string code = colorCodeByName(val);
+			if (code.empty())
+				throw WrongUsageException("commands.scoreboard.teams.option.noValue", {opt, joinNiceString(validColorNames())});
+			if (String::equalsIgnoreCaseJava(val, "reset"))
+			{
+				team->setNamePrefix("");
+				team->setNameSuffix("");
+			}
+			else
+			{
+				team->setNamePrefix(code);
+				team->setNameSuffix("\xc2\xa7" "r");
+			}
+		}
+		else if (opt == "friendlyfire")
+		{
+			if (!String::equalsIgnoreCaseJava(val, "true") && !String::equalsIgnoreCaseJava(val, "false"))
+				throw WrongUsageException("commands.scoreboard.teams.option.noValue", {opt, "true, false"});
+			team->setAllowFriendlyFire(String::equalsIgnoreCaseJava(val, "true"));
+		}
+		else
+		{
+			if (!String::equalsIgnoreCaseJava(val, "true") && !String::equalsIgnoreCaseJava(val, "false"))
+				throw WrongUsageException("commands.scoreboard.teams.option.noValue", {opt, "true, false"});
+			team->setSeeFriendlyInvisiblesEnabled(String::equalsIgnoreCaseJava(val, "true"));
+		}
+		notifyAdmins(sender, "commands.scoreboard.teams.option.success", {opt, team->getRegisteredName(), val});
+	}
+};
+
 // ─── /help (alias: ?) ────────────────────────────────────────────────────────
 class CommandHelp : public CommandBase
 {
@@ -967,6 +1523,7 @@ ServerCommandManager::ServerCommandManager()
 	registerCommand(std::make_unique<CommandSetSpawnpoint>());
 	registerCommand(std::make_unique<CommandGameRule>());
 	registerCommand(std::make_unique<CommandClearInventory>());
+	registerCommand(std::make_unique<CommandScoreboard>());
 	CommandBase::setAdminCommander(this);
 }
 

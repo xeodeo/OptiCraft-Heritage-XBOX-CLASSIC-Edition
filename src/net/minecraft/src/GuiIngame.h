@@ -12,6 +12,7 @@ class Random;
 class FontRenderer;
 class ChatClickData;
 class Tessellator;
+class ScoreObjective;
 #ifdef PS2_PLATFORM
 struct Ps2HudCache;
 #endif
@@ -34,6 +35,7 @@ private:
 	void renderFpsOverlay(FontRenderer *fontRenderer, int_t x, int_t y);
 	void renderCoordinatesOverlay(FontRenderer *fontRenderer, int_t x, int_t y);
 	void renderBossHealth();
+	void renderScoreboard(ScoreObjective *objective, int_t sw, int_t sh, int_t safeRight, int_t safeTop, int_t hudHeight, FontRenderer *fr);
 	void renderSaveIcon(int_t screenWidth, int_t screenHeight);
 	void renderAnimatedCharacter(int_t screenWidth, int_t screenHeight);
 	void renderPlayerStatusHudGeometry(int_t sw, int_t sh, Tessellator *captureTessellator);

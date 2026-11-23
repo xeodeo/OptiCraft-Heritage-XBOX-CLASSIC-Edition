@@ -1,6 +1,7 @@
 #pragma once
 
 #include "java/Type.h"
+#include "java/String.h"
 
 class WorldType;
 
@@ -23,6 +24,9 @@ public:
 	bool isBonusChestEnabled() const;
 	WorldSettings *enableCommands();
 	bool areCommandsAllowed() const;
+	WorldSettings *func_82750_a(const jstring &options);
+	WorldSettings *setGeneratorOptions(const jstring &options) { return func_82750_a(options); }
+	const jstring &getGeneratorOptions() const;
 
 private:
 	int64_t seed;
@@ -33,5 +37,6 @@ private:
 	int_t worldSizeType;
 	bool bonusChestEnabled{false};
 	bool commandsAllowed{false};
+	jstring field_82751_h;
 };
 

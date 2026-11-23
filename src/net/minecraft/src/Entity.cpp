@@ -18,6 +18,7 @@
 #include "EntityAnimal.h"
 #include "EntityWaterMob.h"
 #include "EntityMinecart.h"
+#include "StatCollector.h"
 #include "EntityList.h"
 #include "ItemStack.h"
 #include "MathHelper.h"
@@ -970,29 +971,7 @@ void Entity::moveEntity(double d, double d1, double d2)
 			Block::blocksList[j3]->onEntityWalking(worldObj, l, j1, l1, this);
 		}
 	}
-	int_t i1 = MathHelper::floor_double(boundingBox->minX + 0.001);
-	int_t k1 = MathHelper::floor_double(boundingBox->minY + 0.001);
-	int_t i2 = MathHelper::floor_double(boundingBox->minZ + 0.001);
-	int_t k3 = MathHelper::floor_double(boundingBox->maxX - 0.001);
-	int_t l3 = MathHelper::floor_double(boundingBox->maxY - 0.001);
-	int_t i4 = MathHelper::floor_double(boundingBox->maxZ - 0.001);
-	if (worldObj->checkChunksExist(i1, k1, i2, k3, l3, i4))
-	{
-		for (int_t j4 = i1; j4 <= k3; j4++)
-		{
-			for (int_t k4 = k1; k4 <= l3; k4++)
-			{
-				for (int_t l4 = i2; l4 <= i4; l4++)
-				{
-					int_t i5 = worldObj->getBlockId(j4, k4, l4);
-					if (i5 > 0)
-					{
-						Block::blocksList[i5]->onEntityCollidedWithBlock(worldObj, j4, k4, l4, this);
-					}
-				}
-			}
-		}
-	}
+	doBlockCollisions();
 	bool flag2 = isWet();
 	if (worldObj->isBoundingBoxBurning(boundingBox->contract(0.001, 0.001, 0.001)))
 	{
@@ -1015,6 +994,46 @@ void Entity::moveEntity(double d, double d1, double d2)
 		worldObj->playSoundAtEntity(this, "random.fizz", 0.7f, 1.6f + rand.nextFloatDifference() * 0.4f);
 		fire = -fireResistance;
 	}
+}
+
+void Entity::doBlockCollisions()
+{
+	if (worldObj == nullptr || boundingBox == nullptr)
+		return;
+	int_t minX = MathHelper::floor_double(boundingBox->minX + 0.001);
+	int_t minY = MathHelper::floor_double(boundingBox->minY + 0.001);
+	int_t minZ = MathHelper::floor_double(boundingBox->minZ + 0.001);
+	int_t maxX = MathHelper::floor_double(boundingBox->maxX - 0.001);
+	int_t maxY = MathHelper::floor_double(boundingBox->maxY - 0.001);
+	int_t maxZ = MathHelper::floor_double(boundingBox->maxZ - 0.001);
+	if (worldObj->checkChunksExist(minX, minY, minZ, maxX, maxY, maxZ))
+	{
+		for (int_t bx = minX; bx <= maxX; ++bx)
+		{
+			for (int_t by = minY; by <= maxY; ++by)
+			{
+				for (int_t bz = minZ; bz <= maxZ; ++bz)
+				{
+					int_t bid = worldObj->getBlockId(bx, by, bz);
+					if (bid > 0 && bid < Block::BLOCK_REGISTRY_SIZE && Block::blocksList[bid] != nullptr)
+						Block::blocksList[bid]->onEntityCollidedWithBlock(worldObj, bx, by, bz, this);
+				}
+			}
+		}
+	}
+}
+
+std::string Entity::getEntityName()
+{
+	std::string s = EntityList::getEntityString(this);
+	if (s.empty())
+		s = "generic";
+	return StatCollector::translateToLocal("entity." + s + ".name");
+}
+
+std::string Entity::getTranslatedEntityName()
+{
+	return getEntityName();
 }
 
 void Entity::playStepSound(int_t x, int_t y, int_t z, int_t blockId)

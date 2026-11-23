@@ -7,6 +7,7 @@
 
 class World;
 class Entity;
+class EntityLiving;
 
 struct ChunkPosTuple
 {
@@ -32,6 +33,7 @@ public:
 
     void doExplosionA();
     void doExplosionB(bool flag);
+    EntityLiving *func_94613_c() const;
 
     bool isFlaming;
     bool isSmoking;

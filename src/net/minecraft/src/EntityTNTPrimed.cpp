@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include "EntityLiving.h"
 #include "MathHelper.h"
 #include "NBTTagCompound.h"
 #include "World.h"
@@ -11,6 +12,7 @@
 
 EntityTNTPrimed::EntityTNTPrimed(World *world)
 	: Entity(world)
+	, tntPlacedByEntityId(-1)
 {
 	ensureEntityInit();
 	fuse = 0;
@@ -20,6 +22,11 @@ EntityTNTPrimed::EntityTNTPrimed(World *world)
 }
 
 EntityTNTPrimed::EntityTNTPrimed(World *world, double d, double d1, double d2)
+	: EntityTNTPrimed(world, d, d1, d2, nullptr)
+{
+}
+
+EntityTNTPrimed::EntityTNTPrimed(World *world, double d, double d1, double d2, EntityLiving *placedBy)
 	: EntityTNTPrimed(world)
 {
 	setPosition(d, d1, d2);
@@ -31,6 +38,7 @@ EntityTNTPrimed::EntityTNTPrimed(World *world, double d, double d1, double d2)
 	prevPosX = d;
 	prevPosY = d1;
 	prevPosZ = d2;
+	tntPlacedByEntityId = (placedBy != nullptr) ? placedBy->entityId : -1;
 }
 
 void EntityTNTPrimed::entityInit()
@@ -84,7 +92,15 @@ void EntityTNTPrimed::onUpdate()
 void EntityTNTPrimed::explode()
 {
 	float f = 4.0f;
-	delete worldObj->createExplosion(nullptr, posX, posY, posZ, f);
+	delete worldObj->createExplosion(this, posX, posY, posZ, f);
+}
+
+EntityLiving *EntityTNTPrimed::getTntPlacedBy() const
+{
+	if (worldObj == nullptr || tntPlacedByEntityId < 0)
+		return nullptr;
+	Entity *e = worldObj->getEntityByID(tntPlacedByEntityId);
+	return (e != nullptr && e->isLiving()) ? static_cast<EntityLiving *>(e) : nullptr;
 }
 
 void EntityTNTPrimed::writeEntityToNBT(NBTTagCompound *nbttagcompound)
