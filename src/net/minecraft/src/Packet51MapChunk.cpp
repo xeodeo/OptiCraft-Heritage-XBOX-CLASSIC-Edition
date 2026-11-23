@@ -87,6 +87,18 @@ bool Packet51MapChunk::ensureDecompressed()
     return true;
 }
 
+void Packet51MapChunk::setDecoded(int_t x, int_t z, bool initialize, int_t primaryMask, std::vector<byte_t> &&data)
+{
+    xCh = x;
+    zCh = z;
+    includeInitialize = initialize;
+    yChMin = primaryMask & 0xffff;
+    yChMax = 0;
+    chunkData = std::move(data);
+    tempLength = (int_t)chunkData.size();
+    compressedChunk.clear();
+}
+
 std::vector<byte_t> Packet51MapChunk::takeCompressedData()
 {
     return std::move(compressedChunk);

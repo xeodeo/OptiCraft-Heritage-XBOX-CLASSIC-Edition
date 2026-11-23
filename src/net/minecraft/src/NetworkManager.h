@@ -23,12 +23,16 @@ class Socket;
 
 class NetHandler;
 class Packet;
+class Translator340Connection;
 
 // net.minecraft.src.NetworkManager
 class NetworkManager
 {
 public:
-	NetworkManager(const std::string &host, int_t port, const std::string &s, NetHandler *nethandler);
+	// protocolVersion: 29 = native 1.2.5 framing; 340 = 1.12.2 server reached
+	// through ProtocolTranslator340 (decided before the threads start).
+	NetworkManager(const std::string &host, int_t port, const std::string &s, NetHandler *nethandler,
+	               int_t protocolVersion = 29);
 	~NetworkManager();
 
 	void addToSendQueue(Packet *packet);
@@ -113,4 +117,5 @@ private:
 	std::size_t readQueueByteLength;
 	std::atomic<unsigned int> receivedEntityPackets{0};
 	int_t field_20100_w;
+	std::unique_ptr<Translator340Connection> translatorConn;
 };

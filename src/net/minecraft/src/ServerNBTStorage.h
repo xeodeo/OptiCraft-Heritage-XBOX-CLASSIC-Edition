@@ -31,6 +31,9 @@ public:
 	jstring playerCount;
 	jstring motd;
 	long_t lag;
+	// Server protocol: 0 = Auto (status ping decides), 29 = 1.2.5 native,
+	// 340 = 1.12.2 through ProtocolTranslator340.
+	int_t version;
 	bool polled;
 	std::vector<jstring> playerNames;
 	std::vector<ServerActivityEntry> activity;

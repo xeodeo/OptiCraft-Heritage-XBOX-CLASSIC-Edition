@@ -13,6 +13,11 @@
 #include "GuiButton.h"
 #ifndef NO_NETWORK
 #include "GuiConnecting.h"
+#include "platform/Log.h"
+#include "ProtocolTranslator340IO.h"
+#if defined(XBOX_PLATFORM) && !defined(NO_NETWORK)
+#include "xbox/system/XboxNetwork.h"
+#endif
 #endif
 #include "GuiScreenAddServer.h"
 #include "GuiScreenServerList.h"
@@ -268,6 +273,7 @@ void GuiMultiplayer::actionPerformed(GuiButton *button)
         editClicked = true;
         const auto &server = serverList[(std::size_t)selectedServer];
         tempServer = std::make_shared<ServerNBTStorage>(server->name, server->host);
+        tempServer->version = server->version;
         mc->displayGuiScreen(new GuiScreenAddServer(this, tempServer.get()));
     }
     else if (button->id == 0)
@@ -322,6 +328,7 @@ void GuiMultiplayer::confirmClicked(bool confirmed, int_t id)
         {
             serverList[(std::size_t)selectedServer]->name = tempServer->name;
             serverList[(std::size_t)selectedServer]->host = tempServer->host;
+            serverList[(std::size_t)selectedServer]->version = tempServer->version;
             saveServerList();
         }
         mc->displayGuiScreen(this);
@@ -369,6 +376,25 @@ void GuiMultiplayer::splitServerAddress(const std::string &address, std::string 
     }
 }
 
+void GuiMultiplayer::resolveSrvIfDefault(std::string &host, int_t &port)
+{
+#if defined(XBOX_PLATFORM) && !defined(NO_NETWORK)
+    if (port != 25565 || host.empty())
+        return;
+    char target[256];
+    int srvPort = 0;
+    if (XboxNetwork::resolveMinecraftSrv(host.c_str(), target, sizeof(target), &srvPort))
+    {
+        MC_LOG_INFO("network", "SRV %s -> %s:%d\n", host.c_str(), target, srvPort);
+        host = target;
+        port = srvPort;
+    }
+#else
+    (void)host;
+    (void)port;
+#endif
+}
+
 void GuiMultiplayer::joinServer(int_t index)
 {
     if (index >= 0 && index < (int_t)serverList.size())
@@ -385,7 +411,7 @@ void GuiMultiplayer::joinServer(const std::shared_ptr<ServerNBTStorage> &server)
     std::string host;
     int_t port = 25565;
     splitServerAddress(server->host, host, port);
-    mc->displayGuiScreen(new GuiConnecting(mc, host, port));
+    mc->displayGuiScreen(new GuiConnecting(mc, host, port, server->version));
 #endif
 }
 
@@ -704,6 +730,32 @@ void GuiMultiplayer::pollServer(const std::shared_ptr<ServerNBTStorage> &server)
     std::string host;
     int_t port = 25565;
     splitServerAddress(server->host, host, port);
+    resolveSrvIfDefault(host, port);
+
+    // 1.12.2 (and Auto): modern status ping first.
+    if (server->version == 0 || server->version == translator340::kTargetProtocol)
+    {
+        std::string motd;
+        int online = 0, maximum = 0, protocol = 0;
+        long long lagMs = 0;
+        if (Translator340Connection::pollStatus(host, port, motd, online, maximum, lagMs, protocol))
+        {
+            const std::string tag = protocol == translator340::kTargetProtocol
+                ? "\xC2\xA7" "8[1.12.2] "
+                : "\xC2\xA7" "8[" + std::to_string(protocol) + "] ";
+            std::lock_guard<std::mutex> guard(server->stateMutex);
+            server->lag = static_cast<long_t>(lagMs);
+            server->motd = tag + "\xC2\xA7" "7" + motd;
+            server->playerCount = "\xC2\xA7" "7" + std::to_string(online) + "\xC2\xA7" "8/" "\xC2\xA7" "7" +
+                std::to_string(maximum);
+            return;
+        }
+        if (server->version != 0)
+        {
+            markOffline();
+            return;
+        }
+    }
 
     std::unique_ptr<JavaNetwork::Socket> socket = JavaNetwork::createSocket();
     if (socket == nullptr || !socket->connect(host, port))

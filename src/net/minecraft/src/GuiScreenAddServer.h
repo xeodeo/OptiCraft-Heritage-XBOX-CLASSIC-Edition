@@ -24,10 +24,13 @@ protected:
 
 private:
     void updateAddButtonState();
+    void updateVersionButton();
 
     GuiScreen *parentGui;
     GuiTextField *serverAddress;
     GuiTextField *serverName;
     GuiButton *buttonAdd;
+    GuiButton *buttonVersion;
+    int_t version;
     ServerNBTStorage *serverNBTStorage;
 };

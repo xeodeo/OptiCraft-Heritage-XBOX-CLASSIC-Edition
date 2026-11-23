@@ -141,7 +141,7 @@
 
 // Networking uses the platform socket implementation selected by NetworkManager.
 
-NetClientHandler::NetClientHandler(Minecraft* minecraft, const std::string& host, int port)
+NetClientHandler::NetClientHandler(Minecraft* minecraft, const std::string& host, int port, int protocolVersion)
 {
     disconnected = false;
     terrainDownloaded = false;
@@ -153,7 +153,7 @@ NetClientHandler::NetClientHandler(Minecraft* minecraft, const std::string& host
     
     try
     {
-        netManager = new NetworkManager(host, port, "Client", this);
+        netManager = new NetworkManager(host, port, "Client", this, protocolVersion);
     }
     catch (...)
     {

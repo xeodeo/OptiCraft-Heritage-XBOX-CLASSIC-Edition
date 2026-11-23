@@ -9,16 +9,20 @@
 #include <stdexcept>
 
 #include "GuiConnecting.h"
+#include "GuiMultiplayer.h"
+#include "ProtocolTranslator340IO.h"
 #include "Minecraft.h"
 #include "NetClientHandler.h"
 #include "Packet2Handshake.h"
 #include "Session.h"
 #include "java/String.h"
 
-ThreadConnectToServer::ThreadConnectToServer(GuiConnecting *guiconnecting, Minecraft *minecraft, const std::string &s, int_t i)
+ThreadConnectToServer::ThreadConnectToServer(GuiConnecting *guiconnecting, Minecraft *minecraft, const std::string &s, int_t i,
+                                             int_t protocolVersion)
 	: mc(minecraft)
 	, hostName(s)
 	, port(i)
+	, protocol(protocolVersion)
 {
 	(void)guiconnecting;
 }
@@ -83,7 +87,23 @@ void ThreadConnectToServer::run()
 	{
 		MC_LOG_INFO("network", "[PS2] connect worker running for %s:%d\n", hostName.c_str(), static_cast<int>(port));
 		McLog::flush();
-		NetClientHandler *handler = new NetClientHandler(mc, hostName, port);
+		if (protocol != 29)
+			GuiMultiplayer::resolveSrvIfDefault(hostName, port);
+		if (protocol == 0)
+		{
+			// Auto: a server that answers the 1.7+ status ping is reached through
+			// the 1.12.2 translator; anything else is spoken to natively.
+			std::string motd;
+			int online = 0, maximum = 0, serverProtocol = 0;
+			long long lag = 0;
+			protocol = Translator340Connection::pollStatus(hostName, port, motd, online, maximum, lag, serverProtocol)
+				? translator340::kTargetProtocol : 29;
+			MC_LOG_INFO("network", "auto version: server protocol %d -> using %d\n", serverProtocol,
+				static_cast<int>(protocol));
+			if (cancelled.load())
+				return;
+		}
+		NetClientHandler *handler = new NetClientHandler(mc, hostName, port, static_cast<int>(protocol));
 		if (cancelled.load())
 		{
 			handler->disconnect();
