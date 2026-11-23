@@ -1,6 +1,7 @@
 #include "EntityChocobo.h"
 #include "ChocoCraftItems.h"
 #include "GuiChocoboMenu.h"
+#include "GuiChocopedia.h"
 #include "mods/ModManager.h"
 
 #include "net/minecraft/src/Minecraft.h"
@@ -39,6 +40,32 @@ bool hasChocoboKwehSound()
     }
     return s_state == 1;
 }
+
+const char *const kMaleNames[] = {
+    "Boco", "Choco", "Patch", "Eddie", "Big Bird", "Chobi", "Horse Bird", "Mr. Yellowpuffs",
+    "Oscar", "Wild", "Stitch", "Milo", "Lewis", "Simon", "Steed", "Bocobo", "Chobo",
+    "Butter Fingers", "Caspar", "Chubby", "Coco", "Fuzzy", "Hulk", "Flopsy", "Lionel", "Tidus",
+    "Cloud", "Sephiroth", "Butz", "Cecil", "Golbez", "Squall", "Zidane", "Garnet", "Kuja", "Locke",
+    "Celes", "Crafty", "Sparky", "Skippy", "Whiskers", "Mog's Mount", "Ruffles", "Quistis",
+    "Noctis", "Firecracker", "Ballistic", "Blizzard", "Torobo", "Leon", "Firas", "Travis",
+    "Indigo", "Montoya", "Cobalt", "Jinx", "Komet", "Beau", "Bone", "Claw", "Duke", "Easy", "Fire",
+    "Fury", "Idol", "Iron", "Jack", "Mars", "Noir", "Snow", "Star", "Zero", "Ace", "Air", "Ice",
+    "Max", "Neo", "Ray", "Alpha", "Arrow", "Avian", "Black", "Blade", "Blaze", "Blitz", "Chaos",
+    "Dandy", "Jolly", "Omega", "Pluto", "Point", "Quake", "Titan", "Hope", "Ifrit", "Shiva",
+    "Polonium", "Radon", "Sparks", "Lunik"
+};
+const char *const kFemaleNames[] = {
+    "Choco", "Patch", "Chobi", "Wild", "Chubby", "Crystal", "Coco", "Fuzzy", "Flopsy", "Lulu",
+    "Yuna", "Cecil", "Kuja", "Terra", "Locke", "Celes", "Rikku", "Yuffie", "Selphie", "Rinoa",
+    "Sparky", "Skippy", "Whiskers", "Pupu", "Quistis", "Noctis", "Tranquille", "Twinkling",
+    "Capucine", "Heidi", "Danseuse", "Mercedes", "Psyche", "Victory", "Liberty", "Emma", "Fortune",
+    "Soleil", "Luna", "Violet", "Lilith", "Lilli", "Jinx", "Coco", "Fleur", "Feder", "Flora",
+    "Kugel", "Bleu", "Blue", "Chic", "Ciel", "Face", "Fire", "Fury", "Iris", "Jade", "Joli",
+    "Kiku", "Lady", "Miel", "Momo", "Moon", "Nana", "Noir", "Nova", "Rain", "Rose", "Ruby", "Star",
+    "Vega", "Air", "Aki", "Ayu", "Fee", "Sky", "Sun", "Amber", "Angel", "Azure", "Belle", "Clair",
+    "Ebony", "Ember", "Fairy", "Flare", "Glory", "Jaune", "Jeune", "Jolly", "Lucky", "Olive",
+    "Orange", "Venus", "Lightning", "Galindorf"
+};
 
 void consumeHeldItem(EntityPlayer *player)
 {
@@ -213,6 +240,7 @@ EntityChocobo::EntityChocobo(World *world)
     , m_riderSneak(false)
     , m_sneakArmed(false)
     , m_jumpMoveFactor(0.02f)
+    , m_timeUntilHunger(3000)
 {
     ensureEntityInit();
     texture = "/chococraft/textures/entities/Chocobos/Untamed/Male/yellowchocobo.png";
@@ -840,6 +868,8 @@ void EntityChocobo::onLivingUpdate()
 
     if (m_flyParticleCooldown > 0)
         --m_flyParticleCooldown;
+    if (m_timeUntilHunger > 0)
+        --m_timeUntilHunger;
 
     if (m_color == ChocoboColor::Purple)
     {
@@ -1145,6 +1175,14 @@ bool EntityChocobo::interact(EntityPlayer *player)
                 m_tamed = true;
                 m_ownerName = player->username;
                 m_aiMode = ChocoboAiMode::Wander;
+                // Every chocobo has a name in ChocoCraft (ChocoboNames), hidden until shown
+                // from the Chocopedia.
+                if (m_customName.empty())
+                {
+                    m_customName = getRandomName(m_isMale, rand);
+                    m_inventory.setTitle(m_customName);
+                }
+                m_hidename = true;
                 setHealth(getMaxHealth());
                 spawnParticles("heart", 10);
                 worldObj->playSoundAtEntity(this, getLivingSound(), 0.9f, 1.2f);
@@ -1169,8 +1207,25 @@ bool EntityChocobo::interact(EntityPlayer *player)
             spawnParticles("heart", 6);
             return true;
         }
+        if (isHungry())
+        {
+            consumeHeldItem(player);
+            feeding();
+            return true;
+        }
         m_fedGold = false;
         return EntityAnimal::interact(player);
+    }
+
+    if (held != nullptr && ChocoCraftItems::chocopedia != nullptr &&
+        held->itemID == ChocoCraftItems::chocopedia->shiftedIndex)
+    {
+        // EntityAnimalChocobo.onChocopediaUse: a tamed chocobo opens its page, a wild one smokes.
+        if (m_tamed)
+            GuiChocopedia::open(player, this);
+        else
+            spawnParticles("smoke", 7);
+        return true;
     }
 
     const bool isLoverly = held != nullptr && ChocoCraftItems::gysahlLoverly != nullptr &&
@@ -1383,6 +1438,68 @@ void EntityChocobo::onDeath(const DamageSource &source)
     EntityAnimal::onDeath(source);
 }
 
+void EntityChocobo::toggleFollowWanderStay()
+{
+    if (m_aiMode == ChocoboAiMode::Follow)
+        m_aiMode = ChocoboAiMode::Stay;
+    else if (m_aiMode == ChocoboAiMode::Stay)
+        m_aiMode = ChocoboAiMode::Wander;
+    else
+        m_aiMode = ChocoboAiMode::Follow;
+    spawnParticles(m_aiMode == ChocoboAiMode::Follow ? "heart" : "smoke", 7);
+}
+
+bool EntityChocobo::isOwner(const EntityPlayer *player) const
+{
+    return player != nullptr && m_tamed && m_ownerName == std::string(player->username);
+}
+
+void EntityChocobo::changeOwner(const std::string &newOwner)
+{
+    if (newOwner.empty())
+        return;
+    m_ownerName = newOwner;
+}
+
+// ChocoboDropGear: saddle, saddle bags or pack bags (with what they hold) fall off.
+void EntityChocobo::dropGear()
+{
+    if (worldObj == nullptr || worldObj->multiplayerWorld || riddenByEntity != nullptr)
+        return;
+    if (m_saddled && ChocoCraftItems::chocoboSaddle != nullptr)
+        dropItem(ChocoCraftItems::chocoboSaddle->shiftedIndex, 1);
+    if (m_saddlebags && ChocoCraftItems::chocoboSaddlebags != nullptr)
+        dropItem(ChocoCraftItems::chocoboSaddlebags->shiftedIndex, 1);
+    if (m_packbags && ChocoCraftItems::chocoboPackbags != nullptr)
+        dropItem(ChocoCraftItems::chocoboPackbags->shiftedIndex, 1);
+    if (m_saddlebags || m_packbags)
+        m_inventory.dropAllContents(worldObj, posX, posY, posZ);
+    setSaddlebags(false);
+    setPackbags(false);
+    setSaddled(false);
+}
+
+std::string EntityChocobo::getDisplayName(bool spanish) const
+{
+    if (!m_customName.empty())
+        return m_customName;
+    return std::string("Chocobo ") + getColorName(m_color, spanish);
+}
+
+const char *EntityChocobo::getRandomName(bool male, Random &rng)
+{
+    if (male)
+        return kMaleNames[rng.nextInt(static_cast<int_t>(sizeof(kMaleNames) / sizeof(kMaleNames[0])))];
+    return kFemaleNames[rng.nextInt(static_cast<int_t>(sizeof(kFemaleNames) / sizeof(kFemaleNames[0])))];
+}
+
+// EntityAnimalChocobo.feeding: hungry again after hungerDelayChocobo / hungerDelayChicobo.
+void EntityChocobo::feeding()
+{
+    m_timeUntilHunger = isChild() ? 1000 : 3000;
+    spawnParticles("mobSpell", 7);
+}
+
 void EntityChocobo::writeEntityToNBT(NBTTagCompound *nbt)
 {
     EntityAnimal::writeEntityToNBT(nbt);
@@ -1396,6 +1513,7 @@ void EntityChocobo::writeEntityToNBT(NBTTagCompound *nbt)
     nbt->setInteger("AiMode", static_cast<int_t>(m_aiMode));
     nbt->setString("Owner", m_ownerName);
     nbt->setString("CustomName", m_customName);
+    nbt->setInteger("timeUntilHunger", m_timeUntilHunger);
     m_inventory.writeToNBT(nbt);
 }
 
@@ -1416,7 +1534,13 @@ void EntityChocobo::readEntityFromNBT(NBTTagCompound *nbt)
     m_ownerName = nbt->getString("Owner");
     std::string cname = nbt->getString("CustomName");
     if (!cname.empty())
+    {
+        const bool hidden = m_hidename;
         setCustomName(cname);
+        m_hidename = hidden; // setCustomName shows the name; keep the saved choice
+    }
+    if (nbt->hasKey("timeUntilHunger"))
+        m_timeUntilHunger = nbt->getInteger("timeUntilHunger");
     m_inventory.readFromNBT(nbt);
     m_wasChild = isChild();
     setSize(m_wasChild ? 0.5f : 0.95f, m_wasChild ? 0.5f : 1.85f);

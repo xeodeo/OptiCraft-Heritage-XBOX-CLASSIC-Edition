@@ -34,6 +34,12 @@ public:
 		return true;
 	}
 	virtual bool saveChunks(bool flag, IProgressUpdate *iprogressupdate) = 0;
+
+	// Not in Java: a mod world generator (ChocoCraft's Gysahl bushes, a Forge
+	// IWorldGenerator in the original) run once a surface chunk has had its vanilla
+	// population. It must use its own Random so the vanilla terrain never changes.
+	using ModPopulateHook = void (*)(World *world, int_t chunkX, int_t chunkZ);
+	static ModPopulateHook modPopulateHook;
 	virtual bool unload100OldestChunks() = 0;
 	virtual bool canSave() = 0;
 	virtual jstring makeString() = 0;

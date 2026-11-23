@@ -107,6 +107,24 @@ public:
 
     ChocoboAiMode getAiMode() const { return m_aiMode; }
     void setAiMode(ChocoboAiMode mode) { m_aiMode = mode; }
+    // EntityAnimalChocobo.toggleFollowWanderStay: follow -> stay -> wander -> follow.
+    void toggleFollowWanderStay();
+    // Chocopedia: owner check, change owner, drop saddle and bags (ChocoboDropGear).
+    bool isOwner(const EntityPlayer *player) const;
+    void changeOwner(const std::string &newOwner);
+    void dropGear();
+    // Name shown in the Chocopedia / menu: the chocobo's name, or "Chocobo <colour>".
+    std::string getDisplayName(bool spanish) const;
+    // ChocoboNames.getRandomName
+    static const char *getRandomName(bool male, Random &rng);
+
+    // ChocoCraft hunger (EntityAnimalChocobo.timeUntilHunger). In 4.1.5 it is off
+    // (DEFAULT_HUNGER_ENABLED = false, "hunger not yet active"), so isHungry() is always
+    // false; the timer is kept and saved as in the original.
+    static constexpr bool HUNGER_ENABLED = false;
+    int_t getTimeUntilHunger() const { return m_timeUntilHunger; }
+    bool isHungry() const { return HUNGER_ENABLED && m_timeUntilHunger <= 0; }
+    void feeding();
 
     bool isFlying() const { return m_flying; }
     void setFlying(bool flying) { m_flying = flying; }
@@ -123,7 +141,8 @@ public:
 
     // EntityLiving / EntityAnimal overrides
     int_t getMaxHealth() const override;
-    bool canDespawn() override { return !m_tamed && !m_saddled && !m_packbags && !isChild(); }
+    // ModChocoCraft.wildCanDespawn = false: wild flocks stay (ChocoboSpawner keeps them scarce).
+    bool canDespawn() override { return false; }
     bool isAIEnabled() override { return false; }
     bool canBreatheUnderwater() override;
     void updatePlayerActionState() override;
@@ -199,4 +218,5 @@ private:
     bool m_sneakArmed;
     // EntityLivingBase.jumpMovementFactor as ChocoCraft leaves it (air/water factor)
     float m_jumpMoveFactor;
+    int_t m_timeUntilHunger;
 };

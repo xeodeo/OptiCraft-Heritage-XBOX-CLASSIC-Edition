@@ -85,6 +85,8 @@ void ChunkProviderFlat::populate(IChunkProvider *, int_t x, int_t z)
 	random.setSeed(JavaArithmetic::longFromBits((ulong_t)coordSeed ^ (ulong_t)worldObj->getRandomSeed()));
 	if (useStructures)
 		villageGen->generateStructuresInChunk(worldObj, random, x, z);
+	if (modPopulateHook != nullptr)
+		modPopulateHook(worldObj, x, z);
 }
 
 bool ChunkProviderFlat::saveChunks(bool, IProgressUpdate *)
