@@ -11,6 +11,7 @@
 #include "Item.h"
 #include "RenderManager.h"
 #include "RenderEngine.h"
+#include "platform/Resources.h"
 #include "FontRenderer.h"
 #include "MathHelper.h"
 #include "platform/RenderAPI.h"
@@ -168,30 +169,36 @@ void RenderItem::doRenderItem(EntityItem* entityitem, double d, double d1, doubl
         } else {
             renderScale(0.5f, 0.5f, 0.5f);
         }
-        loadTexture("/gui/items.png");
-        const int renderPasses = item->func_46058_c() ? 2 : 1;
+        const char *customTex = item->getCustomIconTexture();
+        const bool useCustomTex = (customTex != nullptr && !PlatformResources::resolveAsset(customTex).empty());
+        loadTexture(useCustomTex ? customTex : "/gui/items.png");
+        const int renderPasses = (!useCustomTex && item->func_46058_c()) ? 2 : 1;
         for (int renderPass = 0; renderPass < renderPasses; ++renderPass) {
-            const int icon = item->func_46058_c()
+            const int icon = (!useCustomTex && item->func_46058_c())
                 ? item->func_46057_a(itemstack->getItemDamage(), renderPass)
                 : itemstack->getIconIndex();
-            if (!item->func_46058_c() && itemstack->itemID < 256 &&
+            if (!useCustomTex && !item->func_46058_c() && itemstack->itemID < 256 &&
                 (Block::blocksList[itemstack->itemID] == nullptr || Block::blocksList[itemstack->itemID]->getItemIconName() == nullptr)) {
                 loadTexture("/terrain.png");
             }
 
             if (field_27004_a) {
-                const int color = item->getColorFromItemStack(itemstack, renderPass);
-                const float red = (float)(color >> 16 & 0xff) / 255.0f;
-                const float green = (float)(color >> 8 & 0xff) / 255.0f;
-                const float blue = (float)(color & 0xff) / 255.0f;
-                renderColor4f(red, green, blue, 1.0f);
+                if (useCustomTex) {
+                    renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+                } else {
+                    const int color = item->getColorFromItemStack(itemstack, renderPass);
+                    const float red = (float)(color >> 16 & 0xff) / 255.0f;
+                    const float green = (float)(color >> 8 & 0xff) / 255.0f;
+                    const float blue = (float)(color & 0xff) / 255.0f;
+                    renderColor4f(red, green, blue, 1.0f);
+                }
             }
 
             Tessellator* tessellator = &Tessellator::instance;
-            const float minU = (float)((icon % 16) * 16) / 256.0f;
-            const float maxU = (float)((icon % 16) * 16 + 16) / 256.0f;
-            const float minV = (float)((icon / 16) * 16) / 256.0f;
-            const float maxV = (float)((icon / 16) * 16 + 16) / 256.0f;
+            const float minU = useCustomTex ? 0.0f : (float)((icon % 16) * 16) / 256.0f;
+            const float maxU = useCustomTex ? 1.0f : (float)((icon % 16) * 16 + 16) / 256.0f;
+            const float minV = useCustomTex ? 0.0f : (float)((icon / 16) * 16) / 256.0f;
+            const float maxV = useCustomTex ? 1.0f : (float)((icon / 16) * 16 + 16) / 256.0f;
             const float size = 1.0f;
             const float xOffset = 0.5f;
             const float yOffset = 0.25f;
@@ -278,19 +285,35 @@ void RenderItem::drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* rende
         renderDisable(RenderCapability::Lighting);
         renderEnable(RenderCapability::AlphaTest);
         renderAlphaFunc(RenderCompare::Greater, 0.1f);
-        if (i < 256 && (Block::blocksList[i] == nullptr || Block::blocksList[i]->getItemIconName() == nullptr)) {
-            renderengine->bindTexture(renderengine->getTexture("/terrain.png"));
+        const char *customTex = item->getCustomIconTexture();
+        const bool useCustomTex = (customTex != nullptr && !PlatformResources::resolveAsset(customTex).empty());
+        if (useCustomTex) {
+            renderengine->bindTexture(renderengine->getTexture(customTex));
+            if (field_27004_a) {
+                renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            }
+            Tessellator* tessellator = &Tessellator::instance;
+            tessellator->startDrawingQuads();
+            tessellator->addVertexWithUV(l + 0, i1 + 16, zLevel, 0.0f, 1.0f);
+            tessellator->addVertexWithUV(l + 16, i1 + 16, zLevel, 1.0f, 1.0f);
+            tessellator->addVertexWithUV(l + 16, i1 + 0, zLevel, 1.0f, 0.0f);
+            tessellator->addVertexWithUV(l + 0, i1 + 0, zLevel, 0.0f, 0.0f);
+            tessellator->draw();
         } else {
-            renderengine->bindTexture(renderengine->getTexture("/gui/items.png"));
+            if (i < 256 && (Block::blocksList[i] == nullptr || Block::blocksList[i]->getItemIconName() == nullptr)) {
+                renderengine->bindTexture(renderengine->getTexture("/terrain.png"));
+            } else {
+                renderengine->bindTexture(renderengine->getTexture("/gui/items.png"));
+            }
+            int k1 = stack != nullptr ? item->getColorFromItemStack(stack, 0) : item->getColorFromDamage(j, 0);
+            float f = (float)(k1 >> 16 & 0xff) / 255.0f;
+            float f1 = (float)(k1 >> 8 & 0xff) / 255.0f;
+            float f3 = (float)(k1 & 0xff) / 255.0f;
+            if (field_27004_a) {
+                renderColor4f(f, f1, f3, 1.0f);
+            }
+            renderTexturedQuad(l, i1, (k % 16) * 16, (k / 16) * 16, 16, 16);
         }
-        int k1 = stack != nullptr ? item->getColorFromItemStack(stack, 0) : item->getColorFromDamage(j, 0);
-        float f = (float)(k1 >> 16 & 0xff) / 255.0f;
-        float f1 = (float)(k1 >> 8 & 0xff) / 255.0f;
-        float f3 = (float)(k1 & 0xff) / 255.0f;
-        if (field_27004_a) {
-            renderColor4f(f, f1, f3, 1.0f);
-        }
-        renderTexturedQuad(l, i1, (k % 16) * 16, (k / 16) * 16, 16, 16);
         renderEnable(RenderCapability::Lighting);
     }
     renderEnable(RenderCapability::CullFace);
