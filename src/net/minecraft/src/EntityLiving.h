@@ -167,6 +167,7 @@ public:
 	virtual void onLivingUpdate();
 
 protected:
+	virtual void collideWithEntity(Entity *entity);
 	virtual bool isMovementBlocked();
 	virtual bool isClientWorld() const;
 	virtual void jump();

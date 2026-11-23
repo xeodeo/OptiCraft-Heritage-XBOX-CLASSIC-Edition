@@ -50,6 +50,8 @@ void EntityEnderman::entityInit()
 		dataWatcher->addObject(16, static_cast<byte_t>(0));
 	if (!dataWatcher->hasObject(17))
 		dataWatcher->addObject(17, static_cast<byte_t>(0));
+	if (!dataWatcher->hasObject(18))
+		dataWatcher->addObject(18, static_cast<byte_t>(0));
 }
 
 void EntityEnderman::writeEntityToNBT(NBTTagCompound *tag)
@@ -73,9 +75,13 @@ Entity *EntityEnderman::findPlayerToAttack()
 	{
 		if (shouldAttackPlayer(player))
 		{
+			field_104003_g = true;
+			if (stareTimer == 0)
+				worldObj->playSoundAtEntity(player, "mob.endermen.stare", 1.0f, 1.0f);
 			if (stareTimer++ == 5)
 			{
 				stareTimer = 0;
+				setScreaming(true);
 				return player;
 			}
 		}
@@ -112,9 +118,8 @@ void EntityEnderman::onLivingUpdate()
 	if (isWet())
 		attackEntityFrom(DamageSource::drown, 1);
 
-	Entity *target = getTarget();
-	isAttacking = target != nullptr;
-	moveSpeed = target != nullptr ? 6.5f : 0.3f;
+	isAttacking = isScreaming();
+	moveSpeed = isAttacking ? 6.5f : 0.3f;
 
 	if (!worldObj->multiplayerWorld && worldObj->getGameRules().getGameRuleBooleanValue("mobGriefing"))
 	{
@@ -168,18 +173,27 @@ void EntityEnderman::onLivingUpdate()
 			MathHelper::floor_double(posZ)) && rand.nextFloat() * 30.0f < (brightness - 0.4f) * 2.0f)
 		{
 			setTarget(nullptr);
+			setScreaming(false);
+			field_104003_g = false;
 			teleportRandomly();
 		}
 	}
 
-	if (isWet())
+	if (isWet() || isBurning())
 	{
 		setTarget(nullptr);
+		setScreaming(false);
+		field_104003_g = false;
 		teleportRandomly();
 	}
 
+	if (isScreaming() && !field_104003_g && rand.nextInt(100) == 0)
+	{
+		setScreaming(false);
+	}
+
 	isJumping = false;
-	target = getTarget();
+	Entity *target = getTarget();
 	if (target != nullptr)
 		faceEntity(target, 100.0f, 100.0f);
 
@@ -315,7 +329,7 @@ bool EntityEnderman::teleportTo(double x, double y, double z)
 
 jstring EntityEnderman::getLivingSound()
 {
-	return "mob.endermen.idle";
+	return isScreaming() ? "mob.endermen.scream" : "mob.endermen.idle";
 }
 
 jstring EntityEnderman::getHurtSound()
@@ -363,10 +377,29 @@ int_t EntityEnderman::getCarryingData()
 	return dataWatcher->getWatchableObjectByte(17) & 255;
 }
 
+bool EntityEnderman::isScreaming()
+{
+	return dataWatcher->getWatchableObjectByte(18) > 0;
+}
+
+void EntityEnderman::setScreaming(bool screaming)
+{
+	isAttacking = screaming;
+	dataWatcher->updateObject(18, static_cast<byte_t>(screaming ? 1 : 0));
+}
+
 bool EntityEnderman::attackEntityFrom(const DamageSource &source, int_t damage)
 {
+	if (isEntityInvulnerable())
+		return false;
+
+	setScreaming(true);
+	if (dynamic_cast<EntityPlayer *>(source.getEntity()) != nullptr)
+		field_104003_g = true;
+
 	if (source.getSourceOfDamage() != source.getEntity())
 	{
+		field_104003_g = false;
 		for (int_t i = 0; i < 64; ++i)
 		{
 			if (teleportRandomly())

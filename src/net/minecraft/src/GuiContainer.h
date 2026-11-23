@@ -1,12 +1,14 @@
 #pragma once
 
 #include "GuiScreen.h"
+#include <set>
 
 class Container;
 class Slot;
 class RenderItem;
 class InventoryPlayer;
 class EntityPlayer;
+class ItemStack;
 
 // net.minecraft.src.GuiContainer
 class GuiContainer : public GuiScreen
@@ -40,6 +42,7 @@ public:
 	// Returning nullptr uses the normal geometric navigation.
 	virtual Slot *getControllerNavigationTarget(Slot *selected, int_t dirX, int_t dirY);
 	virtual void handleMouseClick(Slot *slot, int_t slotId, int_t button, bool shift);
+	virtual void handleMouseClickMode(Slot *slot, int_t slotId, int_t button, int_t mode);
 	// Holding A on a slot: one more item per repeat (creative adds one, survival takes one).
 	// Returns false when nothing more can be taken, which stops the repeat until A is released.
 	virtual bool holdRepeatTakeOne(Slot *slot);
@@ -47,9 +50,13 @@ public:
 
 protected:
 	bool holdInitialPickedUp = false;
+	std::set<Slot *> field_94077_p;
+	bool field_94076_q = false;
 
 private:
 	bool getIsMouseOverSlot(Slot *slot, int_t mouseX, int_t mouseY);
+	void updateDragSplitting();
+	void finishDragSplitting(int_t button);
 	void tickHoldRepeat(Slot *target);
 	bool holdSawRelease = false;   // a press that opened this screen does not count
 	bool holdArmed = false;
@@ -57,6 +64,13 @@ private:
 	Slot *holdSlot = nullptr;       // compared only, never dereferenced
 	int holdNextMs = 0;
 	int holdIntervalMs = 80;
+	int_t field_94071_C = 0;
+	int_t field_94067_D = -1;
+	bool field_94068_E = false;
+	int_t field_94069_F = 0;
+	long_t field_94070_G = 0;
+	Slot *field_94072_H = nullptr;
+	bool field_94073_N = false;
 
 protected:
 	void mouseClicked(int_t x, int_t y, int_t button) override;

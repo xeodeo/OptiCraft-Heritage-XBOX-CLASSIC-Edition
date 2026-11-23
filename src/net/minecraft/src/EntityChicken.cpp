@@ -10,6 +10,8 @@
 #include "EntityAIWatchClosest.h"
 #include "EntityPlayer.h"
 #include "Item.h"
+#include "ItemSeeds.h"
+#include "ItemStack.h"
 #include "World.h"
 
 EntityChicken::EntityChicken(World *world)
@@ -25,7 +27,7 @@ EntityChicken::EntityChicken(World *world)
 	tasks.addTask(0, new EntityAISwimming(this));
 	tasks.addTask(1, new EntityAIPanic(this, 0.38f));
 	tasks.addTask(2, new EntityAIMate(this, speed));
-	tasks.addTask(3, new EntityAITempt(this, 0.25f, Item::wheat->shiftedIndex, false));
+	tasks.addTask(3, new EntityAITempt(this, 0.25f, Item::seeds->shiftedIndex, false));
 	tasks.addTask(4, new EntityAIFollowParent(this, 0.28f));
 	tasks.addTask(5, new EntityAIWander(this, speed));
 	tasks.addTask(6, new EntityAIWatchClosest(this, typeid(EntityPlayer), 6.0f));
@@ -88,4 +90,9 @@ EntityAnimal *EntityChicken::spawnBabyAnimal(EntityAnimal *mate)
 {
 	(void)mate;
 	return new EntityChicken(worldObj);
+}
+
+bool EntityChicken::isWheat(ItemStack *itemstack) const
+{
+	return itemstack != nullptr && dynamic_cast<ItemSeeds *>(itemstack->getItem()) != nullptr;
 }

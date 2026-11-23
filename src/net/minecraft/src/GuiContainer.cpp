@@ -119,6 +119,12 @@ void GuiContainer::initGui()
 	holdStopped = false;
 	holdSlot = nullptr;
 	holdInitialPickedUp = false;
+	field_94077_p.clear();
+	field_94076_q = false;
+	field_94067_D = -1;
+	field_94069_F = 0;
+	field_94072_H = nullptr;
+	field_94073_N = false;
 }
 
 void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
@@ -150,20 +156,80 @@ void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 	}
 
 	Slot *selectedSlot = controllerSlot;
+	Slot *activeSlot = controllerSlot != nullptr ? controllerSlot : getSlotAtPosition(mouseX, mouseY);
+	EntityPlayer *cp = getContainerPlayer();
+	InventoryPlayer *inv = (cp != nullptr) ? cp->inventory : mc->thePlayer->inventory;
 #if defined(XBOX_PLATFORM)
-	tickHoldRepeat(controllerSlot != nullptr ? controllerSlot : getSlotAtPosition(mouseX, mouseY));
+	if (!field_94076_q && field_94067_D < 0)
+		tickHoldRepeat(activeSlot);
 #endif
 	if (mc == nullptr || !mc->isSplitScreenActive())
 	{
-		if (selectedSlot != nullptr && navigator.consumePrimaryClick())
-			handleMouseClick(selectedSlot, selectedSlot->slotNumber, 0, false);
-		if (selectedSlot != nullptr && navigator.consumeSecondaryClick())
-			handleMouseClick(selectedSlot, selectedSlot->slotNumber, 1, false);
+		const bool navPrimary = navigator.consumePrimaryClick();
+		const bool navSecondary = navigator.consumeSecondaryClick();
+		const bool navQuick = navigator.consumeQuickMove();
+		const bool javaUiQuick = (mc->gameSettings == nullptr || !mc->gameSettings->legacyUI) &&
+			(platformTextInputSnapshot(getOwnerPlayerIndex()).pressed & PLATFORM_TEXT_SHIFT) != 0;
+		if ((navQuick || javaUiQuick) && activeSlot != nullptr)
+		{
+			handleMouseClick(activeSlot, activeSlot->slotNumber, 0, true);
+		}
+		if (selectedSlot != nullptr && (navPrimary || navSecondary))
+		{
+			const int_t btn = navPrimary ? 0 : 1;
+			ItemStack *carried = inv != nullptr ? inv->getItemStack() : nullptr;
+			if (carried != nullptr && Container::func_94527_a(selectedSlot, carried, true) &&
+			    selectedSlot->isItemValid(carried) && inventorySlots->canDragIntoSlot(selectedSlot))
+			{
+				field_94077_p.clear();
+				field_94077_p.insert(selectedSlot);
+				field_94067_D = btn;
+				field_94076_q = true;
+				updateDragSplitting();
+			}
+			else
+			{
+				handleMouseClick(selectedSlot, selectedSlot->slotNumber, btn, false);
+			}
+		}
 	}
 	else
 	{
 		navigator.consumePrimaryClick();
 		navigator.consumeSecondaryClick();
+		navigator.consumeQuickMove();
+	}
+
+	if (field_94067_D == 0 || field_94067_D == 1)
+	{
+		ItemStack *carried = inv != nullptr ? inv->getItemStack() : nullptr;
+		if (carried == nullptr)
+		{
+			field_94076_q = false;
+			field_94077_p.clear();
+			field_94067_D = -1;
+		}
+		else
+		{
+			if (activeSlot != nullptr &&
+			    Container::func_94527_a(activeSlot, carried, true) &&
+			    activeSlot->isItemValid(carried) &&
+			    carried->stackSize > static_cast<int_t>(field_94077_p.size()) &&
+			    inventorySlots->canDragIntoSlot(activeSlot))
+			{
+				field_94077_p.insert(activeSlot);
+				field_94076_q = true;
+				updateDragSplitting();
+			}
+			const PlatformTextInputSnapshot padSnap = platformTextInputSnapshot(getOwnerPlayerIndex());
+			const unsigned int requiredPadMask = (field_94067_D == 0) ? PLATFORM_TEXT_TYPE : PLATFORM_TEXT_BACK;
+			const bool padHeld = (padSnap.held & requiredPadMask) != 0;
+			const bool mouseHeld = (getOwnerPlayerIndex() == 0) && lwjgl::Mouse::isButtonDown(field_94067_D);
+			if (!padHeld && !mouseHeld)
+			{
+				finishDragSplitting(field_94067_D);
+			}
+		}
 	}
 #endif
 
@@ -220,8 +286,6 @@ void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 		}
 	}
 
-	EntityPlayer *cp = getContainerPlayer();
-	InventoryPlayer *inv = (cp != nullptr) ? cp->inventory : mc->thePlayer->inventory;
 	if (inv->getItemStack() != nullptr)
 	{
 		int_t carriedX = mouseX - guiX - 8;
@@ -233,9 +297,19 @@ void GuiContainer::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
 			carriedY = controllerSlot->yDisplayPosition;
 		}
 #endif
+		ItemStack *carriedStack = inv->getItemStack();
+		const int_t savedCount = carriedStack->stackSize;
+		std::string customText;
+		if (field_94076_q && field_94077_p.size() > 1)
+		{
+			carriedStack->stackSize = field_94069_F;
+			if (carriedStack->stackSize == 0)
+				customText = std::string("\xc2\xa7" "e0");
+		}
 		renderTranslate(0.0f, 0.0f, 32.0f);
-		itemRenderer->renderItemIntoGUI(fontRenderer, mc->renderEngine, inv->getItemStack(), carriedX, carriedY);
-		itemRenderer->renderItemOverlayIntoGUI(fontRenderer, mc->renderEngine, inv->getItemStack(), carriedX, carriedY);
+		itemRenderer->renderItemIntoGUI(fontRenderer, mc->renderEngine, carriedStack, carriedX, carriedY);
+		itemRenderer->renderItemOverlayIntoGUI(fontRenderer, mc->renderEngine, carriedStack, carriedX, carriedY, customText);
+		carriedStack->stackSize = savedCount;
 	}
 
 #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)
@@ -334,6 +408,31 @@ void GuiContainer::drawSlotInventory(Slot *slot)
 	int_t x = slot->xDisplayPosition;
 	int_t y = slot->yDisplayPosition;
 	ItemStack *stack = slot->getStack();
+	bool isDragSlot = false;
+	std::string customCountText;
+	EntityPlayer *cp = getContainerPlayer();
+	InventoryPlayer *inv = (cp != nullptr) ? cp->inventory : (mc != nullptr && mc->thePlayer != nullptr ? mc->thePlayer->inventory : nullptr);
+	ItemStack *carried = inv != nullptr ? inv->getItemStack() : nullptr;
+	const int_t savedCarriedCount = carried != nullptr ? carried->stackSize : 0;
+
+	if (field_94076_q && field_94077_p.size() > 1 && carried != nullptr && field_94077_p.count(slot) > 0)
+	{
+		stack = carried;
+		isDragSlot = true;
+		const int_t baseSize = slot->getHasStack() ? slot->getStack()->stackSize : 0;
+		Container::func_94525_a(field_94077_p, field_94067_D, stack, baseSize);
+		if (stack->stackSize > stack->getMaxStackSize())
+		{
+			customCountText = std::string("\xc2\xa7" "e") + std::to_string(stack->getMaxStackSize());
+			stack->stackSize = stack->getMaxStackSize();
+		}
+		if (stack->stackSize > slot->getSlotStackLimit())
+		{
+			customCountText = std::string("\xc2\xa7" "e") + std::to_string(slot->getSlotStackLimit());
+			stack->stackSize = slot->getSlotStackLimit();
+		}
+	}
+
 	if (stack == nullptr)
 	{
 		int_t icon = slot->getBackgroundIconIndex();
@@ -346,8 +445,85 @@ void GuiContainer::drawSlotInventory(Slot *slot)
 			return;
 		}
 	}
+	if (isDragSlot)
+	{
+		renderDisable(RenderCapability::Lighting);
+		renderDisable(RenderCapability::DepthTest);
+		drawRect(x, y, x + 16, y + 16, -2130706433);
+		renderEnable(RenderCapability::Lighting);
+		renderEnable(RenderCapability::DepthTest);
+	}
 	itemRenderer->renderItemIntoGUI(fontRenderer, mc->renderEngine, stack, x, y);
-	itemRenderer->renderItemOverlayIntoGUI(fontRenderer, mc->renderEngine, stack, x, y);
+	itemRenderer->renderItemOverlayIntoGUI(fontRenderer, mc->renderEngine, stack, x, y, customCountText);
+	if (isDragSlot && carried != nullptr)
+	{
+		carried->stackSize = savedCarriedCount;
+	}
+}
+
+void GuiContainer::updateDragSplitting()
+{
+	EntityPlayer *cp = getContainerPlayer();
+	InventoryPlayer *inv = (cp != nullptr) ? cp->inventory : (mc != nullptr && mc->thePlayer != nullptr ? mc->thePlayer->inventory : nullptr);
+	ItemStack *carried = inv != nullptr ? inv->getItemStack() : nullptr;
+	if (carried == nullptr || !field_94076_q)
+		return;
+
+	const int_t savedCarriedCount = carried->stackSize;
+	field_94069_F = savedCarriedCount;
+	for (Slot *slot : field_94077_p)
+	{
+		if (slot == nullptr)
+			continue;
+		carried->stackSize = savedCarriedCount;
+		const int_t baseCount = slot->getHasStack() ? slot->getStack()->stackSize : 0;
+		Container::func_94525_a(field_94077_p, field_94067_D, carried, baseCount);
+		if (carried->stackSize > carried->getMaxStackSize())
+			carried->stackSize = carried->getMaxStackSize();
+		if (carried->stackSize > slot->getSlotStackLimit())
+			carried->stackSize = slot->getSlotStackLimit();
+		field_94069_F -= carried->stackSize - baseCount;
+	}
+	carried->stackSize = savedCarriedCount;
+}
+
+void GuiContainer::finishDragSplitting(int_t button)
+{
+	if (field_94067_D < 0)
+		return;
+
+	const int_t dragLimit = field_94067_D;
+	const bool wasDragging = field_94076_q && field_94077_p.size() > 1;
+	Slot *singleSlot = (!field_94077_p.empty()) ? *field_94077_p.begin() : nullptr;
+	std::set<Slot *> dragSlots = field_94077_p;
+
+	field_94076_q = false;
+	field_94077_p.clear();
+	field_94067_D = -1;
+
+	if (wasDragging)
+	{
+		handleMouseClickMode(nullptr, -999, Container::func_94534_d(0, dragLimit), 5);
+		for (Slot *s : dragSlots)
+		{
+			if (s != nullptr)
+				handleMouseClickMode(s, s->slotNumber, Container::func_94534_d(1, dragLimit), 5);
+		}
+		handleMouseClickMode(nullptr, -999, Container::func_94534_d(2, dragLimit), 5);
+	}
+	else if (singleSlot != nullptr)
+	{
+		const bool shift = (lwjgl::Keyboard::isKeyDown(42) || lwjgl::Keyboard::isKeyDown(54));
+		if (field_94073_N && !shift && dragLimit == 0)
+		{
+			handleMouseClickMode(singleSlot, singleSlot->slotNumber, 0, 6);
+		}
+		else
+		{
+			handleMouseClick(singleSlot, singleSlot->slotNumber, button >= 0 ? button : dragLimit, shift);
+		}
+	}
+	field_94073_N = false;
 }
 
 Slot *GuiContainer::getSlotAtPosition(int_t mouseX, int_t mouseY)
@@ -428,8 +604,32 @@ void GuiContainer::mouseClicked(int_t x, int_t y, int_t button)
 		if (outsideGui && slot == nullptr) slotId = -999;
 		if (slotId != -1)
 		{
+			const long_t now = static_cast<long_t>(consoleInputNowMs());
+			field_94073_N = (field_94072_H == slot && (now - field_94070_G) < 250 && field_94071_C == button);
+			field_94070_G = now;
+			field_94072_H = slot;
+			field_94071_C = button;
+
 			bool shift = slotId != -999 && (lwjgl::Keyboard::isKeyDown(42) || lwjgl::Keyboard::isKeyDown(54));
-			handleMouseClick(slot, slotId, button, shift);
+			EntityPlayer *cp = getContainerPlayer();
+			InventoryPlayer *inv = (cp != nullptr) ? cp->inventory : (mc != nullptr && mc->thePlayer != nullptr ? mc->thePlayer->inventory : nullptr);
+			ItemStack *carried = inv != nullptr ? inv->getItemStack() : nullptr;
+
+			if (!shift && slot != nullptr && carried != nullptr &&
+			    Container::func_94527_a(slot, carried, true) &&
+			    slot->isItemValid(carried) &&
+			    inventorySlots->canDragIntoSlot(slot))
+			{
+				field_94077_p.clear();
+				field_94077_p.insert(slot);
+				field_94067_D = button;
+				field_94076_q = true;
+				updateDragSplitting();
+			}
+			else
+			{
+				handleMouseClick(slot, slotId, button, shift);
+			}
 		}
 	}
 }
@@ -454,6 +654,20 @@ void GuiContainer::handleMouseClick(Slot *slot, int_t slotId, int_t button, bool
 	}
 }
 
+void GuiContainer::handleMouseClickMode(Slot *slot, int_t slotId, int_t button, int_t mode)
+{
+	if (mode == 0 || mode == 1)
+	{
+		handleMouseClick(slot, slotId, button, mode == 1);
+		return;
+	}
+	if (slot != nullptr)
+		slotId = slot->slotNumber;
+	EntityPlayer *p = getContainerPlayer();
+	if (p == nullptr && mc != nullptr) p = mc->thePlayer;
+	delete mc->playerController->windowClick(inventorySlots->windowId, slotId, button, mode, p);
+}
+
 void GuiContainer::mouseMovedOrUp(int_t x, int_t y, int_t button)
 {
 #if PLATFORM_PS2 || PLATFORM_WII || PLATFORM_XBOX
@@ -463,9 +677,12 @@ void GuiContainer::mouseMovedOrUp(int_t x, int_t y, int_t button)
 	if (button < 0 && (lwjgl::Mouse::getEventDX() != 0 || lwjgl::Mouse::getEventDY() != 0))
 		ContainerSlotNavigator::instance(getOwnerPlayerIndex()).notePointerActivity();
 #endif
+	if (button >= 0 && field_94067_D == button)
+	{
+		finishDragSplitting(button);
+	}
 	(void)x;
 	(void)y;
-	(void)button;
 }
 
 void GuiContainer::keyTyped(char_t c, int_t key)

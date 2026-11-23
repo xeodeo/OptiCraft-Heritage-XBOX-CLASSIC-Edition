@@ -871,6 +871,10 @@ bool RenderBlocks::renderBlockByRenderType(Block *block, int_t i, int_t j, int_t
 	{
 		return renderBlockTripWire(block, i, j, k);
 	}
+	if (l == 31)
+	{
+		return renderBlockLog(block, i, j, k);
+	}
 	if (l == 32)
 	{
 		return renderBlockWall(dynamic_cast<BlockWall *>(block), i, j, k);
@@ -4671,7 +4675,7 @@ void RenderBlocks::renderBlockOnInventory(Block *block, int_t i, float f)
 		renderColor4f(f1 * f, f3 * f, f5 * f, 1.0f);
 	}
 	int_t k = block->getRenderType();
-	if (k == 0 || k == 16 || k == 26 || k == 39)
+	if (k == 0 || k == 16 || k == 26 || k == 31 || k == 39)
 	{
 		if (k == 16)
 		{

@@ -56,6 +56,7 @@ public:
 
 	void func_82187_q();
 	EntityVillager *func_90012_b(EntityAgeable *other);
+	EntityAgeable *createChild(EntityAgeable *other) override { return func_90012_b(other); }
 	std::string func_94057_bL() const;
 	void forgetVillage(Village *village) { if (villageObj == village) villageObj = nullptr; }
 

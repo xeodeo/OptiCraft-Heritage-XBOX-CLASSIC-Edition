@@ -20,6 +20,7 @@
 #include "EntityMob.h"
 #include "Entity.h"
 #include "EntityPlayer.h"
+#include "IMob.h"
 #include "Item.h"
 #include "MathHelper.h"
 #include "NBTTagCompound.h"
@@ -68,6 +69,17 @@ int_t EntityIronGolem::decreaseAirSupply(int_t airSupply)
 	return airSupply;
 }
 
+void EntityIronGolem::collideWithEntity(Entity *entity)
+{
+	if (dynamic_cast<IMob *>(entity) != nullptr && getRNG().nextInt(20) == 0)
+	{
+		EntityLiving *living = dynamic_cast<EntityLiving *>(entity);
+		if (living != nullptr)
+			setAttackTarget(living);
+	}
+	EntityGolem::collideWithEntity(entity);
+}
+
 void EntityIronGolem::updateAITick()
 {
 	if (--homeCheckTimer <= 0)
@@ -86,7 +98,7 @@ void EntityIronGolem::updateAITick()
 			villageCenterY = center.y;
 			villageCenterZ = center.z;
 			hasVillageCenter = true;
-			setHomeArea(center.x, center.y, center.z, village->getVillageRadius());
+			setHomeArea(center.x, center.y, center.z, (int_t)((float)village->getVillageRadius() * 0.6f));
 		}
 	}
 	EntityGolem::updateAITick();
@@ -280,4 +292,21 @@ void EntityIronGolem::dropFewItems(bool, int_t lootingLevel)
 	for (int_t i = 0; i < iron; ++i)
 		if (Item::ingotIron != nullptr)
 			dropItem(Item::ingotIron->shiftedIndex, 1);
+}
+
+void EntityIronGolem::onDeath(const DamageSource &source)
+{
+	if (!isPlayerCreated())
+	{
+		Village *village = resolveVillage();
+		if (village != nullptr)
+		{
+			EntityPlayer *attacker = dynamic_cast<EntityPlayer *>(source.getEntity());
+			if (attacker == nullptr)
+				attacker = dynamic_cast<EntityPlayer *>(func_94060_bK());
+			if (attacker != nullptr)
+				village->setReputationForPlayer(attacker->username, -5);
+		}
+	}
+	EntityGolem::onDeath(source);
 }

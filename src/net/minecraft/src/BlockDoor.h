@@ -33,4 +33,5 @@ public:
     bool canPlaceBlockAt(World *world, int_t i, int_t j, int_t k) override;
     static bool isOpen(int_t i);
     int_t getMobilityFlag() override;
+    void onBlockHarvested(World *world, int_t x, int_t y, int_t z, int_t metadata, EntityPlayer *player) override;
 };

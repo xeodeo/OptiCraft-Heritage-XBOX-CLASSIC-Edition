@@ -2,6 +2,9 @@
 #include "java/Arithmetic.h"
 
 #include "Block.h"
+#include "BlockCloth.h"
+#include "Container.h"
+#include "CraftingManager.h"
 #include "DataWatcher.h"
 #include "EntityAIEatGrass.h"
 #include "EntityAIFollowParent.h"
@@ -14,6 +17,7 @@
 #include "EntityAIWatchClosest.h"
 #include "EntityItem.h"
 #include "EntityPlayer.h"
+#include "InventoryCrafting.h"
 #include "InventoryPlayer.h"
 #include "Item.h"
 #include "ItemStack.h"
@@ -22,22 +26,63 @@
 #include "PathNavigate.h"
 #include "World.h"
 
+namespace
+{
+class ContainerSheepBreeding : public Container
+{
+public:
+	bool isUsableByPlayer(EntityPlayer *) override { return false; }
+};
+
+int_t getDyeColorFromSheepParent(EntityAnimal *animal)
+{
+	EntitySheep *sheep = dynamic_cast<EntitySheep *>(animal);
+	return 15 - (sheep != nullptr ? sheep->getFleeceColor() : 0);
+}
+
+int_t getMixedSheepColor(EntityAnimal *parentA, EntityAnimal *parentB, World *world, Random &rand)
+{
+	const int_t dyeA = getDyeColorFromSheepParent(parentA);
+	const int_t dyeB = getDyeColorFromSheepParent(parentB);
+	ContainerSheepBreeding dummyContainer;
+	InventoryCrafting craftMatrix(&dummyContainer, 2, 1);
+	if (Item::dyePowder != nullptr)
+	{
+		craftMatrix.setInventorySlotContents(0, new ItemStack(Item::dyePowder, 1, dyeA));
+		craftMatrix.setInventorySlotContents(1, new ItemStack(Item::dyePowder, 1, dyeB));
+	}
+	ItemStack *result = CraftingManager::getInstance()->findMatchingRecipe(&craftMatrix, world);
+	int_t mixedDye = 0;
+	if (result != nullptr && result->getItem() != nullptr && Item::dyePowder != nullptr &&
+		result->getItem()->shiftedIndex == Item::dyePowder->shiftedIndex)
+	{
+		mixedDye = result->getItemDamage();
+	}
+	else
+	{
+		mixedDye = rand.nextBoolean() ? dyeA : dyeB;
+	}
+	delete result;
+	return BlockCloth::getBlockFromDye(mixedDye);
+}
+} // namespace
+
 const float EntitySheep::fleeceColorTable[16][3] = {
 	{1.00f, 1.00f, 1.00f},
-	{0.95f, 0.70f, 0.20f},
-	{0.90f, 0.50f, 0.85f},
-	{0.60f, 0.70f, 0.95f},
+	{0.85f, 0.50f, 0.20f},
+	{0.70f, 0.30f, 0.85f},
+	{0.40f, 0.60f, 0.85f},
 	{0.90f, 0.90f, 0.20f},
 	{0.50f, 0.80f, 0.10f},
-	{0.95f, 0.70f, 0.80f},
+	{0.95f, 0.50f, 0.65f},
 	{0.30f, 0.30f, 0.30f},
 	{0.60f, 0.60f, 0.60f},
-	{0.30f, 0.60f, 0.70f},
-	{0.70f, 0.40f, 0.90f},
-	{0.20f, 0.40f, 0.80f},
-	{0.50f, 0.40f, 0.30f},
+	{0.30f, 0.50f, 0.60f},
+	{0.50f, 0.25f, 0.70f},
+	{0.20f, 0.30f, 0.70f},
+	{0.40f, 0.30f, 0.20f},
 	{0.40f, 0.50f, 0.20f},
-	{0.80f, 0.30f, 0.30f},
+	{0.60f, 0.20f, 0.20f},
 	{0.10f, 0.10f, 0.10f},
 };
 
@@ -214,10 +259,10 @@ EntityAnimal *EntitySheep::spawnBabyAnimal(EntityAnimal *mate)
 {
 	EntitySheep *other = dynamic_cast<EntitySheep *>(mate);
 	EntitySheep *child = new EntitySheep(worldObj);
-	if (other == nullptr || rand.nextBoolean())
-		child->setFleeceColor(getFleeceColor());
+	if (other != nullptr)
+		child->setFleeceColor(getMixedSheepColor(this, other, worldObj, rand));
 	else
-		child->setFleeceColor(other->getFleeceColor());
+		child->setFleeceColor(getFleeceColor());
 	return child;
 }
 
@@ -231,4 +276,9 @@ void EntitySheep::eatGrassBonus()
 			age = 0;
 		setGrowingAge(age);
 	}
+}
+
+void EntitySheep::initCreature()
+{
+	setFleeceColor(getRandomFleeceColor(worldObj->rand));
 }

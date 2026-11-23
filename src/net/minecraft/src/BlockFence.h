@@ -12,6 +12,7 @@ public:
 	BlockFence(int_t id, int_t texture, Material *material);
 
 	bool canPlaceBlockAt(World *world, int_t x, int_t y, int_t z) override;
+	void getCollidingBoundingBoxes(World *world, int_t x, int_t y, int_t z, AxisAlignedBB *axisalignedbb, std::vector<AxisAlignedBB *> &arraylist) override;
 	AxisAlignedBB *getCollisionBoundingBoxFromPool(World *world, int_t x, int_t y, int_t z) override;
 	void setBlockBoundsBasedOnState(IBlockAccess *iblockaccess, int_t x, int_t y, int_t z) override;
 	bool isOpaqueCube() override;
@@ -19,4 +20,5 @@ public:
 	bool getBlocksMovement(IBlockAccess *iblockaccess, int_t x, int_t y, int_t z) override;
 	int_t getRenderType() override;
 	bool canConnectFenceTo(IBlockAccess *iblockaccess, int_t x, int_t y, int_t z);
+	static bool isIdAFence(int_t blockId);
 };

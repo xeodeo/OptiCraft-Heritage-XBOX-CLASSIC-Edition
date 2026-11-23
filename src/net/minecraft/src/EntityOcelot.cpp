@@ -195,12 +195,15 @@ bool EntityOcelot::interact(EntityPlayer *player)
 		if (aiTempt != nullptr && aiTempt->isRunning() && stack != nullptr && Item::fishRaw != nullptr &&
 			stack->itemID == Item::fishRaw->shiftedIndex && player->getDistanceSqToEntity(this) < 9.0)
 		{
-			--stack->stackSize;
-			if (stack->stackSize <= 0)
+			if (!player->capabilities.isCreativeMode)
 			{
-				int_t slot = player->inventory->currentItem;
-				player->inventory->setInventorySlotContents(slot, nullptr);
-				stack = nullptr;
+				--stack->stackSize;
+				if (stack->stackSize <= 0)
+				{
+					int_t slot = player->inventory->currentItem;
+					player->inventory->setInventorySlotContents(slot, nullptr);
+					stack = nullptr;
+				}
 			}
 			if (!worldObj->multiplayerWorld)
 			{
@@ -280,4 +283,19 @@ bool EntityOcelot::getCanSpawnHere()
 	int_t blockId = worldObj->getBlockId(x, y - 1, z);
 	return (Block::grass != nullptr && blockId == Block::grass->blockID) ||
 		(Block::leaves != nullptr && blockId == Block::leaves->blockID);
+}
+
+void EntityOcelot::initCreature()
+{
+	if (worldObj != nullptr && worldObj->rand.nextInt(7) == 0)
+	{
+		for (int_t i = 0; i < 2; ++i)
+		{
+			EntityOcelot *kitten = new EntityOcelot(worldObj);
+			kitten->setLocationAndAngles(posX, posY, posZ, rotationYaw, 0.0f);
+			kitten->setGrowingAge(-24000);
+			if (!worldObj->spawnEntityInWorld(kitten))
+				delete kitten;
+		}
+	}
 }

@@ -20,6 +20,37 @@ bool BlockFence::canPlaceBlockAt(World *world, int_t x, int_t y, int_t z)
 	return Block::canPlaceBlockAt(world, x, y, z);
 }
 
+void BlockFence::getCollidingBoundingBoxes(World *world, int_t x, int_t y, int_t z, AxisAlignedBB *axisalignedbb, std::vector<AxisAlignedBB *> &arraylist)
+{
+	const bool north = canConnectFenceTo(world, x, y, z - 1);
+	const bool south = canConnectFenceTo(world, x, y, z + 1);
+	const bool west = canConnectFenceTo(world, x - 1, y, z);
+	const bool east = canConnectFenceTo(world, x + 1, y, z);
+	float f = 6.0f / 16.0f;
+	float f1 = 10.0f / 16.0f;
+	float f2 = 6.0f / 16.0f;
+	float f3 = 10.0f / 16.0f;
+	if (north) f2 = 0.0f;
+	if (south) f3 = 1.0f;
+	if (north || south)
+	{
+		setBlockBounds(f, 0.0f, f2, f1, 1.5f, f3);
+		Block::getCollidingBoundingBoxes(world, x, y, z, axisalignedbb, arraylist);
+	}
+	f2 = 6.0f / 16.0f;
+	f3 = 10.0f / 16.0f;
+	if (west) f = 0.0f;
+	if (east) f1 = 1.0f;
+	if (west || east || (!north && !south))
+	{
+		setBlockBounds(f, 0.0f, f2, f1, 1.5f, f3);
+		Block::getCollidingBoundingBoxes(world, x, y, z, axisalignedbb, arraylist);
+	}
+	if (north) f2 = 0.0f;
+	if (south) f3 = 1.0f;
+	setBlockBounds(f, 0.0f, f2, f1, 1.0f, f3);
+}
+
 AxisAlignedBB *BlockFence::getCollisionBoundingBoxFromPool(World *world, int_t x, int_t y, int_t z)
 {
 	const bool north = canConnectFenceTo(world, x, y, z - 1);
@@ -88,4 +119,10 @@ bool BlockFence::canConnectFenceTo(IBlockAccess *iblockaccess, int_t x, int_t y,
 	}
 	Block *block = blocksList[id];
 	return block != nullptr && block->blockMaterial->getIsTranslucent() && block->renderAsNormalBlock() && block->blockMaterial != Material::pumpkin;
+}
+
+bool BlockFence::isIdAFence(int_t blockId)
+{
+	return (Block::fence != nullptr && blockId == Block::fence->blockID) ||
+	       (Block::netherFence != nullptr && blockId == Block::netherFence->blockID);
 }

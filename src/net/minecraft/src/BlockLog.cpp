@@ -48,17 +48,57 @@ void BlockLog::onBlockRemoval(World *world, int_t i, int_t j, int_t k)
 	}
 }
 
+int_t BlockLog::onBlockPlaced(World *world, int_t i, int_t j, int_t k, int_t side, float hitX, float hitY, float hitZ, int_t metadata)
+{
+	(void)world; (void)i; (void)j; (void)k; (void)hitX; (void)hitY; (void)hitZ;
+	int_t type = metadata & 3;
+	int_t dir = 0;
+	switch (side)
+	{
+	case 0:
+	case 1:
+		dir = 0;
+		break;
+	case 2:
+	case 3:
+		dir = 8;
+		break;
+	case 4:
+	case 5:
+		dir = 4;
+		break;
+	}
+	return type | dir;
+}
+
+void BlockLog::onBlockPlaced(World *world, int_t i, int_t j, int_t k, int_t side)
+{
+	int_t meta = onBlockPlaced(world, i, j, k, side, 0.0f, 0.0f, 0.0f, world->getBlockMetadata(i, j, k));
+	world->setBlockMetadataWithNotify(i, j, k, meta);
+}
+
 int_t BlockLog::getBlockTextureFromSideAndMetadata(int_t i, int_t j)
 {
-	if (i == 1) return 21;
-	if (i == 0) return 21;
-	if (j == 1) return 116;
-	if (j == 2) return 117;
-	if (j == 3) return 153;
+	const int_t dir = j & 12;
+	const int_t type = j & 3;
+	if ((dir == 0 && (i == 1 || i == 0)) ||
+	    (dir == 4 && (i == 5 || i == 4)) ||
+	    (dir == 8 && (i == 2 || i == 3)))
+	{
+		return 21;
+	}
+	if (type == 1) return 116;
+	if (type == 2) return 117;
+	if (type == 3) return 153;
 	return 20;
 }
 
-int_t BlockLog::damageDropped(int_t i) { return i; }
+int_t BlockLog::damageDropped(int_t i) { return i & 3; }
+
+ItemStack *BlockLog::createStackedBlock(int_t metadata)
+{
+	return new ItemStack(blockID, 1, limitToValidMetadata(metadata));
+}
 
 void BlockLog::getSubBlocks(int_t id, CreativeTabs *tab, std::vector<ItemStack *> &list)
 {

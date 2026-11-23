@@ -147,6 +147,7 @@ public:
 	bool renderBlockWall(BlockWall *block, int_t x, int_t y, int_t z);
 	bool renderBlockFlowerpot(BlockFlowerPot *block, int_t x, int_t y, int_t z);
 	bool renderBlockCocoa(BlockCocoa *block, int_t x, int_t y, int_t z);
+	bool renderBlockLog(Block *block, int_t x, int_t y, int_t z);
 	bool renderBlockQuartz(Block *block, int_t x, int_t y, int_t z);
 	bool renderBlockBeacon(BlockBeacon *block, int_t x, int_t y, int_t z);
 	bool renderBlockAnvil(BlockAnvil *block, int_t x, int_t y, int_t z);

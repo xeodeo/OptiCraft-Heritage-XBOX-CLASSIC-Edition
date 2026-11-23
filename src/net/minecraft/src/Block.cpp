@@ -132,6 +132,7 @@
 #include "ItemPiston.h"
 #include "ItemSapling.h"
 #include "ItemSlab.h"
+#include "ItemSnow.h"
 #include "ItemStack.h"
 #include "Material.h"
 #include "MovingObjectPosition.h"
@@ -1209,6 +1210,7 @@ void Block::initialize()
 	Item::itemsList[waterlily->blockID] = new ItemLilyPad(waterlily->blockID - 256);
 	Item::itemsList[pistonBase->blockID] = new ItemPiston(pistonBase->blockID - 256);
 	Item::itemsList[pistonStickyBase->blockID] = new ItemPiston(pistonStickyBase->blockID - 256);
+	Item::itemsList[snow->blockID] = new ItemSnow(snow->blockID - 256, snow);
 	Item::itemsList[blockNetherQuartz->blockID] = (new ItemMultiTextureTile(blockNetherQuartz->blockID - 256, blockNetherQuartz, BlockQuartz::quartzBlockTypes, 3))->setItemName("quartzBlock");
 	for (int_t i = 0; i < 256; i++)
 	{

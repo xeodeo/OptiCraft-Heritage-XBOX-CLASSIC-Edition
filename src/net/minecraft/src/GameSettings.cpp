@@ -101,6 +101,7 @@ void GameSettings::setDefaults()
     mouseSensitivity = 0.5f;
     invertMouse = false;
     toggleSneak = false;
+    heldItemTooltips = true;
     dolbyDigital = false;
     showCoordinates = false;
     fullbright = false;

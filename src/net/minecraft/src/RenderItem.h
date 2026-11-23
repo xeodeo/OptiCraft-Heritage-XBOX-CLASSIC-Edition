@@ -3,6 +3,7 @@
 
 #include "Render.h"
 #include "java/Random.h"
+#include <string>
 
 class AxisAlignedBB;
 class EntityItem;
@@ -20,6 +21,7 @@ public:
     void drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* renderengine, int i, int j, int k, int l, int i1, ItemStack* stack = nullptr);
     void renderItemIntoGUI(FontRenderer* fontrenderer, RenderEngine* renderengine, ItemStack* itemstack, int i, int j);
     void renderItemOverlayIntoGUI(FontRenderer* fontrenderer, RenderEngine* renderengine, ItemStack* itemstack, int i, int j);
+    void renderItemOverlayIntoGUI(FontRenderer* fontrenderer, RenderEngine* renderengine, ItemStack* itemstack, int i, int j, const std::string &customCountText);
     void renderTexturedQuad(int i, int j, int k, int l, int i1, int j1);
 
     virtual void doRender(Entity* entity, double d, double d1, double d2, float f, float f1) override;

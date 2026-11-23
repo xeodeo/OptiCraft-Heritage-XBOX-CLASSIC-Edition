@@ -20,6 +20,7 @@ public:
     int_t idDropped(int_t i, Random &random) override;
     void dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, int_t l, float f) override;
     int_t getMobilityFlag() override;
+    void onBlockHarvested(World *world, int_t x, int_t y, int_t z, int_t metadata, EntityPlayer *player) override;
 
     static int_t getDirectionFromMetadata(int_t i);
     static bool isBlockFootOfBed(int_t i);

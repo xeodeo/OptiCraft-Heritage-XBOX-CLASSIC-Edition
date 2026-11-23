@@ -76,6 +76,7 @@ public:
 	bool invertMouse;
 	// Sneak key toggles instead of being held (off by default).
 	bool toggleSneak = false;
+	bool heldItemTooltips = true;
 	// Xbox: encode the sound mix as Dolby Digital (AC-3) instead of plain
 	// stereo. Off by default; not every TV/receiver decodes AC-3.
 	bool dolbyDigital;

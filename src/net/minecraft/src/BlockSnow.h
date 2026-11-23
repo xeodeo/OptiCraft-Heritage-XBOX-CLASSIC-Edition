@@ -14,6 +14,7 @@ public:
 	AxisAlignedBB *getCollisionBoundingBoxFromPool(World *world, int_t i, int_t j, int_t k) override;
 	bool isOpaqueCube() override;
 	bool renderAsNormalBlock() override;
+	void setBlockBoundsForItemRender() override;
 	void setBlockBoundsBasedOnState(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k) override;
 	bool canPlaceBlockAt(World *world, int_t i, int_t j, int_t k) override;
 	void onNeighborBlockChange(World *world, int_t i, int_t j, int_t k, int_t l) override;
@@ -25,5 +26,6 @@ public:
 	bool usesDefaultFaceCulling() const override { return false; }
 
 private:
+	void setBlockBoundsForSnowDepth(int_t meta);
 	bool getGlowing(World *world, int_t i, int_t j, int_t k);
 };

@@ -29,6 +29,8 @@
 #include "InventoryPlayer.h"
 #include "ModelRenderer.h"
 #include "MathHelper.h"
+#include "NBTTagCompound.h"
+#include "TileEntitySkullRenderer.h"
 
 RenderPlayer::RenderPlayer() : RenderLiving(new ModelBiped(0.0f), 0.5f) {
     modelBipedMain = (ModelBiped*)mainModel;
@@ -267,19 +269,29 @@ void RenderPlayer::passSpecialRender(EntityLiving* entityLiving, double d, doubl
 }
 
 void RenderPlayer::renderSpecials(EntityPlayer* entityPlayer, float f) {
-    // Helmet blocks (pumpkins etc.) render attached to the head in Beta.
+    // Helmet blocks (pumpkins etc.) and 1.5.2 skulls render attached to the head.
     ItemStack* helmet = entityPlayer->inventory->armorItemInSlot(3);
-    if (helmet != nullptr && helmet->itemID >= 0 && helmet->itemID < 256 &&
-        Block::blocksList[helmet->itemID] != nullptr) {
+    if (helmet != nullptr && helmet->getItem() != nullptr) {
         renderPushMatrix();
         modelBipedMain->bipedHead->postRender(0.0625f);
-        if (RenderBlocks::renderItemIn3d(Block::blocksList[helmet->itemID]->getRenderType())) {
-            float scale = 0.625f;
-            renderTranslate(0.0f, -0.25f, 0.0f);
-            renderRotate(180.0f, 0.0f, 1.0f, 0.0f);
-            renderScale(scale, -scale, scale);
+        if (helmet->getItem()->shiftedIndex < 256) {
+            if (Block::blocksList[helmet->itemID] != nullptr && RenderBlocks::renderItemIn3d(Block::blocksList[helmet->itemID]->getRenderType())) {
+                float scale = 0.625f;
+                renderTranslate(0.0f, -0.25f, 0.0f);
+                renderRotate(180.0f, 0.0f, 1.0f, 0.0f);
+                renderScale(scale, -scale, scale);
+            }
+            renderManager->itemRenderer->renderItem(entityPlayer, helmet);
+        } else if (Item::skull != nullptr && helmet->getItem()->shiftedIndex == Item::skull->shiftedIndex &&
+                   TileEntitySkullRenderer::skullRenderer != nullptr) {
+            float scale = 1.0625f;
+            renderScale(scale, -scale, -scale);
+            std::string skullOwner;
+            if (helmet->hasTagCompound() && helmet->getTagCompound()->hasKey("SkullOwner")) {
+                skullOwner = helmet->getTagCompound()->getString("SkullOwner");
+            }
+            TileEntitySkullRenderer::skullRenderer->renderSkull(-0.5f, 0.0f, -0.5f, 1, 180.0f, helmet->getItemDamage(), skullOwner);
         }
-        renderManager->itemRenderer->renderItem(entityPlayer, helmet);
         renderPopMatrix();
     }
 

@@ -49,6 +49,8 @@ void RecipesCrafting::addRecipes(CraftingManager *craftingmanager)
 	                           { "###", "###", '#', Block::cobblestone });
 	craftingmanager->addRecipe(new ItemStack(Block::cobblestoneWall, 6, 1),
 	                           { "###", "###", '#', Block::cobblestoneMossy });
+	craftingmanager->addRecipe(new ItemStack(Block::snow, 6),
+	                           { "###", '#', Block::blockSnow });
 	craftingmanager->addRecipe(new ItemStack(Item::flowerPot, 1),
 	                           { "# #", " # ", '#', Item::brick });
 	craftingmanager->addRecipe(new ItemStack(Block::enderChest, 1),

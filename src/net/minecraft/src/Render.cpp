@@ -6,6 +6,7 @@
 #include "BlockFire.h"
 #include "EntityLiving.h"
 #include "EntityAnimal.h"
+#include "Minecraft.h"
 #include "platform/PlatformTuning.h"
 #include "platform/RenderAPI.h"
 
@@ -23,8 +24,14 @@ Render::~Render() {
 }
 
 void Render::loadTexture(const std::string& path) {
-    RenderEngine* renderengine = renderManager->renderEngine;
-    renderengine->bindTexture(renderengine->getTexture(path));
+    RenderEngine* renderengine = renderManager != nullptr ? renderManager->renderEngine : nullptr;
+    if (renderengine == nullptr) {
+        Minecraft *mc = Minecraft::getMinecraft();
+        if (mc != nullptr)
+            renderengine = mc->renderEngine;
+    }
+    if (renderengine != nullptr)
+        renderengine->bindTexture(renderengine->getTexture(path));
 }
 
 bool Render::loadDownloadableImageTexture(const std::string& url, const std::string& fallback) {

@@ -1329,6 +1329,32 @@ bool RenderBlocks::renderBlockCocoa(BlockCocoa *block, int_t x, int_t y, int_t z
 	return true;
 }
 
+bool RenderBlocks::renderBlockLog(Block *block, int_t x, int_t y, int_t z)
+{
+	int_t meta = accessGetBlockMetadata(x, y, z);
+	int_t dir = meta & 12;
+	if (dir == 4)
+	{
+		eastFaceRotation = 1;
+		westFaceRotation = 1;
+		topFaceRotation = 1;
+		bottomFaceRotation = 1;
+	}
+	else if (dir == 8)
+	{
+		southFaceRotation = 1;
+		northFaceRotation = 1;
+	}
+	bool result = renderStandardBlock(block, x, y, z);
+	southFaceRotation = 0;
+	eastFaceRotation = 0;
+	westFaceRotation = 0;
+	northFaceRotation = 0;
+	topFaceRotation = 0;
+	bottomFaceRotation = 0;
+	return result;
+}
+
 bool RenderBlocks::renderBlockQuartz(Block *block, int_t x, int_t y, int_t z)
 {
 	int_t meta = accessGetBlockMetadata(x, y, z);

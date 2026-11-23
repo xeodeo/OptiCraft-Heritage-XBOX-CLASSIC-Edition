@@ -14,27 +14,34 @@
 
 BlockSnow::BlockSnow(int_t i, int_t j) : Block(i, j, Material::snow)
 {
-	setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 0.125f, 1.0f);
+	setBlockBoundsForSnowDepth(0);
 	setTickOnLoad(true);
 }
 
 AxisAlignedBB *BlockSnow::getCollisionBoundingBoxFromPool(World *world, int_t i, int_t j, int_t k)
 {
 	int_t l = world->getBlockMetadata(i, j, k) & 7;
-	if (l >= 3)
-	{
-		return AxisAlignedBB::getBoundingBoxFromPool((double)i + minX, (double)j + minY, (double)k + minZ,
-		                                             (double)i + maxX, (float)j + 0.5f, (double)k + maxZ);
-	}
-	return nullptr;
+	float f = 0.125f;
+	return AxisAlignedBB::getBoundingBoxFromPool((double)i + minX, (double)j + minY, (double)k + minZ,
+	                                             (double)i + maxX, (double)((float)j + (float)l * f), (double)k + maxZ);
 }
 
 bool BlockSnow::isOpaqueCube()        { return false; }
 bool BlockSnow::renderAsNormalBlock() { return false; }
 
+void BlockSnow::setBlockBoundsForItemRender()
+{
+	setBlockBoundsForSnowDepth(0);
+}
+
 void BlockSnow::setBlockBoundsBasedOnState(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k)
 {
-	int_t l = iblockaccess->getBlockMetadata(i, j, k) & 7;
+	setBlockBoundsForSnowDepth(iblockaccess->getBlockMetadata(i, j, k));
+}
+
+void BlockSnow::setBlockBoundsForSnowDepth(int_t meta)
+{
+	int_t l = meta & 7;
 	float f = (float)(2 * (1 + l)) / 16.0f;
 	setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, f, 1.0f);
 }
@@ -42,7 +49,10 @@ void BlockSnow::setBlockBoundsBasedOnState(IBlockAccess *iblockaccess, int_t i, 
 bool BlockSnow::canPlaceBlockAt(World *world, int_t i, int_t j, int_t k)
 {
 	int_t l = world->getBlockId(i, j - 1, k);
-	if (l == 0 || (l != Block::leaves->blockID && !Block::blocksList[l]->isOpaqueCube())) return false;
+	Block *below = (l > 0 && l < BLOCK_REGISTRY_SIZE) ? Block::blocksList[l] : nullptr;
+	if (below == nullptr) return false;
+	if (below == this && (world->getBlockMetadata(i, j - 1, k) & 7) == 7) return true;
+	if (l != Block::leaves->blockID && !below->isOpaqueCube()) return false;
 	return world->getBlockMaterial(i, j - 1, k)->blocksMovement();
 }
 
@@ -65,14 +75,8 @@ bool BlockSnow::getGlowing(World *world, int_t i, int_t j, int_t k)
 void BlockSnow::harvestBlock(World *world, EntityPlayer *entityplayer, int_t i, int_t j, int_t k, int_t l)
 {
 	int_t i1 = Item::snowball->shiftedIndex;
-	float f = 0.7f;
-	double d  = (double)(world->rand.nextFloat() * f) + (double)(1.0f - f) * 0.5;
-	double d1 = (double)(world->rand.nextFloat() * f) + (double)(1.0f - f) * 0.5;
-	double d2 = (double)(world->rand.nextFloat() * f) + (double)(1.0f - f) * 0.5;
-	EntityItem *entityitem = new EntityItem(world, (double)i + d, (double)j + d1, (double)k + d2, new ItemStack(i1, 1, 0));
-	entityitem->delayBeforeCanPickup = 10;
-	if (!world->entityJoinedWorld(entityitem))
-		delete entityitem;
+	int_t count = (l & 7) + 1;
+	dropBlockAsItem_do(world, i, j, k, new ItemStack(i1, count, 0));
 	world->setBlockWithNotify(i, j, k, 0);
 	entityplayer->addStat(StatList::mineBlockStatArray[blockID], 1);
 }

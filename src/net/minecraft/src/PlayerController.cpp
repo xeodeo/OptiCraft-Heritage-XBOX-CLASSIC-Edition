@@ -160,6 +160,11 @@ ItemStack *PlayerController::handleWindowClick(int_t, int_t j, int_t k, bool fla
 	return entityplayer->craftingInventory->slotClick(j, k, flag, entityplayer);
 }
 
+ItemStack *PlayerController::handleWindowClick(int_t, int_t j, int_t k, int_t mode, EntityPlayer *entityplayer)
+{
+	return entityplayer->craftingInventory->slotClick(j, k, mode, entityplayer);
+}
+
 void PlayerController::closeWindow(int_t, EntityPlayer *entityplayer)
 {
 	entityplayer->craftingInventory->onCraftGuiClosed(entityplayer);
@@ -173,6 +178,13 @@ ItemStack *PlayerController::windowClick(int_t windowId, int_t slotId, int_t but
 	// transaction id and send Packet102WindowClick; calling Container directly
 	// here made every inventory/crafting click client-side only.
 	return handleWindowClick(windowId, slotId, button, shift, player);
+}
+
+ItemStack *PlayerController::windowClick(int_t windowId, int_t slotId, int_t button, int_t mode, EntityPlayer *player)
+{
+	if (mode == 0 || mode == 1)
+		return handleWindowClick(windowId, slotId, button, mode == 1, player);
+	return handleWindowClick(windowId, slotId, button, mode, player);
 }
 
 void PlayerController::sendEnchantPacket(int_t windowId, int_t enchantment)

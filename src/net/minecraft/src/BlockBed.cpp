@@ -1,9 +1,11 @@
 #include "BlockBed.h"
+#include "BiomeGenBase.h"
 #include "Material.h"
 #include "World.h"
 #include "Explosion.h"
 #include "WorldProvider.h"
 #include "EntityPlayer.h"
+#include "PlayerCapabilities.h"
 #include "ChunkCoordinates.h"
 #include "EnumStatus.h"
 #include "ModelBed.h"
@@ -30,7 +32,7 @@ bool BlockBed::blockActivated(World *world, int_t i, int_t j, int_t k, EntityPla
         if (world->getBlockId(i, j, k) != blockID) return true;
         l = world->getBlockMetadata(i, j, k);
     }
-    if (!world->worldProvider->canRespawnHere())
+    if (!world->worldProvider->canRespawnHere() || world->getBiomeGenForCoords(i, k) == BiomeGenBase::hell)
     {
         double d  = (double)i + 0.5;
         double d1 = (double)j + 0.5;
@@ -179,3 +181,17 @@ void BlockBed::dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k
 }
 
 int_t BlockBed::getMobilityFlag() { return 1; }
+
+void BlockBed::onBlockHarvested(World *world, int_t x, int_t y, int_t z, int_t metadata, EntityPlayer *player)
+{
+    if (player != nullptr && player->capabilities.isCreativeMode && isBlockFootOfBed(metadata))
+    {
+        int_t dir = getDirectionFromMetadata(metadata);
+        x -= headBlockToFootBlockMap[dir][0];
+        z -= headBlockToFootBlockMap[dir][1];
+        if (world->getBlockId(x, y, z) == blockID)
+        {
+            world->setBlockWithNotify(x, y, z, 0);
+        }
+    }
+}

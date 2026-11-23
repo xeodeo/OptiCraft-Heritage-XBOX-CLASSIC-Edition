@@ -4,6 +4,7 @@
 #include "Entity.h"
 #include "EntityAnimal.h"
 #include "EntityLookHelper.h"
+#include "EntityXPOrb.h"
 #include "PathNavigate.h"
 #include "World.h"
 
@@ -68,7 +69,7 @@ void EntityAIMate::updateTask()
 	if (theAnimal->getNavigator() != nullptr)
 		theAnimal->getNavigator()->tryMoveToEntityLiving(mate, moveSpeed);
 	++spawnBabyDelay;
-	if (spawnBabyDelay == 60)
+	if (spawnBabyDelay >= 60 && theAnimal->getDistanceSqToEntity(mate) < 9.0)
 		spawnBaby();
 }
 
@@ -102,4 +103,8 @@ void EntityAIMate::spawnBaby()
 		const double particleZ = theAnimal->posZ + (double)(random.nextFloat() * theAnimal->width * 2.0f) - (double)theAnimal->width;
 		theWorld->spawnParticle("heart", particleX, particleY, particleZ, motionX, motionY, motionZ);
 	}
+
+	EntityXPOrb *xpOrb = new EntityXPOrb(theWorld, theAnimal->posX, theAnimal->posY, theAnimal->posZ, random.nextInt(7) + 1);
+	if (!theWorld->spawnEntityInWorld(xpOrb))
+		delete xpOrb;
 }

@@ -98,10 +98,137 @@ ItemStack *Container::getStackInSlot(int_t i)
 
 ItemStack *Container::slotClick(int_t slotIndex, int_t mouseButton, bool_t shiftClick, EntityPlayer *entityplayer)
 {
+	return slotClick(slotIndex, mouseButton, shiftClick ? 1 : 0, entityplayer);
+}
+
+ItemStack *Container::slotClick(int_t slotIndex, int_t mouseButton, int_t mode, EntityPlayer *entityplayer)
+{
 	ItemStack *itemstack = nullptr;
+	InventoryPlayer *inventoryplayer = entityplayer != nullptr ? entityplayer->inventory : nullptr;
+	if (inventoryplayer == nullptr)
+		return nullptr;
+
+	if (mode == 5)
+	{
+		const int_t oldState = field_94536_g;
+		field_94536_g = func_94532_c(mouseButton);
+		if ((oldState != 1 || field_94536_g != 2) && oldState != field_94536_g)
+		{
+			func_94533_d();
+		}
+		else if (inventoryplayer->getItemStack() == nullptr)
+		{
+			func_94533_d();
+		}
+		else if (field_94536_g == 0)
+		{
+			field_94535_f = func_94529_b(mouseButton);
+			if (func_94528_d(field_94535_f))
+			{
+				field_94536_g = 1;
+				field_94537_h.clear();
+			}
+			else
+			{
+				func_94533_d();
+			}
+		}
+		else if (field_94536_g == 1)
+		{
+			Slot *slot = (slotIndex >= 0 && slotIndex < static_cast<int_t>(slots.size())) ? slots[slotIndex] : nullptr;
+			if (slot != nullptr && func_94527_a(slot, inventoryplayer->getItemStack(), true) &&
+			    slot->isItemValid(inventoryplayer->getItemStack()) &&
+			    inventoryplayer->getItemStack()->stackSize > static_cast<int_t>(field_94537_h.size()) &&
+			    canDragIntoSlot(slot))
+			{
+				field_94537_h.insert(slot);
+			}
+		}
+		else if (field_94536_g == 2)
+		{
+			if (!field_94537_h.empty())
+			{
+				ItemStack *carriedCopy = inventoryplayer->getItemStack()->copy();
+				int_t remaining = inventoryplayer->getItemStack()->stackSize;
+				for (Slot *slot : field_94537_h)
+				{
+					if (slot != nullptr && func_94527_a(slot, inventoryplayer->getItemStack(), true) &&
+					    slot->isItemValid(inventoryplayer->getItemStack()) &&
+					    inventoryplayer->getItemStack()->stackSize >= static_cast<int_t>(field_94537_h.size()) &&
+					    canDragIntoSlot(slot))
+					{
+						ItemStack *slotStack = carriedCopy->copy();
+						const int_t baseCount = slot->getHasStack() ? slot->getStack()->stackSize : 0;
+						func_94525_a(field_94537_h, field_94535_f, slotStack, baseCount);
+						if (slotStack->stackSize > slotStack->getMaxStackSize())
+							slotStack->stackSize = slotStack->getMaxStackSize();
+						if (slotStack->stackSize > slot->getSlotStackLimit())
+							slotStack->stackSize = slot->getSlotStackLimit();
+						remaining -= slotStack->stackSize - baseCount;
+						slot->putStack(slotStack);
+					}
+				}
+				carriedCopy->stackSize = remaining;
+				if (carriedCopy->stackSize <= 0)
+				{
+					delete carriedCopy;
+					carriedCopy = nullptr;
+				}
+				ItemStack *oldCarried = inventoryplayer->getItemStack();
+				inventoryplayer->setItemStack(carriedCopy);
+				delete oldCarried;
+			}
+			func_94533_d();
+		}
+		else
+		{
+			func_94533_d();
+		}
+		return itemstack;
+	}
+
+	if (field_94536_g != 0)
+	{
+		func_94533_d();
+		return itemstack;
+	}
+
+	if (mode == 6 && slotIndex >= 0)
+	{
+		Slot *slot = (slotIndex < static_cast<int_t>(slots.size())) ? slots[slotIndex] : nullptr;
+		ItemStack *carried = inventoryplayer->getItemStack();
+		if (carried != nullptr && (slot == nullptr || !slot->getHasStack() || !slot->canTakeStack(entityplayer)))
+		{
+			const int_t start = mouseButton == 0 ? 0 : static_cast<int_t>(slots.size()) - 1;
+			const int_t step = mouseButton == 0 ? 1 : -1;
+			for (int_t pass = 0; pass < 2; ++pass)
+			{
+				for (int_t idx = start; idx >= 0 && idx < static_cast<int_t>(slots.size()) && carried->stackSize < carried->getMaxStackSize(); idx += step)
+				{
+					Slot *targetSlot = slots[idx];
+					if (targetSlot != nullptr && targetSlot->getHasStack() &&
+					    func_94527_a(targetSlot, carried, true) && targetSlot->canTakeStack(entityplayer) &&
+					    func_94530_a(carried, targetSlot) &&
+					    (pass != 0 || targetSlot->getStack()->stackSize != targetSlot->getStack()->getMaxStackSize()))
+					{
+						const int_t takeCount = std::min(carried->getMaxStackSize() - carried->stackSize, targetSlot->getStack()->stackSize);
+						ItemStack *taken = targetSlot->decrStackSize(takeCount);
+						carried->stackSize += takeCount;
+						if (taken == nullptr || taken->stackSize <= 0)
+							targetSlot->putStack(nullptr);
+						targetSlot->onPickupFromSlot(entityplayer, taken);
+						delete taken;
+					}
+				}
+			}
+		}
+		detectAndSendChanges();
+		return itemstack;
+	}
+
+	const bool_t shiftClick = (mode == 1);
 	if(mouseButton == 0 || mouseButton == 1)
 	{
-		InventoryPlayer *inventoryplayer = entityplayer->inventory;
 		if(slotIndex == -999)
 		{
 			if(inventoryplayer->getItemStack() != nullptr && slotIndex == -999)
@@ -250,6 +377,50 @@ void Container::onCraftGuiClosed(EntityPlayer *entityplayer)
 		entityplayer->dropPlayerItem(inventoryplayer->getItemStack());
 		inventoryplayer->setItemStack(nullptr);
 	}
+}
+
+void Container::func_94533_d()
+{
+	field_94536_g = 0;
+	field_94537_h.clear();
+}
+
+bool Container::func_94527_a(Slot *slot, ItemStack *stack, bool stackSizeMatters)
+{
+	bool canAdd = (slot == nullptr || !slot->getHasStack());
+	if (slot != nullptr && slot->getHasStack() && stack != nullptr &&
+	    stack->isItemEqual(slot->getStack()) && ItemStack::func_46154_a(slot->getStack(), stack))
+	{
+		const int_t extra = stackSizeMatters ? 0 : stack->stackSize;
+		canAdd |= (slot->getStack()->stackSize + extra <= stack->getMaxStackSize());
+	}
+	return canAdd;
+}
+
+void Container::func_94525_a(const std::set<Slot *> &dragSlots, int_t limit, ItemStack *stack, int_t baseSize)
+{
+	if (stack == nullptr)
+		return;
+	switch (limit)
+	{
+	case 0:
+		stack->stackSize = MathHelper::floor_float(static_cast<float>(stack->stackSize) / static_cast<float>(dragSlots.size()));
+		break;
+	case 1:
+		stack->stackSize = 1;
+		break;
+	}
+	stack->stackSize += baseSize;
+}
+
+bool Container::func_94530_a(ItemStack *, Slot *)
+{
+	return true;
+}
+
+bool Container::canDragIntoSlot(Slot *)
+{
+	return true;
 }
 
 void Container::onCraftMatrixChanged(IInventory *iinventory)

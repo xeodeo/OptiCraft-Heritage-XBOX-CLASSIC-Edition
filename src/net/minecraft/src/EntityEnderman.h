@@ -23,6 +23,8 @@ public:
 	int_t getCarried();
 	void setCarryingData(int_t metadata);
 	int_t getCarryingData();
+	bool isScreaming();
+	void setScreaming(bool screaming);
 
 	bool isAttacking;
 
@@ -46,4 +48,5 @@ private:
 	static bool carryableBlocksInitialized;
 	int_t teleportDelay;
 	int_t stareTimer;
+	bool field_104003_g = false;
 };

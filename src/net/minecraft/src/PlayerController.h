@@ -35,8 +35,10 @@ public:
 	virtual void interactWithEntity(EntityPlayer *entityplayer, Entity *entity);
 	virtual void attackEntity(EntityPlayer *entityplayer, Entity *entity);
 	virtual ItemStack *handleWindowClick(int_t i, int_t j, int_t k, bool flag, EntityPlayer *entityplayer);
+	virtual ItemStack *handleWindowClick(int_t i, int_t j, int_t k, int_t mode, EntityPlayer *entityplayer);
 	virtual void closeWindow(int_t i, EntityPlayer *entityplayer);
 	virtual ItemStack *windowClick(int_t windowId, int_t slotId, int_t button, bool shift, EntityPlayer *player);
+	virtual ItemStack *windowClick(int_t windowId, int_t slotId, int_t button, int_t mode, EntityPlayer *player);
 	virtual void sendEnchantPacket(int_t windowId, int_t enchantment);
 	virtual void onContainerClosed(int_t windowId, EntityPlayer *player);
 	virtual bool isNotCreative();

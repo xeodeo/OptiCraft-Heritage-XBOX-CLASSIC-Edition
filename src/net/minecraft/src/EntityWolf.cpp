@@ -112,8 +112,12 @@ bool EntityWolf::isWheat(ItemStack *itemstack) const
 EntityAnimal *EntityWolf::spawnBabyAnimal(EntityAnimal *)
 {
 	EntityWolf *child = new EntityWolf(worldObj);
-	child->setOwner(getOwnerName());
-	child->setTamed(true);
+	const jstring owner = getOwnerName();
+	if (!owner.empty())
+	{
+		child->setOwner(owner);
+		child->setTamed(true);
+	}
 	return child;
 }
 
@@ -296,11 +300,11 @@ void EntityWolf::onUpdate()
 		health = dataWatcher->getWatchableObjectInt(18);
 
 	field_25054_c = field_25048_b;
-	if (looksWithInterest)
+	if (func_70922_bv())
 		field_25048_b += (1.0f - field_25048_b) * 0.4f;
 	else
 		field_25048_b += (0.0f - field_25048_b) * 0.4f;
-	if (looksWithInterest)
+	if (func_70922_bv())
 		numTicksToChaseTarget = 10;
 
 	if (isWet())

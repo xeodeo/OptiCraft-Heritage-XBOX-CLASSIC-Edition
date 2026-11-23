@@ -388,11 +388,15 @@ void RenderItem::renderGuiItemGlint(int seed, int x, int y, int width, int heigh
 }
 
 void RenderItem::renderItemOverlayIntoGUI(FontRenderer* fontrenderer, RenderEngine* renderengine, ItemStack* itemstack, int i, int j) {
+    renderItemOverlayIntoGUI(fontrenderer, renderengine, itemstack, i, j, "");
+}
+
+void RenderItem::renderItemOverlayIntoGUI(FontRenderer* fontrenderer, RenderEngine* renderengine, ItemStack* itemstack, int i, int j, const std::string &customCountText) {
     if (itemstack == nullptr || !itemstack->isValid()) {
         return;
     }
-    if (itemstack->stackSize > 1) {
-        std::string s = std::to_string(itemstack->stackSize);
+    if (itemstack->stackSize > 1 || !customCountText.empty()) {
+        std::string s = customCountText.empty() ? std::to_string(itemstack->stackSize) : customCountText;
         renderDisable(RenderCapability::Lighting);
         renderDisable(RenderCapability::DepthTest);
         fontrenderer->drawStringWithShadow(s, (i + 19) - 2 - fontrenderer->getStringWidth(s), j + 6 + 3, 0xffffff);

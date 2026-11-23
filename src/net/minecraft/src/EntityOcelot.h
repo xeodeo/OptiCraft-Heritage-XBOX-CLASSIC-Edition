@@ -27,6 +27,7 @@ public:
 	bool getCanSpawnHere() override;
 	int_t getCatType() const;
 	void setCatType(int_t type);
+	void initCreature() override;
 
 protected:
 	void entityInit() override;

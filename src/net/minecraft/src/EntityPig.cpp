@@ -96,7 +96,22 @@ bool EntityPig::interact(EntityPlayer *entityplayer)
 
 int_t EntityPig::getDropItemId()
 {
-	return fire > 0 ? Item::porkCooked->shiftedIndex : Item::porkRaw->shiftedIndex;
+	return isBurning() ? Item::porkCooked->shiftedIndex : Item::porkRaw->shiftedIndex;
+}
+
+void EntityPig::dropFewItems(bool, int_t lootingLevel)
+{
+	const int_t count = rand.nextInt(3) + 1 + rand.nextInt(1 + lootingLevel);
+	for (int_t i = 0; i < count; ++i)
+	{
+		if (isBurning())
+			dropItem(Item::porkCooked->shiftedIndex, 1);
+		else
+			dropItem(Item::porkRaw->shiftedIndex, 1);
+	}
+
+	if (getSaddled() && Item::saddle != nullptr)
+		dropItem(Item::saddle->shiftedIndex, 1);
 }
 
 bool EntityPig::getSaddled()
