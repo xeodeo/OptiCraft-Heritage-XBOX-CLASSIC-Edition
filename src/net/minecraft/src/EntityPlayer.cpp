@@ -319,6 +319,9 @@ bool EntityPlayer::canAttackPlayer(EntityPlayer *other) const
 {
 	if (other == nullptr)
 		return true;
+	// LCE host option "Player vs Player" (split screen players hitting each other).
+	if (worldObj != nullptr && !worldObj->getGameRules().getGameRuleBooleanValue("pvp"))
+		return false;
 	ScorePlayerTeam *myTeam = getTeam();
 	ScorePlayerTeam *otherTeam = other->getTeam();
 	return myTeam == nullptr || myTeam != otherTeam || myTeam->getAllowFriendlyFire();

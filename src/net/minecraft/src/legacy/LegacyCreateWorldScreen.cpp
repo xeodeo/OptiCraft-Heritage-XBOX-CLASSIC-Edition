@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "LegacyDifficultySlider.h"
+#include "../GuiWorldGameOptions.h"
 #include "LegacyGuiButton.h"
 #include "LegacyMainMenuLayout.h"
 #include "LegacyOptionLabel.h"
@@ -37,7 +38,8 @@ enum LegacyCreateButtonId
     BUTTON_ALLOW_COMMANDS = 6,
     BUTTON_WORLD_SIZE = 7,
     BUTTON_DIFFICULTY = 9,
-    BUTTON_CUSTOMIZE_TYPE = 10
+    BUTTON_CUSTOMIZE_TYPE = 10,
+    BUTTON_GAME_OPTIONS = 11
 };
 
 bool pointInside(int_t x, int_t y, int_t left, int_t top, int_t width, int_t height)
@@ -66,7 +68,7 @@ LegacyCreateWorldScreen::LegacyCreateWorldScreen(GuiScreen *parent)
 int_t LegacyCreateWorldScreen::selectionCount() const
 {
     if (!moreOptions)
-        return 6;
+        return 7;
     return isFlatWorldType() ? 8 : 7;
 }
 
@@ -90,7 +92,8 @@ void LegacyCreateWorldScreen::repositionControls()
         btn->setButtonSize(layout.contentWidth, layout.rowHeight);
     };
     if (!controlList.empty())
-        placeBtn(controlList[0], moreOptions ? (6 + shift) : 5);
+        placeBtn(controlList[0], moreOptions ? (6 + shift) : 6);
+    placeBtn(gameOptionsButton, 4);
     placeBtn(gameModeButton, 1);
     placeBtn(difficultySlider, 2);
     placeBtn(legacyWorldSizeButton, 3);
@@ -99,7 +102,7 @@ void LegacyCreateWorldScreen::repositionControls()
     placeBtn(legacyCustomizeTypeButton, 3);
     placeBtn(bonusChestButton, 3 + shift);
     placeBtn(legacyAllowCommandsButton, 4 + shift);
-    placeBtn(moreWorldOptionsButton, moreOptions ? (5 + shift) : 4);
+    placeBtn(moreWorldOptionsButton, moreOptions ? (5 + shift) : 5);
     const bool nameFocused = textboxWorldName != nullptr && textboxWorldName->getFocused();
     const bool seedFocused = textboxSeed != nullptr && textboxSeed->getFocused();
     delete textboxWorldName;
@@ -148,6 +151,13 @@ void LegacyCreateWorldScreen::initGui()
     controlList.push_back(legacyCustomizeTypeButton = new LegacyGuiButton(BUTTON_CUSTOMIZE_TYPE, layout.contentX,
         layout.rowY(3), layout.contentWidth, layout.rowHeight, tr->translateKey("selectWorld.customizeType")));
     customizeTypeButton = legacyCustomizeTypeButton;
+    if (gameOptions.empty())
+        gameOptions = GuiWorldGameOptions::defaultRules();
+    {
+        const bool es = tr->getCurrentLanguage().rfind("es_", 0) == 0;
+        controlList.push_back(gameOptionsButton = new LegacyGuiButton(BUTTON_GAME_OPTIONS, layout.contentX,
+            layout.rowY(4), layout.contentWidth, layout.rowHeight, es ? "Opciones de juego..." : "Game Options..."));
+    }
 
     delete textboxWorldName;
     textboxWorldName = new GuiTextField(fontRenderer, layout.contentX, layout.rowY(0), layout.contentWidth, textFieldHeight);
@@ -175,6 +185,8 @@ void LegacyCreateWorldScreen::updateControlVisibility()
 {
     gameModeButton->enabled2 = !moreOptions;
     difficultySlider->enabled2 = !moreOptions;
+    if (gameOptionsButton != nullptr)
+        gameOptionsButton->enabled2 = !moreOptions;
     generateStructuresButton->enabled2 = moreOptions;
     worldTypeButton->enabled2 = moreOptions;
     if (legacyCustomizeTypeButton != nullptr)
@@ -236,8 +248,9 @@ GuiButton *LegacyCreateWorldScreen::buttonForSelection(int_t index) const
     case 1: return gameModeButton;
     case 2: return static_cast<GuiButton *>(difficultySlider);
     case 3: return static_cast<GuiButton *>(worldSizeButton);
-    case 4: return moreWorldOptionsButton;
-    case 5: return !controlList.empty() ? controlList[0] : nullptr;
+    case 4: return gameOptionsButton;
+    case 5: return moreWorldOptionsButton;
+    case 6: return !controlList.empty() ? controlList[0] : nullptr;
     default: return nullptr;
     }
 }
@@ -259,10 +272,12 @@ int_t LegacyCreateWorldScreen::selectionForButton(const GuiButton *button) const
         return 3 + shift;
     if (moreOptions && button == legacyAllowCommandsButton)
         return 4 + shift;
+    if (!moreOptions && button == gameOptionsButton)
+        return 4;
     if (button == moreWorldOptionsButton)
-        return moreOptions ? (5 + shift) : 4;
+        return moreOptions ? (5 + shift) : 5;
     if (!controlList.empty() && button == controlList[0])
-        return moreOptions ? (6 + shift) : 5;
+        return moreOptions ? (6 + shift) : 6;
     return -1;
 }
 
@@ -486,6 +501,11 @@ void LegacyCreateWorldScreen::actionPerformed(GuiButton *button)
     }
 
     const int_t id = button->id;
+    if (id == BUTTON_GAME_OPTIONS)
+    {
+        mc->displayGuiScreen(new GuiWorldGameOptions(this, &gameOptions));
+        return;
+    }
     GuiCreateWorld::actionPerformed(button);
     if (id == BUTTON_MORE_OPTIONS)
     {

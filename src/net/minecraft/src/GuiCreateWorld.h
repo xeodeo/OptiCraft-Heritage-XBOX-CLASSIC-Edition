@@ -1,4 +1,6 @@
 #pragma once
+#include <utility>
+#include <vector>
 
 #include "GuiScreen.h"
 #include <string>
@@ -56,6 +58,8 @@ protected:
     GuiButton *allowCommandsButton;
     bool bonusItems;
     bool commandsAllowed;
+    // LCE "Game Options" (GuiWorldGameOptions), applied to the new world's rules.
+    std::vector<std::pair<std::string, bool>> gameOptions;
     bool commandsToggled;
     bool limitedWorld;
     int_t worldSizeType;

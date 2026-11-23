@@ -128,6 +128,9 @@ WorldInfo::WorldInfo(WorldSettings *settings, const jstring &s)
 	hardcore = settings != nullptr && settings->getHardcoreEnabled();
 	allowCommands = settings != nullptr && settings->areCommandsAllowed();
 	bonusChestEnabled = settings != nullptr && settings->isBonusChestEnabled();
+	if (settings != nullptr)
+		for (const auto &rule : settings->gameRuleOverrides)
+			theGameRules.setOrCreateGameRule(rule.first, rule.second);
 	worldSizeType = settings != nullptr ? settings->getWorldSizeType() : 0;
 	limitedWorld = (worldSizeType != 0);
 	levelName = s;

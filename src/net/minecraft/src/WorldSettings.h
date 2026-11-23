@@ -1,4 +1,7 @@
 #pragma once
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "java/Type.h"
 #include "java/String.h"
@@ -37,6 +40,10 @@ private:
 	int_t worldSizeType;
 	bool bonusChestEnabled{false};
 	bool commandsAllowed{false};
+public:
+	// LCE game options chosen when creating the world (rule name, value).
+	std::vector<std::pair<std::string, std::string>> gameRuleOverrides;
+private:
 	jstring field_82751_h;
 };
 

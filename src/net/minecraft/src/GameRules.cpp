@@ -38,6 +38,9 @@ GameRules::GameRules()
 	addGameRule("doMobLoot", "true");
 	addGameRule("doTileDrops", "true");
 	addGameRule("commandBlockOutput", "true");
+	// LCE host options (world creation > Game Options).
+	addGameRule("tntExplodes", "true");
+	addGameRule("pvp", "true");
 }
 
 void GameRules::addGameRule(const std::string &name, const std::string &value)
