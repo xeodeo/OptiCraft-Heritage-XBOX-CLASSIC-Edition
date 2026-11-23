@@ -41,6 +41,10 @@
 #include "StringTranslate.h"
 #include "Minecraft.h"
 #include "HudSafeArea.h"
+#include "scoreboard/Score.h"
+#include "scoreboard/ScoreObjective.h"
+#include "scoreboard/ScorePlayerTeam.h"
+#include "scoreboard/Scoreboard.h"
 #include "RenderManager.h"
 #include "Render.h"
 #include "OpenGlHelper.h"
@@ -1118,6 +1122,13 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 		}
 	}
 
+	if (mc->theWorld != nullptr && mc->theWorld->getScoreboard() != nullptr)
+	{
+		ScoreObjective *sidebarObj = mc->theWorld->getScoreboard()->getObjectiveInDisplaySlot(Scoreboard::DISPLAY_SLOT_SIDEBAR);
+		if (sidebarObj != nullptr)
+			renderScoreboard(sidebarObj, sw, sh, hudSafe.right, hudSafe.top, hudHeight, fr);
+	}
+
 	int_t chatLines = 10;
 	bool chatOpen = false;
 	if (dynamic_cast<GuiChat *>(mc->currentScreen) != nullptr)
@@ -1161,6 +1172,8 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 	}
 	renderPopMatrix();
 
+	Scoreboard *hudBoard = (mc->theWorld != nullptr) ? mc->theWorld->getScoreboard() : nullptr;
+	ScoreObjective *listObj = (hudBoard != nullptr) ? hudBoard->getObjectiveInDisplaySlot(Scoreboard::DISPLAY_SLOT_LIST) : nullptr;
 	EntityClientPlayerMP *clientPlayer = dynamic_cast<EntityClientPlayerMP *>(mc->thePlayer);
 	if (clientPlayer != nullptr && mc->gameSettings->keyBindPlayerList != nullptr &&
 	    mc->gameSettings->keyBindPlayerList->pressed && clientPlayer->sendQueue != nullptr)
@@ -1194,7 +1207,21 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 			if (index < (int_t)players.size() && players[index] != nullptr)
 			{
 				GuiPlayerInfo *info = players[index];
-				fr->drawStringWithShadow(info->name, x, y, 0xffffff);
+				ScorePlayerTeam *team = (hudBoard != nullptr) ? hudBoard->getPlayersTeam(info->name) : nullptr;
+				const std::string displayName = ScorePlayerTeam::formatPlayerName(team, info->name);
+				fr->drawStringWithShadow(displayName, x, y, 0xffffff);
+				if (listObj != nullptr && hudBoard != nullptr)
+				{
+					const int_t scoreMinX = x + fr->getStringWidth(displayName) + 5;
+					const int_t scoreMaxX = x + columnWidth - 12 - 5;
+					if (scoreMaxX - scoreMinX > 5)
+					{
+						Score *sc = hudBoard->getValueFromObjective(info->name, listObj);
+						const std::string scoreStr = std::string("\xc2\xa7" "e") + std::to_string(sc->getScorePoints());
+						fr->drawStringWithShadow(scoreStr, scoreMaxX - fr->getStringWidth(scoreStr), y, 0xffffff);
+					}
+				}
+				renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 				renderBindTexture(mc->renderEngine->getTexture("/gui/icons.png"));
 				int_t pingIcon = 0;
 				if (info->responseTime < 0) pingIcon = 5;
@@ -1207,6 +1234,36 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 				zLevel += 100.0f;
 				drawTexturedModalRect(x + columnWidth - 12, y, 0, 176 + pingIcon * 8, 10, 8);
 				zLevel -= 100.0f;
+			}
+		}
+	}
+	else if (clientPlayer == nullptr && mc->gameSettings->keyBindPlayerList != nullptr &&
+	         mc->gameSettings->keyBindPlayerList->pressed && mc->theWorld != nullptr &&
+	         (mc->isSplitScreenActive() || listObj != nullptr))
+	{
+		const auto &localPlayers = mc->theWorld->playerEntities;
+		const int_t count = std::max<int_t>(1, static_cast<int_t>(localPlayers.size()));
+		const int_t columnWidth = std::min<int_t>(150, sw - hudSafe.left - hudSafe.right - 8);
+		const int_t left = (sw - columnWidth) / 2;
+		const int_t top = 10 + hudSafe.top;
+		drawRect(left - 1, top - 1, left + columnWidth, top + 9 * count, 0x80000000);
+		for (int_t idx = 0; idx < static_cast<int_t>(localPlayers.size()); ++idx)
+		{
+			EntityPlayer *p = localPlayers[static_cast<std::size_t>(idx)];
+			if (p == nullptr)
+				continue;
+			const int_t y = top + idx * 9;
+			drawRect(left, y, left + columnWidth - 1, y + 8, 0x20ffffff);
+			renderColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			renderEnable(RenderCapability::AlphaTest);
+			ScorePlayerTeam *team = (hudBoard != nullptr) ? hudBoard->getPlayersTeam(p->username) : nullptr;
+			const std::string displayName = ScorePlayerTeam::formatPlayerName(team, p->username);
+			fr->drawStringWithShadow(displayName, left + 2, y, 0xffffff);
+			if (listObj != nullptr && hudBoard != nullptr)
+			{
+				Score *sc = hudBoard->getValueFromObjective(p->username, listObj);
+				const std::string scoreStr = std::string("\xc2\xa7" "e") + std::to_string(sc->getScorePoints());
+				fr->drawStringWithShadow(scoreStr, left + columnWidth - 4 - fr->getStringWidth(scoreStr), y, 0xffffff);
 			}
 		}
 	}
@@ -1223,6 +1280,85 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 #endif
 	ModManager::getInstance().onRenderGameOverlay(this, sw, sh, partialTick);
 	finishOverlayGLState();
+}
+
+void GuiIngame::renderScoreboard(ScoreObjective *objective, int_t sw, int_t sh, int_t safeRight, int_t safeTop, int_t hudHeight, FontRenderer *fr)
+{
+	if (objective == nullptr || fr == nullptr)
+		return;
+	Scoreboard *board = objective->getScoreboard();
+	if (board == nullptr)
+		return;
+
+	std::vector<Score *> scores = board->getSortedScores(objective);
+	if (scores.empty())
+		return;
+	if (scores.size() > 15)
+		scores.erase(scores.begin(), scores.begin() + static_cast<std::ptrdiff_t>(scores.size() - 15));
+
+	const int_t fontH = 9;
+	int_t maxWidth = fr->getStringWidth(objective->getDisplayName());
+	for (Score *sc : scores)
+	{
+		if (sc == nullptr)
+			continue;
+		ScorePlayerTeam *team = board->getPlayersTeam(sc->getPlayerName());
+		const std::string namePart = ScorePlayerTeam::formatPlayerName(team, sc->getPlayerName());
+		const std::string valPart = std::string("\xc2\xa7" "c") + std::to_string(sc->getScorePoints());
+		maxWidth = std::max<int_t>(maxWidth, fr->getStringWidth(namePart) + fr->getStringWidth(valPart) + 10);
+	}
+
+	const int_t maxAllowedWidth = std::max<int_t>(60, sw / 2 - safeRight - 6);
+	if (maxWidth > maxAllowedWidth)
+		maxWidth = maxAllowedWidth;
+
+	const int_t totalRowsH = static_cast<int_t>(scores.size()) * fontH;
+	int_t bottomY = sh / 2 + totalRowsH / 3;
+	const int_t minTopY = safeTop + fontH + 4;
+	const int_t maxBottomY = std::max<int_t>(minTopY + totalRowsH, hudHeight - 28);
+	if (bottomY > maxBottomY)
+		bottomY = maxBottomY;
+	if (bottomY - totalRowsH < minTopY)
+		bottomY = minTopY + totalRowsH;
+
+	const int_t rightMargin = std::max<int_t>(3, safeRight);
+	const int_t leftX = sw - maxWidth - rightMargin;
+	const int_t rightX = sw - rightMargin + 2;
+
+	renderEnable(RenderCapability::Blend);
+	renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
+
+	int_t rowIndex = 0;
+	for (Score *sc : scores)
+	{
+		if (sc == nullptr)
+			continue;
+		++rowIndex;
+		ScorePlayerTeam *team = board->getPlayersTeam(sc->getPlayerName());
+		std::string nameStr = ScorePlayerTeam::formatPlayerName(team, sc->getPlayerName());
+		const std::string valStr = std::string("\xc2\xa7" "c") + std::to_string(sc->getScorePoints());
+		const int_t valW = fr->getStringWidth(valStr);
+		const int_t maxNameW = std::max<int_t>(16, maxWidth - valW - 6);
+		if (fr->getStringWidth(nameStr) > maxNameW)
+			nameStr = fr->trimStringToWidth(nameStr, maxNameW);
+
+		const int_t rowY = bottomY - rowIndex * fontH;
+		drawRect(leftX - 2, rowY, rightX, rowY + fontH, 0x50000000);
+		renderEnable(RenderCapability::Blend);
+		fr->drawString(nameStr, leftX, rowY, 0xffe0e0e0);
+		fr->drawString(valStr, rightX - valW - 1, rowY, 0xffe0e0e0);
+
+		if (rowIndex == static_cast<int_t>(scores.size()))
+		{
+			std::string titleStr = objective->getDisplayName();
+			if (fr->getStringWidth(titleStr) > maxWidth)
+				titleStr = fr->trimStringToWidth(titleStr, maxWidth);
+			drawRect(leftX - 2, rowY - fontH - 1, rightX, rowY - 1, 0x60000000);
+			drawRect(leftX - 2, rowY - 1, rightX, rowY, 0x50000000);
+			renderEnable(RenderCapability::Blend);
+			fr->drawString(titleStr, leftX + maxWidth / 2 - fr->getStringWidth(titleStr) / 2, rowY - fontH, 0xffffffff);
+		}
+	}
 }
 
 void GuiIngame::renderPumpkinBlur(int_t w, int_t h)

@@ -7,6 +7,8 @@
 #include "Chunk.h"
 #include "java/Math.h"
 #include "Entity.h"
+#include "EntityLiving.h"
+#include "EntityTNTPrimed.h"
 #include "Block.h"
 #include "MathHelper.h"
 #include "AxisAlignedBB.h"
@@ -199,7 +201,7 @@ void Explosion::doExplosionA()
         if (d4 <= 1.0)
         {
             double d6  = entity->posX - explosionX;
-            double d8  = entity->posY - explosionY;
+            double d8  = entity->posY + static_cast<double>(entity->getEyeHeight()) - explosionY;
             double d10 = entity->posZ - explosionZ;
             double d11 = MathHelper::sqrt_double(d6 * d6 + d8 * d8 + d10 * d10);
             if (d11 > 0.0)
@@ -231,7 +233,7 @@ void Explosion::doExplosionA()
                 d12 = worldObj->getBlockDensity(vec3d, entity->boundingBox);
             }
             double d13 = (1.0 - d4) * d12;
-            entity->attackEntityFrom(DamageSource::explosion,
+            entity->attackEntityFrom(DamageSource::setExplosionSource(this),
                 JavaArithmetic::doubleToInt(((d13 * d13 + d13) / 2.0) * 8.0 * (double)explosionSize + 1.0));
             double d14 = EnchantmentProtection::func_92092_a(entity, d13);
             entity->motionX += d6  * d14;
@@ -353,4 +355,13 @@ void Explosion::doExplosionB(bool flag)
                 worldObj->setBlockWithNotify(x, y, z, Block::fire->blockID);
         }
     }
+}
+
+EntityLiving *Explosion::func_94613_c() const
+{
+    if (exploder == nullptr)
+        return nullptr;
+    if (EntityTNTPrimed *tnt = dynamic_cast<EntityTNTPrimed *>(exploder))
+        return tnt->getTntPlacedBy();
+    return exploder->isLiving() ? static_cast<EntityLiving *>(exploder) : nullptr;
 }

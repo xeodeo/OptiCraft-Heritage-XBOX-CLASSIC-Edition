@@ -36,6 +36,11 @@ std::string StatCollector::translateToLocalFormatted(const std::string &s, const
 	return StringTranslate::getInstance()->translateKeyFormat(s, arg1, arg2);
 }
 
+std::string StatCollector::translateToLocalFormatted(const std::string &s, const std::string &arg1, const std::string &arg2, const std::string &arg3)
+{
+	return StringTranslate::getInstance()->translateKeyFormat(s, std::vector<std::string>{arg1, arg2, arg3});
+}
+
 bool StatCollector::func_94522_b(const std::string &s)
 {
 	return StringTranslate::getInstance()->containsTranslateKey(s);

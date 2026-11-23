@@ -24,6 +24,12 @@ namespace
 		"asdfghjkl_=",
 		"zxcvbnm/.-:",
 	};
+	const char* KB_ROWS_SHIFT[] = {
+		"!@#$%^&*()?",
+		"QWERTYUIOP[",
+		"ASDFGHJKL]+",
+		"ZXCVBNM\\,_;",
+	};
 	const int KB_COLS     = 11;
 	const int KB_ROWCOUNT = 4;
 
@@ -194,9 +200,7 @@ void VirtualKeyboard::tick()
 	// Cross: type the selected key.
 	if (pressed & keyType)
 	{
-		char c = KB_ROWS[selY][selX];
-		if (shift && c >= 'a' && c <= 'z')
-			c = (char)(c - 'a' + 'A');
+		char c = (shift ? KB_ROWS_SHIFT : KB_ROWS)[selY][selX];
 		lwjgl::Keyboard::detail::pushChar((int)(unsigned char)c);
 	}
 	// Square: backspace.
@@ -301,9 +305,7 @@ void VirtualKeyboard::render(FontRenderer* font, int_t screenWidth, int_t screen
 			const bool sel = (row == selY && col == selX);
 			drawRect(x0, y0, x0 + keyW - 2, y0 + keyH - 2, sel ? 0xffffffff : 0xff707070);
 			drawRect(x0 + 1, y0 + 1, x0 + keyW - 3, y0 + keyH - 3, sel ? 0xff606060 : 0xff101010);
-			char ch = KB_ROWS[row][col];
-			if (shift && ch >= 'a' && ch <= 'z')
-				ch = (char)(ch - 'a' + 'A');
+			char ch = (shift ? KB_ROWS_SHIFT : KB_ROWS)[row][col];
 			const char s[2] = { ch, 0 };
 			drawString(font, std::string(s), x0 + 8, y0 + 5, 0xffffff);
 		}

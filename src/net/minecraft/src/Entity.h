@@ -87,6 +87,7 @@ protected:
 public:
 	bool isOffsetPositionInLiquid(double d, double d1, double d2);
 	virtual void moveEntity(double d, double d1, double d2);
+	void doBlockCollisions();
 
 protected:
 	virtual void playStepSound(int_t x, int_t y, int_t z, int_t blockId);
@@ -148,6 +149,8 @@ public:
 	virtual bool isEntityInvulnerable() const { return invulnerable; }
 	// Java 1.5.2 Entity.func_82146_a: this entity's view of a block's explosion resistance.
 	virtual float func_82146_a(Explosion *explosion, World *world, int_t x, int_t y, int_t z, Block *block);
+	virtual std::string getEntityName();
+	virtual std::string getTranslatedEntityName();
 
 	bool addEntityID(NBTTagCompound *nbttagcompound);
 	void writeToNBT(NBTTagCompound *nbttagcompound);

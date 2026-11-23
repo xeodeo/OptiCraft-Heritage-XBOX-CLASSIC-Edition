@@ -1,44 +1,85 @@
 #include "ChunkProviderFlat.h"
 
+#include <cstring>
+
 #include "BiomeGenBase.h"
 #include "Block.h"
-#include "BlockGrass.h"
 #include "Chunk.h"
+#include "ExtendedBlockStorage.h"
+#include "MapGenMineshaft.h"
+#include "MapGenScatteredFeature.h"
+#include "MapGenStronghold.h"
+#include "MapGenStructure.h"
 #include "MapGenVillage.h"
 #include "World.h"
 #include "WorldChunkManager.h"
+#include "WorldGenDungeons.h"
+#include "WorldGenLakes.h"
+#include "WorldHeight.h"
 #include "java/Arithmetic.h"
 
-ChunkProviderFlat::ChunkProviderFlat(World *world, long_t seed, bool structures) :
-	worldObj(world), random(seed), useStructures(structures), villageGen(new MapGenVillage(1))
+ChunkProviderFlat::ChunkProviderFlat(World *world, long_t seed, bool structures, const jstring &generatorOptions)
+	: worldObj(world)
+	, random(seed)
+	, flatGeneratorInfo(FlatGeneratorInfo::createFlatGeneratorFromString(generatorOptions))
+	, hasDecoration(false)
+	, hasDungeons(false)
+	, waterLakeGenerator(nullptr)
+	, lavaLakeGenerator(nullptr)
 {
+	std::memset(layerBlocks, 0, sizeof(layerBlocks));
+	std::memset(layerMeta, 0, sizeof(layerMeta));
+
+	auto &features = flatGeneratorInfo.getWorldFeatures();
+	if (structures)
+	{
+		if (features.find("village") != features.end())
+		{
+			auto villageParams = features["village"];
+			if (villageParams.find("size") == villageParams.end())
+				villageParams["size"] = "1";
+			structureGenerators.push_back(new MapGenVillage(villageParams));
+		}
+
+		if (features.find("biome_1") != features.end())
+			structureGenerators.push_back(new MapGenScatteredFeature(features["biome_1"]));
+
+		if (features.find("mineshaft") != features.end())
+			structureGenerators.push_back(new MapGenMineshaft(features["mineshaft"]));
+
+		if (features.find("stronghold") != features.end())
+			structureGenerators.push_back(new MapGenStronghold(features["stronghold"]));
+	}
+
+	hasDecoration = (features.find("decoration") != features.end());
+	if (features.find("lake") != features.end() && Block::waterStill != nullptr)
+		waterLakeGenerator = new WorldGenLakes(Block::waterStill->blockID);
+	if (features.find("lava_lake") != features.end() && Block::lavaStill != nullptr)
+		lavaLakeGenerator = new WorldGenLakes(Block::lavaStill->blockID);
+	hasDungeons = (features.find("dungeon") != features.end());
+
+	for (const FlatLayerInfo &layer : flatGeneratorInfo.getFlatLayers())
+	{
+		const int_t startY = layer.getMinY();
+		const int_t endY = startY + layer.getLayerCount();
+		for (int_t y = startY; y < endY; ++y)
+		{
+			if (y >= 0 && y < WorldHeight::HEIGHT)
+			{
+				layerBlocks[y] = static_cast<byte_t>(layer.getFillBlock() & 0xFF);
+				layerMeta[y] = static_cast<byte_t>(layer.getFillBlockMeta() & 0x0F);
+			}
+		}
+	}
 }
 
 ChunkProviderFlat::~ChunkProviderFlat()
 {
-	delete villageGen;
-}
-
-void ChunkProviderFlat::generate(std::vector<byte_t> &blocks)
-{
-	const int_t height = (int_t)blocks.size() / 256;
-	for (int_t x = 0; x < 16; ++x)
-	{
-		for (int_t z = 0; z < 16; ++z)
-		{
-			for (int_t y = 0; y < height; ++y)
-			{
-				int_t blockId = 0;
-				if (y == 0)
-					blockId = Block::bedrock->blockID;
-				else if (y <= 2)
-					blockId = Block::dirt->blockID;
-				else if (y == 3)
-					blockId = Block::grass->blockID;
-				blocks[(std::size_t)(x << 11 | z << 7 | y)] = (byte_t)blockId;
-			}
-		}
-	}
+	for (MapGenStructure *gen : structureGenerators)
+		delete gen;
+	structureGenerators.clear();
+	delete waterLakeGenerator;
+	delete lavaLakeGenerator;
 }
 
 Chunk *ChunkProviderFlat::prepareChunk(int_t x, int_t z)
@@ -53,19 +94,47 @@ Chunk *ChunkProviderFlat::loadChunk(int_t x, int_t z)
 
 Chunk *ChunkProviderFlat::provideChunk(int_t x, int_t z)
 {
-	std::vector<byte_t> blocks(32768, 0);
-	generate(blocks);
-	Chunk *chunk = new Chunk(worldObj, blocks, x, z);
+	Chunk *chunk = new Chunk(worldObj, x, z);
+	ExtendedBlockStorage **storageArr = chunk->getBlockStorageArray();
 
-	if (useStructures)
-		villageGen->generate(this, worldObj, x, z, blocks.data());
+	for (int_t y = 0; y < WorldHeight::HEIGHT; ++y)
+	{
+		const int_t blockId = static_cast<int_t>(static_cast<unsigned char>(layerBlocks[y]));
+		if (blockId == 0)
+			continue;
+
+		const int_t sectionY = y >> 4;
+		ExtendedBlockStorage *storage = storageArr[sectionY];
+		if (storage == nullptr)
+		{
+			storage = new ExtendedBlockStorage(sectionY << 4);
+			storageArr[sectionY] = storage;
+		}
+
+		const int_t localY = y & 15;
+		const int_t meta = static_cast<int_t>(static_cast<unsigned char>(layerMeta[y])) & 0x0F;
+		for (int_t lx = 0; lx < 16; ++lx)
+		{
+			for (int_t lz = 0; lz < 16; ++lz)
+			{
+				storage->setExtBlockID(lx, localY, lz, blockId);
+				if (meta != 0)
+					storage->setExtBlockMetadata(lx, localY, lz, meta);
+			}
+		}
+	}
+
+	chunk->generateSkylightMap();
 
 	std::vector<BiomeGenBase *> biomes;
 	worldObj->getWorldChunkManager()->loadBlockGeneratorData(
 		biomes, JavaArithmetic::intMul(x, 16), JavaArithmetic::intMul(z, 16), 16, 16);
 	std::vector<byte_t> &biomeArray = chunk->getBiomeArray();
 	for (std::size_t i = 0; i < biomeArray.size() && i < biomes.size(); ++i)
-		biomeArray[i] = biomes[i] == nullptr ? 0 : (byte_t)biomes[i]->biomeID;
+		biomeArray[i] = biomes[i] == nullptr ? 0 : static_cast<byte_t>(biomes[i]->biomeID);
+
+	for (MapGenStructure *gen : structureGenerators)
+		gen->generate(this, worldObj, x, z, nullptr);
 
 	chunk->generateSkylightMap();
 	return chunk;
@@ -78,13 +147,58 @@ bool ChunkProviderFlat::chunkExists(int_t, int_t)
 
 void ChunkProviderFlat::populate(IChunkProvider *, int_t x, int_t z)
 {
+	const int_t blockX = JavaArithmetic::intMul(x, 16);
+	const int_t blockZ = JavaArithmetic::intMul(z, 16);
+	BiomeGenBase *biome = worldObj->getBiomeGenForCoords(blockX + 16, blockZ + 16);
+	bool hasVillage = false;
+
 	random.setSeed(worldObj->getRandomSeed());
 	const long_t oddX = JavaArithmetic::longAdd(JavaArithmetic::longMul(random.nextLong() / 2LL, 2LL), 1LL);
 	const long_t oddZ = JavaArithmetic::longAdd(JavaArithmetic::longMul(random.nextLong() / 2LL, 2LL), 1LL);
-	const long_t coordSeed = JavaArithmetic::longAdd(JavaArithmetic::longMul((long_t)x, oddX), JavaArithmetic::longMul((long_t)z, oddZ));
-	random.setSeed(JavaArithmetic::longFromBits((ulong_t)coordSeed ^ (ulong_t)worldObj->getRandomSeed()));
-	if (useStructures)
-		villageGen->generateStructuresInChunk(worldObj, random, x, z);
+	const long_t coordSeed = JavaArithmetic::longAdd(JavaArithmetic::longMul(static_cast<long_t>(x), oddX),
+	                                                 JavaArithmetic::longMul(static_cast<long_t>(z), oddZ));
+	random.setSeed(JavaArithmetic::longFromBits(static_cast<ulong_t>(coordSeed) ^ static_cast<ulong_t>(worldObj->getRandomSeed())));
+
+	for (MapGenStructure *gen : structureGenerators)
+	{
+		const bool generated = gen->generateStructuresInChunk(worldObj, random, x, z);
+		if (dynamic_cast<MapGenVillage *>(gen) != nullptr)
+			hasVillage = hasVillage || generated;
+	}
+
+	if (waterLakeGenerator != nullptr && !hasVillage && random.nextInt(4) == 0)
+	{
+		const int_t lx = blockX + random.nextInt(16) + 8;
+		const int_t ly = random.nextInt(128);
+		const int_t lz = blockZ + random.nextInt(16) + 8;
+		waterLakeGenerator->generate(worldObj, random, lx, ly, lz);
+	}
+
+	if (lavaLakeGenerator != nullptr && !hasVillage && random.nextInt(8) == 0)
+	{
+		const int_t lx = blockX + random.nextInt(16) + 8;
+		const int_t ly = random.nextInt(random.nextInt(120) + 8);
+		const int_t lz = blockZ + random.nextInt(16) + 8;
+		if (ly < 63 || random.nextInt(10) == 0)
+			lavaLakeGenerator->generate(worldObj, random, lx, ly, lz);
+	}
+
+	if (hasDungeons)
+	{
+		WorldGenDungeons dungeonGen;
+		for (int_t i = 0; i < 8; ++i)
+		{
+			const int_t dx = blockX + random.nextInt(16) + 8;
+			const int_t dy = random.nextInt(128);
+			const int_t dz = blockZ + random.nextInt(16) + 8;
+			dungeonGen.generate(worldObj, random, dx, dy, dz);
+		}
+	}
+
+	if (hasDecoration && biome != nullptr)
+	{
+		biome->decorate(worldObj, random, blockX, blockZ);
+	}
 }
 
 bool ChunkProviderFlat::saveChunks(bool, IProgressUpdate *)
@@ -113,7 +227,15 @@ std::vector<SpawnListEntry> *ChunkProviderFlat::getPossibleCreatures(const EnumC
 	return biome == nullptr ? nullptr : biome->getSpawnableList(type);
 }
 
-ChunkPosition *ChunkProviderFlat::findClosestStructure(World *, const jstring &, int_t, int_t, int_t)
+ChunkPosition *ChunkProviderFlat::findClosestStructure(World *world, const jstring &name, int_t x, int_t y, int_t z)
 {
+	if (name == "Stronghold")
+	{
+		for (MapGenStructure *gen : structureGenerators)
+		{
+			if (dynamic_cast<MapGenStronghold *>(gen) != nullptr)
+				return gen->getNearestInstance(world, x, y, z);
+		}
+	}
 	return nullptr;
 }

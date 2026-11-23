@@ -1,9 +1,11 @@
 #include "EntityFallingSand.h"
 #include "java/Arithmetic.h"
+#include <cmath>
 
 #include "Block.h"
 #include "BlockPistonMoving.h"
 #include "BlockSand.h"
+#include "DamageSource.h"
 #include "MathHelper.h"
 #include "NBTTagCompound.h"
 #include "World.h"
@@ -155,4 +157,36 @@ void EntityFallingSand::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 float EntityFallingSand::getShadowSize()
 {
 	return 0.0f;
+}
+
+void EntityFallingSand::fall(float dist)
+{
+	if (isAnvil && worldObj != nullptr && !worldObj->multiplayerWorld)
+	{
+		const int_t fallBlocks = static_cast<int_t>(std::ceil(dist - 1.0f));
+		if (fallBlocks > 0)
+		{
+			const bool isAnvilBlock = (Block::anvil != nullptr && blockID == Block::anvil->blockID);
+			const DamageSource &src = isAnvilBlock ? DamageSource::anvil : DamageSource::fallingBlock;
+			int_t dmg = MathHelper::floor_float(static_cast<float>(fallBlocks) * 2.0f);
+			if (dmg > 40)
+				dmg = 40;
+			const auto entities = worldObj->getEntitiesWithinAABBExcludingEntity(this, boundingBox);
+			for (Entity *e : entities)
+			{
+				if (e != nullptr && !e->isDead)
+					e->attackEntityFrom(src, dmg);
+			}
+			if (isAnvilBlock && rand.nextFloat() < 0.05f + static_cast<float>(fallBlocks) * 0.05f)
+			{
+				int_t dmgStage = metadata >> 2;
+				const int_t orient = metadata & 3;
+				++dmgStage;
+				if (dmgStage > 2)
+					setEntityDead();
+				else
+					metadata = orient | (dmgStage << 2);
+			}
+		}
+	}
 }

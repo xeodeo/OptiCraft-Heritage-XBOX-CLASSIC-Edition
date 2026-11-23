@@ -30,6 +30,7 @@ class IMerchant;
 class MerchantRecipeList;
 class EntityMinecartHopper;
 class StatBase;
+class ScorePlayerTeam;
 enum class EnumStatus;
 
 // net.minecraft.src.EntityPlayer
@@ -40,6 +41,11 @@ public:
 	~EntityPlayer() override;
 
 	bool isPlayer() const override { return true; }
+	std::string getEntityName() override;
+	std::string getTranslatedEntityName() override;
+	ScorePlayerTeam *getTeam() const;
+	bool isOnSameTeam(EntityPlayer *other) const;
+	bool canAttackPlayer(EntityPlayer *other) const;
 
 protected:
 	void entityInit() override;
@@ -267,6 +273,7 @@ public:
 	float   prevTimeInPortal;
 private:
 	int_t   damageRemainder;
+	int_t   lastScoreboardHealth = -999999;
 protected:
 	int_t   flyToggleTimer;
  	float   speedOnGround;

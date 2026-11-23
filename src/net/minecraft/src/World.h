@@ -62,6 +62,7 @@ class IProgressUpdate;
 class WorldChunkManager;
 class VillageCollection;
 class VillageSiege;
+class Scoreboard;
 class SpawnListEntry;
 #if PLATFORM_PC_LEGACY || PLATFORM_XBOX
 class PcLegacyTickScheduler;
@@ -510,6 +511,7 @@ public:
 	MapDataBase *loadItemData(const std::type_info &class1, const jstring &s);
 	MapDataBase *loadItemData(const jstring &s, MapDataFactory factory);
 	MapStorage *getMapStorage() const { return mapStorage; }
+	Scoreboard *getScoreboard() const { return worldScoreboard; }
 	int_t getUniqueDataId(const jstring &s);
 	void isTrapdoorOpen(int_t i, int_t j, int_t k, int_t l, int_t i1);
 	void getTrapdoorFacing(EntityPlayer *entityplayer, int_t i, int_t j, int_t k, int_t l, int_t i1);
@@ -722,8 +724,10 @@ private:
 	std::vector<Entity *> entitiesWithinAABBExcludingEntity;
 	std::vector<Entity *> entitiesWithinAABB;
 	MapStorage *mapStorage;
+	Scoreboard *worldScoreboard = nullptr;
 	bool ownsSaveHandler = true;
 	bool ownsMapStorage = true;
 	bool updatingTileEntities = false;
 	Pathfinder *pathfinderCache = nullptr;
+	void initScoreboard();
 };

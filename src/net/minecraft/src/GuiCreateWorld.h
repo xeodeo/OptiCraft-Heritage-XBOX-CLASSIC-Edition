@@ -29,9 +29,13 @@ public:
     void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
     void selectNextField() override;
 
+    std::string generatorOptionsToUse;
+
 protected:
     void updateFolderName();
     void updateButtonText();
+    void updateMoreOptionsVisibility();
+    bool isFlatWorldType() const;
 
     GuiScreen *parentScreen;
     GuiTextField *textboxWorldName;
@@ -46,6 +50,7 @@ protected:
     GuiButton *moreWorldOptionsButton;
     GuiButton *generateStructuresButton;
     GuiButton *worldTypeButton;
+    GuiButton *customizeTypeButton;
     GuiButton *worldSizeButton;
     GuiButton *bonusItemsButton;
     GuiButton *allowCommandsButton;

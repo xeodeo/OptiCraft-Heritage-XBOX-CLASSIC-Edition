@@ -2,6 +2,7 @@
 
 #include <array>
 #include "java/Type.h"
+#include "java/String.h"
 #include "Vec3D.h"
 #include "MathHelper.h"
 #include "IChunkProvider.h"
@@ -52,6 +53,7 @@ public:
 	World *worldObj = nullptr;
 	WorldChunkManager *worldChunkMgr = nullptr;
 	WorldType *terrainType = nullptr; // Static WorldType registry entry; not owned.
+	jstring field_82913_c;            // generatorOptions (Java 1.5.2)
 	bool isNether;
 	bool isHellWorld;
 	bool hasNoSky;

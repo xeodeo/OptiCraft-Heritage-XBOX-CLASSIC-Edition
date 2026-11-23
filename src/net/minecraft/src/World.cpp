@@ -91,6 +91,8 @@
 #include "Vec3D.h"
 #include "VillageCollection.h"
 #include "VillageSiege.h"
+#include "scoreboard/Scoreboard.h"
+#include "scoreboard/ScoreboardSaveData.h"
 #include "Entity.h"
 #include "AxisAlignedBB.h"
 #include "WorldChunkManager.h"
@@ -142,6 +144,8 @@ static int_t platformFindTopSpawnBlockY(World *world, int_t x, int_t z)
     // bounded chunk cache can delay player ticking. A resolved surface Y
     // prevents the player from appearing far above the terrain while the world
     // finishes loading.
+    WorldInfo *wi = world != nullptr ? world->getWorldInfo() : nullptr;
+    const bool isFlatWorld = (wi != nullptr && wi->getTerrainType() == WorldType::FLAT);
     for (int_t y = WorldHeight::MAX_Y; y >= 0; --y)
     {
         int_t id = world->getBlockId(x, y, z);
@@ -149,8 +153,9 @@ static int_t platformFindTopSpawnBlockY(World *world, int_t x, int_t z)
             continue;
 
         Block *block = Block::blocksList[id];
-        if (block != nullptr && block->blockMaterial != nullptr && block->blockMaterial->getIsSolid())
-            return y;
+        if (block != nullptr && block->blockMaterial != nullptr &&
+            (block->blockMaterial->getIsSolid() || (isFlatWorld && block->blockMaterial->getIsLiquid())))
+            return isFlatWorld ? (y + 1) : y;
     }
 
     return 64;
@@ -292,12 +297,35 @@ World::~World()
     villageSiegeObj = nullptr;
     delete villageCollectionObj;
     villageCollectionObj = nullptr;
+    if (worldScoreboard != nullptr)
+        worldScoreboard->setSaveData(nullptr);
     delete worldProvider;
     delete worldInfo;
     if (ownsMapStorage)
         delete mapStorage;
+    delete worldScoreboard;
+    worldScoreboard = nullptr;
     if (ownsSaveHandler)
         delete saveHandler;
+}
+
+void World::initScoreboard()
+{
+    if (worldScoreboard == nullptr)
+        worldScoreboard = new Scoreboard();
+    if (mapStorage == nullptr)
+        return;
+
+    auto factory = [](const std::string &name) -> MapDataBase * {
+        return new ScoreboardSaveData(name);
+    };
+    ScoreboardSaveData *data = dynamic_cast<ScoreboardSaveData *>(mapStorage->loadData("scoreboard", factory));
+    if (data == nullptr)
+    {
+        data = new ScoreboardSaveData("scoreboard");
+        mapStorage->setData("scoreboard", data);
+    }
+    data->setScoreboard(worldScoreboard);
 }
 
 World::World(ISaveHandler* saveHandler, const jstring& name, WorldProvider* worldProvider, long_t seed)
@@ -337,6 +365,7 @@ World::World(ISaveHandler* saveHandler, const jstring& name, WorldProvider* worl
     this->worldInfo = new WorldInfo(seed, name);
     this->worldProvider = worldProvider;
     this->mapStorage = new MapStorage(saveHandler);
+    initScoreboard();
     this->villageCollectionObj = new VillageCollection(this);
     this->villageSiegeObj = new VillageSiege(this);
     
@@ -386,6 +415,7 @@ World::World(World* world, WorldProvider* worldProvider)
     world->ownsSaveHandler = false;
     this->worldInfo = new WorldInfo(world->worldInfo);
     this->mapStorage = new MapStorage(saveHandler);
+    initScoreboard();
     this->worldProvider = worldProvider;
     this->villageCollectionObj = new VillageCollection(this);
     this->villageSiegeObj = new VillageSiege(this);
@@ -398,10 +428,13 @@ World::World(World* world, WorldProvider* worldProvider)
 
 void World::setMapStorage(MapStorage *storage)
 {
+    if (worldScoreboard != nullptr)
+        worldScoreboard->setSaveData(nullptr);
     if (ownsMapStorage)
         delete mapStorage;
     mapStorage = storage;
     ownsMapStorage = false;
+    initScoreboard();
 }
 
 World::World(ISaveHandler* saveHandler, const jstring& name, WorldSettings* settings)
@@ -478,6 +511,7 @@ World::World(ISaveHandler* saveHandler, const jstring& name, WorldSettings* sett
     }
 
     WorldLoadTrace::step("villages");
+    initScoreboard();
     this->villageCollectionObj = new VillageCollection(this);
     this->villageSiegeObj = new VillageSiege(this);
     WorldLoadTrace::step("registerWorld");
@@ -569,6 +603,7 @@ World::World(ISaveHandler* saveHandler, const jstring& name, long_t seed, WorldP
     }
     
     WorldLoadTrace::step("villages");
+    initScoreboard();
     this->villageCollectionObj = new VillageCollection(this);
     this->villageSiegeObj = new VillageSiege(this);
     WorldLoadTrace::step("registerWorld");
@@ -742,7 +777,18 @@ void World::generateSpawnPoint()
     }
 #elif PLATFORM_BOUNDED_WORLD
     WorldLoadTrace::step("canCoordinateBeSpawn");
-    if (isLimitedWorld())
+    if (worldInfo != nullptr && worldInfo->getTerrainType() == WorldType::FLAT)
+    {
+        // Custom superflat worlds may not have grass at the surface (Desert, Redstone Ready,
+        // Water World, Snowy Kingdom, etc.). Spawn directly on the surface without probing 32 chunks.
+        const int_t cx = JavaArithmetic::intShr(spawnX, 4);
+        const int_t cz = JavaArithmetic::intShr(spawnZ, 4);
+        if (ChunkProviderLoadOrGenerate *p = dynamic_cast<ChunkProviderLoadOrGenerate *>(chunkProvider))
+            p->setCurrentChunkOver(cx, cz);
+        else if (ChunkProvider *p2 = dynamic_cast<ChunkProvider *>(chunkProvider))
+            p2->setCurrentChunkOver(cx, cz);
+    }
+    else if (isLimitedWorld())
     {
         for (int_t attempts = 0; attempts < 8 && !worldProvider->canCoordinateBeSpawn(spawnX, spawnZ); ++attempts)
         {
@@ -821,6 +867,15 @@ ChunkCoordinates *World::getEntrancePortalLocation()
 
 void World::setSpawnLocation()
 {
+    if (worldInfo != nullptr && worldInfo->getTerrainType() == WorldType::FLAT)
+    {
+        const int_t x = worldInfo->getSpawnX();
+        const int_t z = worldInfo->getSpawnZ();
+        const int_t y = platformFindTopSpawnBlockY(this, x, z);
+        worldInfo->setSpawnPosition(x, y, z);
+        return;
+    }
+
     if (worldInfo->getSpawnY() <= 0)
     {
         worldInfo->setSpawnY(64);

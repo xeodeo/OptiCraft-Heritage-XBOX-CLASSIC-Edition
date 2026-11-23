@@ -26,6 +26,8 @@ EntityCreeper::EntityCreeper(World *world)
 	: EntityMob(world)
 	, timeSinceIgnited(0)
 	, lastActiveTime(0)
+	, fuseTime(30)
+	, explosionRadius(3)
 {
 	ensureEntityInit();
 	texture = "/mob/creeper.png";
@@ -47,6 +49,14 @@ void EntityCreeper::entityInit()
 	dataWatcher->addObject(17, (byte_t)0);
 }
 
+void EntityCreeper::fall(float dist)
+{
+	EntityMob::fall(dist);
+	timeSinceIgnited = static_cast<int_t>(static_cast<float>(timeSinceIgnited) + dist * 1.5f);
+	if (timeSinceIgnited > fuseTime - 5)
+		timeSinceIgnited = fuseTime - 5;
+}
+
 void EntityCreeper::writeEntityToNBT(NBTTagCompound *nbttagcompound)
 {
 	EntityMob::writeEntityToNBT(nbttagcompound);
@@ -54,12 +64,18 @@ void EntityCreeper::writeEntityToNBT(NBTTagCompound *nbttagcompound)
 	{
 		nbttagcompound->setBoolean("powered", true);
 	}
+	nbttagcompound->setShort("Fuse", static_cast<short_t>(fuseTime));
+	nbttagcompound->setByte("ExplosionRadius", static_cast<byte_t>(explosionRadius));
 }
 
 void EntityCreeper::readEntityFromNBT(NBTTagCompound *nbttagcompound)
 {
 	EntityMob::readEntityFromNBT(nbttagcompound);
 	dataWatcher->updateObject(17, (byte_t)(nbttagcompound->getBoolean("powered") ? 1 : 0));
+	if (nbttagcompound->hasKey("Fuse"))
+		fuseTime = nbttagcompound->getShort("Fuse");
+	if (nbttagcompound->hasKey("ExplosionRadius"))
+		explosionRadius = nbttagcompound->getByte("ExplosionRadius");
 }
 
 void EntityCreeper::onUpdate()
@@ -73,13 +89,14 @@ void EntityCreeper::onUpdate()
 		timeSinceIgnited += state;
 		if (timeSinceIgnited < 0)
 			timeSinceIgnited = 0;
-		if (timeSinceIgnited >= 30)
+		if (timeSinceIgnited >= fuseTime)
 		{
-			timeSinceIgnited = 30;
+			timeSinceIgnited = fuseTime;
 			if (!worldObj->multiplayerWorld)
 			{
 				const bool mobGriefing = worldObj->getGameRules().getGameRuleBooleanValue("mobGriefing");
-				delete worldObj->newExplosion(this, posX, posY, posZ, getPowered() ? 6.0f : 3.0f, false, mobGriefing);
+				const float radius = getPowered() ? static_cast<float>(explosionRadius * 2) : static_cast<float>(explosionRadius);
+				delete worldObj->newExplosion(this, posX, posY, posZ, radius, false, mobGriefing);
 				setEntityDead();
 			}
 		}
@@ -132,7 +149,8 @@ bool EntityCreeper::getPowered()
 
 float EntityCreeper::setCreeperFlashTime(float f)
 {
-	return ((float)lastActiveTime + (float)(timeSinceIgnited - lastActiveTime) * f) / 28.0f;
+	const float denom = static_cast<float>(fuseTime > 2 ? (fuseTime - 2) : 1);
+	return ((float)lastActiveTime + (float)(timeSinceIgnited - lastActiveTime) * f) / denom;
 }
 
 int_t EntityCreeper::getDropItemId()

@@ -1,5 +1,6 @@
 #include "FontRenderer.h"
 #include "GuiCreateWorld.h"
+#include "GuiCreateFlatWorld.h"
 #include "GuiTextField.h"
 #include "GuiButton.h"
 #include "StringTranslate.h"
@@ -21,7 +22,8 @@
 #include <algorithm>
 
 GuiCreateWorld::GuiCreateWorld(GuiScreen *parent)
-    : parentScreen(parent)
+    : generatorOptionsToUse("")
+    , parentScreen(parent)
     , textboxWorldName(nullptr)
     , textboxSeed(nullptr)
     , gameMode("survival")
@@ -33,6 +35,7 @@ GuiCreateWorld::GuiCreateWorld(GuiScreen *parent)
     , moreWorldOptionsButton(nullptr)
     , generateStructuresButton(nullptr)
     , worldTypeButton(nullptr)
+    , customizeTypeButton(nullptr)
     , worldSizeButton(nullptr)
     , bonusItemsButton(nullptr)
     , allowCommandsButton(nullptr)
@@ -73,24 +76,27 @@ void GuiCreateWorld::initGui()
     controlList.push_back(gameModeButton = new GuiButton(2, width / 2 - 75, 100, 150, 20,
         tr->translateKey("selectWorld.gameMode")));
     controlList.push_back(moreWorldOptionsButton = new GuiButton(3, width / 2 - 75, 187, 150, 20,
-        tr->translateKey("selectWorld.moreWorldOptions")));
-    controlList.push_back(generateStructuresButton = new GuiButton(4, width / 2 - 155, 100, 150, 20,
+        tr->translateKey(moreOptions ? "gui.done" : "selectWorld.moreWorldOptions")));
+    controlList.push_back(generateStructuresButton = new GuiButton(4, width / 2 - 155, 96, 150, 20,
         tr->translateKey("selectWorld.mapFeatures")));
     generateStructuresButton->enabled2 = false;
-    controlList.push_back(worldTypeButton = new GuiButton(5, width / 2 + 5, 100, 150, 20,
+    controlList.push_back(worldTypeButton = new GuiButton(5, width / 2 + 5, 96, 150, 20,
         tr->translateKey("selectWorld.mapType")));
     worldTypeButton->enabled2 = false;
-    controlList.push_back(allowCommandsButton = new GuiButton(6, width / 2 - 155, 134, 150, 20,
+    controlList.push_back(allowCommandsButton = new GuiButton(6, width / 2 - 155, 122, 150, 20,
         tr->translateKey("selectWorld.allowCommands")));
     allowCommandsButton->enabled2 = false;
-    controlList.push_back(bonusItemsButton = new GuiButton(8, width / 2 + 5, 134, 150, 20, ""));
-    bonusItemsButton->enabled2 = false;
-    controlList.push_back(worldSizeButton = new GuiButton(7, width / 2 - 155, 160, 150, 20, ""));
+    controlList.push_back(customizeTypeButton = new GuiButton(10, width / 2 + 5, 122, 150, 20,
+        tr->translateKey("selectWorld.customizeType")));
+    customizeTypeButton->enabled2 = false;
+    controlList.push_back(worldSizeButton = new GuiButton(7, width / 2 - 155, 148, 150, 20, ""));
     worldSizeButton->enabled2 = false;
+    controlList.push_back(bonusItemsButton = new GuiButton(8, width / 2 + 5, 148, 150, 20, ""));
+    bonusItemsButton->enabled2 = false;
 
     delete textboxWorldName;
     textboxWorldName = new GuiTextField(this, fontRenderer, width / 2 - 100, 60, 200, 20, "");
-    textboxWorldName->setFocused(true);
+    textboxWorldName->setFocused(!moreOptions);
     textboxWorldName->setText(localizedNewWorldText);
 
     delete textboxSeed;
@@ -99,6 +105,7 @@ void GuiCreateWorld::initGui()
 
     updateFolderName();
     updateButtonText();
+    updateMoreOptionsVisibility();
 }
 
 #if PLATFORM_XBOX || PLATFORM_PS2
@@ -148,6 +155,33 @@ void GuiCreateWorld::updateFolderName()
     if (MathHelper::stringNullOrLengthZero(folderName))
         folderName = "World";
     folderName = generateUnusedFolderName(mc->getSaveLoader(), folderName);
+}
+
+bool GuiCreateWorld::isFlatWorldType() const
+{
+    return worldTypeIndex >= 0 && worldTypeIndex < WorldType::WORLD_TYPE_COUNT &&
+           WorldType::worldTypes[worldTypeIndex] == WorldType::FLAT;
+}
+
+void GuiCreateWorld::updateMoreOptionsVisibility()
+{
+    if (gameModeButton != nullptr)
+        gameModeButton->enabled2 = !moreOptions;
+    if (generateStructuresButton != nullptr)
+        generateStructuresButton->enabled2 = moreOptions;
+    if (worldTypeButton != nullptr)
+        worldTypeButton->enabled2 = moreOptions;
+    if (customizeTypeButton != nullptr)
+        customizeTypeButton->enabled2 = moreOptions && isFlatWorldType();
+    if (worldSizeButton != nullptr)
+        worldSizeButton->enabled2 = moreOptions;
+    if (bonusItemsButton != nullptr)
+        bonusItemsButton->enabled2 = moreOptions;
+    if (allowCommandsButton != nullptr)
+        allowCommandsButton->enabled2 = moreOptions;
+    if (moreWorldOptionsButton != nullptr)
+        moreWorldOptionsButton->displayString = StringTranslate::getInstance()->translateKey(
+            moreOptions ? "gui.done" : "selectWorld.moreWorldOptions");
 }
 
 void GuiCreateWorld::updateButtonText()
@@ -207,7 +241,7 @@ void GuiCreateWorld::updateButtonText()
     }
     // Long translations (e.g. Spanish) must not spill over the 150 px buttons.
     constexpr int_t kOptionButtonWidth = 150;
-    for (GuiButton *b : {generateStructuresButton, worldTypeButton, bonusItemsButton, allowCommandsButton, worldSizeButton, gameModeButton})
+    for (GuiButton *b : {generateStructuresButton, worldTypeButton, customizeTypeButton, bonusItemsButton, allowCommandsButton, worldSizeButton, gameModeButton})
         if (b != nullptr && fontRenderer != nullptr && !(mc != nullptr && mc->gameSettings != nullptr && mc->gameSettings->legacyUI) &&
             fontRenderer->getStringWidth(b->displayString) > kOptionButtonWidth - 8)
             b->displayString = fontRenderer->trimStringToWidth(b->displayString, kOptionButtonWidth - 14) + "...";
@@ -300,6 +334,10 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
         }
 
         WorldSettings settings(worldSeed, gameType, generateStructures, hardcore, type, worldSizeType);
+        if (type == WorldType::FLAT && !generatorOptionsToUse.empty())
+        {
+            settings.setGeneratorOptions(generatorOptionsToUse);
+        }
         if (bonusItems && !hardcore)
         {
             settings.enableBonusChest();
@@ -318,17 +356,11 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
             textboxWorldName->setFocused(false);
         if (textboxSeed != nullptr)
             textboxSeed->setFocused(false);
-        gameModeButton->enabled2 = !moreOptions;
-        generateStructuresButton->enabled2 = moreOptions;
-        worldTypeButton->enabled2 = moreOptions;
-        if (worldSizeButton != nullptr)
-            worldSizeButton->enabled2 = moreOptions;
-        if (bonusItemsButton != nullptr)
-            bonusItemsButton->enabled2 = moreOptions;
-        if (allowCommandsButton != nullptr)
-            allowCommandsButton->enabled2 = moreOptions;
-        moreWorldOptionsButton->displayString = StringTranslate::getInstance()->translateKey(
-            moreOptions ? "gui.done" : "selectWorld.moreWorldOptions");
+        updateMoreOptionsVisibility();
+    }
+    else if (button->id == 10)
+    {
+        mc->displayGuiScreen(new GuiCreateFlatWorld(this, generatorOptionsToUse));
     }
     else if (button->id == 6)
     {
@@ -388,6 +420,7 @@ void GuiCreateWorld::actionPerformed(GuiButton *button)
         while (WorldType::worldTypes[worldTypeIndex] == nullptr ||
                !WorldType::worldTypes[worldTypeIndex]->getCanBeCreated());
         updateButtonText();
+        updateMoreOptionsVisibility();
     }
 }
 
@@ -438,9 +471,8 @@ void GuiCreateWorld::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
     else
     {
         drawString(fontRenderer, tr->translateKey("selectWorld.enterSeed"), width / 2 - 100, 47, 0xa0a0a0);
-        drawString(fontRenderer, tr->translateKey("selectWorld.seedInfo"), width / 2 - 100, 85, 0xa0a0a0);
-        drawString(fontRenderer, tr->translateKey("selectWorld.mapFeatures.info"), width / 2 - 150, 122, 0xa0a0a0);
-        drawString(fontRenderer, tr->translateKey("selectWorld.allowCommands.info"), width / 2 + 5, 165, 0xa0a0a0);
+        drawString(fontRenderer, tr->translateKey("selectWorld.seedInfo"), width / 2 - 100, 83, 0xa0a0a0);
+        drawString(fontRenderer, tr->translateKey("selectWorld.mapFeatures.info"), width / 2 - 155, 172, 0xa0a0a0);
         textboxSeed->drawTextBox();
     }
 

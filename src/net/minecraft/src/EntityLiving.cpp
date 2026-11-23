@@ -9,6 +9,7 @@
 #include "Block.h"
 #include "BlockVine.h"
 #include "DamageSource.h"
+#include "CombatTracker.h"
 #include "DataWatcher.h"
 #include "EntityPlayer.h"
 #include "EntityWolf.h"
@@ -154,6 +155,7 @@ EntityLiving::EntityLiving(World *world)
 	revengeTimer = 0;
 	attackingPlayerEntityId = -1;
 	recentlyHit = 0;
+	combatTracker = new CombatTracker(this);
 	carryoverDamage = 0;
 	potionsNeedUpdate = true;
 	currentTarget = nullptr;
@@ -188,6 +190,31 @@ EntityLiving::~EntityLiving()
 	delete bodyHelper;
 	delete navigator;
 	delete entitySenses;
+	delete combatTracker;
+	combatTracker = nullptr;
+}
+
+EntityLiving *EntityLiving::func_94060_bK() const
+{
+	if (combatTracker != nullptr)
+	{
+		EntityLiving *best = combatTracker->getBestAttacker();
+		if (best != nullptr)
+			return best;
+	}
+	if (worldObj != nullptr && attackingPlayerEntityId >= 0)
+	{
+		Entity *e = worldObj->getEntityByID(attackingPlayerEntityId);
+		if (e != nullptr && e->isLiving())
+			return static_cast<EntityLiving *>(e);
+	}
+	if (worldObj != nullptr && revengeTargetEntityId >= 0)
+	{
+		Entity *e = worldObj->getEntityByID(revengeTargetEntityId);
+		if (e != nullptr && e->isLiving())
+			return static_cast<EntityLiving *>(e);
+	}
+	return nullptr;
 }
 
 void EntityLiving::entityInit()
@@ -628,6 +655,10 @@ void EntityLiving::onEntityUpdate()
 	{
 		livingSoundTime = -getTalkInterval();
 		playLivingSound();
+	}
+	if (combatTracker != nullptr && worldObj != nullptr && !worldObj->multiplayerWorld)
+	{
+		combatTracker->updateFallState();
 	}
 #if PLATFORM_MULTIPLAYER_REMOTE_LIVING_PHYSICS_TICK_DIVISOR > 1
 	if (ps2FullRemotePhysics && isEntityAlive() && isEntityInsideOpaqueBlock())
@@ -1157,6 +1188,9 @@ void EntityLiving::damageEntity(const DamageSource &source, int_t damage)
 {
 	damage = applyArmorCalculations(source, damage);
 	damage = applyPotionDamageCalculations(source, damage);
+	const int_t oldHealth = health;
+	if (combatTracker != nullptr)
+		combatTracker->recordDamage(source, oldHealth, damage);
 	health = JavaArithmetic::intSub(health, damage);
 }
 

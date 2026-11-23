@@ -3,6 +3,8 @@
 #include "World.h"
 #include "Block.h"
 #include "EntityTNTPrimed.h"
+#include "EntityArrow.h"
+#include "EntityLiving.h"
 #include "ItemStack.h"
 #include "EntityPlayer.h"
 #include "Item.h"
@@ -51,6 +53,11 @@ void BlockTNT::onBlockDestroyedByExplosion(World *world, int_t i, int_t j, int_t
 
 void BlockTNT::onBlockDestroyedByPlayer(World *world, int_t i, int_t j, int_t k, int_t l)
 {
+	primeTnt(world, i, j, k, l, nullptr);
+}
+
+void BlockTNT::primeTnt(World *world, int_t i, int_t j, int_t k, int_t l, EntityLiving *igniter)
+{
 	if (world->multiplayerWorld) return;
 	if ((l & 1) == 0)
 	{
@@ -58,7 +65,7 @@ void BlockTNT::onBlockDestroyedByPlayer(World *world, int_t i, int_t j, int_t k,
 	}
 	else
 	{
-		EntityTNTPrimed *entitytntprimed = new EntityTNTPrimed(world, (float)i + 0.5f, (float)j + 0.5f, (float)k + 0.5f);
+		EntityTNTPrimed *entitytntprimed = new EntityTNTPrimed(world, (float)i + 0.5f, (float)j + 0.5f, (float)k + 0.5f, igniter);
 		if (!world->entityJoinedWorld(entitytntprimed))
 		{
 			delete entitytntprimed;
@@ -78,11 +85,23 @@ bool BlockTNT::blockActivated(World *world, int_t i, int_t j, int_t k, EntityPla
 	ItemStack *held = entityplayer->getCurrentEquippedItem();
 	if (held != nullptr && held->itemID == Item::flintAndSteel->shiftedIndex)
 	{
-		onBlockDestroyedByPlayer(world, i, j, k, 1);
+		primeTnt(world, i, j, k, 1, entityplayer);
 		world->setBlockWithNotify(i, j, k, 0);
 		return true;
 	}
 	return Block::blockActivated(world, i, j, k, entityplayer);
+}
+
+void BlockTNT::onEntityCollidedWithBlock(World *world, int_t x, int_t y, int_t z, Entity *entity)
+{
+	if (world == nullptr || world->multiplayerWorld)
+		return;
+	EntityArrow *arrow = dynamic_cast<EntityArrow *>(entity);
+	if (arrow != nullptr && arrow->isBurning())
+	{
+		primeTnt(world, x, y, z, 1, arrow->getShootingEntity());
+		world->setBlockWithNotify(x, y, z, 0);
+	}
 }
 
 

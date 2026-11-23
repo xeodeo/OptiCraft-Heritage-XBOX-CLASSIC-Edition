@@ -19,6 +19,7 @@ public:
 protected:
 	bool canTriggerWalking() override;
 	void entityInit() override;
+	void fall(float dist) override;
 
 public:
 	bool canBeCollidedWith() override;

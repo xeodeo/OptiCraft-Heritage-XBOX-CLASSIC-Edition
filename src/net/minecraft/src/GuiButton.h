@@ -48,5 +48,6 @@ public:
 	// Accesores para deteccion de hover (tooltips OptiFine); width/height son protected.
 	int_t getButtonWidth() const { return width; }
 	int_t getButtonHeight() const { return height; }
+	void setButtonSize(int_t w, int_t h) { width = w; height = h; }
 	bool isKeyboardSelected() const { return keyboardSelected; }
 };

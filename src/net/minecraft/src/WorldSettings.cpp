@@ -64,5 +64,16 @@ bool WorldSettings::areCommandsAllowed() const
 	return commandsAllowed;
 }
 
+WorldSettings *WorldSettings::func_82750_a(const jstring &options)
+{
+	field_82751_h = options;
+	return this;
+}
+
+const jstring &WorldSettings::getGeneratorOptions() const
+{
+	return field_82751_h;
+}
+
 
 

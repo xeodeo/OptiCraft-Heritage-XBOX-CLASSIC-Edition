@@ -17,6 +17,11 @@
 #include "EnumAction.h"
 #include "FontRenderer.h"
 #include "Tessellator.h"
+#include "World.h"
+#include "scoreboard/Score.h"
+#include "scoreboard/ScoreObjective.h"
+#include "scoreboard/ScorePlayerTeam.h"
+#include "scoreboard/Scoreboard.h"
 #include "client/Minecraft.h"
 #include "platform/RenderAPI.h"
 
@@ -193,11 +198,21 @@ void RenderPlayer::renderName(EntityPlayer* entityPlayer, double d, double d1, d
         return;
     }
 
-    const std::string& name = entityPlayer->username;
+    Scoreboard *board = (entityPlayer->worldObj != nullptr) ? entityPlayer->worldObj->getScoreboard() : nullptr;
+    ScorePlayerTeam *team = (board != nullptr) ? board->getPlayersTeam(entityPlayer->username) : nullptr;
+    const std::string name = ScorePlayerTeam::formatPlayerName(team, entityPlayer->username);
     if (!entityPlayer->isSneaking()) {
-        renderLivingLabel(entityPlayer, name, d,
-                          entityPlayer->isPlayerSleeping() ? d1 - 1.5 : d1,
-                          d2, 64);
+        double labelY = entityPlayer->isPlayerSleeping() ? d1 - 1.5 : d1;
+        if (distance < 10.0f && board != nullptr) {
+            ScoreObjective *belowObj = board->getObjectiveInDisplaySlot(Scoreboard::DISPLAY_SLOT_BELOW_NAME);
+            if (belowObj != nullptr) {
+                Score *score = board->getValueFromObjective(entityPlayer->username, belowObj);
+                const std::string belowText = std::to_string(score->getScorePoints()) + " " + belowObj->getDisplayName();
+                renderLivingLabel(entityPlayer, belowText, d, labelY, d2, 64);
+                labelY += static_cast<double>(9.0f * 1.15f * 0.02666667f);
+            }
+        }
+        renderLivingLabel(entityPlayer, name, d, labelY, d2, 64);
         return;
     }
 

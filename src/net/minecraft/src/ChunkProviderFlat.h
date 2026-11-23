@@ -1,16 +1,21 @@
 #pragma once
 
+#include <vector>
+
+#include "FlatGeneratorInfo.h"
 #include "IChunkProvider.h"
 #include "java/Random.h"
+#include "java/String.h"
 
-class MapGenVillage;
+class MapGenStructure;
 class World;
+class WorldGenLakes;
 
-// net.minecraft.src.ChunkProviderFlat
+// net.minecraft.src.ChunkProviderFlat (Java 1.5.2)
 class ChunkProviderFlat : public IChunkProvider
 {
 public:
-	ChunkProviderFlat(World *world, long_t seed, bool useStructures);
+	ChunkProviderFlat(World *world, long_t seed, bool useStructures, const jstring &generatorOptions = "");
 	~ChunkProviderFlat() override;
 
 	Chunk *prepareChunk(int_t x, int_t z) override;
@@ -26,10 +31,14 @@ public:
 	ChunkPosition *findClosestStructure(World *world, const jstring &name, int_t x, int_t y, int_t z) override;
 
 private:
-	void generate(std::vector<byte_t> &blocks);
-
 	World *worldObj;
 	Random random;
-	bool useStructures;
-	MapGenVillage *villageGen;
+	byte_t layerBlocks[256];
+	byte_t layerMeta[256];
+	FlatGeneratorInfo flatGeneratorInfo;
+	std::vector<MapGenStructure *> structureGenerators;
+	bool hasDecoration;
+	bool hasDungeons;
+	WorldGenLakes *waterLakeGenerator;
+	WorldGenLakes *lavaLakeGenerator;
 };

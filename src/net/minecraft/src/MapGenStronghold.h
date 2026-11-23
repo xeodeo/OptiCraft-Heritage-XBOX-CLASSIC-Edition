@@ -1,6 +1,7 @@
 #pragma once
 
-#include <array>
+#include <map>
+#include <string>
 #include <vector>
 
 #include "MapGenStructure.h"
@@ -15,6 +16,7 @@ class MapGenStronghold : public MapGenStructure
 {
 public:
 	MapGenStronghold();
+	explicit MapGenStronghold(const std::map<std::string, std::string> &options);
 	~MapGenStronghold() override;
 
 protected:
@@ -27,5 +29,8 @@ private:
 
 	std::vector<BiomeGenBase *> allowedBiomeGenBases;
 	bool ranBiomeCheck;
-	std::array<ChunkCoordIntPair *, 3> structureCoords;
+	std::vector<ChunkCoordIntPair *> structureCoords;
+	double strongholdDistance;
+	int_t strongholdSpread;
+	bool useCustomParams;
 };

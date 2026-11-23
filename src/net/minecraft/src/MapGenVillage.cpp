@@ -9,13 +9,29 @@
 #include "java/Random.h"
 #include "java/Arithmetic.h"
 
+#include <cstdlib>
 #include <memory>
 #include <vector>
 
 std::vector<BiomeGenBase *> MapGenVillage::villageSpawnBiomes;
 
+namespace
+{
+int_t parseIntDefaultMin(const std::string &s, int_t def, int_t minVal)
+{
+	if (s.empty())
+		return def;
+	char *endPtr = nullptr;
+	const long v = std::strtol(s.c_str(), &endPtr, 10);
+	if (endPtr == s.c_str() || *endPtr != '\0')
+		return def;
+	const int_t parsed = static_cast<int_t>(v);
+	return parsed < minVal ? minVal : parsed;
+}
+} // namespace
+
 MapGenVillage::MapGenVillage(int_t terrainTypeValue)
-	: terrainType(terrainTypeValue)
+	: terrainType(terrainTypeValue), maxDistanceBetweenVillages(32), minDistanceBetweenVillages(8)
 {
 	if (villageSpawnBiomes.empty())
 	{
@@ -24,10 +40,22 @@ MapGenVillage::MapGenVillage(int_t terrainTypeValue)
 	}
 }
 
+MapGenVillage::MapGenVillage(const std::map<std::string, std::string> &options)
+	: MapGenVillage(0)
+{
+	for (const auto &entry : options)
+	{
+		if (entry.first == "size")
+			terrainType = parseIntDefaultMin(entry.second, terrainType, 0);
+		else if (entry.first == "distance")
+			maxDistanceBetweenVillages = parseIntDefaultMin(entry.second, maxDistanceBetweenVillages, minDistanceBetweenVillages + 1);
+	}
+}
+
 bool MapGenVillage::canSpawnStructureAtCoords(int_t chunkX, int_t chunkZ)
 {
-	static constexpr int_t spacing = 32;
-	static constexpr int_t separation = 8;
+	const int_t spacing = maxDistanceBetweenVillages;
+	const int_t separation = minDistanceBetweenVillages;
 	const int_t originalX = chunkX;
 	const int_t originalZ = chunkZ;
 	if (chunkX < 0)
