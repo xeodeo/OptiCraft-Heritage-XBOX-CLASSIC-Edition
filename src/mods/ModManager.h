@@ -51,6 +51,12 @@ public:
     bool deleteMod(const std::string &id);
     std::string getGameModsDir() const;
 
+    // Per-world mod detector (encargo 115): "id@version;..." of the enabled mods, the game
+    // version written to level.dat, and which mods change the world (creatures, blocks...).
+    std::string getEnabledModsSignature() const;
+    static const char *gameVersion();
+    static bool isWorldContentMod(const std::string &id);
+
     // Persistence: saves/loads enabled states to/from mods.txt
     void load();
     void save();

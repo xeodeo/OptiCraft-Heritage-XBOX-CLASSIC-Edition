@@ -6,6 +6,9 @@
 #include "GuiRenameWorld.h"
 #include "StringTranslate.h"
 #include "ISaveFormat.h"
+#include "WorldInfo.h"
+#include "mods/GuiWorldModsWarning.h"
+#include <memory>
 #include "SaveFormatComparator.h"
 #include "MathHelper.h"
 #include "PlayerControllerSP.h"
@@ -108,6 +111,27 @@ void GuiSelectWorld::actionPerformed(GuiButton *button)
 }
 
 void GuiSelectWorld::selectWorld(int_t i)
+{
+	if (selected) return;
+	{
+		std::string checkName = getSaveFileName(i);
+		if (checkName.empty()) checkName = "World" + std::to_string(i);
+		ISaveFormat *fmt = mc->getSaveLoader();
+		std::unique_ptr<WorldInfo> info(fmt != nullptr ? fmt->getWorldInfo(checkName) : nullptr);
+		if (info != nullptr)
+		{
+			const WorldModsCheck check = checkWorldMods(info->optiCraftMods, info->optiCraftVersion);
+			if (check.needsWarning())
+			{
+				mc->displayGuiScreen(new GuiWorldModsWarning(this, i, check));
+				return;
+			}
+		}
+	}
+	selectWorldChecked(i);
+}
+
+void GuiSelectWorld::selectWorldChecked(int_t i)
 {
 	mc->displayGuiScreen(nullptr);
 	if (selected) return;

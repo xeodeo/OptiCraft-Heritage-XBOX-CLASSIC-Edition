@@ -29,6 +29,7 @@ protected:
 public:
 	void actionPerformed(GuiButton *button) override;
 	void selectWorld(int_t index);
+	void selectWorldChecked(int_t index); // after the per-world mods warning (encargo 115)
 	void deleteWorld(bool confirmed, int_t index) override;
 	void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
 
