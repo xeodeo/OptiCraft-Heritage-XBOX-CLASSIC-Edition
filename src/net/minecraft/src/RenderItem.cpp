@@ -17,6 +17,17 @@
 #include "platform/RenderAPI.h"
 
 namespace {
+// Mod block items that ship their own flat icon (ChocoCraft straw) draw it
+// instead of a 3D block.
+bool hasCustomItemIcon(Item *item)
+{
+    const char *tex = item != nullptr ? item->getCustomIconTexture() : nullptr;
+    return tex != nullptr && !PlatformResources::resolveAsset(tex).empty();
+}
+}
+
+
+namespace {
 void renderEndPortalGuiIcon(RenderEngine *renderEngine, int x, int y, float zLevel) {
     Tessellator *tessellator = &Tessellator::instance;
 
@@ -129,7 +140,7 @@ void RenderItem::doRenderItem(EntityItem* entityitem, double d, double d1, doubl
     }
     renderTranslate((float)d, (float)d1 + f2, (float)d2);
     renderEnable(RenderCapability::RescaleNormal);
-    if (itemstack->itemID >= 0 && itemstack->itemID < 256 && Block::blocksList[itemstack->itemID] != nullptr && RenderBlocks::renderItemIn3d(Block::blocksList[itemstack->itemID]->getRenderType())) {
+    if (itemstack->itemID >= 0 && itemstack->itemID < 256 && Block::blocksList[itemstack->itemID] != nullptr && RenderBlocks::renderItemIn3d(Block::blocksList[itemstack->itemID]->getRenderType()) && !hasCustomItemIcon(itemstack->getItem())) {
         renderRotate(f3, 0.0f, 1.0f, 0.0f);
         loadTexture("/terrain.png");
         float f4 = 0.25f;
@@ -217,7 +228,7 @@ void RenderItem::drawItemIntoGui(FontRenderer* fontrenderer, RenderEngine* rende
         renderEnable(RenderCapability::CullFace);
         return;
     }
-    if (i >= 0 && i < 256 && Block::blocksList[i] != nullptr && RenderBlocks::renderItemIn3d(Block::blocksList[i]->getRenderType())) {
+    if (i >= 0 && i < 256 && Block::blocksList[i] != nullptr && RenderBlocks::renderItemIn3d(Block::blocksList[i]->getRenderType()) && !hasCustomItemIcon(item)) {
         int j1 = i;
         renderengine->bindTexture(renderengine->getTexture("/terrain.png"));
         Block* block = Block::blocksList[j1];

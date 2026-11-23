@@ -278,9 +278,8 @@ void ModelChocobo::render(Entity *entity, float f, float f1, float f2, float f3,
     isAirborne = false;
     if (entity != nullptr)
     {
-        EntityChocobo *choco = dynamic_cast<EntityChocobo *>(entity);
-        isAirborne = !entity->onGround || std::fabs(entity->motionY) > 0.1 ||
-                     (choco != nullptr && choco->isFlying());
+        // ModelChocobo.setRotationAngles: wings open while |motionY| > 0.1
+        isAirborne = std::fabs(entity->motionY) > 0.1;
     }
     setRotationAngles(f, f1, f2, f3, f4, f5);
 
@@ -353,10 +352,12 @@ void ModelChicobo::setRotationAngles(float f, float f1, float f2, float f3, floa
 {
     (void)f2;
     (void)f5;
-    head->rotateAngleX = f4 * kDegToRad;
+    // ModelChicobo.setRotationAngles as shipped: the head pitch is negated and
+    // the left leg swings around Y (an upstream typo kept for an identical look).
+    head->rotateAngleX = -(f4 * kDegToRad);
     head->rotateAngleY = f3 * kDegToRad;
     rightleg->rotateAngleX = MathHelper::cos(f * 0.6662f) * 1.4f * f1;
-    leftleg->rotateAngleX = MathHelper::cos(f * 0.6662f + kPi) * 1.4f * f1;
+    leftleg->rotateAngleY = MathHelper::cos(f * 0.6662f + kPi) * 1.4f * f1;
 }
 
 void ModelChicobo::render(Entity *entity, float f, float f1, float f2, float f3, float f4, float f5)
