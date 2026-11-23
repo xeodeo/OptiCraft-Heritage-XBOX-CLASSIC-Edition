@@ -99,7 +99,7 @@ LONG toDsVolume(float volume)
 
 // ---- One-shot sounds -------------------------------------------------------
 constexpr size_t kSfxCacheBudget = 1024 * 1024;   // decoded PCM kept resident
-constexpr size_t kSfxMaxSample = 256 * 1024;      // longer clips are skipped
+constexpr size_t kSfxMaxSample = 384 * 1024;      // 384 KB fits explode2..4 (280 KB) and fuse (244 KB)
 constexpr int kSfxVoices = 16;
 
 struct SfxSample
