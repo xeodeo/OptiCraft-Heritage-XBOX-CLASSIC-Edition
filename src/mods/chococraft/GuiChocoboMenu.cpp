@@ -144,17 +144,21 @@ void GuiChocoboMenu::refreshJavaButtons()
                 (m_chocobo->getCustomName().empty() ? (es ? "(Sin nombre)" : "(Unnamed)") : m_chocobo->getCustomName());
         else if (btn->id == 1)
         {
-            btn->enabled = m_chocobo->hasSaddlebags();
-            btn->displayString = m_chocobo->hasSaddlebags()
-                ? (es ? "Abrir Alforjas (27 huecos)" : "Open Saddlebags (27 slots)")
-                : (es ? "Alforjas (Sin equipar)" : "Saddlebags (Not equipped)");
+            const bool hasBags = m_chocobo->hasSaddlebags() || m_chocobo->hasPackbags();
+            btn->enabled = hasBags;
+            if (m_chocobo->hasPackbags())
+                btn->displayString = es ? "Abrir Mochila (54 huecos)" : "Open Pack Bags (54 slots)";
+            else if (m_chocobo->hasSaddlebags())
+                btn->displayString = es ? "Abrir Alforjas (27 huecos)" : "Open Saddlebags (27 slots)";
+            else
+                btn->displayString = es ? "Alforjas (Sin equipar)" : "Saddlebags (Not equipped)";
         }
         else if (btn->id == 2)
             btn->displayString = std::string(es ? "Modo: " : "Behavior: ") + aiStr;
         else if (btn->id == 3)
         {
-            btn->enabled = m_chocobo->isSaddled() && !m_chocobo->isChild();
-            btn->displayString = m_chocobo->isSaddled()
+            btn->enabled = m_chocobo->isSaddled() && !m_chocobo->hasPackbags() && !m_chocobo->isChild();
+            btn->displayString = btn->enabled
                 ? (es ? "Montar Chocobo" : "Mount Chocobo")
                 : (es ? "Montar (Necesita silla)" : "Mount (Needs saddle)");
         }
@@ -197,7 +201,7 @@ void GuiChocoboMenu::cancelRename()
 
 void GuiChocoboMenu::openSaddlebags()
 {
-    if (m_chocobo == nullptr || m_player == nullptr || !m_chocobo->hasSaddlebags() || mc == nullptr)
+    if (m_chocobo == nullptr || m_player == nullptr || (!m_chocobo->hasSaddlebags() && !m_chocobo->hasPackbags()) || mc == nullptr)
         return;
     GuiChest *chest = new GuiChest(m_player->inventory, m_chocobo->getSaddlebagInventory(), m_player);
     if (mc->isSplitScreenActive() && m_playerIndex == 1)
@@ -216,7 +220,7 @@ void GuiChocoboMenu::activateRow(int_t row)
     }
     else if (row == 1)
     {
-        if (m_chocobo->hasSaddlebags())
+        if (m_chocobo->hasSaddlebags() || m_chocobo->hasPackbags())
             openSaddlebags();
     }
     else if (row == 2)
@@ -229,12 +233,12 @@ void GuiChocoboMenu::activateRow(int_t row)
     }
     else if (row == 3)
     {
-        if (m_chocobo->isSaddled() && !m_chocobo->isChild() && m_player != nullptr)
+        if (m_chocobo->isSaddled() && !m_chocobo->hasPackbags() && !m_chocobo->isChild() && m_player != nullptr)
         {
             EntityPlayer *p = m_player;
             EntityChocobo *c = m_chocobo;
             closeScreen();
-            p->mountEntity(c);
+            c->mountChocobo(p);
         }
     }
 }
@@ -415,14 +419,18 @@ void GuiChocoboMenu::drawLegacyScreen(float_t partialTick)
     case ChocoboAiMode::Follow: aiStr = es ? "Seguir" : "Follow"; break;
     case ChocoboAiMode::Stay:   aiStr = es ? "Quieto" : "Stay"; break;
     }
+    const std::string bagRow = m_chocobo->hasPackbags()
+        ? (es ? "Abrir mochila (54 huecos)" : "Open Pack Bags (54 slots)")
+        : (m_chocobo->hasSaddlebags()
+            ? (es ? "Abrir alforjas (27 huecos)" : "Open Saddlebags (27 slots)")
+            : (es ? "Alforjas (sin equipar)" : "Saddlebags (Not equipped)"));
+    const bool canMount = m_chocobo->isSaddled() && !m_chocobo->hasPackbags() && !m_chocobo->isChild();
     const std::string rows[4] = {
         std::string(es ? "Cambiar nombre: " : "Rename: ") +
             (m_chocobo->getCustomName().empty() ? (es ? "(Sin nombre)" : "(Unnamed)") : m_chocobo->getCustomName()),
-        m_chocobo->hasSaddlebags()
-            ? (es ? "Abrir alforjas (27 huecos)" : "Open Saddlebags (27 slots)")
-            : (es ? "Alforjas (sin equipar)" : "Saddlebags (Not equipped)"),
+        bagRow,
         std::string(es ? "Comportamiento: " : "Behavior: ") + aiStr,
-        m_chocobo->isSaddled()
+        canMount
             ? (es ? "Montar chocobo" : "Mount Chocobo")
             : (es ? "Montar (necesita silla)" : "Mount (Needs saddle)")
     };
@@ -452,8 +460,8 @@ void GuiChocoboMenu::drawLegacyScreen(float_t partialTick)
     {
         const int_t i = scroll + vi;
         const bool avail = (i == 0 || i == 2) ||
-                           (i == 1 && m_chocobo->hasSaddlebags()) ||
-                           (i == 3 && m_chocobo->isSaddled() && !m_chocobo->isChild());
+                           (i == 1 && (m_chocobo->hasSaddlebags() || m_chocobo->hasPackbags())) ||
+                           (i == 3 && canMount);
         legacyDrawMenuButton(mc, l.contentX, l.rowY(vi), l.contentW, l.rowH, rows[i], i == m_selectedIndex, avail);
     }
 

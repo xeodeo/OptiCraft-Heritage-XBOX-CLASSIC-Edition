@@ -316,16 +316,35 @@ endif()
 # <repo>/data or pass -DXBOX_DATA_DIR=...; every build stages whatever changed
 # into the ISO tree before the ISO is packed.
 set(XBOX_DATA_DIR "${CMAKE_SOURCE_DIR}/data" CACHE PATH "Folder with the game's assets/ and resources/")
+set(XBOX_ASSETS_PAK "" CACHE FILEPATH "Optional generated assets.pak staged at the disc root")
 set(_xbox_stage_data)
-if(EXISTS "${XBOX_DATA_DIR}/assets")
+set(_xbox_has_assets_pak FALSE)
+if(XBOX_ASSETS_PAK AND EXISTS "${XBOX_ASSETS_PAK}")
+    set(_xbox_has_assets_pak TRUE)
+    set(_xbox_stage_data
+        COMMAND ${CMAKE_COMMAND} -E rm -rf "${XBOX_ISO_DIR}/data")
+elseif(EXISTS "${XBOX_DATA_DIR}/assets")
     set(_xbox_stage_data
         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
                 "${XBOX_DATA_DIR}/assets" "${XBOX_ISO_DIR}/data/assets"
         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
                 "${XBOX_DATA_DIR}/resources" "${XBOX_ISO_DIR}/data/resources")
+    if(EXISTS "${CMAKE_SOURCE_DIR}/scripts/chococraft/assets")
+        list(APPEND _xbox_stage_data
+            COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                    "${CMAKE_SOURCE_DIR}/scripts/chococraft/assets" "${XBOX_ISO_DIR}/data/assets"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                    "${CMAKE_SOURCE_DIR}/scripts/chococraft/resources" "${XBOX_ISO_DIR}/data/resources")
+    endif()
 else()
     message(WARNING "Xbox build: no game data at XBOX_DATA_DIR='${XBOX_DATA_DIR}' "
                     "(expects assets/ and resources/); the ISO will not have data/.")
+endif()
+set(_xbox_stage_pak)
+if(XBOX_ASSETS_PAK AND EXISTS "${XBOX_ASSETS_PAK}")
+    set(_xbox_stage_pak
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${XBOX_ASSETS_PAK}" "${XBOX_ISO_DIR}/assets.pak")
 endif()
 
 # Names the game XBE also gets, for the launcher (src/xbox/tools/XboxLauncher.cpp):
@@ -344,15 +363,19 @@ else()
         COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/${_xbox_game_name}.xbe"
         COMMAND ${CMAKE_COMMAND} -E copy "${XBOX_XBE}" "${XBOX_ISO_DIR}/${_xbox_game_name}_720p.xbe"
         # Folder thumbnail for XBMC-style dashboards.
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/scripts/xbox/media/cover.png" "${XBOX_ISO_DIR}/default.tbn"
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/scripts/xbox/media/cover.png" "${XBOX_ISO_DIR}/default.tbn")
+    if(NOT _xbox_has_assets_pak)
         # Xbox port credit shown after the OptiProjects logo (StartupPresentation).
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_ISO_DIR}/data/assets/legacy"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/xbox/media/logo3.png" "${XBOX_ISO_DIR}/data/assets/legacy/logo3.png")
+        list(APPEND _xbox_game_steps
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_ISO_DIR}/data/assets/legacy"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/xbox/media/logo3.png" "${XBOX_ISO_DIR}/data/assets/legacy/logo3.png")
+    endif()
 endif()
 
 add_custom_command(TARGET OptiCraft POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${XBOX_ISO_DIR}"
     ${_xbox_stage_data}
+    ${_xbox_stage_pak}
     COMMAND powershell -NoProfile -ExecutionPolicy Bypass
             -File "${CMAKE_SOURCE_DIR}/scripts/xbox/patch_pe_for_imagebld.ps1"
             -Path "$<TARGET_FILE:OptiCraft>"
