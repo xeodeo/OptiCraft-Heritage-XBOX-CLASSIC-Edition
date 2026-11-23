@@ -27,6 +27,7 @@
 #include "EntityList.h"
 #include "TileEntity.h"
 #include "java/String.h"
+#include "mods/ModManager.h"
 
 // ---- base-36 helpers (Java Integer.toString(n, 36)) ----
 
@@ -430,6 +431,17 @@ void ChunkLoader::storeChunkInCompound(Chunk *chunk, World *world, NBTTagCompoun
 				delete nbttagcompound1;
 		}
 	}
+	for (NBTTagCompound *dormant : chunk->dormantModEntities)
+	{
+		if (dormant == nullptr)
+			continue;
+		NBTTagCompound *copy = dynamic_cast<NBTTagCompound *>(dormant->copy());
+		if (copy != nullptr)
+		{
+			nbttaglist->setTag(copy);
+			chunk->hasEntities = true;
+		}
+	}
 	nbttagcompound->setTag("Entities", nbttaglist);
 
 	NBTTagList *nbttaglist1 = new NBTTagList();
@@ -579,6 +591,16 @@ void ChunkLoader::loadChunkEntitiesFromCompound(World *world, Chunk *chunk, NBTT
 		for (int_t k = 0; k < nbttaglist->tagCount(); k++)
 		{
 			NBTTagCompound *nbttagcompound1 = static_cast<NBTTagCompound *>(nbttaglist->tagAt(k));
+			if (nbttagcompound1 == nullptr)
+				continue;
+			const std::string entId = nbttagcompound1->getString("id");
+			if (!ModManager::isEntityIdAllowed(entId))
+			{
+				NBTTagCompound *copy = dynamic_cast<NBTTagCompound *>(nbttagcompound1->copy());
+				if (copy != nullptr)
+					chunk->addDormantModEntity(copy);
+				continue;
+			}
 			Entity *entity = EntityList::createEntityFromNBT(nbttagcompound1, world);
 			chunk->hasEntities = true;
 			if (entity != nullptr)

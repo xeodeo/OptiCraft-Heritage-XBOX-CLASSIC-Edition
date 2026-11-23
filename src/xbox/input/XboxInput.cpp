@@ -12,6 +12,7 @@
 #ifdef XBOX_PLATFORM
 
 #include "xbox/input/XboxInput.h"
+#include "mods/ModManager.h"
 #include "xbox/input/XboxPad.h"
 #include "xbox/input/XboxPadKeyCodes.h"
 #include "xbox/system/XboxVideoMode.h"
@@ -370,35 +371,37 @@ void updateGameplay(const XboxPadSnapshot& p)
 	const float moveX = XboxInput::applyDeadzone(p.leftX);
 	const float moveY = XboxInput::applyDeadzone(p.leftY);
 	const bool backHeld = (p.held & XBOX_PAD_BACK) != 0;
+	const bool minimapEnabled = ModManager::getInstance().isModEnabled("reiminimap");
+	const bool villageEnabled = ModManager::getInstance().isModEnabled("villagelocator");
 	if (p.pressed & XBOX_PAD_BACK)
 		s_backCombo = false;
-	if (backHeld && (p.pressed & XBOX_PAD_DPAD_UP))
+	if (minimapEnabled && backHeld && (p.pressed & XBOX_PAD_DPAD_UP))
 	{
 		s_waypointRequest[0] = 1;
 		s_backCombo = true;
 	}
-	else if (backHeld && (p.pressed & XBOX_PAD_DPAD_DOWN))
+	else if (minimapEnabled && backHeld && (p.pressed & XBOX_PAD_DPAD_DOWN))
 	{
 		s_waypointRequest[0] = 2;
 		s_backCombo = true;
 	}
-	else if (backHeld && (p.pressed & XBOX_PAD_DPAD_LEFT))
+	else if (minimapEnabled && backHeld && (p.pressed & XBOX_PAD_DPAD_LEFT))
 	{
 		s_waypointRequest[0] = 3;
 		s_backCombo = true;
 	}
-	else if (backHeld && (p.pressed & XBOX_PAD_DPAD_RIGHT))
+	else if (minimapEnabled && backHeld && (p.pressed & XBOX_PAD_DPAD_RIGHT))
 	{
 		s_waypointRequest[0] = 4;
 		s_backCombo = true;
 	}
-	else if (backHeld && (p.pressed & XBOX_PAD_Y))
+	else if (villageEnabled && backHeld && (p.pressed & XBOX_PAD_Y))
 	{
 		s_villageLocatorRequest = true;
 		s_backCombo = true;
 	}
-	// The D-pad does not walk while it is part of a Back combo.
-	const unsigned short dpadHeld = backHeld ? 0 : p.held;
+	// The D-pad does not walk while it is part of a Back combo (only when minimap is active).
+	const unsigned short dpadHeld = (backHeld && minimapEnabled) ? 0 : p.held;
 	setKey(XBOX_KEY_LSTICK_UP, moveY < -0.05f);
 	setKey(XBOX_KEY_LSTICK_DOWN, moveY > 0.05f);
 	setKey(XBOX_KEY_LSTICK_LEFT, moveX < -0.05f);

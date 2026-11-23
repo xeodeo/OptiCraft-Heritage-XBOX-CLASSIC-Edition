@@ -3,6 +3,7 @@
 #include "Block.h"
 #include "Item.h"
 #include "ItemStack.h"
+#include "mods/ModManager.h"
 
 FurnaceRecipes* FurnaceRecipes::smeltingBase = nullptr;
 
@@ -40,9 +41,15 @@ void FurnaceRecipes::addSmelting(int_t itemId, ItemStack *output)
 
 ItemStack* FurnaceRecipes::getSmeltingResult(int_t itemId)
 {
+    if (!ModManager::isItemAllowed(itemId))
+        return nullptr;
     auto it = smeltingList.find(itemId);
     if (it != smeltingList.end())
+    {
+        if (it->second != nullptr && !ModManager::isItemAllowed(it->second->itemID))
+            return nullptr;
         return it->second;
+    }
     return nullptr;
 }
 
@@ -57,8 +64,10 @@ std::vector<ItemStack*> FurnaceRecipes::getSmeltingValuesInJavaOrder() const
     values.reserve(smeltingList.size());
     for (int_t itemId : smeltingOrder.valuesInIterationOrder())
     {
+        if (!ModManager::isItemAllowed(itemId))
+            continue;
         auto it = smeltingList.find(itemId);
-        if (it != smeltingList.end())
+        if (it != smeltingList.end() && it->second != nullptr && ModManager::isItemAllowed(it->second->itemID))
             values.push_back(it->second);
     }
     return values;

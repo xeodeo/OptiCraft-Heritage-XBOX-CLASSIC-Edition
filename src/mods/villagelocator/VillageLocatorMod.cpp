@@ -31,7 +31,12 @@ void VillageLocatorMod::setEnabled(bool enabled)
 {
     m_enabled = enabled;
     if (!enabled)
+    {
         m_comboWasPressed = false;
+#if PLATFORM_XBOX
+        (void)XboxInput::consumeVillageLocatorRequest();
+#endif
+    }
 }
 
 void VillageLocatorMod::onInit(Minecraft *mc)

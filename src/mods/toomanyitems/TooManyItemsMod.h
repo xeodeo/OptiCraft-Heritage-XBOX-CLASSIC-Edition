@@ -15,7 +15,7 @@ public:
     std::string getAuthor() const override { return "Marglyph"; }
 
     bool isEnabled() const override { return m_enabled; }
-    void setEnabled(bool state) override { m_enabled = state; }
+    void setEnabled(bool state) override;
 
     void onInit(Minecraft *mc) override;
     void onDrawContainer(GuiContainer *container, int_t mouseX, int_t mouseY) override;

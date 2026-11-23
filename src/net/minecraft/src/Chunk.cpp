@@ -25,6 +25,7 @@
 #include "World.h"
 #include "WorldProvider.h"
 #include "Entity.h"
+#include "NBTTagCompound.h"
 
 bool Chunk::isLit = false;
 
@@ -217,6 +218,7 @@ Chunk::Chunk(World *world, const byte_t *blocks, std::size_t blockCount, int_t i
 
 Chunk::~Chunk()
 {
+	clearDormantModEntities();
 	for (int_t section = 0; section < SECTION_COUNT; ++section)
 	{
 #if PLATFORM_ENTITY_QUERY_CACHE
@@ -226,6 +228,21 @@ Chunk::~Chunk()
 		delete storageArrays[section];
 		storageArrays[section] = nullptr;
 	}
+}
+
+void Chunk::addDormantModEntity(NBTTagCompound *tag)
+{
+	if (tag == nullptr)
+		return;
+	dormantModEntities.push_back(tag);
+	hasEntities = true;
+}
+
+void Chunk::clearDormantModEntities()
+{
+	for (NBTTagCompound *tag : dormantModEntities)
+		delete tag;
+	dormantModEntities.clear();
 }
 
 bool Chunk::isAtLocation(int_t i, int_t j)

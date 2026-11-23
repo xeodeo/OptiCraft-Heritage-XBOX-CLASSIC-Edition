@@ -16,6 +16,7 @@ class TooManyItems
 {
 public:
     static void init();
+    static void refreshItems();
     static bool isEnabled();
     static void setEnabled(bool enabled);
     static void toggle();

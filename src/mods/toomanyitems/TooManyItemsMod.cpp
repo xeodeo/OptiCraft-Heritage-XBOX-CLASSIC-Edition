@@ -6,6 +6,13 @@ TooManyItemsMod::TooManyItemsMod()
 {
 }
 
+void TooManyItemsMod::setEnabled(bool state)
+{
+    m_enabled = state;
+    if (!state)
+        TooManyItems::setDeleteMode(false);
+}
+
 void TooManyItemsMod::onInit(Minecraft *mc)
 {
     TooManyItems::init();

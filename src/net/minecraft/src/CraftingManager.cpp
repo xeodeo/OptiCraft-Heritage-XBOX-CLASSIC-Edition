@@ -23,6 +23,7 @@
 #include "RecipesWeapons.h"
 #include "ShapedRecipes.h"
 #include "ShapelessRecipes.h"
+#include "mods/ModManager.h"
 
 CraftingManager *CraftingManager::instance = nullptr;
 
@@ -246,6 +247,8 @@ ItemStack *CraftingManager::findMatchingRecipe(InventoryCrafting *inventorycraft
 
 	for (IRecipe *irecipe : recipes)
 	{
+		if (!ModManager::isRecipeAllowed(irecipe))
+			continue;
 		if (irecipe->matches(inventorycrafting))
 		{
 			return irecipe->getCraftingResult(inventorycrafting);

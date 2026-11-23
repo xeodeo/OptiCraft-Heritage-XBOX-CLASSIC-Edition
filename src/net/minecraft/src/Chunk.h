@@ -29,6 +29,7 @@ class ChunkCoordIntPair;
 class TileEntity;
 class World;
 class Entity;
+class NBTTagCompound;
 
 struct ChunkPositionHash
 {
@@ -93,6 +94,8 @@ public:
 	virtual void removeEntity(Entity *entity);
 	virtual void removeEntityAtIndex(Entity *entity, int_t i);
 	void removeEntityFromAllSections(Entity *entity);
+	void addDormantModEntity(NBTTagCompound *tag);
+	void clearDormantModEntities();
 	virtual bool canBlockSeeTheSky(int_t i, int_t j, int_t k);
 
 	virtual TileEntity *getChunkBlockTileEntity(int_t i, int_t j, int_t k);
@@ -160,6 +163,9 @@ public:
 	std::unordered_map<ChunkPosition, TileEntity *, ChunkPositionHash, ChunkPositionEqual> chunkTileEntityMap;
 	JavaHashSet<ChunkPosition, ChunkPositionHash, ChunkPositionEqual> chunkTileEntityOrder;
 	std::vector<Entity *> entities[SECTION_COUNT];
+	// Preserved NBT compounds for entities belonging to disabled mods (encargo 115).
+	// Owned by this Chunk; written back verbatim on chunk save and revived if the mod is re-enabled.
+	std::vector<NBTTagCompound *> dormantModEntities;
 #if PLATFORM_ENTITY_QUERY_CACHE
 	std::uint32_t entitySectionRevision[SECTION_COUNT];
 	std::uint32_t entitySectionValidatedGen[SECTION_COUNT] = {};

@@ -70,10 +70,7 @@ void EntityHerobrine::vanishWithEffects()
 void EntityHerobrine::onLivingUpdate()
 {
     if (!ModManager::getInstance().isModEnabled("herobrine"))
-    {
-        setEntityDead();
         return;
-    }
 
     // Keep Herobrine standing still and immune to fire (e.g. when standing atop the lit altar)
     fire = 0;

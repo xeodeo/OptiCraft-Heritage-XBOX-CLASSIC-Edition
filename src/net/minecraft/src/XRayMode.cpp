@@ -13,7 +13,7 @@ namespace XRayMode
 {
 bool active()
 {
-    return s_active;
+    return s_active && s_comboEnabled;
 }
 
 bool isVisibleBlock(int blockID)

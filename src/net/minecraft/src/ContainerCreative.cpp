@@ -19,6 +19,8 @@
 #include "Slot.h"
 #include "Minecraft.h"
 #include "GameSettings.h"
+#include "mods/ModManager.h"
+#include "mods/chococraft/ChocoCraftItems.h"
 
 #include <cmath>
 
@@ -255,10 +257,13 @@ ContainerCreative::ContainerCreative(EntityPlayer *player)
         addItemStack(new ItemStack(block, 1, meta));
     }
 
+    if (ChocoCraftItems::blockStraw != nullptr && ModManager::isBlockAllowed(ChocoCraftItems::BLOCK_STRAW_ID))
+        addItemStack(new ItemStack(ChocoCraftItems::blockStraw, 1, 0));
+
     for (int_t id = 256; id < Item::ITEM_LIST_SIZE; ++id)
     {
         Item *item = Item::itemsList[id];
-        if (item != nullptr && item != Item::potion && item != Item::monsterPlacer)
+        if (item != nullptr && item != Item::potion && item != Item::monsterPlacer && ModManager::isItemAllowed(id))
             addItemStack(new ItemStack(item));
     }
 

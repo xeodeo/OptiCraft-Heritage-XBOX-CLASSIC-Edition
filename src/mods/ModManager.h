@@ -10,6 +10,8 @@
 class Minecraft;
 class GuiContainer;
 class GuiIngame;
+class Entity;
+class IRecipe;
 
 struct CompiledModInfo
 {
@@ -56,6 +58,17 @@ public:
     std::string getEnabledModsSignature() const;
     static const char *gameVersion();
     static bool isWorldContentMod(const std::string &id);
+
+    // Content ownership & active-mod gating (encargo 115 point 1: true disable without data loss).
+    static const char *getOwnerModForBlock(int_t blockId);
+    static const char *getOwnerModForItem(int_t itemId);
+    static const char *getOwnerModForEntityId(const std::string &entityId);
+    static const char *getOwnerModForEntity(const Entity *entity);
+    static bool isBlockAllowed(int_t blockId);
+    static bool isItemAllowed(int_t itemId);
+    static bool isEntityIdAllowed(const std::string &entityId);
+    static bool isEntityAllowed(const Entity *entity);
+    static bool isRecipeAllowed(IRecipe *recipe);
 
     // Persistence: saves/loads enabled states to/from mods.txt
     void load();

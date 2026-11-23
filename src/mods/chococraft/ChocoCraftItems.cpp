@@ -1,5 +1,6 @@
 #include "ChocoCraftItems.h"
 #include "EntityChocobo.h"
+#include "mods/ModManager.h"
 
 #include "net/minecraft/src/Block.h"
 #include "net/minecraft/src/BlockGrass.h"
@@ -86,9 +87,18 @@ int_t BlockGysahlGreens::getCropItem()
     return ChocoCraftItems::gysahlGreens ? ChocoCraftItems::gysahlGreens->shiftedIndex : Item::wheat->shiftedIndex;
 }
 
+void BlockGysahlGreens::updateTick(World *world, int_t x, int_t y, int_t z, Random &random)
+{
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return;
+    BlockCrops::updateTick(world, x, y, z, random);
+}
+
 void BlockGysahlGreens::dropBlockAsItemWithChance(World *world, int_t x, int_t y, int_t z, int_t meta, float chance, int_t fortune)
 {
     if (world == nullptr || world->multiplayerWorld)
+        return;
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
         return;
 
     if (meta >= 7)
@@ -130,7 +140,7 @@ BlockChocoboStraw::BlockChocoboStraw(int_t id, int_t texIndex)
 
 bool BlockChocoboStraw::canPlaceBlockAt(World *world, int_t x, int_t y, int_t z)
 {
-    if (world == nullptr)
+    if (world == nullptr || !ModManager::getInstance().isModEnabled("chococraft"))
         return false;
     const int_t belowId = world->getBlockId(x, y - 1, z);
     Block *below = (belowId > 0 && belowId < 256) ? Block::blocksList[belowId] : nullptr;
@@ -140,6 +150,8 @@ bool BlockChocoboStraw::canPlaceBlockAt(World *world, int_t x, int_t y, int_t z)
 void BlockChocoboStraw::onNeighborBlockChange(World *world, int_t x, int_t y, int_t z, int_t neighborId)
 {
     (void)neighborId;
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return;
     if (world != nullptr && !canPlaceBlockAt(world, x, y, z))
     {
         dropBlockAsItem(world, x, y, z, world->getBlockMetadata(x, y, z), 0);
@@ -180,6 +192,20 @@ std::string ItemChocoFood::getItemDisplayName(ItemStack *)
     return chocoIsSpanish() ? m_esName : m_enName;
 }
 
+ItemStack *ItemChocoFood::onItemRightClick(ItemStack *itemstack, World *world, EntityPlayer *player)
+{
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return itemstack;
+    return ItemFood::onItemRightClick(itemstack, world, player);
+}
+
+ItemStack *ItemChocoFood::onFoodEaten(ItemStack *itemstack, World *world, EntityPlayer *player)
+{
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return itemstack;
+    return ItemFood::onFoodEaten(itemstack, world, player);
+}
+
 ItemGysahlSeeds::ItemGysahlSeeds(int id, int cropBlockId)
     : ItemSeeds(id, cropBlockId, Block::tilledField ? Block::tilledField->blockID : 60)
 {
@@ -192,6 +218,13 @@ std::string ItemGysahlSeeds::getItemDisplayName(ItemStack *)
     return chocoIsSpanish() ? "Semillas Gysahl" : "Gysahl Seeds";
 }
 
+bool ItemGysahlSeeds::onItemUse(ItemStack *itemstack, EntityPlayer *player, World *world, int x, int y, int z, int side)
+{
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return false;
+    return ItemSeeds::onItemUse(itemstack, player, world, x, y, z, side);
+}
+
 ItemChocoboWhistle::ItemChocoboWhistle(int id)
     : ItemChocoIcon(id, 0xFFD840, "/chococraft/textures/items/whistle.png", "Chocobo Whistle", "Silbato de Chocobo")
 {
@@ -201,7 +234,7 @@ ItemChocoboWhistle::ItemChocoboWhistle(int id)
 
 ItemStack *ItemChocoboWhistle::onItemRightClick(ItemStack *itemstack, World *world, EntityPlayer *player)
 {
-    if (world == nullptr || player == nullptr)
+    if (world == nullptr || player == nullptr || !ModManager::getInstance().isModEnabled("chococraft"))
         return itemstack;
 
     world->playSoundAtEntity(player, "random.orb", 0.8f, 1.8f);
@@ -241,7 +274,7 @@ ItemPurpleChocoboEgg::ItemPurpleChocoboEgg(int id)
 
 ItemStack *ItemPurpleChocoboEgg::onItemRightClick(ItemStack *itemstack, World *world, EntityPlayer *player)
 {
-    if (world == nullptr || player == nullptr)
+    if (world == nullptr || player == nullptr || !ModManager::getInstance().isModEnabled("chococraft"))
         return itemstack;
 
     if (!player->capabilities.isCreativeMode && itemstack != nullptr)
