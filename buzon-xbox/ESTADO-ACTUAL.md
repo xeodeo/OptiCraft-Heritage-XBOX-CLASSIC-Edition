@@ -1,9 +1,13 @@
 # Estado actual del proyecto (23-11-2026)
 
-## AHORA (23-11 09:15) — LEER PRIMERO
+## AHORA (23-11 tarde) — LEER PRIMERO
+- SUBIDO a la consola: 1.2.5 `2f91320` y 1.5.2 `a11cdea` (chocobos 117 + Modrinth «Para <versión>» con Faithful +
+  Mods y texturas + pausa centrada + agacharse al volar). Lo probado el 23-11 está en `PENDIENTES-TODO.md` arriba.
+
+### Antes (23-11 09:15)
 - **Ramas buenas**: 1.5.2 `port152-int` `6121e6c` (carpeta `wt-build-152`) y 1.2.5 `opti30-erluza` `a20d430`
   (`wt-opti30`; build en `wt-build-125`). Respaldadas en el remoto `xbox`.
-- **En el lanzador, SIN SUBIR a la consola** (estaba apagada): las 4 XBE de cada versión + `assets.pak` parcheado con
+- **SUBIDO a la consola (23-11 09:25)**: las 4 XBE de cada versión + `assets.pak` parcheado con
   las texturas del chocobo. Subir por FTP (192.168.0.3, `F:\Games\OptiCraft\<versión>`) y probar.
 - Nuevo desde lo último en consola: minimapa sin redibujos (114), sin tirón al guardar (111.5), chocobos reales de
   ChocoCraft 4.1.5 (113, probado en xemu), detector de mods por mundo + apagar mods de verdad (115, sin probar),

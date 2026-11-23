@@ -3,8 +3,20 @@
 Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-ENCARGO-*.md`) y en
 `ESTADO-OPTICRAFT.html`. Qué rehacer en cada consola: `PLATAFORMAS-QUE-HACER.md`.
 
+## Probado en consola 1.2.5 (usuario 23-11 mañana)
+- BIEN: minimapa, creeper (sonidos), personaje animado, chunks/memoria (11-18 MB libres), cambios de dimensión
+  (Nether da un tirón pero bien), catálogo de mods, HTTPS (abre Modrinth), skins 3D 1.8, tirón al guardar, reloj (no
+  existe en 1.2.5: correcto). Apagar mods dentro de la partida: se deja la opción por ahora.
+- HECHO tras la prueba (sin probar): «Mods y texturas» (packs solo ahí), pausa centrada en 480p, agacharse siempre
+  mantener al volar/montar, Modrinth pestaña «Para <versión>» que revisa el archivo de cada pack (Faithful) + reintento.
+- EN MARCHA: chocobos = mod ORIGINAL completo (subagente, encargo 117): volar, «Montar» que te baja, correr, brazo
+  partido, semilla sin traducir, cría fea.
+- FALTA: skins sin brazos (Halo, doctora Helsing: pedir nombres), +3 MB con pack (normal si 32x; medir si 16x),
+  pruebas de servidor 1.2.5, sección XBE a demanda para mbedTLS, aligerar armar el chunk al guardar (50-130 ms).
+- 1.6.4 (después de la 1.5.2): en SU PROPIA carpeta del lanzador `OptiCraft.6.4`.
+
 ## 0. Versiones y dónde está cada cosa
-- **EN EL LANZADOR, SIN SUBIR (22-11 20:45, la consola estaba apagada; hay que subirlo por FTP)**: 1.5.2 `6121e6c`
+- **EN LA CONSOLA (subido 23-11 09:25)**: 1.5.2 `6121e6c`
   (`port152-int`) y 1.2.5 `a20d430` (`opti30-erluza`): todo lo de abajo + minimapa sin redibujos (114) + sin tirón
   al guardar (111.5) + Modrinth desde la consola (116) + chocobos reales de ChocoCraft 4.1.5 (113) + detector de mods
   por mundo y apagar mods de verdad (115). `assets.pak` de las dos versiones parcheado con las 140 texturas del

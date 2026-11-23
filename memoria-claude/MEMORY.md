@@ -37,3 +37,4 @@
 - [Repos de la LCE](lce-repos-referencia.md) — TU19 (hugozz26) bajada en lce-tu19 con recetas 1.5/1.6; URLs de las que no sirven
 - [Qué rehacer por consola](plataformas-que-hacer.md) — buzon-xbox/PLATAFORMAS-QUE-HACER.md; PS2 auditada (informe 106)
 - [Classic Xbox Store](classic-xbox-store.md) — nuestra app de Xbox con HTTPS (mbedTLS); reutilizar su Http.cpp para descargas
+- [1.6.4 en su carpeta](version-164-carpeta.md) — al empezar 1.6.4: carpeta propia OptiCraft\1.6.4 en lanzador y consola
