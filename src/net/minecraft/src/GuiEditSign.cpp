@@ -95,7 +95,7 @@ void GuiEditSign::keyTyped(char_t c, int_t key)
 		editLine = (editLine + 1) & 3;
 	if (key == 14 && !entitySign->signText[editLine].empty()) // Backspace
 		entitySign->signText[editLine] = String::removeLastUtf16Unit(entitySign->signText[editLine]);
-	if (String::indexOfUtf16Unit(ChatAllowedCharacters::allowedCharacters(), c) >= 0 && String::utf16Length(entitySign->signText[editLine]) < 15)
+	if ((c == 167 || String::indexOfUtf16Unit(ChatAllowedCharacters::allowedCharacters(), c) >= 0) && String::utf16Length(entitySign->signText[editLine]) < 15)
 		String::appendUtf16Unit(entitySign->signText[editLine], c);
 
 #if defined(PS2_PLATFORM) || defined(WII_PLATFORM) || defined(XBOX_PLATFORM)

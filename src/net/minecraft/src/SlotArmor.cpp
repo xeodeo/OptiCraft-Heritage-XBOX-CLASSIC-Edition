@@ -31,7 +31,7 @@ bool SlotArmor::isItemValid(ItemStack *itemstack)
 	{
 		return armor->armorType == armorType;
 	}
-	if(item != nullptr && item->shiftedIndex == Block::pumpkin->blockID)
+	if(item != nullptr && (item->shiftedIndex == Block::pumpkin->blockID || (Item::skull != nullptr && item->shiftedIndex == Item::skull->shiftedIndex)))
 	{
 		return armorType == 0;
 	} else

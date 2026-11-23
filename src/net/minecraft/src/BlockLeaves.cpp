@@ -157,6 +157,17 @@ void BlockLeaves::updateTick(World *world, int_t i, int_t j, int_t k, Random &ra
 	}
 }
 
+void BlockLeaves::randomDisplayTick(World *world, int_t i, int_t j, int_t k, Random &random)
+{
+	if (world->canLightningStrikeAt(i, j + 1, k) && !world->doesBlockHaveSolidTopSurface(i, j - 1, k) && random.nextInt(15) == 1)
+	{
+		double d = (double)((float)i + random.nextFloat());
+		double d1 = (double)j - 0.05;
+		double d2 = (double)((float)k + random.nextFloat());
+		world->spawnParticle("dripWater", d, d1, d2, 0.0, 0.0, 0.0);
+	}
+}
+
 void BlockLeaves::removeLeaves(World *world, int_t i, int_t j, int_t k)
 {
 	dropBlockAsItem(world, i, j, k, world->getBlockMetadata(i, j, k));
@@ -175,15 +186,29 @@ int_t BlockLeaves::idDropped(int_t i, Random &random, int_t fortune)
 
 void BlockLeaves::dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, int_t l, float f, int_t fortune)
 {
+	(void)f;
 	if (world->multiplayerWorld)
 		return;
 	int_t chance = (l & 3) == 3 ? 40 : 20;
+	if (fortune > 0)
+	{
+		chance -= 2 << fortune;
+		if (chance < 10)
+			chance = 10;
+	}
 	if (world->rand.nextInt(chance) == 0)
 	{
 		int_t droppedId = idDropped(l, world->rand, fortune);
 		dropBlockAsItem_do(world, i, j, k, new ItemStack(droppedId, 1, damageDropped(l)));
 	}
-	if ((l & 3) == 0 && world->rand.nextInt(200) == 0)
+	chance = 200;
+	if (fortune > 0)
+	{
+		chance -= 10 << fortune;
+		if (chance < 40)
+			chance = 40;
+	}
+	if ((l & 3) == 0 && world->rand.nextInt(chance) == 0)
 		dropBlockAsItem_do(world, i, j, k, new ItemStack(Item::appleRed, 1, 0));
 }
 
@@ -202,6 +227,11 @@ void BlockLeaves::harvestBlock(World *world, EntityPlayer *entityplayer, int_t i
 }
 
 int_t BlockLeaves::damageDropped(int_t i) { return i & 3; }
+
+ItemStack *BlockLeaves::createStackedBlock(int_t metadata)
+{
+	return new ItemStack(blockID, 1, metadata & 3);
+}
 
 bool BlockLeaves::isOpaqueCube() { return !graphicsLevel; }
 

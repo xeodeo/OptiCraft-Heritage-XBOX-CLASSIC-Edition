@@ -25,7 +25,7 @@ namespace
 		"zxcvbnm/.-:",
 	};
 	const char* KB_ROWS_SHIFT[] = {
-		"!@#$%^&*()?",
+		"!@#$%^&*()\xa7",
 		"QWERTYUIOP[",
 		"ASDFGHJKL]+",
 		"ZXCVBNM\\,_;",
@@ -293,7 +293,7 @@ void VirtualKeyboard::render(FontRenderer* font, int_t screenWidth, int_t screen
 		}
 	}
 	drawRect(px + 3, py + 3, px + panelW - 3, py + 14, 0xff000000);
-	drawString(font, preview, px + 5, py + 5, shift ? 0xffff80 : 0xffffff);
+	drawString(font, preview + "\xc2\xa7r", px + 5, py + 5, shift ? 0xffff80 : 0xffffff);
 
 	const int gridY = py + 16;
 	for (int row = 0; row < KB_ROWCOUNT; row++)
@@ -305,9 +305,17 @@ void VirtualKeyboard::render(FontRenderer* font, int_t screenWidth, int_t screen
 			const bool sel = (row == selY && col == selX);
 			drawRect(x0, y0, x0 + keyW - 2, y0 + keyH - 2, sel ? 0xffffffff : 0xff707070);
 			drawRect(x0 + 1, y0 + 1, x0 + keyW - 3, y0 + keyH - 3, sel ? 0xff606060 : 0xff101010);
-			char ch = (shift ? KB_ROWS_SHIFT : KB_ROWS)[row][col];
-			const char s[2] = { ch, 0 };
-			drawString(font, std::string(s), x0 + 8, y0 + 5, 0xffffff);
+			const unsigned char ch = static_cast<unsigned char>((shift ? KB_ROWS_SHIFT : KB_ROWS)[row][col]);
+			if (ch == 0xa7)
+			{
+				drawString(font, "S", x0 + 6, y0 + 4, 0xffff55);
+				drawString(font, "S", x0 + 8, y0 + 6, 0xffff55);
+			}
+			else
+			{
+				const char s[2] = { static_cast<char>(ch), 0 };
+				drawString(font, std::string(s), x0 + 8, y0 + 5, 0xffffff);
+			}
 		}
 	}
 

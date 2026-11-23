@@ -1,5 +1,6 @@
 #include "EntitySlime.h"
 
+#include "BiomeGenBase.h"
 #include "Chunk.h"
 #include "DamageSource.h"
 #include "DataWatcher.h"
@@ -8,6 +9,13 @@
 #include "MathHelper.h"
 #include "NBTTagCompound.h"
 #include "World.h"
+#include "WorldInfo.h"
+#include "WorldType.h"
+
+namespace
+{
+constexpr float kSlimeMoonPhaseChances[8] = {1.0f, 0.75f, 0.5f, 0.25f, 0.0f, 0.25f, 0.5f, 0.75f};
+} // namespace
 
 EntitySlime::EntitySlime(World *world)
 	: EntityLiving(world), field_40139_a(0.0f), field_768_a(0.0f), field_767_b(0.0f), slimeJumpDelay(0)
@@ -99,6 +107,10 @@ void EntitySlime::onUpdate()
 				((rand.nextFloatDifference()) * 0.2f + 1.0f) / 0.8f);
 
 		field_40139_a = -0.5f;
+	}
+	else if (!onGround && wasOnGround)
+	{
+		field_40139_a = 1.0f;
 	}
 
 	updateSquish();
@@ -210,12 +222,32 @@ int_t EntitySlime::getDropItemId()
 
 bool EntitySlime::getCanSpawnHere()
 {
-	Chunk *chunk = worldObj->getChunkFromBlockCoords(MathHelper::floor_double(posX), MathHelper::floor_double(posZ));
+	const int_t blockX = MathHelper::floor_double(posX);
+	const int_t blockY = MathHelper::floor_double(posY);
+	const int_t blockZ = MathHelper::floor_double(posZ);
+	Chunk *chunk = worldObj->getChunkFromBlockCoords(blockX, blockZ);
 	if (chunk == nullptr)
 		return false;
-	Random chunkRandom = chunk->getRandomWithSeed(987234911LL);
-	return (getSlimeSize() == 1 || worldObj->difficultySetting > 0) && rand.nextInt(10) == 0 &&
-		chunkRandom.nextInt(10) == 0 && posY < 40.0 ? EntityLiving::getCanSpawnHere() : false;
+	if (worldObj->getWorldInfo() != nullptr && worldObj->getWorldInfo()->getTerrainType() == WorldType::FLAT && rand.nextInt(4) != 1)
+		return false;
+
+	if (getSlimeSize() == 1 || worldObj->difficultySetting > 0)
+	{
+		BiomeGenBase *biome = worldObj->getBiomeGenForCoords(blockX, blockZ);
+		const int_t moonPhase = worldObj->getMoonPhase(0.0f) & 7;
+		if (biome == BiomeGenBase::swampland && posY > 50.0 && posY < 70.0 && rand.nextFloat() < 0.5f &&
+			rand.nextFloat() < kSlimeMoonPhaseChances[moonPhase] &&
+			worldObj->getBlockLightValue(blockX, blockY, blockZ) <= rand.nextInt(8))
+		{
+			return EntityLiving::getCanSpawnHere();
+		}
+
+		Random chunkRandom = chunk->getRandomWithSeed(987234911LL);
+		if (rand.nextInt(10) == 0 && chunkRandom.nextInt(10) == 0 && posY < 40.0)
+			return EntityLiving::getCanSpawnHere();
+	}
+
+	return false;
 }
 
 float EntitySlime::getSoundVolume()
@@ -230,7 +262,7 @@ int_t EntitySlime::getVerticalFaceSpeed()
 
 bool EntitySlime::makesSoundOnJump()
 {
-	return getSlimeSize() > 1;
+	return getSlimeSize() > 0;
 }
 
 bool EntitySlime::makesSoundOnLand()

@@ -17,6 +17,7 @@ public:
 	void writeEntityToNBT(NBTTagCompound *nbttagcompound) override { EntityAnimal::writeEntityToNBT(nbttagcompound); }
 	void readEntityFromNBT(NBTTagCompound *nbttagcompound) override { EntityAnimal::readEntityFromNBT(nbttagcompound); }
 	EntityAnimal *spawnBabyAnimal(EntityAnimal *mate) override;
+	bool isWheat(ItemStack *itemstack) const override;
 
 protected:
 	void fall(float f) override { (void)f; }

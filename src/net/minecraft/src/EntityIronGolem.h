@@ -22,6 +22,7 @@ public:
 	bool canAttackEntity(EntityLiving *target) override;
 	bool func_48100_a(const std::type_info &type) const override;
 	void handleHealthUpdate(byte_t state) override;
+	void onDeath(const DamageSource &source) override;
 
 	Village *getVillage() const;
 	int_t getAttackTimer() const;
@@ -38,6 +39,7 @@ public:
 protected:
 	void entityInit() override;
 	int_t decreaseAirSupply(int_t airSupply) override;
+	void collideWithEntity(Entity *entity) override;
 	void updateAITick() override;
 	jstring getLivingSound() override;
 	jstring getHurtSound() override;

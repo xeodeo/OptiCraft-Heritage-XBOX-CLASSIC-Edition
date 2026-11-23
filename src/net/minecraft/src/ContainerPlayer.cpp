@@ -9,6 +9,7 @@
 #include "CraftingManager.h"
 #include "IInventory.h"
 #include "EntityPlayer.h"
+#include "ItemArmor.h"
 #include "ItemStack.h"
 
 ContainerPlayer::ContainerPlayer(InventoryPlayer *inventoryplayer) :
@@ -100,6 +101,20 @@ ItemStack *ContainerPlayer::getStackInSlot(int_t slotIndex)
 		moved = mergeItemStack(source, 9, 45, true);
 		if(moved)
 			slot->onSlotChange(source, original);
+	}
+	else if(slotIndex >= 1 && slotIndex < 5)
+	{
+		moved = mergeItemStack(source, 9, 45, false);
+	}
+	else if(slotIndex >= 5 && slotIndex < 9)
+	{
+		moved = mergeItemStack(source, 9, 45, false);
+	}
+	else if(dynamic_cast<ItemArmor *>(original->getItem()) != nullptr &&
+	        !slots[5 + static_cast<ItemArmor *>(original->getItem())->armorType]->getHasStack())
+	{
+		int_t armorSlot = 5 + static_cast<ItemArmor *>(original->getItem())->armorType;
+		moved = mergeItemStack(source, armorSlot, armorSlot + 1, false);
 	}
 	else if(slotIndex >= 9 && slotIndex < 36)
 		moved = mergeItemStack(source, 36, 45, false);

@@ -13,6 +13,7 @@ class FontRenderer;
 class ChatClickData;
 class Tessellator;
 class ScoreObjective;
+class ItemStack;
 #ifdef PS2_PLATFORM
 struct Ps2HudCache;
 #endif
@@ -89,6 +90,8 @@ private:
 	bool field_22065_l;        // record playing with color effect
 	int_t chatScroll;
 	bool isScrolled;
+	int_t remainingHighlightTicks[2] = {0, 0};
+	ItemStack *highlightingItemStack[2] = {nullptr, nullptr};
 #if PLATFORM_PC_LEGACY
 	int_t pcLegacyHudDisplayLists;
 	int_t pcLegacyHudWidth;

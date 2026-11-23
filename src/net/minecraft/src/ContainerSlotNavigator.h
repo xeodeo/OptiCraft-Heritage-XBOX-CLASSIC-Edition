@@ -42,6 +42,7 @@ public:
     void activateControllerSelection();
     bool consumePrimaryClick();
     bool consumeSecondaryClick();
+    bool consumeQuickMove();
 
 private:
     ContainerSlotNavigator() = default;
@@ -59,6 +60,7 @@ private:
     bool ignorePointerMotionOnce = false;
     bool pendingPrimary = false;
     bool pendingSecondary = false;
+    bool pendingQuickMove = false;
     int nextRepeatMs = 0;
     int m_padPort = 0;
 };

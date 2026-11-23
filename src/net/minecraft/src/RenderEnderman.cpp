@@ -15,8 +15,8 @@ RenderEnderman::RenderEnderman()
 void RenderEnderman::renderEnderman(EntityEnderman *enderman, double x, double y, double z, float yaw, float partialTick)
 {
 	endermanModel->isCarrying = enderman->getCarried() > 0;
-	endermanModel->isAttacking = enderman->isAttacking;
-	if (enderman->isAttacking)
+	endermanModel->isAttacking = enderman->isScreaming();
+	if (enderman->isScreaming())
 	{
 		const double jitter = 0.02;
 		x += rnd.nextGaussian() * jitter;

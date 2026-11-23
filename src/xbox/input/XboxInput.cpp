@@ -343,7 +343,7 @@ void updateMenu(const XboxPadSnapshot& p, bool specializedMenuNavigation)
 		if (p.released & XBOX_PAD_A) lwjgl::Mouse::detail::pushButton(0, false, cx, cy);
 		if (p.pressed & XBOX_PAD_X) lwjgl::Mouse::detail::pushButton(1, true, cx, cy);
 		if (p.released & XBOX_PAD_X) lwjgl::Mouse::detail::pushButton(1, false, cx, cy);
-		pushKeyEdge(p, XBOX_PAD_B | XBOX_PAD_Y, lwjgl::Keyboard::KEY_ESCAPE);
+		pushKeyEdge(p, XBOX_PAD_B, lwjgl::Keyboard::KEY_ESCAPE);
 		pushKeyEdge(p, XBOX_PAD_START, lwjgl::Keyboard::KEY_RETURN);
 	}
 	pushKeyEdge(p, XBOX_PAD_BACK, lwjgl::Keyboard::KEY_TAB);

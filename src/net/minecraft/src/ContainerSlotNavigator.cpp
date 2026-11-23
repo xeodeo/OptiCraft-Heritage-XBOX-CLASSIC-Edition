@@ -49,6 +49,7 @@ void ContainerSlotNavigator::notifyOpen(GuiContainer *guiContainer, const Layout
         controllerActive = false;
         pendingPrimary = false;
         pendingSecondary = false;
+        pendingQuickMove = false;
         nextRepeatMs = consoleInputNowMs() + REPEAT_DELAY_MS;
     }
     layout = guiLayout;
@@ -67,6 +68,7 @@ void ContainerSlotNavigator::notifyClosed(const GuiContainer *guiContainer)
     ignorePointerMotionOnce = false;
     pendingPrimary = false;
     pendingSecondary = false;
+    pendingQuickMove = false;
     nextRepeatMs = 0;
     if (!instance(0).isActive() && !instance(1).isActive())
         platformSetContainerNavigationActive(false);
@@ -106,6 +108,7 @@ void ContainerSlotNavigator::clearControllerSelection()
     controllerActive = false;
     pendingPrimary = false;
     pendingSecondary = false;
+    pendingQuickMove = false;
 }
 
 void ContainerSlotNavigator::notePointerActivity()
@@ -169,6 +172,13 @@ bool ContainerSlotNavigator::consumeSecondaryClick()
 {
     const bool value = pendingSecondary;
     pendingSecondary = false;
+    return value;
+}
+
+bool ContainerSlotNavigator::consumeQuickMove()
+{
+    const bool value = pendingQuickMove;
+    pendingQuickMove = false;
     return value;
 }
 
@@ -266,6 +276,12 @@ void ContainerSlotNavigator::tickWithInput(const PlatformTextInputSnapshot &pad)
             activateControllerSelection();
             if (controllerSelectionActive())
                 pendingSecondary = true;
+        }
+        if ((pad.pressed & PLATFORM_TEXT_SHIFT) != 0)
+        {
+            if (!pointerOwnsClick)
+                activateControllerSelection();
+            pendingQuickMove = true;
         }
     }
 

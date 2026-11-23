@@ -23,6 +23,7 @@ public:
 	int_t getTalkInterval() override { return 120; }
 	bool interact(EntityPlayer *entityplayer) override;
 
+	EntityAgeable *createChild(EntityAgeable *other) override { return spawnBabyAnimal(dynamic_cast<EntityAnimal *>(other)); }
 	virtual EntityAnimal *spawnBabyAnimal(EntityAnimal *mate);
 	virtual bool isWheat(ItemStack *itemstack) const;
 	bool isInLove() const;

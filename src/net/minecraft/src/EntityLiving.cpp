@@ -1666,10 +1666,16 @@ void EntityLiving::onLivingUpdate()
 			Entity *entity = list[i];
 			if (entity->canBePushed())
 			{
-				entity->applyEntityCollision(this);
+				collideWithEntity(entity);
 			}
 		}
 	}
+}
+
+void EntityLiving::collideWithEntity(Entity *entity)
+{
+	if (entity != nullptr)
+		entity->applyEntityCollision(this);
 }
 
 void EntityLiving::updatePotionEffects()

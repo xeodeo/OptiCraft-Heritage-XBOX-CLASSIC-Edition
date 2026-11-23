@@ -4,6 +4,7 @@
 #include "World.h"
 #include "AxisAlignedBB.h"
 #include "EntityPlayer.h"
+#include "PlayerCapabilities.h"
 #include "Vec3D.h"
 #include "MovingObjectPosition.h"
 #include "Block.h"
@@ -147,7 +148,11 @@ void BlockDoor::setDoorRotation(int_t metadata)
 
 void BlockDoor::onBlockClicked(World *world, int_t i, int_t j, int_t k, EntityPlayer *entityplayer)
 {
-    blockActivated(world, i, j, k, entityplayer);
+    (void)world;
+    (void)i;
+    (void)j;
+    (void)k;
+    (void)entityplayer;
 }
 
 bool BlockDoor::blockActivated(World *world, int_t i, int_t j, int_t k, EntityPlayer *entityplayer)
@@ -210,7 +215,7 @@ void BlockDoor::onNeighborBlockChange(World *world, int_t i, int_t j, int_t k, i
         world->setBlockWithNotify(i, j, k, 0);
         removed = true;
     }
-    if (!world->isBlockNormalCube(i, j - 1, k))
+    if (!world->doesBlockHaveSolidTopSurface(i, j - 1, k))
     {
         world->setBlockWithNotify(i, j, k, 0);
         removed = true;
@@ -256,7 +261,7 @@ int_t BlockDoor::getState(int_t i)
 bool BlockDoor::canPlaceBlockAt(World *world, int_t i, int_t j, int_t k)
 {
     if (j >= 255) return false;
-    return world->isBlockNormalCube(i, j - 1, k) &&
+    return world->doesBlockHaveSolidTopSurface(i, j - 1, k) &&
            Block::canPlaceBlockAt(world, i, j, k) &&
            Block::canPlaceBlockAt(world, i, j + 1, k);
 }
@@ -267,6 +272,14 @@ bool BlockDoor::isOpen(int_t i)
 }
 
 int_t BlockDoor::getMobilityFlag() { return 1; }
+
+void BlockDoor::onBlockHarvested(World *world, int_t x, int_t y, int_t z, int_t metadata, EntityPlayer *player)
+{
+    if (player != nullptr && player->capabilities.isCreativeMode && (metadata & 8) != 0 && world->getBlockId(x, y - 1, z) == blockID)
+    {
+        world->setBlockWithNotify(x, y - 1, z, 0);
+    }
+}
 
 bool BlockDoor::getBlocksMovement(IBlockAccess *iblockaccess, int_t i, int_t j, int_t k)
 {

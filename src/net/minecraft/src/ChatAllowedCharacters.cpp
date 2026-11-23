@@ -37,7 +37,7 @@ std::string ChatAllowedCharacters::getAllowedCharacters()
 
 bool ChatAllowedCharacters::isAllowedCharacter(char_t c)
 {
-	return c != 167 && (String::indexOfUtf16Unit(allowedCharacters(), c) >= 0 || c > 32);
+	return c == 167 || (String::indexOfUtf16Unit(allowedCharacters(), c) >= 0 || c > 32);
 }
 
 std::string ChatAllowedCharacters::filterAllowedCharacters(const std::string &text)

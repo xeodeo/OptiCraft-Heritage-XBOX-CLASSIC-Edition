@@ -9,25 +9,25 @@ FurnaceRecipes* FurnaceRecipes::smeltingBase = nullptr;
 
 FurnaceRecipes::FurnaceRecipes()
 {
-    addSmelting(Block::oreIron->blockID,         new ItemStack(Item::ingotIron));
-    addSmelting(Block::oreGold->blockID,         new ItemStack(Item::ingotGold));
-    addSmelting(Block::oreDiamond->blockID,      new ItemStack(Item::diamond));
-    addSmelting(Block::sand->blockID,            new ItemStack(Block::glass));
-    addSmelting(Item::porkRaw->shiftedIndex,     new ItemStack(Item::porkCooked));
-    addSmelting(Item::beefRaw->shiftedIndex,     new ItemStack(Item::beefCooked));
-    addSmelting(Item::chickenRaw->shiftedIndex,  new ItemStack(Item::chickenCooked));
-    addSmelting(Item::fishRaw->shiftedIndex,     new ItemStack(Item::fishCooked));
-    addSmelting(Block::cobblestone->blockID,     new ItemStack(Block::stone));
-    addSmelting(Item::clay->shiftedIndex,        new ItemStack(Item::brick));
-    addSmelting(Block::cactus->blockID,          new ItemStack(Item::dyePowder, 1, 2));
-    addSmelting(Block::wood->blockID,            new ItemStack(Item::coal, 1, 1));
-    addSmelting(Item::potato->shiftedIndex,      new ItemStack(Item::bakedPotato));
-    addSmelting(Block::netherrack->blockID,      new ItemStack(Item::netherrackBrick));
-    addSmelting(Block::oreCoal->blockID,         new ItemStack(Item::coal));
-    addSmelting(Block::oreRedstone->blockID,     new ItemStack(Item::redstone));
-    addSmelting(Block::oreLapis->blockID,        new ItemStack(Item::dyePowder, 1, 4));
-    addSmelting(Block::oreEmerald->blockID,      new ItemStack(Item::emerald));
-    addSmelting(Block::oreNetherQuartz->blockID, new ItemStack(Item::netherQuartz));
+    addSmelting(Block::oreIron->blockID,         new ItemStack(Item::ingotIron),         0.7f);
+    addSmelting(Block::oreGold->blockID,         new ItemStack(Item::ingotGold),         1.0f);
+    addSmelting(Block::oreDiamond->blockID,      new ItemStack(Item::diamond),           1.0f);
+    addSmelting(Block::sand->blockID,            new ItemStack(Block::glass),            0.1f);
+    addSmelting(Item::porkRaw->shiftedIndex,     new ItemStack(Item::porkCooked),        0.35f);
+    addSmelting(Item::beefRaw->shiftedIndex,     new ItemStack(Item::beefCooked),        0.35f);
+    addSmelting(Item::chickenRaw->shiftedIndex,  new ItemStack(Item::chickenCooked),     0.35f);
+    addSmelting(Item::fishRaw->shiftedIndex,     new ItemStack(Item::fishCooked),        0.35f);
+    addSmelting(Block::cobblestone->blockID,     new ItemStack(Block::stone),            0.1f);
+    addSmelting(Item::clay->shiftedIndex,        new ItemStack(Item::brick),             0.3f);
+    addSmelting(Block::cactus->blockID,          new ItemStack(Item::dyePowder, 1, 2),   0.2f);
+    addSmelting(Block::wood->blockID,            new ItemStack(Item::coal, 1, 1),        0.15f);
+    addSmelting(Item::potato->shiftedIndex,      new ItemStack(Item::bakedPotato),       0.35f);
+    addSmelting(Block::netherrack->blockID,      new ItemStack(Item::netherrackBrick),   0.1f);
+    addSmelting(Block::oreCoal->blockID,         new ItemStack(Item::coal),              0.1f);
+    addSmelting(Block::oreRedstone->blockID,     new ItemStack(Item::redstone),          0.7f);
+    addSmelting(Block::oreLapis->blockID,        new ItemStack(Item::dyePowder, 1, 4),   0.2f);
+    addSmelting(Block::oreEmerald->blockID,      new ItemStack(Item::emerald),           1.0f);
+    addSmelting(Block::oreNetherQuartz->blockID, new ItemStack(Item::netherQuartz),      0.2f);
 }
 
 FurnaceRecipes* FurnaceRecipes::smelting()
@@ -37,10 +37,18 @@ FurnaceRecipes* FurnaceRecipes::smelting()
     return smeltingBase;
 }
 
-void FurnaceRecipes::addSmelting(int_t itemId, ItemStack *output)
+void FurnaceRecipes::addSmelting(int_t itemId, ItemStack *output, float experience)
 {
     smeltingOrder.add(itemId);
     smeltingList[itemId] = output;
+    if (output != nullptr)
+        experienceList[output->itemID] = experience;
+}
+
+float FurnaceRecipes::getExperience(int_t itemId)
+{
+    auto it = experienceList.find(itemId);
+    return it != experienceList.end() ? it->second : 0.0f;
 }
 
 ItemStack* FurnaceRecipes::getSmeltingResult(int_t itemId)

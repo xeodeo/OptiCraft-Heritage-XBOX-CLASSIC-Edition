@@ -36,6 +36,16 @@ public:
 
 	// Java: func_27280_a — handles a click on a slot (left/right + shift-click).
 	ItemStack *slotClick(int_t slotIndex, int_t mouseButton, bool shiftClick, EntityPlayer *entityplayer);
+	virtual ItemStack *slotClick(int_t slotIndex, int_t mouseButton, int_t mode, EntityPlayer *entityplayer);
+	virtual bool func_94530_a(ItemStack *stack, Slot *slot);
+	virtual bool canDragIntoSlot(Slot *slot);
+
+	static int_t func_94529_b(int_t arg) { return (arg >> 2) & 3; }
+	static int_t func_94532_c(int_t arg) { return arg & 3; }
+	static int_t func_94534_d(int_t state, int_t limit) { return (state & 3) | ((limit & 3) << 2); }
+	static bool func_94528_d(int_t limit) { return limit == 0 || limit == 1; }
+	static bool func_94527_a(Slot *slot, ItemStack *stack, bool stackSizeMatters);
+	static void func_94525_a(const std::set<Slot *> &dragSlots, int_t limit, ItemStack *stack, int_t baseSize);
 
 	virtual void onCraftGuiClosed(EntityPlayer *entityplayer);
 	virtual void onCraftMatrixChanged(IInventory *iinventory);
@@ -86,6 +96,12 @@ protected:
 	std::vector<ICrafting *> crafters;
 
 private:
+	void func_94533_d();
+
+	int_t field_94535_f = -1;
+	int_t field_94536_g = 0;
+	std::set<Slot *> field_94537_h;
+
 	// Java field_20918_b — set of players who have this container open.
 	std::set<int_t> playerList;
 };

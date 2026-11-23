@@ -16,8 +16,10 @@ private:
 public:
     static FurnaceRecipes* smelting();
 
-    void addSmelting(int_t itemId, ItemStack *output);
+    void addSmelting(int_t itemId, ItemStack *output, float experience);
+    void addSmelting(int_t itemId, ItemStack *output) { addSmelting(itemId, output, 0.0f); }
     ItemStack* getSmeltingResult(int_t itemId);
+    float getExperience(int_t itemId);
     std::map<int_t, ItemStack*>& getSmeltingList();
     std::vector<ItemStack*> getSmeltingValuesInJavaOrder() const;
 
@@ -40,5 +42,6 @@ private:
 
     static FurnaceRecipes *smeltingBase;
     std::map<int_t, ItemStack*> smeltingList;
+    std::map<int_t, float> experienceList;
     JavaHashSet<int_t, JavaIntHash, JavaIntEqual> smeltingOrder;
 };

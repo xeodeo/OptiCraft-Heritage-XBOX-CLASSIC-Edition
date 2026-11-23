@@ -39,7 +39,7 @@ bool ItemBlock::onItemUse(ItemStack* itemstack, EntityPlayer* entityplayer, Worl
         return false;
     }
     int targetId = world->getBlockId(i, j, k);
-    if (Block::snow != nullptr && targetId == Block::snow->blockID) {
+    if (Block::snow != nullptr && targetId == Block::snow->blockID && (world->getBlockMetadata(i, j, k) & 7) < 1) {
         l = 1;
     } else if ((Block::vine == nullptr || targetId != Block::vine->blockID) &&
                (Block::tallGrass == nullptr || targetId != Block::tallGrass->blockID) &&

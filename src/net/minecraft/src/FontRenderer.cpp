@@ -702,6 +702,36 @@ std::string FontRenderer::stripFormattingCodes(const std::string &s)
 	return String::fromUtf16(out);
 }
 
+namespace
+{
+std::string getFormatFromString(const std::string &s)
+{
+	const std::vector<char_t> units = String::toUtf16(jstring(s));
+	std::vector<char_t> activeColor;
+	std::vector<char_t> activeStyles;
+	for (std::size_t i = 0; i + 1 < units.size(); ++i)
+	{
+		if (units[i] == 0x00a7u)
+		{
+			const char_t c = units[++i];
+			const char_t lower = (c >= 'A' && c <= 'Z') ? static_cast<char_t>(c + ('a' - 'A')) : c;
+			if ((lower >= '0' && lower <= '9') || (lower >= 'a' && lower <= 'f') || lower == 'r')
+			{
+				activeColor = { 0x00a7u, c };
+				activeStyles.clear();
+			}
+			else if (lower >= 'k' && lower <= 'o')
+			{
+				activeStyles.push_back(0x00a7u);
+				activeStyles.push_back(c);
+			}
+		}
+	}
+	activeColor.insert(activeColor.end(), activeStyles.begin(), activeStyles.end());
+	return String::fromUtf16(activeColor);
+}
+} // namespace
+
 void FontRenderer::drawSplitStringInternal(const std::string &s, int_t i, int_t j, int_t k, int_t l)
 {
 	std::vector<std::string> lines = split(s, '\n');
@@ -717,9 +747,10 @@ void FontRenderer::drawSplitStringInternal(const std::string &s, int_t i, int_t 
 
 	std::vector<std::string> words = split(s, ' ');
 	int_t j1 = 0;
+	std::string activeFormat;
 	while (j1 < (int_t)words.size())
 	{
-		std::string s1 = words[j1++] + " ";
+		std::string s1 = activeFormat + words[j1++] + " ";
 		while (j1 < (int_t)words.size() && getStringWidth(s1 + words[j1]) < k)
 			s1 += words[j1++] + " ";
 		while (getStringWidth(s1) > k)
@@ -733,13 +764,15 @@ void FontRenderer::drawSplitStringInternal(const std::string &s, int_t i, int_t 
 				drawString(linePart, i, j, l);
 				j += 8;
 			}
-			s1 = String::substringUtf16(s1, k1, String::utf16Length(s1));
+			activeFormat = getFormatFromString(linePart);
+			s1 = activeFormat + std::string(String::substringUtf16(s1, k1, String::utf16Length(s1)));
 		}
 		if (!String::trimJava(s1).empty())
 		{
 			drawString(s1, i, j, l);
 			j += 8;
 		}
+		activeFormat = getFormatFromString(s1);
 	}
 }
 

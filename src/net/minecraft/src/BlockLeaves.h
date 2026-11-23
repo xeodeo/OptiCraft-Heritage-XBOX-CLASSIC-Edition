@@ -18,6 +18,7 @@ public:
 	bool usesDefaultColorMultiplier() const override { return false; }
 	void onBlockRemoval(World *world, int_t i, int_t j, int_t k) override;
 	void updateTick(World *world, int_t i, int_t j, int_t k, Random &random) override;
+	void randomDisplayTick(World *world, int_t i, int_t j, int_t k, Random &random) override;
 	int_t quantityDropped(Random &random) override;
 	int_t idDropped(int_t i, Random &random, int_t fortune) override;
 	void dropBlockAsItemWithChance(World *world, int_t i, int_t j, int_t k, int_t l, float f, int_t fortune) override;
@@ -31,6 +32,7 @@ public:
 
 protected:
 	int_t damageDropped(int_t i) override;
+	ItemStack *createStackedBlock(int_t metadata) override;
 
 private:
 	void removeLeaves(World *world, int_t i, int_t j, int_t k);

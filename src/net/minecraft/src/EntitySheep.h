@@ -34,6 +34,7 @@ public:
 	void setSheared(bool flag);
 	EntityAnimal *spawnBabyAnimal(EntityAnimal *mate) override;
 	void eatGrassBonus() override;
+	void initCreature() override;
 
 	static int_t getRandomFleeceColor(Random &random);
 	static const float fleeceColorTable[16][3];

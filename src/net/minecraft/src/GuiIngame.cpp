@@ -19,6 +19,7 @@
 #include "GameSettings.h"
 #include "KeyBinding.h"
 #include "ItemStack.h"
+#include "EnumRarity.h"
 #include "Block.h"
 #include "BlockPortal.h"
 #include "RenderEngine.h"
@@ -263,6 +264,10 @@ GuiIngame::~GuiIngame()
 	}
 #endif
 	clearChatMessages();
+	delete highlightingItemStack[0];
+	delete highlightingItemStack[1];
+	highlightingItemStack[0] = nullptr;
+	highlightingItemStack[1] = nullptr;
 	delete rand;
 	rand = nullptr;
 }
@@ -1122,6 +1127,37 @@ void GuiIngame::renderGameOverlay(float_t partialTick, bool showDebug, int_t mou
 		}
 	}
 
+	const int highlightPlayerIdx = (mc->inPlayer2Context()) ? 1 : 0;
+	if (mc->gameSettings != nullptr && mc->gameSettings->heldItemTooltips)
+	{
+		if (remainingHighlightTicks[highlightPlayerIdx] > 0 && highlightingItemStack[highlightPlayerIdx] != nullptr)
+		{
+			std::string name = highlightingItemStack[highlightPlayerIdx]->getDisplayName();
+			int_t alpha = static_cast<int_t>(static_cast<float>(remainingHighlightTicks[highlightPlayerIdx]) * 256.0f / 10.0f);
+			if (alpha > 255)
+				alpha = 255;
+			if (alpha > 0)
+			{
+				int_t y = hudHeight - 59;
+				if (mc->playerController != nullptr && !mc->playerController->shouldDrawHUD())
+					y += 14;
+				renderPushMatrix();
+				renderEnable(RenderCapability::Blend);
+				renderBlendFunc(RenderBlendFactor::SrcAlpha, RenderBlendFactor::OneMinusSrcAlpha);
+				int_t color = 0xffffff;
+				const int_t rarityColor = highlightingItemStack[highlightPlayerIdx]->getRarity().nameColor & 15;
+				if (rarityColor == 14) color = 0xffff55;
+				else if (rarityColor == 11) color = 0x55ffff;
+				else if (rarityColor == 13) color = 0xff55ff;
+				if (highlightingItemStack[highlightPlayerIdx]->hasDisplayName())
+					name = std::string("\xc2\xa7o") + name + "\xc2\xa7r";
+				fr->drawStringWithShadow(name, (sw - fr->getStringWidth(name)) / 2, y, JavaArithmetic::intAdd(color, JavaArithmetic::intShl(alpha, 24)));
+				renderDisable(RenderCapability::Blend);
+				renderPopMatrix();
+			}
+		}
+	}
+
 	if (mc->theWorld != nullptr && mc->theWorld->getScoreboard() != nullptr)
 	{
 		ScoreObjective *sidebarObj = mc->theWorld->getScoreboard()->getObjectiveInDisplaySlot(Scoreboard::DISPLAY_SLOT_SIDEBAR);
@@ -1468,6 +1504,39 @@ void GuiIngame::updateTick()
 		LegacyTipHud::tick();
 	if (recordPlayingUpFor > 0) recordPlayingUpFor--;
 	updateCounter++;
+	EntityPlayer *players[2] = { mc != nullptr ? mc->thePlayer : nullptr, mc != nullptr ? mc->thePlayer2 : nullptr };
+	for (int pIdx = 0; pIdx < 2; ++pIdx)
+	{
+		EntityPlayer *p = players[pIdx];
+		if (p != nullptr && p->inventory != nullptr)
+		{
+			ItemStack *current = p->inventory->getCurrentItem();
+			if (current == nullptr)
+			{
+				remainingHighlightTicks[pIdx] = 0;
+			}
+			else if (highlightingItemStack[pIdx] != nullptr &&
+			         current->itemID == highlightingItemStack[pIdx]->itemID &&
+			         ItemStack::areItemStackTagsEqual(current, highlightingItemStack[pIdx]) &&
+			         (current->isItemStackDamageable() || current->getItemDamage() == highlightingItemStack[pIdx]->getItemDamage()))
+			{
+				if (remainingHighlightTicks[pIdx] > 0)
+					--remainingHighlightTicks[pIdx];
+			}
+			else
+			{
+				remainingHighlightTicks[pIdx] = 40;
+			}
+			delete highlightingItemStack[pIdx];
+			highlightingItemStack[pIdx] = current != nullptr ? current->copy() : nullptr;
+		}
+		else
+		{
+			remainingHighlightTicks[pIdx] = 0;
+			delete highlightingItemStack[pIdx];
+			highlightingItemStack[pIdx] = nullptr;
+		}
+	}
 	for (int_t i = 0; i < (int_t)chatMessageList.size(); i++)
 		chatMessageList[i]->updateCounter++;
 }

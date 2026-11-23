@@ -70,7 +70,7 @@ bool TileEntitySignRenderer::renderTileEntitySignParts(TileEntitySign *tileentit
             {
                 std::string s = tileentitysign->signText[k];
                 if (k == tileentitysign->lineBeingEdited)
-                    s = "> " + s + " <";
+                    s = "> " + s + "\xc2\xa7r <";
                 fontrenderer->drawString(s, -fontrenderer->getStringWidth(s) / 2, k * 10 - 20, 0);
             }
             renderDepthMask(true);
