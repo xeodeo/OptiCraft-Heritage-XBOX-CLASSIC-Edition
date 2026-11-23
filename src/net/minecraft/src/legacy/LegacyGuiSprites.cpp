@@ -32,9 +32,21 @@ void legacyDrawGuiAtlasRect(int_t x, int_t y, int_t width, int_t height, int_t t
 void legacyDrawVanillaButtonBase(int_t x, int_t y, int_t width, int_t height, int_t state,
     float_t zLevel)
 {
+    const int_t texY = BUTTON_SOURCE_Y + state * BUTTON_SOURCE_HEIGHT;
+    const int_t half = BUTTON_SOURCE_WIDTH / 2;
+    if (width > BUTTON_SOURCE_WIDTH)
+    {
+        // Wider than the 200 px sprite (rows at 720p): both ends from the sprite and
+        // its middle stretched, instead of reading past the sprite (a stripe in the
+        // middle of every row, user 23-11).
+        const int_t middle = width - 2 * half;
+        legacyDrawGuiAtlasRect(x, y, half, height, 0, texY, half, BUTTON_SOURCE_HEIGHT, zLevel);
+        legacyDrawGuiAtlasRect(x + half, y, middle, height, half - 50, texY, 100, BUTTON_SOURCE_HEIGHT, zLevel);
+        legacyDrawGuiAtlasRect(x + half + middle, y, half, height, half, texY, half, BUTTON_SOURCE_HEIGHT, zLevel);
+        return;
+    }
     const int_t leftWidth = width / 2;
     const int_t rightWidth = width - leftWidth;
-    const int_t texY = BUTTON_SOURCE_Y + state * BUTTON_SOURCE_HEIGHT;
     legacyDrawGuiAtlasRect(x, y, leftWidth, height, 0, texY, leftWidth, BUTTON_SOURCE_HEIGHT, zLevel);
     legacyDrawGuiAtlasRect(x + leftWidth, y, rightWidth, height, BUTTON_SOURCE_WIDTH - rightWidth,
         texY, rightWidth, BUTTON_SOURCE_HEIGHT, zLevel);
