@@ -316,6 +316,7 @@ void RenderLiving::passSpecialRender(EntityLiving* entityliving, double d, doubl
 }
 
 void RenderLiving::renderLivingLabel(EntityLiving* entityliving, std::string s, double d, double d1, double d2, int i) {
+    if (entityliving == nullptr || renderManager->livingPlayer == nullptr) return;
     float f = entityliving->getDistanceToEntity(renderManager->livingPlayer);
     if (f > (float)i) {
         return;
