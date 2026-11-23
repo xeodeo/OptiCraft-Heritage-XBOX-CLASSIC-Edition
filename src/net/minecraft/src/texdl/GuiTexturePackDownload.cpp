@@ -41,6 +41,7 @@
 #include <cstring>
 #include <istream>
 #include <iterator>
+#include <map>
 #include <mutex>
 #include <thread>
 
@@ -661,59 +662,120 @@ void GuiTexturePackDownload::requestPage()
 
         // Tab 0, second pass: ask Modrinth for each multi-version pack's file for
         // this game version and keep it when that file is an old-format one.
-        for (TexDl::SearchHit &cand : candidates)
+        // Three requests at a time, and every answer is remembered on disk
+        // (texturepacks\.modrinth-<version>.txt) so the next visit is instant.
+        if (candidates.empty())
+            return;
+        struct VerifyShared
         {
-            if (job->cancel.load())
-                return;
-            const std::string vurl = "https://api.modrinth.com/v2/project/" + cand.projectId +
-                "/version?game_versions=" + TexDl::urlEncode(std::string("[\"") + kGameVersion + "\"]");
-            std::vector<unsigned char> vbody;
-            TexDl::ProjectVersion pv;
-            bool ok = false;
-            if (JavaNetwork::httpGetToMemory(vurl, vbody, kMaxJsonBytes, nullptr, apiOptions(&job->cancel)) ==
-                    JavaNetwork::HttpResult::Ok &&
-                TexDl::parseVersions(reinterpret_cast<const char *>(vbody.data()), vbody.size(), kGameVersion, pv))
+            std::vector<TexDl::SearchHit> cands;
+            std::atomic<int> next{0};
+            std::mutex cacheMtx;
+            std::map<std::string, bool> cache;
+            std::string cachePath;
+        };
+        auto shared = std::make_shared<VerifyShared>();
+        shared->cands = std::move(candidates);
+        shared->cachePath = std::string(kPackDir) + "\\.modrinth-" + kGameVersion + ".txt";
+        if (FILE *f = std::fopen(shared->cachePath.c_str(), "rb"))
+        {
+            char line[128];
+            while (std::fgets(line, sizeof(line), f) != nullptr)
             {
-                int parts[3] = {0, 0, 0};
-                int idx = 0;
-                for (char c : pv.newestGameVersion)
-                {
-                    if (c >= '0' && c <= '9') parts[idx] = parts[idx] * 10 + (c - '0');
-                    else if (c == '.' && idx < 2) ++idx;
-                    else break;
-                }
-                const bool newer = parts[0] > 1 || (parts[0] == 1 && (parts[1] > 5 || (parts[1] == 5 && parts[2] > 2)));
-                ok = !pv.listsModernVersions && !newer;
+                char id[64] = {0};
+                int value = 0;
+                if (std::sscanf(line, "%63s %d", id, &value) == 2)
+                    shared->cache[id] = value != 0;
             }
-            std::vector<unsigned char>().swap(vbody);
-            PageJob::Icon icon;
-            if (ok && !cand.iconUrl.empty())
-            {
-                icon.projectId = cand.projectId;
-                std::vector<unsigned char> bytes;
-                JavaNetwork::HttpStreamOptions o = apiOptions(&job->cancel);
-                o.accept = "image/png,image/jpeg,image/gif,image/webp,*/*";
-                o.connectTimeoutMs = 10000;
-                o.idleTimeoutMs = 10000;
-                if (JavaNetwork::httpGetToMemory(cand.iconUrl, bytes, kMaxIconBytes, nullptr, o) == JavaNetwork::HttpResult::Ok)
-                {
-                    std::string error;
-                    TexDl::decodeIcon(bytes, kIconSize, icon.rgba, error);
-                }
-                icon.ready = true;
-            }
-            if (ok)
-                MC_LOG_INFO("texdl", "verified %s: file for %s is old format (%s)\n", cand.title.c_str(), kGameVersion,
-                            pv.newestGameVersion.c_str());
-            std::lock_guard<std::mutex> lock(job->mtx);
-            ++job->verifyDone;
-            if (ok)
-            {
-                job->verified.push_back(std::move(cand));
-                if (icon.ready)
-                    job->iconsOut.push_back(std::move(icon));
-            }
+            std::fclose(f);
         }
+        auto worker = [job, shared]() {
+            for (;;)
+            {
+                if (job->cancel.load())
+                    return;
+                const int index = shared->next.fetch_add(1);
+                if (index >= static_cast<int>(shared->cands.size()))
+                    return;
+                TexDl::SearchHit cand = shared->cands[static_cast<std::size_t>(index)];
+                bool ok = false;
+                bool known = false;
+                {
+                    std::lock_guard<std::mutex> lock(shared->cacheMtx);
+                    auto it = shared->cache.find(cand.projectId);
+                    if (it != shared->cache.end())
+                    {
+                        known = true;
+                        ok = it->second;
+                    }
+                }
+                if (!known)
+                {
+                    const std::string vurl = "https://api.modrinth.com/v2/project/" + cand.projectId +
+                        "/version?game_versions=" + TexDl::urlEncode(std::string("[\"") + kGameVersion + "\"]");
+                    std::vector<unsigned char> vbody;
+                    TexDl::ProjectVersion pv;
+                    const JavaNetwork::HttpResult r =
+                        JavaNetwork::httpGetToMemory(vurl, vbody, kMaxJsonBytes, nullptr, apiOptions(&job->cancel));
+                    if (r == JavaNetwork::HttpResult::Ok)
+                    {
+                        known = true;
+                        if (TexDl::parseVersions(reinterpret_cast<const char *>(vbody.data()), vbody.size(), kGameVersion, pv))
+                        {
+                            int parts[3] = {0, 0, 0};
+                            int idx = 0;
+                            for (char c : pv.newestGameVersion)
+                            {
+                                if (c >= '0' && c <= '9') parts[idx] = parts[idx] * 10 + (c - '0');
+                                else if (c == '.' && idx < 2) ++idx;
+                                else break;
+                            }
+                            const bool newer = parts[0] > 1 || (parts[0] == 1 && (parts[1] > 5 || (parts[1] == 5 && parts[2] > 2)));
+                            ok = !pv.listsModernVersions && !newer;
+                            if (ok)
+                                MC_LOG_INFO("texdl", "verified %s: file for %s is old format (%s)\n", cand.title.c_str(),
+                                            kGameVersion, pv.newestGameVersion.c_str());
+                        }
+                        std::lock_guard<std::mutex> lock(shared->cacheMtx);
+                        shared->cache[cand.projectId] = ok;
+                        if (FILE *f = std::fopen(shared->cachePath.c_str(), "ab"))
+                        {
+                            std::fprintf(f, "%s %d\n", cand.projectId.c_str(), ok ? 1 : 0);
+                            std::fclose(f);
+                        }
+                    }
+                }
+                PageJob::Icon icon;
+                if (ok && !cand.iconUrl.empty() && !job->cancel.load())
+                {
+                    icon.projectId = cand.projectId;
+                    std::vector<unsigned char> bytes;
+                    JavaNetwork::HttpStreamOptions o = apiOptions(&job->cancel);
+                    o.accept = "image/png,image/jpeg,image/gif,image/webp,*/*";
+                    o.connectTimeoutMs = 10000;
+                    o.idleTimeoutMs = 10000;
+                    if (JavaNetwork::httpGetToMemory(cand.iconUrl, bytes, kMaxIconBytes, nullptr, o) == JavaNetwork::HttpResult::Ok)
+                    {
+                        std::string error;
+                        TexDl::decodeIcon(bytes, kIconSize, icon.rgba, error);
+                    }
+                    icon.ready = true;
+                }
+                std::lock_guard<std::mutex> lock(job->mtx);
+                ++job->verifyDone;
+                if (ok)
+                {
+                    job->verified.push_back(std::move(cand));
+                    if (icon.ready)
+                        job->iconsOut.push_back(std::move(icon));
+                }
+            }
+        };
+        std::thread second(worker);
+        std::thread third(worker);
+        worker();
+        second.join();
+        third.join();
     }).detach();
 }
 
@@ -1263,7 +1325,10 @@ void GuiTexturePackDownload::drawBrowse(float_t partialTick)
     const int_t headY = l.panelY + 6;
     const std::string title = std::string(es ? "Texturas de Modrinth" : "Modrinth texture packs") + " (" + kGameVersion + ")";
     const int pages = std::max(1, (totalHits + kPageSize - 1) / kPageSize);
-    const std::string pageText = (es ? "P\xC3\xA1gina " : "Page ") + std::to_string(page + 1) + "/" + std::to_string(pages);
+    // Tab 0 keeps finding packs for a while: say so next to the page count.
+    const std::string pageText = (es ? "P\xC3\xA1gina " : "Page ") + std::to_string(page + 1) + "/" + std::to_string(pages) +
+        (verifyDone < verifyTotal ? (es ? "  (buscando m\xC3\xA1s " : "  (finding more ") + std::to_string(verifyDone) + "/" +
+            std::to_string(verifyTotal) + ")" : std::string());
     const int_t pageW = fontRenderer->getStringWidth(pageText);
     fontRenderer->drawString(legacyFitText(fontRenderer, title, l.contentW - pageW - 8), l.contentX, headY, textColor);
     fontRenderer->drawString(pageText, l.contentX + l.contentW - pageW, headY, greyColor);

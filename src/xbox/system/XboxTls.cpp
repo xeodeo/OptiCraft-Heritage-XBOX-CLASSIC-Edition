@@ -37,6 +37,18 @@ mbedtls_entropy_context s_entropy;
 mbedtls_ctr_drbg_context s_drbg;
 mbedtls_ssl_config s_config;
 
+// The DRBG is shared by every session; mbedTLS has no threading layer here, so
+// concurrent handshakes (texture pack search runs three) take turns on it.
+volatile LONG s_rngLock = 0;
+int lockedRandom(void *context, unsigned char *output, size_t length)
+{
+    while (InterlockedCompareExchange(&s_rngLock, 1, 0) != 0)
+        Sleep(0);
+    const int ret = mbedtls_ctr_drbg_random(context, output, length);
+    InterlockedExchange(&s_rngLock, 0);
+    return ret;
+}
+
 bool initOnce(char *error, int errorSize)
 {
     while (InterlockedCompareExchange(&s_lock, 1, 0) != 0)
@@ -55,7 +67,7 @@ bool initOnce(char *error, int errorSize)
         {
             // Relaxed mode: no root store, the chain is not checked (see XboxTls.h).
             mbedtls_ssl_conf_authmode(&s_config, MBEDTLS_SSL_VERIFY_NONE);
-            mbedtls_ssl_conf_rng(&s_config, mbedtls_ctr_drbg_random, &s_drbg);
+            mbedtls_ssl_conf_rng(&s_config, lockedRandom, &s_drbg);
             s_ready = true;
         }
         else if (error != nullptr && errorSize > 0)
