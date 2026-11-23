@@ -21,6 +21,13 @@ public:
 	WorldInfo(WorldInfo *worldinfo);
 	~WorldInfo();
 
+	// Per-world mod detector (encargo 115). Filled from level.dat; written back with the
+	// providers below (set by ModManager) so the world remembers the mods/version it used.
+	std::string optiCraftMods;
+	std::string optiCraftVersion;
+	static std::string (*modsSignatureProvider)();
+	static const char *(*gameVersionProvider)();
+
 	NBTTagCompound *getNBTTagCompound();
 	NBTTagCompound *getNBTTagCompoundWithPlayer(const std::vector<EntityPlayer *> &list);
 	NBTTagCompound *getNBTTagCompoundWithPlayers(const std::vector<EntityPlayer *> &list);

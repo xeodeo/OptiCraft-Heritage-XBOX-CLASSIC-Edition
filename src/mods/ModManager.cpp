@@ -16,7 +16,54 @@
 #include "villagelocator/VillageLocatorMod.h"
 #include "serverutils/ServerUtilsMod.h"
 
+#include "net/minecraft/src/WorldInfo.h"
+
+#include <algorithm>
 #include <cstdio>
+
+#if __has_include("net/minecraft/src/BlockHopper.h")
+#define OPTICRAFT_GAME_VERSION "1.5.2"
+#else
+#define OPTICRAFT_GAME_VERSION "1.2.5"
+#endif
+
+namespace
+{
+std::string modsSignatureForWorld()
+{
+    return ModManager::getInstance().getEnabledModsSignature();
+}
+} // namespace
+
+const char *ModManager::gameVersion()
+{
+    return OPTICRAFT_GAME_VERSION;
+}
+
+bool ModManager::isWorldContentMod(const std::string &id)
+{
+    // Utility mods (minimap, X-Ray, TooManyItems, locators, lights) leave nothing in the world.
+    return id == "chococraft" || id == "herobrine";
+}
+
+std::string ModManager::getEnabledModsSignature() const
+{
+    std::vector<std::string> entries;
+    for (const auto &mod : mods)
+    {
+        if (mod->isEnabled())
+            entries.push_back(mod->getId() + "@" + mod->getVersion());
+    }
+    std::sort(entries.begin(), entries.end());
+    std::string out;
+    for (const std::string &e : entries)
+    {
+        if (!out.empty())
+            out += ";";
+        out += e;
+    }
+    return out;
+}
 
 ModManager::ModManager()
     : mc(nullptr)
@@ -42,6 +89,8 @@ void ModManager::init(Minecraft *mcInstance)
 
     mc = mcInstance;
     initialized = true;
+    WorldInfo::modsSignatureProvider = &modsSignatureForWorld;
+    WorldInfo::gameVersionProvider = &ModManager::gameVersion;
 
     // Register all built-in compiled mods so players can search and enable them
     // with one click from the Mods store/catalog on Xbox without FTP transfers.

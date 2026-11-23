@@ -6,6 +6,9 @@
 #include "WorldSettings.h"
 #include "java/System.h"
 
+std::string (*WorldInfo::modsSignatureProvider)() = nullptr;
+const char *(*WorldInfo::gameVersionProvider)() = nullptr;
+
 WorldInfo::WorldInfo(NBTTagCompound *nbttagcompound)
 {
 	WorldType::initialize();
@@ -48,6 +51,11 @@ WorldInfo::WorldInfo(NBTTagCompound *nbttagcompound)
 	lastTimePlayed = nbttagcompound->getLong("LastPlayed");
 	sizeOnDisk = nbttagcompound->getLong("SizeOnDisk");
 	levelName = nbttagcompound->getString("LevelName");
+	if (nbttagcompound->hasKey("OptiCraftVersion"))
+	{
+		optiCraftVersion = nbttagcompound->getString("OptiCraftVersion");
+		optiCraftMods = nbttagcompound->getString("OptiCraftMods");
+	}
 	saveVersion = nbttagcompound->getInteger("version");
 	rainTime = nbttagcompound->getInteger("rainTime");
 	raining = nbttagcompound->getBoolean("raining");
@@ -168,6 +176,8 @@ WorldInfo::WorldInfo(WorldInfo *worldinfo)
 		: nullptr;
 	dimension = worldinfo->dimension;
 	levelName = worldinfo->levelName;
+	optiCraftMods = worldinfo->optiCraftMods;
+	optiCraftVersion = worldinfo->optiCraftVersion;
 	saveVersion = worldinfo->saveVersion;
 	rainTime = worldinfo->rainTime;
 	raining = worldinfo->raining;
@@ -246,6 +256,11 @@ void WorldInfo::updateTagCompound(NBTTagCompound *nbttagcompound, NBTTagCompound
 	nbttagcompound->setLong("SizeOnDisk", sizeOnDisk);
 	nbttagcompound->setLong("LastPlayed", System::currentTimeMillis());
 	nbttagcompound->setString("LevelName", levelName);
+	if (gameVersionProvider != nullptr)
+	{
+		nbttagcompound->setString("OptiCraftVersion", gameVersionProvider());
+		nbttagcompound->setString("OptiCraftMods", modsSignatureProvider != nullptr ? modsSignatureProvider() : std::string());
+	}
 	nbttagcompound->setInteger("version", saveVersion);
 	nbttagcompound->setInteger("rainTime", rainTime);
 	nbttagcompound->setBoolean("raining", raining);
