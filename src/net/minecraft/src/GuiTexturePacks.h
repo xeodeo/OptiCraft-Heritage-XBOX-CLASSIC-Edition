@@ -18,6 +18,7 @@ public:
 	void updateScreen() override;
 	void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
 	void handleSpecializedMenuInput() override;
+	bool usesSpecializedMenuNavigation() const override;
 
 protected:
 	void actionPerformed(GuiButton *button) override;
@@ -27,10 +28,20 @@ protected:
 protected:
 	GuiScreen *guiScreen;
 
+	bool isLegacyMode() const;
+	// LCE look: packs as stone rows (thumbnail, name, description, tick on the
+	// one in use) and a "Download from the internet" button under them.
+	void drawLegacyScreen(float_t partialTick);
+	void openDownloader();
+	void applyHighlighted();
+
 private:
 	int_t field_6454_o;
 	// Console pad: the highlighted row (D-pad up/down moves it, A applies it).
+	// In the Legacy list, index == pack count is the download button.
 	int_t controllerIndex;
+	int_t legacyScroll;
+	bool inputLatch;
 	std::string fileLocation;
 	GuiTexturePackSlot *guiTexturePackSlot;
 };

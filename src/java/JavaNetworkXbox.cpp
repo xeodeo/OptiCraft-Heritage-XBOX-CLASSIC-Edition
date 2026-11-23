@@ -16,6 +16,7 @@
 #ifdef XBOX_PLATFORM
 
 #include "java/JavaNetwork.h"
+#include "java/JavaNetworkStream.h"
 
 #include <algorithm>
 #include <atomic>
@@ -622,6 +623,397 @@ HttpResult httpGetUrl(const std::string &url, std::vector<unsigned char> &outDat
 	}
 
 	return HttpResult::InvalidResponse;
+}
+#endif
+
+#ifdef NO_NETWORK
+HttpResult httpGetStream(const std::string &, HttpStreamSink &, int *outStatusCode, const HttpStreamOptions &)
+{
+	if (outStatusCode != nullptr)
+		*outStatusCode = -1;
+	return HttpResult::NoConnection;
+}
+
+HttpResult httpGetToMemory(const std::string &, std::vector<unsigned char> &out, std::size_t, int *outStatusCode,
+                           const HttpStreamOptions &)
+{
+	out.clear();
+	if (outStatusCode != nullptr)
+		*outStatusCode = -1;
+	return HttpResult::NoConnection;
+}
+#else
+namespace
+{
+// One HTTP(S) connection for httpGetStream: socket + optional TLS session.
+struct StreamConnection
+{
+	intptr_t sock = XboxNetwork::kInvalidSocket;
+	XboxTls::Session *tls = nullptr;
+
+	~StreamConnection() { close(); }
+
+	void close()
+	{
+		if (tls != nullptr)
+		{
+			XboxTls::close(tls);
+			tls = nullptr;
+		}
+		if (sock != XboxNetwork::kInvalidSocket)
+		{
+			XboxNetwork::tcpShutdown(sock, false);
+			XboxNetwork::tcpClose(sock);
+			sock = XboxNetwork::kInvalidSocket;
+		}
+	}
+
+	int recv(char *buffer, int length, int timeoutMs)
+	{
+		return tls != nullptr ? XboxTls::recv(tls, buffer, length, timeoutMs)
+		                      : XboxNetwork::tcpRecvTimeout(sock, buffer, length, timeoutMs);
+	}
+
+	bool sendAll(const std::string &data, int timeoutMs)
+	{
+		std::size_t sent = 0;
+		while (sent < data.size())
+		{
+			const int n = tls != nullptr
+				? XboxTls::send(tls, data.data() + sent, static_cast<int>(data.size() - sent), timeoutMs)
+				: XboxNetwork::tcpSendTimeout(sock, data.data() + sent, static_cast<int>(data.size() - sent), timeoutMs);
+			if (n <= 0)
+				return false;
+			sent += static_cast<std::size_t>(n);
+		}
+		return true;
+	}
+};
+
+// Incremental "Transfer-Encoding: chunked" decoder: feed() takes whatever
+// arrived and passes the payload bytes on.
+class ChunkedDecoder
+{
+public:
+	bool feed(const unsigned char *data, std::size_t length, HttpStreamSink &sink)
+	{
+		std::size_t i = 0;
+		while (i < length && state != State::Done && state != State::Error)
+		{
+			if (state == State::Size)
+			{
+				const unsigned char c = data[i++];
+				if (c == '\n')
+				{
+					if (!anyHex)
+						continue; // the blank line after a chunk's data
+					state = remaining == 0 ? State::Trailer : State::Data;
+					anyHex = false;
+					inExtension = false;
+				}
+				else if (c == '\r' || c == ' ' || c == '\t')
+				{
+				}
+				else if (c == ';')
+					inExtension = true;
+				else if (!inExtension)
+				{
+					int v = -1;
+					if (c >= '0' && c <= '9') v = c - '0';
+					else if (c >= 'a' && c <= 'f') v = c - 'a' + 10;
+					else if (c >= 'A' && c <= 'F') v = c - 'A' + 10;
+					if (v < 0 || remaining > (0x7fffffffffffLL >> 4))
+					{
+						state = State::Error;
+						break;
+					}
+					remaining = (remaining << 4) | v;
+					anyHex = true;
+				}
+			}
+			else if (state == State::Data)
+			{
+				const std::size_t take = static_cast<std::size_t>(
+					std::min<long long>(remaining, static_cast<long long>(length - i)));
+				if (!sink.onData(data + i, take))
+				{
+					state = State::Error;
+					break;
+				}
+				i += take;
+				remaining -= static_cast<long long>(take);
+				if (remaining == 0)
+					state = State::Size;
+			}
+			else
+			{
+				// Trailer lines until an empty one.
+				const unsigned char c = data[i++];
+				if (c == '\n')
+				{
+					if (trailerLineLength == 0)
+						state = State::Done;
+					trailerLineLength = 0;
+				}
+				else if (c != '\r')
+					++trailerLineLength;
+			}
+		}
+		return state != State::Error;
+	}
+
+	bool done() const { return state == State::Done; }
+
+private:
+	enum class State { Size, Data, Trailer, Done, Error };
+	State state = State::Size;
+	long long remaining = 0;
+	bool anyHex = false;
+	bool inExtension = false;
+	int trailerLineLength = 0;
+};
+
+bool streamCancelled(const HttpStreamOptions &options)
+{
+	return options.cancel != nullptr && options.cancel->load(std::memory_order_acquire);
+}
+} // namespace
+
+HttpResult httpGetStream(const std::string &url, HttpStreamSink &sink, int *outStatusCode,
+                         const HttpStreamOptions &options)
+{
+	if (outStatusCode != nullptr)
+		*outStatusCode = -1;
+	const int connectMs = std::max(2000, options.connectTimeoutMs);
+	const int idleMs = std::max(2000, options.idleTimeoutMs);
+
+	std::string currentUrl = url;
+	for (int redirect = 0; redirect < 6; ++redirect)
+	{
+		if (streamCancelled(options))
+			return HttpResult::NoConnection;
+		ParsedHttpUrl parsed;
+		if (!parseHttpUrl(currentUrl, parsed))
+			return HttpResult::InvalidResponse;
+
+		StreamConnection conn;
+		conn.sock = XboxNetwork::tcpConnectTimeout(parsed.host.c_str(), parsed.port, connectMs);
+		if (conn.sock == XboxNetwork::kInvalidSocket)
+		{
+			MC_LOG_INFO("network", "httpGetStream connect failed: %s:%d (wsa=%d) link=%d dns='%s'\n",
+			            parsed.host.c_str(), parsed.port, XboxNetwork::lastError(),
+			            XboxNetwork::hasLink() ? 1 : 0, XboxNetwork::lastResolveError());
+			return HttpResult::NoConnection;
+		}
+		if (parsed.secure)
+		{
+			char tlsError[160];
+			conn.tls = XboxTls::open(conn.sock, parsed.host.c_str(), connectMs, tlsError, sizeof(tlsError));
+			if (conn.tls == nullptr)
+			{
+				MC_LOG_INFO("network", "httpGetStream %s\n", tlsError);
+				return HttpResult::NoConnection;
+			}
+		}
+		if (streamCancelled(options))
+			return HttpResult::NoConnection;
+
+		std::string req;
+		req.reserve(320 + parsed.path.size());
+		req += "GET ";
+		req += parsed.path;
+		req += " HTTP/1.1\r\nHost: ";
+		req += parsed.host;
+		if (parsed.port != (parsed.secure ? 443 : 80))
+		{
+			req += ":";
+			req += std::to_string(parsed.port);
+		}
+		req += "\r\nUser-Agent: OptiCraft-Xbox/1.0 (texture packs; Xbox)\r\nAccept: ";
+		req += options.accept != nullptr ? options.accept : "*/*";
+		req += "\r\nAccept-Encoding: identity\r\nConnection: close\r\n\r\n";
+		if (!conn.sendAll(req, idleMs))
+			return HttpResult::NoConnection;
+
+		// Header block (at most 16 KB), then whatever body came with it.
+		std::vector<unsigned char> head;
+		head.reserve(2048);
+		std::size_t headerEnd = std::string::npos;
+		unsigned char buffer[8192];
+		while (headerEnd == std::string::npos)
+		{
+			if (streamCancelled(options))
+				return HttpResult::NoConnection;
+			const int n = conn.recv(reinterpret_cast<char *>(buffer), sizeof(buffer), idleMs);
+			if (n <= 0)
+				return head.empty() ? HttpResult::NoConnection : HttpResult::InvalidResponse;
+			const std::size_t searchFrom = head.size() >= 3 ? head.size() - 3 : 0;
+			head.insert(head.end(), buffer, buffer + n);
+			for (std::size_t i = searchFrom; i + 3 < head.size(); ++i)
+				if (head[i] == '\r' && head[i + 1] == '\n' && head[i + 2] == '\r' && head[i + 3] == '\n')
+				{
+					headerEnd = i;
+					break;
+				}
+			if (headerEnd == std::string::npos && head.size() > 16384)
+				return HttpResult::InvalidResponse;
+		}
+
+		const std::string headerStr(reinterpret_cast<const char *>(head.data()), headerEnd);
+		const std::size_t firstLineEnd = headerStr.find("\r\n");
+		const std::string statusLine = firstLineEnd == std::string::npos ? headerStr : headerStr.substr(0, firstLineEnd);
+		int statusCode = -1;
+		const std::size_t sp1 = statusLine.find(' ');
+		if (sp1 != std::string::npos)
+			statusCode = std::atoi(statusLine.c_str() + sp1 + 1);
+		if (outStatusCode != nullptr)
+			*outStatusCode = statusCode;
+
+		std::string location;
+		bool isChunked = false;
+		long long contentLength = -1;
+		if (firstLineEnd != std::string::npos)
+		{
+			std::size_t pos = firstLineEnd + 2;
+			while (pos < headerStr.size())
+			{
+				const std::size_t next = headerStr.find("\r\n", pos);
+				const std::string line = next == std::string::npos ? headerStr.substr(pos) : headerStr.substr(pos, next - pos);
+				const std::size_t colon = line.find(':');
+				if (colon != std::string::npos)
+				{
+					const std::string key = toLowerAscii(line.substr(0, colon));
+					std::string val = line.substr(colon + 1);
+					while (!val.empty() && (val.front() == ' ' || val.front() == '\t'))
+						val.erase(val.begin());
+					while (!val.empty() && (val.back() == ' ' || val.back() == '\t' || val.back() == '\r'))
+						val.pop_back();
+					if (key == "location")
+						location = val;
+					else if (key == "transfer-encoding" && toLowerAscii(val).find("chunked") != std::string::npos)
+						isChunked = true;
+					else if (key == "content-length")
+						contentLength = std::atoll(val.c_str());
+				}
+				if (next == std::string::npos)
+					break;
+				pos = next + 2;
+			}
+		}
+
+		if ((statusCode == 301 || statusCode == 302 || statusCode == 303 || statusCode == 307 || statusCode == 308) &&
+		    !location.empty())
+		{
+			if (location.rfind("http://", 0) == 0 || location.rfind("https://", 0) == 0)
+				currentUrl = location;
+			else if (location[0] == '/')
+			{
+				const int defaultPort = parsed.secure ? 443 : 80;
+				currentUrl = std::string(parsed.secure ? "https://" : "http://") + parsed.host +
+				             (parsed.port != defaultPort ? (":" + std::to_string(parsed.port)) : "") + location;
+			}
+			else
+				return HttpResult::InvalidResponse;
+			continue;
+		}
+		if (statusCode == 404 || statusCode == 400 || statusCode == 403 || statusCode == 410 || statusCode == 422)
+			return HttpResult::NotFound;
+		if (statusCode < 200 || statusCode >= 300)
+			return HttpResult::InvalidResponse;
+		if (isChunked)
+			contentLength = -1;
+		if (!sink.onResponse(statusCode, contentLength))
+			return HttpResult::InvalidResponse;
+
+		ChunkedDecoder chunked;
+		long long received = 0;
+		auto deliver = [&](const unsigned char *data, std::size_t length) -> bool {
+			if (length == 0)
+				return true;
+			if (isChunked)
+				return chunked.feed(data, length, sink);
+			if (contentLength >= 0 && received + static_cast<long long>(length) > contentLength)
+				length = static_cast<std::size_t>(contentLength - received);
+			received += static_cast<long long>(length);
+			return length == 0 || sink.onData(data, length);
+		};
+		auto finished = [&]() -> bool {
+			return isChunked ? chunked.done() : (contentLength >= 0 && received >= contentLength);
+		};
+
+		const std::size_t bodyStart = headerEnd + 4;
+		if (!deliver(head.data() + bodyStart, head.size() - bodyStart))
+			return HttpResult::InvalidResponse;
+		std::vector<unsigned char>().swap(head);
+		while (!finished())
+		{
+			if (streamCancelled(options))
+				return HttpResult::NoConnection;
+			const int n = conn.recv(reinterpret_cast<char *>(buffer), sizeof(buffer), idleMs);
+			if (n == 0)
+			{
+				// Closed: fine only for a body without length.
+				if (!isChunked && contentLength < 0)
+					return HttpResult::Ok;
+				return HttpResult::NoConnection;
+			}
+			if (n < 0)
+				return HttpResult::NoConnection;
+			if (!deliver(buffer, static_cast<std::size_t>(n)))
+				return HttpResult::InvalidResponse;
+		}
+		return HttpResult::Ok;
+	}
+	return HttpResult::InvalidResponse;
+}
+
+namespace
+{
+class MemorySink : public HttpStreamSink
+{
+public:
+	MemorySink(std::vector<unsigned char> &target, std::size_t limit) : out(target), maxBytes(limit) {}
+
+	bool onResponse(int, long long contentLength) override
+	{
+		if (contentLength > static_cast<long long>(maxBytes))
+		{
+			tooLarge = true;
+			return false;
+		}
+		if (contentLength > 0)
+			out.reserve(static_cast<std::size_t>(contentLength));
+		return true;
+	}
+
+	bool onData(const unsigned char *data, std::size_t length) override
+	{
+		if (out.size() + length > maxBytes)
+		{
+			tooLarge = true;
+			return false;
+		}
+		out.insert(out.end(), data, data + length);
+		return true;
+	}
+
+	std::vector<unsigned char> &out;
+	std::size_t maxBytes;
+	bool tooLarge = false;
+};
+} // namespace
+
+HttpResult httpGetToMemory(const std::string &url, std::vector<unsigned char> &out, std::size_t maxBytes,
+                           int *outStatusCode, const HttpStreamOptions &options)
+{
+	out.clear();
+	MemorySink sink(out, maxBytes);
+	HttpResult result = httpGetStream(url, sink, outStatusCode, options);
+	if (sink.tooLarge)
+		result = HttpResult::TooLarge;
+	if (result != HttpResult::Ok)
+		std::vector<unsigned char>().swap(out);
+	return result;
 }
 #endif
 
