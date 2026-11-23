@@ -16,6 +16,7 @@
 #include "net/minecraft/src/Container.h"
 #include "net/minecraft/src/ContainerWorkbench.h"
 #include "net/minecraft/src/CraftingManager.h"
+#include "mods/ModManager.h"
 #include "net/minecraft/src/EntityPlayerSP.h"
 #include "net/minecraft/src/FontRenderer.h"
 #include "net/minecraft/src/IRecipe.h"
@@ -161,6 +162,8 @@ void XboxCraftingScreen::buildEntries()
     for (IRecipe *recipe : recipes)
     {
         if (recipe == nullptr || recipe->getRecipeOutput() == nullptr)
+            continue;
+        if (!ModManager::isRecipeAllowed(recipe))
             continue;
         // RecipesMapExtending is a ShapedRecipes whose real result is the zoomed
         // copy of the map in the grid, not its placeholder output (an empty

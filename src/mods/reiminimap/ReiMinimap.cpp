@@ -236,6 +236,18 @@ void ReiMinimap::setEnabled(bool en)
         ensureTexturesAllocated();
         markMapDirty();
     }
+    else
+    {
+        for (int i = 0; i < 2; ++i)
+        {
+            m_toastTimer[i] = 0;
+            m_waypointComboWasPressed[i] = false;
+            m_waypointMenuComboWasPressed[i] = false;
+#if PLATFORM_XBOX
+            (void)XboxInput::consumeWaypointRequest(i);
+#endif
+        }
+    }
 }
 
 void ReiMinimap::init(Minecraft *mc)

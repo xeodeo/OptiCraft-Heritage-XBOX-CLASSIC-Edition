@@ -139,6 +139,7 @@
 #include "mods/herobrine/RenderHerobrine.h"
 #include "mods/chococraft/EntityChocobo.h"
 #include "mods/chococraft/RenderChocobo.h"
+#include "mods/ModManager.h"
 #include "OpenGlHelper.h"
 #include <unordered_set>
 
@@ -429,6 +430,8 @@ void RenderManager::cacheActiveRenderInfo(World* world, RenderEngine* renderengi
 }
 
 void RenderManager::renderEntity(Entity* entity, float f) {
+    if (entity == nullptr || !ModManager::isEntityAllowed(entity))
+        return;
     double d = entity->lastTickPosX + (entity->posX - entity->lastTickPosX) * (double)f;
     double d1 = entity->lastTickPosY + (entity->posY - entity->lastTickPosY) * (double)f;
     double d2 = entity->lastTickPosZ + (entity->posZ - entity->lastTickPosZ) * (double)f;

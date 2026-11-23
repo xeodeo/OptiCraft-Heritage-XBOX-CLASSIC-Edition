@@ -1,8 +1,10 @@
 #include "ChocoCraftItems.h"
 #include "EntityChocobo.h"
+#include "mods/ModManager.h"
 
 #include "net/minecraft/src/Block.h"
 #include "net/minecraft/src/BlockGrass.h"
+#include "net/minecraft/src/CreativeTabs.h"
 #include "net/minecraft/src/Material.h"
 #include "net/minecraft/src/ItemBlock.h"
 #include "net/minecraft/src/ItemStack.h"
@@ -86,9 +88,18 @@ int_t BlockGysahlGreens::getCropItem()
     return ChocoCraftItems::gysahlGreens ? ChocoCraftItems::gysahlGreens->shiftedIndex : Item::wheat->shiftedIndex;
 }
 
+void BlockGysahlGreens::updateTick(World *world, int_t x, int_t y, int_t z, Random &random)
+{
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return;
+    BlockCrops::updateTick(world, x, y, z, random);
+}
+
 void BlockGysahlGreens::dropBlockAsItemWithChance(World *world, int_t x, int_t y, int_t z, int_t meta, float chance, int_t fortune)
 {
     if (world == nullptr || world->multiplayerWorld)
+        return;
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
         return;
 
     // Mature Gysahl: drop Green Gysahl with ChocoCraft 4.1.5 mutation chances to Loverly / Golden Gysahl!
@@ -132,7 +143,7 @@ BlockChocoboStraw::BlockChocoboStraw(int_t id, int_t texIndex)
 
 bool BlockChocoboStraw::canPlaceBlockAt(World *world, int_t x, int_t y, int_t z)
 {
-    if (world == nullptr)
+    if (world == nullptr || !ModManager::getInstance().isModEnabled("chococraft"))
         return false;
     const int_t belowId = world->getBlockId(x, y - 1, z);
     Block *below = (belowId > 0 && belowId < 256) ? Block::blocksList[belowId] : nullptr;
@@ -142,6 +153,8 @@ bool BlockChocoboStraw::canPlaceBlockAt(World *world, int_t x, int_t y, int_t z)
 void BlockChocoboStraw::onNeighborBlockChange(World *world, int_t x, int_t y, int_t z, int_t neighborId)
 {
     (void)neighborId;
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return;
     if (world != nullptr && !canPlaceBlockAt(world, x, y, z))
     {
         dropBlockAsItem(world, x, y, z, world->getBlockMetadata(x, y, z), 0);
@@ -182,6 +195,20 @@ std::string ItemChocoFood::getItemDisplayName(ItemStack *)
     return chocoIsSpanish() ? m_esName : m_enName;
 }
 
+ItemStack *ItemChocoFood::onItemRightClick(ItemStack *itemstack, World *world, EntityPlayer *player)
+{
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return itemstack;
+    return ItemFood::onItemRightClick(itemstack, world, player);
+}
+
+ItemStack *ItemChocoFood::onFoodEaten(ItemStack *itemstack, World *world, EntityPlayer *player)
+{
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return itemstack;
+    return ItemFood::onFoodEaten(itemstack, world, player);
+}
+
 ItemGysahlSeeds::ItemGysahlSeeds(int id, int cropBlockId)
     : ItemSeeds(id, cropBlockId, Block::tilledField ? Block::tilledField->blockID : 60)
 {
@@ -194,6 +221,13 @@ std::string ItemGysahlSeeds::getItemDisplayName(ItemStack *)
     return chocoIsSpanish() ? "Semillas Gysahl" : "Gysahl Seeds";
 }
 
+bool ItemGysahlSeeds::onItemUse(ItemStack *itemstack, EntityPlayer *player, World *world, int x, int y, int z, int side)
+{
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return false;
+    return ItemSeeds::onItemUse(itemstack, player, world, x, y, z, side);
+}
+
 ItemChocoboWhistle::ItemChocoboWhistle(int id)
     : ItemChocoIcon(id, 0xFFD840, "/chococraft/textures/items/whistle.png", "Chocobo Whistle", "Silbato de Chocobo")
 {
@@ -203,7 +237,7 @@ ItemChocoboWhistle::ItemChocoboWhistle(int id)
 
 ItemStack *ItemChocoboWhistle::onItemRightClick(ItemStack *itemstack, World *world, EntityPlayer *player)
 {
-    if (world == nullptr || player == nullptr)
+    if (world == nullptr || player == nullptr || !ModManager::getInstance().isModEnabled("chococraft"))
         return itemstack;
 
     world->playSoundAtEntity(player, "random.orb", 0.8f, 1.8f);
@@ -243,7 +277,7 @@ ItemPurpleChocoboEgg::ItemPurpleChocoboEgg(int id)
 
 ItemStack *ItemPurpleChocoboEgg::onItemRightClick(ItemStack *itemstack, World *world, EntityPlayer *player)
 {
-    if (world == nullptr || player == nullptr)
+    if (world == nullptr || player == nullptr || !ModManager::getInstance().isModEnabled("chococraft"))
         return itemstack;
 
     if (!player->capabilities.isCreativeMode && itemstack != nullptr)
@@ -430,6 +464,34 @@ void registerAll()
 
     if (Item::itemsList[256 + ITEM_PURPLE_EGG_RAW] == nullptr)
         purpleChocoboEgg = new ItemPurpleChocoboEgg(ITEM_PURPLE_EGG_RAW);
+
+    // Assign Creative tabs (1.5.2) — dynamically hidden by CreativeTabs/GuiContainerCreative when ChocoCraft is OFF.
+    CreativeTabs::initialize();
+    if (blockStraw != nullptr && CreativeTabs::tabDecorations != nullptr)
+        blockStraw->setCreativeTab(CreativeTabs::tabDecorations);
+    if (CreativeTabs::tabFood != nullptr)
+    {
+        if (gysahlGreens != nullptr)     gysahlGreens->setCreativeTab(CreativeTabs::tabFood);
+        if (gysahlCake != nullptr)       gysahlCake->setCreativeTab(CreativeTabs::tabFood);
+        if (gysahlPicklesRaw != nullptr) gysahlPicklesRaw->setCreativeTab(CreativeTabs::tabFood);
+        if (gysahlPickles != nullptr)    gysahlPickles->setCreativeTab(CreativeTabs::tabFood);
+        if (chocoboLegRaw != nullptr)    chocoboLegRaw->setCreativeTab(CreativeTabs::tabFood);
+        if (chocoboLegCooked != nullptr) chocoboLegCooked->setCreativeTab(CreativeTabs::tabFood);
+    }
+    if (CreativeTabs::tabMisc != nullptr)
+    {
+        if (gysahlSeeds != nullptr)       gysahlSeeds->setCreativeTab(CreativeTabs::tabMisc);
+        if (chocoboSaddle != nullptr)     chocoboSaddle->setCreativeTab(CreativeTabs::tabMisc);
+        if (chocoboSaddlebags != nullptr) chocoboSaddlebags->setCreativeTab(CreativeTabs::tabMisc);
+        if (chocoboPackbags != nullptr)   chocoboPackbags->setCreativeTab(CreativeTabs::tabMisc);
+        if (chocoboFeather != nullptr)    chocoboFeather->setCreativeTab(CreativeTabs::tabMisc);
+        if (gysahlLoverly != nullptr)     gysahlLoverly->setCreativeTab(CreativeTabs::tabMisc);
+        if (gysahlGolden != nullptr)      gysahlGolden->setCreativeTab(CreativeTabs::tabMisc);
+        if (gysahlPink != nullptr)        gysahlPink->setCreativeTab(CreativeTabs::tabMisc);
+        if (gysahlRed != nullptr)         gysahlRed->setCreativeTab(CreativeTabs::tabMisc);
+        if (chocoboWhistle != nullptr)    chocoboWhistle->setCreativeTab(CreativeTabs::tabMisc);
+        if (purpleChocoboEgg != nullptr)  purpleChocoboEgg->setCreativeTab(CreativeTabs::tabMisc);
+    }
 
     // ChocoCraft 4.1.5 crafting recipes (ChocoCraftRecipes.java)
     CraftingManager *cm = CraftingManager::getInstance();

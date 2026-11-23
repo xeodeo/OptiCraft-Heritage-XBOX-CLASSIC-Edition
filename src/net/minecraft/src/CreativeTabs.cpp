@@ -8,6 +8,7 @@
 #include "ItemEnchantedBook.h"
 #include "ItemStack.h"
 #include "StringTranslate.h"
+#include "mods/ModManager.h"
 
 CreativeTabs *CreativeTabs::creativeTabArray[12] = { nullptr };
 CreativeTabs *CreativeTabs::tabBlock = nullptr;
@@ -119,7 +120,7 @@ void CreativeTabs::displayAllReleventItems(std::vector<ItemStack *> &list)
     for (int i = 0; i < Item::ITEM_LIST_SIZE; ++i)
     {
         Item *item = Item::itemsList[i];
-        if (item != nullptr && item->getCreativeTab() == this)
+        if (item != nullptr && item->getCreativeTab() == this && ModManager::isItemAllowed(i))
         {
             item->getSubItems(item->shiftedIndex, this, list);
         }

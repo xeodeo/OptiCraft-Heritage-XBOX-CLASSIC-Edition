@@ -19,6 +19,7 @@ public:
     int_t getRenderColor(int_t meta) override;
     int_t colorMultiplier(IBlockAccess *access, int_t x, int_t y, int_t z) override;
     bool usesDefaultColorMultiplier() const override { return false; }
+    void updateTick(World *world, int_t x, int_t y, int_t z, Random &random) override;
     void dropBlockAsItemWithChance(World *world, int_t x, int_t y, int_t z, int_t meta, float chance, int_t fortune) override;
 
 protected:
@@ -67,6 +68,8 @@ public:
     int getColorFromDamage(int damage) override { (void)damage; return m_tint; }
     int getColorFromDamage(int damage, int renderPass) override { (void)damage; (void)renderPass; return m_tint; }
     std::string getItemDisplayName(ItemStack *stack) override;
+    ItemStack *onItemRightClick(ItemStack *itemstack, World *world, EntityPlayer *player) override;
+    ItemStack *onFoodEaten(ItemStack *itemstack, World *world, EntityPlayer *player) override;
 
 private:
     int_t m_tint;
@@ -83,6 +86,7 @@ public:
     int getColorFromDamage(int damage) override { (void)damage; return 0x55DD77; }
     int getColorFromDamage(int damage, int renderPass) override { (void)damage; (void)renderPass; return 0x55DD77; }
     std::string getItemDisplayName(ItemStack *stack) override;
+    bool onItemUse(ItemStack *itemstack, EntityPlayer *player, World *world, int x, int y, int z, int side) override;
 };
 
 class ItemChocoboWhistle : public ItemChocoIcon

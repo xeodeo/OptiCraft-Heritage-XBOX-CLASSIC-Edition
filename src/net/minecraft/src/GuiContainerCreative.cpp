@@ -33,6 +33,7 @@
 #include "SlotCreativeInventory.h"
 #include "SoundManager.h"
 #include "StringTranslate.h"
+#include "mods/ModManager.h"
 #include "net/minecraft/src/ControlIcon.h"
 #include "pc/lwjgl/Keyboard.h"
 #include "pc/lwjgl/Mouse.h"
@@ -496,7 +497,7 @@ void GuiContainerCreative::updateCreativeSearch()
     for (int i = 0; i < Item::ITEM_LIST_SIZE; ++i)
     {
         Item *item = Item::itemsList[i];
-        if (item != nullptr && item->getCreativeTab() != nullptr)
+        if (item != nullptr && item->getCreativeTab() != nullptr && ModManager::isItemAllowed(i))
         {
             item->getSubItems(item->shiftedIndex, nullptr, container->itemList);
         }

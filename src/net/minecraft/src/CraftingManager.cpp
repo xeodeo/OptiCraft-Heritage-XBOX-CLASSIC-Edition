@@ -27,6 +27,7 @@
 #include "RecipesMapExtending.h"
 #include "RecipeFireworks.h"
 #include "RecipesArmorDyes.h"
+#include "mods/ModManager.h"
 
 CraftingManager *CraftingManager::instance = nullptr;
 
@@ -277,6 +278,8 @@ ItemStack *CraftingManager::findMatchingRecipe(InventoryCrafting *inventorycraft
 
 	for (IRecipe *irecipe : recipes)
 	{
+		if (!ModManager::isRecipeAllowed(irecipe))
+			continue;
 		if (irecipe->matches(inventorycrafting, world))
 		{
 			return irecipe->getCraftingResult(inventorycrafting);

@@ -680,6 +680,10 @@ public:
 	int_t getLoadedChunkCount() const;
 	void unloadAllChunks();
 	void initializeWeatherStrengths();
+	// Encargo 115 point 1: freeze/revive entities of a content mod without losing NBT.
+	void suspendModEntities(const std::string &modId);
+	void reviveModEntities(const std::string &modId);
+	int_t countDormantModEntities(const std::string &modId) const;
 
 private:
 	Chunk *getPopulationFastChunk(int_t x, int_t y, int_t z) const;

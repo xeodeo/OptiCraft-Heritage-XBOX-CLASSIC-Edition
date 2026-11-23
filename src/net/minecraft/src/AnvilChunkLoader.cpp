@@ -32,6 +32,7 @@
 #include "java/Arithmetic.h"
 #include "WorldInfo.h"
 #include "WorldProvider.h"
+#include "mods/ModManager.h"
 #ifdef PS2_PLATFORM
 #include "ps2/storage/save/Ps2SaveFileSystem.h"
 #endif
@@ -400,6 +401,18 @@ void AnvilChunkLoader::writeChunkToLevel(Chunk *chunk, World *world, NBTTagCompo
                 delete entityTag;
         }
     }
+    // Preserve dormant entities belonging to currently disabled mods verbatim.
+    for (NBTTagCompound *dormant : chunk->dormantModEntities)
+    {
+        if (dormant == nullptr)
+            continue;
+        NBTTagCompound *copy = dynamic_cast<NBTTagCompound *>(dormant->copy());
+        if (copy != nullptr)
+        {
+            entitiesTag->appendTag(copy);
+            chunk->hasEntities = true;
+        }
+    }
     level->setTag("Entities", entitiesTag);
 
     NBTTagList *tileEntitiesTag = new NBTTagList();
@@ -541,6 +554,14 @@ Chunk *AnvilChunkLoader::readChunkFromLevel(World *world, NBTTagCompound *level)
             NBTTagCompound *tag = dynamic_cast<NBTTagCompound *>(entities->tagAt(index));
             if (tag == nullptr)
                 continue;
+            const std::string entId = tag->getString("id");
+            if (!ModManager::isEntityIdAllowed(entId))
+            {
+                NBTTagCompound *copy = dynamic_cast<NBTTagCompound *>(tag->copy());
+                if (copy != nullptr)
+                    chunk->addDormantModEntity(copy);
+                continue;
+            }
             Entity *entity = EntityList::createEntityFromNBT(tag, world);
             if (entity == nullptr)
                 continue;

@@ -15,7 +15,12 @@ public:
     std::string getAuthor() const override { return "OptiCraft"; }
 
     bool isEnabled() const override { return m_enabled; }
-    void setEnabled(bool state) override { m_enabled = state; }
+    void setEnabled(bool state) override
+    {
+        m_enabled = state;
+        if (!state)
+            m_comboWasPressed = false;
+    }
 
     void onInit(Minecraft *mc) override;
     void onTick() override;

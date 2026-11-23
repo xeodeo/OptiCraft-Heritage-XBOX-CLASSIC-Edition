@@ -203,6 +203,13 @@ int_t g_sourceCount = 0;
 void setModEnabled(bool enabled)
 {
     s_modEnabled = enabled;
+    if (!enabled)
+    {
+        if (g_world != nullptr && g_sourceCount > 0)
+            clearSources(g_world, true);
+        g_enabled = false;
+        s_scanCountdown = 0;
+    }
 }
 
 bool isModEnabled()

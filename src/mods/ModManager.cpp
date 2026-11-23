@@ -10,6 +10,10 @@
 #include "herobrine/HerobrineMod.h"
 #include "chococraft/ChocoCraftMod.h"
 #include "toomanyitems/TooManyItemsMod.h"
+#include "toomanyitems/TooManyItems.h"
+#include "chococraft/ChocoCraftItems.h"
+#include "chococraft/EntityChocobo.h"
+#include "herobrine/EntityHerobrine.h"
 #include "xray/XRayMod.h"
 #include "dynamiclights/DynamicLightsMod.h"
 #include "strongholdlocator/StrongholdLocatorMod.h"
@@ -17,6 +21,12 @@
 #include "serverutils/ServerUtilsMod.h"
 
 #include "net/minecraft/src/WorldInfo.h"
+#include "net/minecraft/src/World.h"
+#include "net/minecraft/src/Entity.h"
+#include "net/minecraft/src/IRecipe.h"
+#include "net/minecraft/src/ShapedRecipes.h"
+#include "net/minecraft/src/ShapelessRecipes.h"
+#include "net/minecraft/src/ItemStack.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -44,6 +54,101 @@ bool ModManager::isWorldContentMod(const std::string &id)
 {
     // Utility mods (minimap, X-Ray, TooManyItems, locators, lights) leave nothing in the world.
     return id == "chococraft" || id == "herobrine";
+}
+
+const char *ModManager::getOwnerModForBlock(int_t blockId)
+{
+    if (blockId == ChocoCraftItems::BLOCK_GYSAHL_ID ||
+        blockId == ChocoCraftItems::BLOCK_STRAW_ID)
+    {
+        return "chococraft";
+    }
+    return nullptr;
+}
+
+const char *ModManager::getOwnerModForItem(int_t itemId)
+{
+    if (itemId >= 0 && itemId < 256)
+        return getOwnerModForBlock(itemId);
+
+    const int_t firstChocoItem = 256 + ChocoCraftItems::ITEM_GYSAHL_GREENS_RAW;
+    const int_t lastChocoItem  = 256 + ChocoCraftItems::ITEM_PURPLE_EGG_RAW;
+    if (itemId >= firstChocoItem && itemId <= lastChocoItem)
+        return "chococraft";
+
+    return nullptr;
+}
+
+const char *ModManager::getOwnerModForEntityId(const std::string &entityId)
+{
+    if (entityId == "Chocobo")
+        return "chococraft";
+    if (entityId == "Herobrine")
+        return "herobrine";
+    return nullptr;
+}
+
+const char *ModManager::getOwnerModForEntity(const Entity *entity)
+{
+    if (entity == nullptr)
+        return nullptr;
+    if (dynamic_cast<const EntityChocobo *>(entity) != nullptr)
+        return "chococraft";
+    if (dynamic_cast<const EntityHerobrine *>(entity) != nullptr)
+        return "herobrine";
+    return nullptr;
+}
+
+bool ModManager::isBlockAllowed(int_t blockId)
+{
+    const char *owner = getOwnerModForBlock(blockId);
+    return owner == nullptr || getInstance().isModEnabled(owner);
+}
+
+bool ModManager::isItemAllowed(int_t itemId)
+{
+    const char *owner = getOwnerModForItem(itemId);
+    return owner == nullptr || getInstance().isModEnabled(owner);
+}
+
+bool ModManager::isEntityIdAllowed(const std::string &entityId)
+{
+    const char *owner = getOwnerModForEntityId(entityId);
+    return owner == nullptr || getInstance().isModEnabled(owner);
+}
+
+bool ModManager::isEntityAllowed(const Entity *entity)
+{
+    const char *owner = getOwnerModForEntity(entity);
+    return owner == nullptr || getInstance().isModEnabled(owner);
+}
+
+bool ModManager::isRecipeAllowed(IRecipe *recipe)
+{
+    if (recipe == nullptr)
+        return false;
+    ItemStack *output = recipe->getRecipeOutput();
+    if (output != nullptr && !isItemAllowed(output->itemID))
+        return false;
+    if (ShapedRecipes *shaped = dynamic_cast<ShapedRecipes *>(recipe))
+    {
+        const int_t count = shaped->getWidth() * shaped->getHeight();
+        for (int_t i = 0; i < count; ++i)
+        {
+            ItemStack *ing = shaped->getPatternItem(i);
+            if (ing != nullptr && !isItemAllowed(ing->itemID))
+                return false;
+        }
+    }
+    else if (ShapelessRecipes *shapeless = dynamic_cast<ShapelessRecipes *>(recipe))
+    {
+        for (ItemStack *ing : shapeless->getIngredients())
+        {
+            if (ing != nullptr && !isItemAllowed(ing->itemID))
+                return false;
+        }
+    }
+    return true;
 }
 
 std::string ModManager::getEnabledModsSignature() const
@@ -172,11 +277,25 @@ bool ModManager::isModEnabled(const std::string &id)
 void ModManager::setModEnabled(const std::string &id, bool enabled)
 {
     IMod *mod = getMod(id);
-    if (mod != nullptr)
+    if (mod == nullptr)
+        return;
+
+    const bool changed = (mod->isEnabled() != enabled);
+    mod->setEnabled(enabled);
+
+    if (changed)
     {
-        mod->setEnabled(enabled);
-        save();
+        TooManyItems::refreshItems();
+        if (mc != nullptr && mc->theWorld != nullptr && isWorldContentMod(id))
+        {
+            if (enabled)
+                mc->theWorld->reviveModEntities(id);
+            else
+                mc->theWorld->suspendModEntities(id);
+        }
     }
+
+    save();
 }
 
 std::string ModManager::getGameModsDir() const

@@ -100,14 +100,6 @@ void HerobrineMod::setEnabled(bool state)
         m_altarRitual.active = false;
         m_digger.active = false;
         m_diamond.active = false;
-        if (m_mc != nullptr && m_mc->theWorld != nullptr)
-        {
-            for (Entity *ent : m_mc->theWorld->loadedEntityList)
-            {
-                if (dynamic_cast<EntityHerobrine *>(ent) != nullptr)
-                    ent->setEntityDead();
-            }
-        }
     }
 }
 

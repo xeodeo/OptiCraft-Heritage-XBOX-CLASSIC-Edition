@@ -757,6 +757,8 @@ void EntityChocobo::updatePlayerActionState()
 
 void EntityChocobo::onLivingUpdate()
 {
+    if (!ModManager::getInstance().isModEnabled("chococraft"))
+        return;
     // Sync hitbox size when Chicobo grows into adult Chocobo (or loaded as baby)
     const bool childNow = isChild();
     if (childNow != m_wasChild)
@@ -1112,7 +1114,7 @@ EntityAnimal *EntityChocobo::spawnBabyAnimal(EntityAnimal *mate)
 
 bool EntityChocobo::interact(EntityPlayer *player)
 {
-    if (player == nullptr || worldObj == nullptr)
+    if (player == nullptr || worldObj == nullptr || !ModManager::getInstance().isModEnabled("chococraft"))
         return false;
 
     ItemStack *held = player->inventory ? player->inventory->getCurrentItem() : nullptr;

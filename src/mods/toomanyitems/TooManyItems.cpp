@@ -1,4 +1,5 @@
 #include "TooManyItems.h"
+#include "mods/ModManager.h"
 
 #include "Minecraft.h"
 #include "GuiContainer.h"
@@ -63,6 +64,17 @@ void TooManyItems::init()
     s_initialized = true;
 }
 
+void TooManyItems::refreshItems()
+{
+    if (!s_initialized)
+        return;
+    populateItems();
+    if (s_currentPage >= s_totalPages)
+        s_currentPage = s_totalPages - 1;
+    if (s_currentPage < 0)
+        s_currentPage = 0;
+}
+
 bool TooManyItems::isEnabled()
 {
     return s_enabled;
@@ -99,6 +111,7 @@ void TooManyItems::populateItems()
     {
         Block *b = Block::blocksList[id];
         if (b == nullptr) continue;
+        if (!ModManager::isBlockAllowed(id)) continue;
 
         if (Block::cloth && b->blockID == Block::cloth->blockID)
         {
@@ -159,6 +172,7 @@ void TooManyItems::populateItems()
     {
         Item *item = Item::itemsList[id];
         if (item == nullptr) continue;
+        if (!ModManager::isItemAllowed(id)) continue;
 
         if (Item::dyePowder && item->shiftedIndex == Item::dyePowder->shiftedIndex)
         {

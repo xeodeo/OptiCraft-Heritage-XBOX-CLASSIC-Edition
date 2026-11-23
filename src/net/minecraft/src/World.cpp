@@ -1,5 +1,8 @@
 #include "World.h"
 #include "DynamicLights.h"
+#include "EntityList.h"
+#include "NBTTagCompound.h"
+#include "mods/ModManager.h"
 #include "EntitySheep.h"
 #include <algorithm>
 #include <cstdio>
@@ -2930,6 +2933,9 @@ bool World::addWeatherEffect(Entity* entity)
 
 bool World::entityJoinedWorld(Entity* entity)
 {
+    if (entity == nullptr || !ModManager::isEntityAllowed(entity))
+        return false;
+
     int chunkX = MathHelper::floor_double(entity->posX / 16.0);
     int chunkZ = MathHelper::floor_double(entity->posZ / 16.0);
     bool flag = false;
@@ -3062,6 +3068,137 @@ void World::detachEntityForWorldChange(Entity *entity)
     if (chunkProvider != nullptr)
         chunkProvider->removeEntityFromLoadedChunks(entity);
     entity->addedToChunk = false;
+}
+
+void World::suspendModEntities(const std::string &modId)
+{
+    if (modId.empty())
+        return;
+
+    std::vector<Entity *> toSuspend;
+    for (Entity *entity : loadedEntityList)
+    {
+        if (entity == nullptr || entity->isDead)
+            continue;
+        const char *owner = ModManager::getOwnerModForEntity(entity);
+        if (owner != nullptr && modId == owner)
+            toSuspend.push_back(entity);
+    }
+
+    for (Entity *entity : toSuspend)
+    {
+        if (!isLoadedEntityPointer(entity))
+            continue;
+
+        if (entity->riddenByEntity != nullptr)
+        {
+            Entity *rider = entity->riddenByEntity;
+            rider->mountEntity(nullptr);
+            rider->fallDistance = 0.0f;
+        }
+        if (entity->ridingEntity != nullptr)
+        {
+            entity->mountEntity(nullptr);
+        }
+
+        if (!multiplayerWorld)
+        {
+            const int_t cx = entity->addedToChunk
+                ? entity->chunkCoordX
+                : MathHelper::floor_double(entity->posX / 16.0);
+            const int_t cz = entity->addedToChunk
+                ? entity->chunkCoordZ
+                : MathHelper::floor_double(entity->posZ / 16.0);
+            Chunk *chunk = getChunkIfExists(cx, cz);
+            if (chunk != nullptr)
+            {
+                NBTTagCompound *tag = new NBTTagCompound();
+                if (entity->addEntityID(tag))
+                {
+                    chunk->addDormantModEntity(tag);
+                    chunk->setChunkModified();
+                }
+                else
+                {
+                    delete tag;
+                }
+            }
+        }
+
+        detachEntityForWorldChange(entity);
+        releaseEntitySkin(entity);
+        onEntityRemoved(entity);
+        destroyEntity(entity);
+    }
+}
+
+void World::reviveModEntities(const std::string &modId)
+{
+    if (modId.empty() || multiplayerWorld || chunkProvider == nullptr)
+        return;
+
+    std::vector<Chunk *> chunks = chunkProvider->getLoadedChunksSnapshot();
+    for (Chunk *chunk : chunks)
+    {
+        if (chunk == nullptr || chunk->dormantModEntities.empty())
+            continue;
+
+        std::vector<NBTTagCompound *> remaining;
+        remaining.reserve(chunk->dormantModEntities.size());
+        bool revivedAny = false;
+
+        for (NBTTagCompound *tag : chunk->dormantModEntities)
+        {
+            if (tag == nullptr)
+                continue;
+            const char *owner = ModManager::getOwnerModForEntityId(tag->getString("id"));
+            if (owner != nullptr && modId == owner)
+            {
+                Entity *entity = EntityList::createEntityFromNBT(tag, this);
+                if (entity != nullptr && entityJoinedWorld(entity))
+                {
+                    delete tag;
+                    revivedAny = true;
+                    continue;
+                }
+                delete entity;
+            }
+            remaining.push_back(tag);
+        }
+
+        chunk->dormantModEntities = std::move(remaining);
+        if (revivedAny)
+            chunk->setChunkModified();
+    }
+}
+
+int_t World::countDormantModEntities(const std::string &modId) const
+{
+    if (chunkProvider == nullptr)
+        return 0;
+    int_t count = 0;
+    std::vector<Chunk *> chunks = chunkProvider->getLoadedChunksSnapshot();
+    for (Chunk *chunk : chunks)
+    {
+        if (chunk == nullptr)
+            continue;
+        for (NBTTagCompound *tag : chunk->dormantModEntities)
+        {
+            if (tag == nullptr)
+                continue;
+            if (modId.empty())
+            {
+                ++count;
+            }
+            else
+            {
+                const char *owner = ModManager::getOwnerModForEntityId(tag->getString("id"));
+                if (owner != nullptr && modId == owner)
+                    ++count;
+            }
+        }
+    }
+    return count;
 }
 
 void World::addWorldAccess(IWorldAccess* worldAccess)
