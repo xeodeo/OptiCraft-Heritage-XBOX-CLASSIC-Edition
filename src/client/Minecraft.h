@@ -256,6 +256,7 @@ public:
 
 private:
     friend void LegacyStartup::run(Minecraft* minecraft);
+    friend class AdminModeMod; // FastPlace / Timer modules
 
     void loadScreen();
     void drawSplashScreenTexturedModalRect(int_t i, int_t j, int_t k, int_t l, int_t i1, int_t j1);

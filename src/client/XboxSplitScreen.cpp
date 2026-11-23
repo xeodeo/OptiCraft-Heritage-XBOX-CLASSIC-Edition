@@ -20,6 +20,7 @@
 
 #include "client/Minecraft.h"
 #include "xbox/input/XboxInput.h"
+#include "mods/ModManager.h"
 #include "net/minecraft/src/EntityPlayerSP.h"
 #include "net/minecraft/src/World.h"
 #include "net/minecraft/src/WorldInfo.h"
@@ -239,6 +240,11 @@ void tick(Minecraft *mc)
         else if (pressed & XBOX_PAD_DPAD_DOWN)  { XboxInput::setWaypointRequest(1, 2); s_p2BackCombo = true; }
         else if (pressed & XBOX_PAD_DPAD_LEFT)  { XboxInput::setWaypointRequest(1, 3); s_p2BackCombo = true; }
         else if (pressed & XBOX_PAD_DPAD_RIGHT) { XboxInput::setWaypointRequest(1, 4); s_p2BackCombo = true; }
+        else if ((pressed & XBOX_PAD_X) && ModManager::getInstance().isModEnabled("adminmode"))
+        {
+            XboxInput::setAdminMenuRequest(1);
+            s_p2BackCombo = true;
+        }
     }
 
     // Controller unplugged, Back released without combo while playing, or "Leave Game": player 2 leaves.
@@ -351,7 +357,7 @@ void tick(Minecraft *mc)
         return;
     }
     // X: console crafting (2x2), as for player 1.
-    if ((pressed & XBOX_PAD_X) && mc->gameSettings->xboxStyleCrafting && mc->playerController != nullptr &&
+    if ((pressed & XBOX_PAD_X) && !backHeld && mc->gameSettings->xboxStyleCrafting && mc->playerController != nullptr &&
         !mc->playerController->isInCreativeMode())
     {
         asPlayer2(mc, [mc, p2]() { mc->displayGuiScreen(new XboxCraftingScreen(p2)); });

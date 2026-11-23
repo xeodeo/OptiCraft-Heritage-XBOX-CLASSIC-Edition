@@ -14,6 +14,7 @@ namespace translator340
 {
 namespace
 {
+std::atomic<int> s_localOpLevel{-1};
 
 // 1.12.2 play, clientbound.
 enum Clientbound : uint32_t
@@ -1502,6 +1503,9 @@ void translateClientbound(Session &s, uint32_t id, const uint8_t *payload, std::
 	{
 		const int32_t eid = c.i32();
 		const int8_t status = c.i8();
+		// 24..28: op permission level 0..4, only ever sent about the local player.
+		if (c.ok && status >= 24 && status <= 28)
+			s_localOpLevel.store(status - 24, std::memory_order_relaxed);
 		if (!c.ok || status < 0 || status > 11)
 			return;
 		w.i32(eid);
@@ -2032,6 +2036,16 @@ void translateClientbound(Session &s, uint32_t id, const uint8_t *payload, std::
 	default:
 		return; // titles, boss bars, scoreboards, sounds, particles, advancements...
 	}
+}
+
+int localOpLevel()
+{
+	return s_localOpLevel.load(std::memory_order_relaxed);
+}
+
+void resetLocalOpLevel()
+{
+	s_localOpLevel.store(-1, std::memory_order_relaxed);
 }
 
 } // namespace translator340

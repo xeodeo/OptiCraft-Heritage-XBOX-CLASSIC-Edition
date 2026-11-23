@@ -1,4 +1,5 @@
 #include "EntityPlayerSP.h"
+#include "mods/adminmode/AdminHooks.h"
 
 #include "GameSettings.h"
 #include "KeyBinding.h"
@@ -178,6 +179,9 @@ void EntityPlayerSP::onLivingUpdate()
 	bool wasMovingForward = movementInput != nullptr && movementInput->moveForward >= sprintThreshold;
 	if (movementInput != nullptr)
 		movementInput->updatePlayerMoveState(this);
+	if (movementInput != nullptr && AdminHooks::onFor(AdminHooks::AutoWalk, this) &&
+		(mc == nullptr || mc->currentScreen == nullptr))
+		movementInput->moveForward = 1.0f;
 #ifdef PS2_PLATFORM
 	// While a screen is open the player must stand still. On PC that happens by
 	// itself: movement comes from key events and opening a screen releases them
@@ -194,7 +198,7 @@ void EntityPlayerSP::onLivingUpdate()
 		movementInput->sneak       = false;
 	}
 #endif
-	if (isUsingItem() && movementInput != nullptr)
+	if (isUsingItem() && movementInput != nullptr && !AdminHooks::onFor(AdminHooks::NoSlowDown, this))
 	{
 		movementInput->moveStrafe *= 0.2f;
 		movementInput->moveForward *= 0.2f;
@@ -547,6 +551,8 @@ void EntityPlayerSP::sendChatMessage(const std::string &message)
 
 bool EntityPlayerSP::isSneaking()
 {
+	if (AdminHooks::onFor(AdminHooks::Sneak, this) && !sleeping)
+		return true;
 	return movementInput != nullptr && movementInput->sneak && !sleeping;
 }
 
@@ -637,6 +643,8 @@ bool EntityPlayerSP::isBlockTranslucent(int_t i, int_t j, int_t k)
 
 bool EntityPlayerSP::pushOutOfBlocks(double d, double d1, double d2)
 {
+	if (noClip) // admin mode Freecam flies through blocks
+		return false;
 	int_t i = MathHelper::floor_double(d);
 	int_t j = MathHelper::floor_double(d1);
 	int_t k = MathHelper::floor_double(d2);
