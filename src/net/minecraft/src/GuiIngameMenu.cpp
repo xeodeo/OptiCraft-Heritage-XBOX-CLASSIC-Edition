@@ -62,6 +62,15 @@ void GuiIngameMenu::initGui()
 		if (mc->isSplitScreenActive() && mc->thePlayer2 != nullptr)
 			layout.firstButtonY = std::max<int_t>(4,
 				(height - (legacyPauseButtonCount() * stride - layout.buttonSpacing)) / 2);
+		else
+		{
+			// The pause screen has no logo: centre the column between the top of the
+			// safe area and the hint row (at 480p it sat low, almost on the hints).
+			const int_t columnHeight = legacyPauseButtonCount() * stride - layout.buttonSpacing;
+			const int_t top = std::max<int_t>(8, height / 12);
+			const int_t bottom = legacyHintRowY(height) - std::max<int_t>(6, height / 30);
+			layout.firstButtonY = std::max<int_t>(4, top + std::max<int_t>(0, (bottom - top - columnHeight) / 2));
+		}
 		const float_t alpha = legacyPauseButtonOpacity();
 		int_t row = 0;
 

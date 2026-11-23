@@ -90,7 +90,7 @@ private:
     bool inputLatch = true;
     Mode mode = Mode::Browse;
 
-    int tab = 0;            // 0..3 lists, 4 = search results
+    int tab = 0;            // 0 = made for this version (filtered), 1..4 lists, 5 = search results
     int page = 0;
     int selected = 0;
     int scroll = 0;
@@ -103,6 +103,11 @@ private:
     // Current page (copied from the job when it lands).
     struct Hit;
     std::vector<std::shared_ptr<Hit>> hits;
+    // Tab 0 fetches every hit for the version once, keeps the old-format ones and
+    // pages through them locally.
+    std::vector<std::shared_ptr<Hit>> allHits;
+    bool localPages = false;
+    void showLocalPage();
     int totalHits = 0;
     bool pageLoading = false;
     std::string pageError;

@@ -38,16 +38,15 @@ LegacyHelpOptions::LegacyHelpOptions(GuiScreen *parent, GameSettings *settingsVa
 
 void LegacyHelpOptions::initGui()
 {
-    configureLegacyLayout(8, false);
-    const LegacyMainMenuLayout layout = legacyMainMenuLayout(width, height, 8);
+    configureLegacyLayout(7, false);
+    const LegacyMainMenuLayout layout = legacyMainMenuLayout(width, height, 7);
     const int_t stride = layout.buttonHeight + layout.buttonSpacing;
     const std::string labels[] = {
         uiText("Video"),
         uiText("Controls"),
         uiText("Language"),
         uiText("OptiCraft Options"),
-        uiText("Mods"),
-        uiText("Texture Packs"),
+        uiText("Mods & Textures"),
         uiText("View"),
         uiText("Back")
     };
@@ -57,12 +56,11 @@ void LegacyHelpOptions::initGui()
         BUTTON_LANGUAGE,
         BUTTON_HERITAGE,
         BUTTON_MODS,
-        BUTTON_TEXTURES,
         BUTTON_VIEW,
         BUTTON_BACK
     };
 
-    for (int_t i = 0; i < 8; ++i)
+    for (int_t i = 0; i < 7; ++i)
     {
         controlList.push_back(new LegacyGuiButton(ids[i], layout.buttonX,
             layout.firstButtonY + i * stride, layout.buttonWidth, layout.buttonHeight, labels[i]));

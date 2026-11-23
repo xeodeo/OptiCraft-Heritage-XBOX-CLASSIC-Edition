@@ -19,6 +19,9 @@ struct SearchHit
     std::string iconUrl;
     std::int64_t downloads = 0;
     std::int64_t follows = 0;
+    // Lists a game version after 1.5.2: most likely a newer-format pack that only
+    // "claims" the old version too (user 23-11: hidden from the default list).
+    bool newerThanConsole = false;
 };
 
 struct SearchPage
