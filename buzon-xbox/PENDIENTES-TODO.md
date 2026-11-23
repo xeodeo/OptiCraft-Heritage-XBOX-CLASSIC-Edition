@@ -1,9 +1,15 @@
-# TODO lo pendiente (22-11-2026, 18:40)
+# TODO lo pendiente (22-11-2026, 20:45)
 
 Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-ENCARGO-*.md`) y en
 `ESTADO-OPTICRAFT.html`. Qué rehacer en cada consola: `PLATAFORMAS-QUE-HACER.md`.
 
 ## 0. Versiones y dónde está cada cosa
+- **EN EL LANZADOR, SIN SUBIR (22-11 20:45, la consola estaba apagada; hay que subirlo por FTP)**: 1.5.2 `6121e6c`
+  (`port152-int`) y 1.2.5 `a20d430` (`opti30-erluza`): todo lo de abajo + minimapa sin redibujos (114) + sin tirón
+  al guardar (111.5) + Modrinth desde la consola (116) + chocobos reales de ChocoCraft 4.1.5 (113) + detector de mods
+  por mundo y apagar mods de verdad (115). `assets.pak` de las dos versiones parcheado con las 140 texturas del
+  chocobo (copia del anterior en `%TEMP%ssets-<ver>-backup.pak`). agy sin cuota hasta ~28-11. Falta: 108
+  (bloques/mobs, `port152-blq`), marca de mods en la lista de mundos, 1.6.4 después.
 - **En la consola (subido 22-11 18:40)**: 1.5.2 `ee55f32` (rama `port152-int`) y 1.2.5 `e4af03f` (`opti30-erluza`):
   todo lo de los encargos 87–103 + mods (101) + skins 3D 1.8 (107) + DNS de respaldo + HTTPS relajado (mbedTLS de
   la Classic Xbox Store; skins reintentan por HTTPS) + Texture Packs de vuelta en el catálogo (botón/Start) + fondo
@@ -27,20 +33,26 @@ Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-
 - **A vigilar**: RAM al volver a zonas ya cargadas (en xemu bajó de 24 a 11 MB); memoria en el End (isla residente).
 
 ## 2. Trabajo de agy (cuota vuelve ~19:05)
+- **116**: HECHO (`71bc987`/`1928c76`, sin probar en consola; informe 116 con lista de pruebas). Antes: descargar packs de Modrinth desde la consola por versión + pantalla de
+  texturas con estilo LCE + conversión del formato 1.5 en la consola.
 - **111 (URGENTE, del usuario 22-11 18:00)**: (1) volvió a desaparecer la entrada «Texture Packs» (no hay dónde
   cambiar texturas); (2) menú de mods: fondo quieto y contenido muy arriba, revisar TODAS las pantallas nuevas en
   480p/720p; (3) descargar packs de Modrinth desde la consola (≈244 para 1.2.5, ≈266 para 1.5.2) con montaje del
   formato 1.5 en la consola; (4) HTTPS sin gasto dentro del juego (`XboxTls::shutdown`, sección XBE a demanda).
-- **Tirón de 1,5 s guardando un chunk al descargarlo** (consola 22-11 18:01): encargo 111 punto 5.
+- **Tirón de 1,5 s guardando un chunk al descargarlo** (consola 22-11 18:01): HECHO por Claude 19:30 (`820d6d0` 1.5.2 /
+  `709aac3` 1.2.5): cada guardado de chunk releía `session.lock` del disco en el hilo principal (en FATX espera a las
+  escrituras del hilo de IO); ahora se comprueba cada 30 s. Si vuelve, el log dirá `slow chunk save x,z: lock= nbt= queue=`.
 - **Cuelgue en consola 22-11 ~18:00**: el receptor del log estaba apagado (se cayó al hibernar); reproducir con
   `escuchar_log.py` encendido o leer `E:\TDATA\FFFF4F43\debug.log` por FTP.
-- **113 (chocobos, usuario 22-11 18:20)**: cría con la cabeza despegada; no parece un chocobo (usar modelo y
+- **113 (chocobos)**: HECHO por agy (`45edeba`/`2ee1d28`, probado en xemu; assets.pak del lanzador parcheado). Antes: cría con la cabeza despegada; no parece un chocobo (usar modelo y
   texturas de ChocoCraft4, MIT/CC-BY-SA, bajado en `mcp-diff\chococraft4-ref`); el dorado no vuela; montado se mueve
   solo y monta sin silla; daño por caída al planear/aterrizar.
-- **115 (mods por mundo)**: apagar un mod no lo apaga (los chocobos se siguen viendo); detector de mods y versión
+- **115 (mods por mundo)**: HECHO 20:40 (detector `9f442e3`; apagar de verdad `6121e6c`/`a20d430`), SIN PROBAR. Antes: apagar un mod no lo apaga (los chocobos se siguen viendo); detector de mods y versión
   por mundo con aviso al abrirlo (activar / entrar sin ellos conservándolos / volver); Herobrine con la maldición
   (fuego) encendida por defecto como el original.
-- **114 (minimapa)**: funciona, pero a veces se redibuja entero (usuario 22-11 18:25).
+- **114 (minimapa)**: HECHO por Claude 19:25 (`7d51ba7` 1.2.5 / `d7197b2` 1.5.2): el modo cueva automático cambiaba en
+  cada boca de cueva/árbol y redibujaba todo a 1 fila cada 4 ticks (~13 s); ahora espera 1,5 s estable y el
+  redibujado rápido tarda ~0,2 s. Probar en consola.
 - **112 (subagente de Claude, en marcha)**: todas las pantallas nuevas con aspecto LCE de Xbox (parecían Bedrock).
 - **105** (agy-1, A MEDIAS, 54 ficheros sin commit + sonda `XboxProbe105.cpp`): superplano personalizable, marcador
   (scoreboard), combate 1.5.2 (mensajes de muerte, flechas en llamas). NO reset.

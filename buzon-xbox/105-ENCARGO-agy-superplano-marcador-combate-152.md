@@ -40,3 +40,10 @@ agy-1 se quedó sin cuota (vuelve ~19:05) a mitad del encargo: **54 ficheros SIN
 marcador: GuiIngame, comandos…) + sonda temporal `XboxProbe105.cpp` que hay que quitar antes del commit; capturas
 01–10 del superplano ya hechas en `105-capturas\`. NO hacer reset: al volver la cuota, seguir desde ese árbol,
 terminar, quitar la sonda, commit e informe.
+
+## CIERRE (Claude, 22-11 19:20)
+Por decisión del usuario (solo 1 agy), Claude cerró el 105: quitó la sonda (`XboxProbe105.cpp` y ganchos), conservó
+el arreglo de sonido (clips hasta 384 KB: la mecha y la explosión del creeper se saltaban) y lo commiteó como
+`6a6ce29` en `port152-erluza`; juntado en `port152-int` `412dce9` (conflictos en EntityPlayer::onDeath y
+MapGenVillage resueltos: minimapa + marcador). Compila. SIN informe de agy y SIN probar a fondo: probar en consola
+superplano (preajustes), /scoreboard, mensajes de muerte, flechas en llamas, sonido del creeper.

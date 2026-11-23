@@ -12,7 +12,7 @@ juego), nunca /fp:fast, dos interfaces (Java y Legacy), **480p y 720p** (captura
   NO toques esas pantallas.
 - Punto 4 HECHO a medias: `XboxTls::shutdown()` existe y se llama al salir de buscar skin; falta llamarlo al salir
   de «Descargar packs» (tu pantalla) y la idea de la sección XBE a demanda.
-- **Tu parte: punto 3 (Modrinth) y punto 5 (tirón al guardar)**, ramas `port152-int` (`ee55f32`) y `opti30-erluza`
+- **Punto 3 (Modrinth) lo hace ahora un subagente de Claude (informe 116). Tu parte: SOLO el punto 5 (tirón al guardar).**, ramas `port152-int` (`ee55f32`) y `opti30-erluza`
   (`e4af03f`).
 
 ## 1. Ya no hay dónde cambiar las texturas (URGENTE)

@@ -1,6 +1,6 @@
 ---
 name: estado-actual
-description: "Start any session by reading buzon-xbox/PENDIENTES-TODO.md + ESTADO-ACTUAL.md (22-11): test branches port152-erluza (wt-152-rend) and opti30-erluza (wt-opti30)"
+description: "Start any session by reading buzon-xbox/PENDIENTES-TODO.md (22-11 20:45): good branches port152-int 6121e6c and opti30-erluza a20d430, in launcher but NOT uploaded"
 metadata:
   node_type: memory
   type: project
@@ -11,7 +11,7 @@ metadata:
 `Desktop\Minecraft en xboox clasico\buzon-xbox\ESTADO-ACTUAL.md` is the short status file: branches per version,
 builds in the launcher, decisions the user made, what to test and what is next. Header rewritten on 2026-11-20.
 
-As of 2026-11-22 17:55: **full pending list in `buzon-xbox/PENDIENTES-TODO.md`** (read it first). On the console (18:40):
+As of 2026-11-22 20:45: launcher has 1.5.2 `6121e6c` / 1.2.5 `a20d430` (113 chocobos, 114 minimap, 111.5 save hitch, 115 mods off + per-world detector, 116 Modrinth) NOT uploaded (console was off); agy out of quota until ~2026-11-28; next: upload, test, then 108. Older note — as of 17:55: **full pending list in `buzon-xbox/PENDIENTES-TODO.md`** (read it first). On the console (18:40):
 1.5.2 `ee55f32` (branch `port152-int` = everything + mods + 3D skins + HTTPS + UI fixes) and 1.2.5 `e4af03f` (`opti30-erluza`).
 agy-1 encargo 105 half done uncommitted in `wt-152-rend` (no reset); agy-2 encargo 108 on `port152-blq` not started;
 agy queue 105→108→111→113→114→115; 110 HTTPS done by Claude (`XboxTls`, mbedTLS from the Classic Xbox Store, relaxed).

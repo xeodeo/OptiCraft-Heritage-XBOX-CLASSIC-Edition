@@ -1,0 +1,31 @@
+[VERIFY] PERF fps=131.2 freeKB=44920
+[VERIFY] PERF fps=90.2 freeKB=44920
+[VERIFY] PHASE 0 starting_world_152
+[VERIFY] PERF fps=106.0 freeKB=41664
+[VERIFY] PHASE 1 world_started_152
+[VERIFY] PHASE 2 9_adult_colours_shot
+[VERIFY] SHOT 01_152_9_colores_adultos seq=1 ptr=014d1010 w=640 h=480
+[VERIFY] PHASE 4 chicobo_babies_shot
+[VERIFY] SHOT 02_152_cria_chicobo seq=2 ptr=014d1010 w=640 h=480
+[VERIFY] PERF fps=68.3 freeKB=38312
+[VERIFY] NO_SADDLE_TEST mounted=0 saddled=0
+[VERIFY] SHOT 03_152_sin_silla_no_monta seq=3 ptr=014d1010 w=640 h=480
+[VERIFY] MOUNT_WITH_SADDLE mounted=1 saddled=1
+[VERIFY] MOUNTED_AI_OFF_DRIFT drift=0.0000 ticks=30
+[VERIFY] SHOT 04_152_montado_con_silla_3p seq=4 ptr=014d1010 w=640 h=480
+[VERIFY] PERF fps=79.4 freeKB=36468
+[VERIFY] GOLD_FLIGHT startY=4.00 peakY=20.02 deltaY=16.02 flying=1
+[VERIFY] SHOT 05_152_dorado_volando seq=5 ptr=014d1010 w=640 h=480
+[VERIFY] PERF fps=86.3 freeKB=36360
+[VERIFY] PERF fps=84.6 freeKB=36348
+[VERIFY] PERF fps=86.7 freeKB=36284
+[VERIFY] PERF fps=83.5 freeKB=36268
+[VERIFY] GOLD_LANDING hpBefore=20 hpAfter=20 chocoHp=30 onGround=0
+[VERIFY] PERF fps=85.1 freeKB=36276
+[VERIFY] PERF fps=85.4 freeKB=36276
+[VERIFY] PERF fps=83.1 freeKB=36276
+[VERIFY] YELLOW_GLIDE_LANDING hpBefore=20 hpAfter=20 dismountHp=20
+[VERIFY] SHOT 06_152_aterrizaje_sin_dano seq=6 ptr=014d1010 w=640 h=480
+[VERIFY] PERF fps=56.3 freeKB=34168
+[VERIFY] SAVE_LOAD total=2 goldSaddled=1 purpleBaby=1
+[VERIFY] ALL_DONE

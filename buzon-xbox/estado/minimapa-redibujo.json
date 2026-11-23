@@ -1,1 +1,1 @@
-{"version": "ambas", "estado": "fallo", "area": "Mods y texturas", "nombre": "Minimapa: a veces se redibuja entero", "nota": "Funciona bien; encargo 114 para que solo pinte lo nuevo.", "ref": "114", "orden": 4}
+{"version": "ambas", "estado": "por_probar", "area": "Mods y texturas", "nombre": "Minimapa: a veces se redibuja entero", "nota": "Arreglado (1.2.5 7d51ba7, 1.5.2 d7197b2): el modo cueva automático cambiaba en cada boca de cueva y redibujaba todo durante ~13 s; ahora espera 1,5 s estable y redibuja en ~0,2 s.", "ref": "114", "orden": 4}

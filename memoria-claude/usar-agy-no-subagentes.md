@@ -19,3 +19,5 @@ auditar (un subagente de auditoría está bien) y arreglos pequeños hechos a ma
 **22-11-2026, otra vez:** lancé 2 subagentes a la vez (encantar/mapas y texturas) además de 2 agy; el usuario dijo
 «lanzaste muchos agents tuyos, no hagas tanto: máximo 1 agente tuyo». Regla: **como mucho UN subagente de Claude
 activo**; varios agy en paralelo sí (el usuario pidió un segundo agy), cada uno en su worktree.
+
+**22-11 19:15:** «solo 1 agy» por la poca cuota: un agy a la vez; Claude hace la otra mitad del trabajo él mismo.

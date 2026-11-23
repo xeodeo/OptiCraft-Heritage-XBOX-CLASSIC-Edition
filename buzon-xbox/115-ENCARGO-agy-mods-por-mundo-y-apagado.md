@@ -8,6 +8,10 @@ mando, 480p/720p, pantalla partida. Va DESPUÉS del 113 (chocobos) si tocas los 
 Apagó ChocoCraft en el catálogo y **los chocobos se siguen viendo**. Al apagar un mod (y al arrancar con él apagado):
 sus entidades no se crean ni se actualizan ni se dibujan, sus bloques/objetos no funcionan, no aparecen nuevos
 (spawns), sus recetas salen del crafteo (Java y consola), sus HUD/combos se apagan. Comprobar con los 9 mods.
+**Visto otra vez por el usuario (22-11 18:50):** con ChocoCraft apagado **sus objetos siguen saliendo en los menús**
+(inventario creativo, crafteo Java y de consola, etc.). Con un mod apagado, sus objetos/bloques no deben aparecer en
+ninguna lista (creativo, crafteo de consola, recetas, TooManyItems) ni poder conseguirse; los que el jugador ya tenga
+se conservan en su inventario/cofres (NBT intacto) aunque no se puedan usar mientras esté apagado.
 **Sin borrar datos del jugador**: las entidades/objetos del mod que ya están en el mundo se conservan en el chunk
 (guardar su NBT tal cual al volver a guardar el chunk) para que reaparezcan si se vuelve a encender.
 
@@ -31,3 +35,24 @@ la opción para apagarla en el menú del mod. Revisar que todo lo demás coincid
 Capturas: aviso de mods al abrir un mundo (faltan / nuevos / otra versión), mundo con chocobos con el mod apagado
 (no se ven) y vuelto a encender (reaparecen), Herobrine quemando al jugador. Capturas en `buzon-xbox\115-capturas\`.
 Informe `buzon-xbox\115-INFORME-agy.md`; la señal de fin es la palabra CIENTOQUINCE-LISTO seguida de los commits.
+
+## REVISIÓN DE CLAUDE (22-11 19:45) — ANTES DE EMPEZAR
+- Punto 3 (Herobrine maldición encendida por defecto) HECHO por Claude.
+- Punto 2 (detector por mundo) HECHO por Claude: `9f442e3` en `opti30-erluza` (cherry-pick en `port152-int`).
+  `level.dat` guarda `OptiCraftVersion` y `OptiCraftMods` ("id@ver;..."); al abrir un mundo (Java y Legacy, ambas
+  pasan por `GuiSelectWorld::selectWorld`) sale `GuiWorldModsWarning` si faltan/sobran mods de contenido
+  (`ModManager::isWorldContentMod`: chococraft, herobrine) o la versión es otra (más nueva = aviso en rojo).
+  Falta solo la marca pequeña en la lista de mundos (opcional).
+- **Tu parte: SOLO el punto 1** (apagar de verdad: entidades, spawns, objetos fuera de listas/recetas, conservar NBT).
+
+## CARPETAS (Claude, 22-11 20:15)
+Tus chocobos (113) ya están juntados. Trabaja en `wt-152-choco` (rama nueva `port152-off`, desde `port152-int`
+`49cf07e`, ya con 113 + Modrinth + detector) y `wt-125-choco` (rama `opti30-off`, desde `opti30-erluza` `88772bf`).
+
+## CIERRE (Claude, 22-11 20:40)
+agy se quedó sin cuota (vuelve en ~136 h) con el punto 1 casi hecho y sin commit; Claude lo revisó, compiló (4 builds
+OK) y commiteó: 1.5.2 `6121e6c` (`port152-off`), 1.2.5 `a20d430` (`opti30-off`), ya en `port152-int` y
+`opti30-erluza`. Qué hace: al apagar un mod de contenido sus entidades se guardan "dormidas" en el NBT del chunk
+(`Chunk::dormantModEntities`, se reescriben tal cual al guardar y reviven al encender), no entran nuevas
+(`World::entityJoinedWorld`), sus objetos salen del creativo, búsqueda, crafteo (Java y consola), recetas y
+TooManyItems, y sus bloques/objetos no hacen nada. SIN informe de agy y SIN probar en xemu ni consola.

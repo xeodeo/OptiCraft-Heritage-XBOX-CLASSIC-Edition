@@ -1,0 +1,1 @@
+{"version": "ambas", "estado": "por_probar", "area": "Sonido", "nombre": "Creeper: se oyen la mecha y la explosión", "nota": "Los clips pasaban del tope de 256 KB y se saltaban; ahora 384 KB (1.2.5 9a26a4a, 1.5.2 en 412dce9).", "ref": "105", "orden": 5}
