@@ -240,3 +240,8 @@ Estado al día en `ESTADO-ACTUAL.md` (sección «21-11») y `ESTADO-OPTICRAFT.ht
 Qué rehacer por consola en `PLATAFORMAS-QUE-HACER.md`. Auditoría PS2 completa en `106-INFORME-agy-auditoria-ps2.md`
 (compila; 1.5.2 viable con recortes). Estado al día en `ESTADO-ACTUAL.md` y `ESTADO-OPTICRAFT.html`.
 Pendientes completos: `PENDIENTES-TODO.md` (22-11 17:55).
+
+## 23-11 mañana
+Ramas buenas: 1.5.2 `port152-int` `6121e6c`, 1.2.5 `opti30-erluza` `a20d430` (encargos 113, 114, 115, 116 y 111.5
+juntados). En el lanzador, SIN subir a la consola. Resumen en `ESTADO-ACTUAL.md` («AHORA»); pendientes en
+`PENDIENTES-TODO.md` (22-11 20:45).

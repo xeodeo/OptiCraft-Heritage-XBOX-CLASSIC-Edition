@@ -1,4 +1,16 @@
-# Estado actual del proyecto (21-11-2026)
+# Estado actual del proyecto (23-11-2026)
+
+## AHORA (23-11 09:15) — LEER PRIMERO
+- **Ramas buenas**: 1.5.2 `port152-int` `6121e6c` (carpeta `wt-build-152`) y 1.2.5 `opti30-erluza` `a20d430`
+  (`wt-opti30`; build en `wt-build-125`). Respaldadas en el remoto `xbox`.
+- **En el lanzador, SIN SUBIR a la consola** (estaba apagada): las 4 XBE de cada versión + `assets.pak` parcheado con
+  las texturas del chocobo. Subir por FTP (192.168.0.3, `F:\Games\OptiCraft\<versión>`) y probar.
+- Nuevo desde lo último en consola: minimapa sin redibujos (114), sin tirón al guardar (111.5), chocobos reales de
+  ChocoCraft 4.1.5 (113, probado en xemu), detector de mods por mundo + apagar mods de verdad (115, sin probar),
+  descargar packs de Modrinth desde la consola (116, sin probar; lista de pruebas en el informe 116).
+- agy sin cuota hasta ~28-11. Falta: 108 (bloques/mobs), marca de mods en la lista de mundos, luego 1.6.4.
+- Lista completa: `PENDIENTES-TODO.md`. Estado de cada cosa: `ESTADO-OPTICRAFT.html`.
+
 
 Resumen para empezar un chat nuevo. Contexto de fondo: `00-CONTEXTO.md`. Lo técnico del port: `docs/XBOX_PORT.md`
 (en cada rama). Plan de la 1.5.2: `69-PLAN-COMPLETO-152.md`. Lo más reciente: sección «21-11» justo abajo; estado de cada cosa en `ESTADO-OPTICRAFT.html`.
