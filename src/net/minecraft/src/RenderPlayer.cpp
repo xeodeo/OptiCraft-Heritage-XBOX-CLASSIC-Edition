@@ -164,7 +164,10 @@ void RenderPlayer::doRender(Entity* entity, double d, double d1, double d2, floa
 }
 
 void RenderPlayer::renderName(EntityPlayer* entityPlayer, double d, double d1, double d2) {
-    if (!Minecraft::isGuiEnabled() || entityPlayer == renderManager->livingPlayer) {
+    // livingPlayer is still null on the first frame in a world, when the HUD
+    // animated character is drawn before the world (crash 23-11 on console).
+    if (!Minecraft::isGuiEnabled() || entityPlayer == nullptr || renderManager->livingPlayer == nullptr ||
+        entityPlayer == renderManager->livingPlayer) {
         return;
     }
 
