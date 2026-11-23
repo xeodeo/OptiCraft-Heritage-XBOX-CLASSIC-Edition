@@ -177,6 +177,19 @@ std::string ItemChocoIcon::getItemDisplayName(ItemStack *)
     return chocoIsSpanish() ? m_esName : m_enName;
 }
 
+ItemChocoBlock::ItemChocoBlock(int id, const char *customTex, const char *enName, const char *esName)
+    : ItemBlock(id)
+    , m_customTex(customTex)
+    , m_enName(enName)
+    , m_esName(esName)
+{
+}
+
+std::string ItemChocoBlock::getItemDisplayName(ItemStack *)
+{
+    return chocoIsSpanish() ? m_esName : m_enName;
+}
+
 ItemChocoFood::ItemChocoFood(int id, int healAmount, float sat, bool wolfFood, int_t fallbackTint,
                              const char *customTex, const char *enName, const char *esName)
     : ItemFood(id, healAmount, sat, wolfFood)
@@ -215,7 +228,7 @@ ItemGysahlSeeds::ItemGysahlSeeds(int id, int cropBlockId)
 
 std::string ItemGysahlSeeds::getItemDisplayName(ItemStack *)
 {
-    return chocoIsSpanish() ? "Semillas Gysahl" : "Gysahl Seeds";
+    return chocoIsSpanish() ? "Semillas de Gysahl" : "Gysahl Seeds";
 }
 
 bool ItemGysahlSeeds::onItemUse(ItemStack *itemstack, EntityPlayer *player, World *world, int x, int y, int z, int side)
@@ -305,7 +318,7 @@ namespace ChocoCraftItems
 {
 BlockGysahlGreens    *blockGysahl = nullptr;
 BlockChocoboStraw    *blockStraw = nullptr;
-ItemChocoFood        *gysahlGreens = nullptr;
+ItemChocoIcon        *gysahlGreens = nullptr;
 ItemGysahlSeeds      *gysahlSeeds = nullptr;
 ItemChocoIcon        *chocoboSaddle = nullptr;
 ItemChocoIcon        *chocoboSaddlebags = nullptr;
@@ -342,23 +355,27 @@ void registerAll()
         Block::lightOpacity[BLOCK_GYSAHL_ID] = 0;
         Block::canBlockGrass[BLOCK_GYSAHL_ID] = false;
         if (Item::itemsList[BLOCK_GYSAHL_ID] == nullptr)
-            Item::itemsList[BLOCK_GYSAHL_ID] = new ItemBlock(BLOCK_GYSAHL_ID - 256);
+            Item::itemsList[BLOCK_GYSAHL_ID] = new ItemChocoBlock(BLOCK_GYSAHL_ID - 256,
+                "/chococraft/textures/blocks/gysahl_stem05.png", "Gysahl Stem", "Tallo de Gysahl");
     }
 
     if (Block::blocksList[BLOCK_STRAW_ID] == nullptr)
     {
-        blockStraw = new BlockChocoboStraw(BLOCK_STRAW_ID, 88);
+        // Wheat (ripe) tinted straw-yellow: closest vanilla terrain tile to strawBlock.
+        blockStraw = new BlockChocoboStraw(BLOCK_STRAW_ID, 95);
         Block::opaqueCubeLookup[BLOCK_STRAW_ID] = false;
         Block::lightOpacity[BLOCK_STRAW_ID] = 0;
         Block::canBlockGrass[BLOCK_STRAW_ID] = false;
         if (Item::itemsList[BLOCK_STRAW_ID] == nullptr)
-            Item::itemsList[BLOCK_STRAW_ID] = new ItemBlock(BLOCK_STRAW_ID - 256);
+            Item::itemsList[BLOCK_STRAW_ID] = new ItemChocoBlock(BLOCK_STRAW_ID - 256,
+                "/chococraft/textures/blocks/chocoboStraw.png", "Straw", "Paja");
     }
 
     if (Item::itemsList[256 + ITEM_GYSAHL_GREENS_RAW] == nullptr)
     {
-        gysahlGreens = new ItemChocoFood(ITEM_GYSAHL_GREENS_RAW, 2, 0.3f, false, 0x78EE44,
-            "/chococraft/textures/blocks/gysahl_green.png", "Gysahl Greens", "Verdura Gysahl");
+        // In ChocoCraft the Gysahl Green is not food (it is the gysahlGreenBlock item).
+        gysahlGreens = new ItemChocoIcon(ITEM_GYSAHL_GREENS_RAW, 0x78EE44,
+            "/chococraft/textures/blocks/gysahl_green.png", "Gysahl Green", "Verdura de Gysahl");
         gysahlGreens->setIconCoord(9, 5)->setItemName("gysahlGreens");
     }
 
@@ -375,7 +392,7 @@ void registerAll()
     if (Item::itemsList[256 + ITEM_SADDLEBAGS_RAW] == nullptr)
     {
         chocoboSaddlebags = new ItemChocoIcon(ITEM_SADDLEBAGS_RAW, 0xC88A3B,
-            "/chococraft/textures/items/saddlebag.png", "Chocobo Saddlebags", "Alforjas de Chocobo");
+            "/chococraft/textures/items/saddlebag.png", "Chocobo Saddle Bags", "Alforjas de Chocobo");
         chocoboSaddlebags->setMaxStackSize(8)->setIconCoord(7, 6)->setItemName("chocoboSaddlebags");
     }
 
@@ -396,49 +413,49 @@ void registerAll()
     if (Item::itemsList[256 + ITEM_GYSAHL_LOVERLY_RAW] == nullptr)
     {
         gysahlLoverly = new ItemChocoIcon(ITEM_GYSAHL_LOVERLY_RAW, 0xFF70A8,
-            "/chococraft/textures/items/gysahl_loverly.png", "Loverly Gysahl", "Gysahl Amoroso");
+            "/chococraft/textures/items/gysahl_loverly.png", "Loverly Gysahl", "Gysahl amorosa");
         gysahlLoverly->setIconCoord(9, 5)->setItemName("gysahlLoverly");
     }
 
     if (Item::itemsList[256 + ITEM_GYSAHL_GOLDEN_RAW] == nullptr)
     {
         gysahlGolden = new ItemChocoIcon(ITEM_GYSAHL_GOLDEN_RAW, 0xFFD820,
-            "/chococraft/textures/items/gysahl_golden.png", "Golden Gysahl", "Gysahl Dorado");
+            "/chococraft/textures/items/gysahl_golden.png", "Golden Gysahl", "Gysahl dorada");
         gysahlGolden->setIconCoord(9, 5)->setItemName("gysahlGolden");
     }
 
     if (Item::itemsList[256 + ITEM_GYSAHL_PINK_RAW] == nullptr)
     {
         gysahlPink = new ItemChocoIcon(ITEM_GYSAHL_PINK_RAW, 0xFF88CC,
-            "/chococraft/textures/items/gysahl_pink.png", "Pink Gysahl", "Gysahl Rosa");
+            "/chococraft/textures/items/gysahl_pink.png", "Pink Gysahl", "Gysahl rosa");
         gysahlPink->setIconCoord(9, 5)->setItemName("gysahlPink");
     }
 
     if (Item::itemsList[256 + ITEM_GYSAHL_RED_RAW] == nullptr)
     {
         gysahlRed = new ItemChocoIcon(ITEM_GYSAHL_RED_RAW, 0xE83030,
-            "/chococraft/textures/items/gysahl_red.png", "Red Gysahl", "Gysahl Rojo");
+            "/chococraft/textures/items/gysahl_red.png", "Red Gysahl", "Gysahl roja");
         gysahlRed->setIconCoord(9, 5)->setItemName("gysahlRed");
     }
 
     if (Item::itemsList[256 + ITEM_GYSAHL_CAKE_RAW] == nullptr)
     {
         gysahlCake = new ItemChocoIcon(ITEM_GYSAHL_CAKE_RAW, 0x88E050,
-            "/chococraft/textures/items/gysahl_cake.png", "Gysahl Cake", "Pastel Gysahl");
+            "/chococraft/textures/items/gysahl_cake.png", "Gysahl Cake", "Pastel de Gysahl");
         gysahlCake->setMaxStackSize(8)->setIconCoord(13, 1)->setItemName("gysahlCake");
     }
 
     if (Item::itemsList[256 + ITEM_GYSAHL_RAWPKL_RAW] == nullptr)
     {
         gysahlPicklesRaw = new ItemChocoIcon(ITEM_GYSAHL_RAWPKL_RAW, 0x90E070,
-            "/chococraft/textures/items/gysahl_rawpickles.png", "Raw Gysahl Pickles", "Gysahl Encurtido Crudo");
+            "/chococraft/textures/items/gysahl_rawpickles.png", "Gysahl Raw Pickles", "Encurtido de Gysahl crudo");
         gysahlPicklesRaw->setIconCoord(9, 5)->setItemName("gysahlPicklesRaw");
     }
 
     if (Item::itemsList[256 + ITEM_GYSAHL_PICKLES_RAW] == nullptr)
     {
         gysahlPickles = new ItemChocoFood(ITEM_GYSAHL_PICKLES_RAW, 2, 0.4f, false, 0x48B838,
-            "/chococraft/textures/items/gysahl_pickles.png", "Gysahl Pickles", "Gysahl Encurtido");
+            "/chococraft/textures/items/gysahl_pickles.png", "Gysahl Pickles", "Encurtido de Gysahl");
         gysahlPickles->setIconCoord(9, 5)->setItemName("gysahlPickles");
     }
 

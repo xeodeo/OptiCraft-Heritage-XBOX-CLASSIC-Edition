@@ -16,6 +16,8 @@ public:
 
 	int getPadPort() const { return padPort; }
 	void setPadPort(int port) { padPort = port; }
+	// Mounts call this so a sneak toggled on before mounting is not a dismount press.
+	void clearSneakToggle() { sneakToggled = false; }
 
 private:
 	GameSettings *gameSettings;

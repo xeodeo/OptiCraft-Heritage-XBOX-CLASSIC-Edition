@@ -23,6 +23,17 @@
 #include "platform/Resources.h"
 #include "java/System.h"
 
+namespace {
+// Mod block items that ship their own flat icon (ChocoCraft straw) draw it
+// instead of a 3D block.
+bool hasCustomItemIcon(Item *item)
+{
+    const char *tex = item != nullptr ? item->getCustomIconTexture() : nullptr;
+    return tex != nullptr && !PlatformResources::resolveAsset(tex).empty();
+}
+}
+
+
 
 
 namespace {
@@ -90,7 +101,7 @@ void ItemRenderer::renderItem(EntityLiving* entityliving, ItemStack* itemstack, 
     }
 
     renderPushMatrix();
-    if (itemstack->itemID >= 0 && itemstack->itemID < 256 && Block::blocksList[itemstack->itemID] != nullptr && RenderBlocks::renderItemIn3d(Block::blocksList[itemstack->itemID]->getRenderType())) {
+    if (itemstack->itemID >= 0 && itemstack->itemID < 256 && Block::blocksList[itemstack->itemID] != nullptr && RenderBlocks::renderItemIn3d(Block::blocksList[itemstack->itemID]->getRenderType()) && !hasCustomItemIcon(itemstack->getItem())) {
         renderBindTexture(mc->renderEngine->getTexture("/terrain.png"));
         renderBlocksInstance->renderBlockAsItem(Block::blocksList[itemstack->itemID], itemstack->getItemDamage(), 1.0f);
     } else {
