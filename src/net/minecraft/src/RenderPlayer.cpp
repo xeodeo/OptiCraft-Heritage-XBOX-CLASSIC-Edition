@@ -68,10 +68,17 @@ int RenderPlayer::setArmorModel(EntityPlayer* entityPlayer, int i, float)
         return -1;
 
     static const char* const armorFilenamePrefix[] = {"cloth", "chain", "iron", "diamond", "gold"};
-    if (armor->renderIndex < 0 || armor->renderIndex >= 5)
-        return -1;
-    std::string texture = std::string("/armor/") + armorFilenamePrefix[armor->renderIndex] + "_" + (i != 2 ? "1" : "2") + ".png";
-    loadTexture(texture);
+    if (const char* custom = armor->getCustomArmorTexture(i != 2 ? 1 : 2))
+    {
+        loadTexture(custom);
+    }
+    else
+    {
+        if (armor->renderIndex < 0 || armor->renderIndex >= 5)
+            return -1;
+        std::string texture = std::string("/armor/") + armorFilenamePrefix[armor->renderIndex] + "_" + (i != 2 ? "1" : "2") + ".png";
+        loadTexture(texture);
+    }
 
     ModelBiped* model = i != 2 ? modelArmorChestplate : modelArmor;
     model->bipedHead->showModel = i == 0;

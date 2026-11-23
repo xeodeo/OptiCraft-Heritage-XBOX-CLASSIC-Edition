@@ -14,6 +14,9 @@ public:
     static const int maxDamageArray[4];
 
     int getItemEnchantability() override;
+    // Mod armour (ChocoCraft's Chocodisguise): own texture for armour layer 1 or 2
+    // instead of /armor/<material>_<layer>.png. nullptr = the vanilla texture.
+    virtual const char *getCustomArmorTexture(int layer) const { (void)layer; return nullptr; }
     bool getIsRepairable(ItemStack* stack1, ItemStack* stack2) override;
     bool func_46058_c() override;
     int func_46057_a(int damage, int renderPass) override;

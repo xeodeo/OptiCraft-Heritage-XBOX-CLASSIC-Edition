@@ -59,7 +59,8 @@ bool ModManager::isWorldContentMod(const std::string &id)
 const char *ModManager::getOwnerModForBlock(int_t blockId)
 {
     if (blockId == ChocoCraftItems::BLOCK_GYSAHL_ID ||
-        blockId == ChocoCraftItems::BLOCK_STRAW_ID)
+        blockId == ChocoCraftItems::BLOCK_STRAW_ID ||
+        blockId == ChocoCraftItems::BLOCK_GYSAHL_GREEN_ID)
     {
         return "chococraft";
     }
@@ -71,8 +72,8 @@ const char *ModManager::getOwnerModForItem(int_t itemId)
     if (itemId >= 0 && itemId < 256)
         return getOwnerModForBlock(itemId);
 
-    const int_t firstChocoItem = 256 + ChocoCraftItems::ITEM_GYSAHL_GREENS_RAW;
-    const int_t lastChocoItem  = 256 + ChocoCraftItems::ITEM_PURPLE_EGG_RAW;
+    const int_t firstChocoItem = 256 + ChocoCraftItems::ITEM_FIRST_RAW;
+    const int_t lastChocoItem  = 256 + ChocoCraftItems::ITEM_LAST_RAW;
     if (itemId >= firstChocoItem && itemId <= lastChocoItem)
         return "chococraft";
 
