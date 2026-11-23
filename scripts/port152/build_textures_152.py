@@ -564,6 +564,26 @@ def copy_lce_skin_packs(base_data: Path, assets: Path, staged: list[str]) -> lis
     return copied
 
 
+def copy_chococraft_assets(choco_root: Path, output_data: Path) -> list[str]:
+    """Copy ChocoCraft 4.1.5 entity/item/block textures and kweh sound into the staged pak tree."""
+    copied = []
+    if not choco_root.is_dir():
+        return copied
+    for sub in ("assets", "resources"):
+        src_dir = choco_root / sub
+        if not src_dir.is_dir():
+            continue
+        for source in sorted(src_dir.rglob("*")):
+            if not source.is_file():
+                continue
+            rel = source.relative_to(choco_root).as_posix()
+            dest = output_data / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, dest)
+            copied.append(rel)
+    return copied
+
+
 def load_make_pak(script: Path):
     spec = importlib.util.spec_from_file_location("make_pak", script)
     if spec is None or spec.loader is None:
@@ -625,6 +645,7 @@ def main() -> int:
     sound3 = copy_sound3(args.launcher_assets, output_data / "resources") if args.launcher_assets else []
     staged += sound3
     staged += copy_extra_sounds(repo / "scripts/port152/extra_sounds", output_data / "resources")
+    staged += copy_chococraft_assets(repo / "scripts/chococraft", output_data)
     merged_langs = merge_languages(args.base_data / "assets/lang", args.source.parent / "src125/lang",
                                    args.source / "lang", assets / "lang")
     staged += [f"assets/lang/{name}" for name in merged_langs]

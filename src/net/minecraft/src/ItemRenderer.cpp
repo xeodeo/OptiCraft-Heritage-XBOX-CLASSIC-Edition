@@ -20,6 +20,7 @@
 #include "ItemMap.h"
 #include "InventoryPlayer.h"
 #include "platform/RenderAPI.h"
+#include "platform/Resources.h"
 #include "java/System.h"
 
 
@@ -93,15 +94,17 @@ void ItemRenderer::renderItem(EntityLiving* entityliving, ItemStack* itemstack, 
         renderBindTexture(mc->renderEngine->getTexture("/terrain.png"));
         renderBlocksInstance->renderBlockAsItem(Block::blocksList[itemstack->itemID], itemstack->getItemDamage(), 1.0f);
     } else {
-        const bool blockAtlas = itemstack->itemID < 256 &&
+        const char *customTex = item->getCustomIconTexture();
+        const bool useCustomTex = (customTex != nullptr && !PlatformResources::resolveAsset(customTex).empty());
+        const bool blockAtlas = !useCustomTex && itemstack->itemID < 256 &&
             (Block::blocksList[itemstack->itemID] == nullptr || Block::blocksList[itemstack->itemID]->getItemIconName() == nullptr);
-        renderBindTexture(mc->renderEngine->getTexture(blockAtlas ? "/terrain.png" : "/gui/items.png"));
+        renderBindTexture(mc->renderEngine->getTexture(useCustomTex ? customTex : (blockAtlas ? "/terrain.png" : "/gui/items.png")));
         Tessellator* tessellator = &Tessellator::instance;
         int icon = entityliving->getItemIcon(itemstack, renderPass);
-        float minU = (static_cast<float>((icon % 16) * 16) + 0.0f) / 256.0f;
-        float maxU = (static_cast<float>((icon % 16) * 16) + 15.99f) / 256.0f;
-        float minV = (static_cast<float>((icon / 16) * 16) + 0.0f) / 256.0f;
-        float maxV = (static_cast<float>((icon / 16) * 16) + 15.99f) / 256.0f;
+        float minU = useCustomTex ? 0.0f : (static_cast<float>((icon % 16) * 16) + 0.0f) / 256.0f;
+        float maxU = useCustomTex ? 1.0f : (static_cast<float>((icon % 16) * 16) + 15.99f) / 256.0f;
+        float minV = useCustomTex ? 0.0f : (static_cast<float>((icon / 16) * 16) + 0.0f) / 256.0f;
+        float maxV = useCustomTex ? 1.0f : (static_cast<float>((icon / 16) * 16) + 15.99f) / 256.0f;
 
         renderEnable(RenderCapability::RescaleNormal);
         renderTranslate(0.0f, -0.3f, 0.0f);

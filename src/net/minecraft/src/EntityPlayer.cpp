@@ -1375,6 +1375,11 @@ void EntityPlayer::addMountedMovementStat(double d, double d1, double d2)
 
 void EntityPlayer::fall(float f)
 {
+	if (ridingEntity != nullptr)
+	{
+		fallDistance = 0.0f;
+		return;
+	}
 	if (f >= 2.0f)
 	{
 		addStat(StatList::distanceFallenStat, JavaArithmetic::longToInt(JavaArithmetic::roundDouble((double)f * 100.0)));

@@ -79,6 +79,7 @@ public:
     bool isPotionIngredient() const;
     virtual bool func_46058_c();
     virtual int func_46057_a(int damage, int renderPass);
+    virtual const char *getCustomIconTexture() const { return nullptr; }
 
     CreativeTabs *tabToDisplayOn = nullptr;
     Item *setCreativeTab(CreativeTabs *tab);

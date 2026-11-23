@@ -331,6 +331,13 @@ elseif(EXISTS "${XBOX_DATA_DIR}/assets")
                 "${XBOX_DATA_DIR}/assets" "${XBOX_ISO_DIR}/data/assets"
         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
                 "${XBOX_DATA_DIR}/resources" "${XBOX_ISO_DIR}/data/resources")
+    if(EXISTS "${CMAKE_SOURCE_DIR}/scripts/chococraft/assets")
+        list(APPEND _xbox_stage_data
+            COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                    "${CMAKE_SOURCE_DIR}/scripts/chococraft/assets" "${XBOX_ISO_DIR}/data/assets"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                    "${CMAKE_SOURCE_DIR}/scripts/chococraft/resources" "${XBOX_ISO_DIR}/data/resources")
+    endif()
 else()
     message(WARNING "Xbox build: no game data at XBOX_DATA_DIR='${XBOX_DATA_DIR}' "
                     "(expects assets/ and resources/); the ISO will not have data/.")
