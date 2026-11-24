@@ -1,4 +1,6 @@
 #include "BlockFluid.h"
+#include "mods/adminmode/AdminHooks.h"
+#include "Entity.h"
 #include "java/Math.h"
 
 #include "IBlockAccess.h"
@@ -182,6 +184,13 @@ bool BlockFluid::shouldSideBeRendered(IBlockAccess *iblockaccess, int_t i, int_t
 
 AxisAlignedBB *BlockFluid::getCollisionBoundingBoxFromPool(World *world, int_t i, int_t j, int_t k)
 {
+	// Admin mode "Water": the local player walks on water (sneak to sink), as Nodus.
+	if (AdminHooks::on(AdminHooks::Water) && blockMaterial == Material::water)
+	{
+		Entity *e = AdminHooks::g_collidingEntity;
+		if (AdminHooks::isLocal(e) && !e->isSneaking() && e->boundingBox->minY >= (double)j + 0.6)
+			return AxisAlignedBB::getBoundingBoxFromPool((double)i, (double)j, (double)k, (double)i + 1.0, (double)j + 0.7, (double)k + 1.0);
+	}
 	return nullptr;
 }
 

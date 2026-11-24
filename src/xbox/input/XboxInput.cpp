@@ -50,6 +50,7 @@ int s_cameraWarmup = 0;
 bool s_backCombo = false;
 int s_waypointRequest[2] = { 0, 0 };
 bool s_villageLocatorRequest = false;
+bool s_adminMenuRequest[2] = { false, false };
 int s_menuAnalogDirection = 0;
 float s_menuAnalogRepeat = 0.0f;
 bool s_rebindStickArmed = false;
@@ -373,6 +374,7 @@ void updateGameplay(const XboxPadSnapshot& p)
 	const bool backHeld = (p.held & XBOX_PAD_BACK) != 0;
 	const bool minimapEnabled = ModManager::getInstance().isModEnabled("reiminimap");
 	const bool villageEnabled = ModManager::getInstance().isModEnabled("villagelocator");
+	const bool adminEnabled = ModManager::getInstance().isModEnabled("adminmode");
 	if (p.pressed & XBOX_PAD_BACK)
 		s_backCombo = false;
 	if (minimapEnabled && backHeld && (p.pressed & XBOX_PAD_DPAD_UP))
@@ -400,6 +402,11 @@ void updateGameplay(const XboxPadSnapshot& p)
 		s_villageLocatorRequest = true;
 		s_backCombo = true;
 	}
+	else if (adminEnabled && backHeld && (p.pressed & XBOX_PAD_X))
+	{
+		s_adminMenuRequest[0] = true;
+		s_backCombo = true;
+	}
 	// The D-pad does not walk while it is part of a Back combo (only when minimap is active).
 	const unsigned short dpadHeld = (backHeld && minimapEnabled) ? 0 : p.held;
 	setKey(XBOX_KEY_LSTICK_UP, moveY < -0.05f);
@@ -412,7 +419,8 @@ void updateGameplay(const XboxPadSnapshot& p)
 	setKey(XBOX_KEY_DPAD_RIGHT, (dpadHeld & XBOX_PAD_DPAD_RIGHT) != 0);
 	setKey(XBOX_KEY_A, (p.held & XBOX_PAD_A) != 0);
 	setKey(XBOX_KEY_B, (p.held & XBOX_PAD_B) != 0);
-	setKey(XBOX_KEY_X, (p.held & XBOX_PAD_X) != 0);
+	// Back + X is the admin menu combo: X must not also open the crafting screen.
+	setKey(XBOX_KEY_X, (p.held & XBOX_PAD_X) != 0 && !(adminEnabled && backHeld));
 	setKey(XBOX_KEY_Y, (p.held & XBOX_PAD_Y) != 0);
 	setKey(XBOX_KEY_BLACK, (p.held & XBOX_PAD_BLACK) != 0);
 	setKey(XBOX_KEY_WHITE, (p.held & XBOX_PAD_WHITE) != 0);
@@ -456,6 +464,19 @@ void setWaypointRequest(int playerIndex, int request)
 {
 	const int idx = (playerIndex == 1) ? 1 : 0;
 	s_waypointRequest[idx] = request;
+}
+
+bool consumeAdminMenuRequest(int playerIndex)
+{
+	const int idx = (playerIndex == 1) ? 1 : 0;
+	const bool req = s_adminMenuRequest[idx];
+	s_adminMenuRequest[idx] = false;
+	return req;
+}
+
+void setAdminMenuRequest(int playerIndex)
+{
+	s_adminMenuRequest[(playerIndex == 1) ? 1 : 0] = true;
 }
 
 bool consumeVillageLocatorRequest()

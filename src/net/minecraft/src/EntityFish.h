@@ -43,6 +43,7 @@ public:
 	int_t inTile;
 	bool  inGround;
 	int_t shake;
+	int getTicksCatchable() const { return ticksCatchable; } // admin mode AutoFish
 private:
 	void setBobber(Entity *entity);
 	int_t anglerEntityId;
