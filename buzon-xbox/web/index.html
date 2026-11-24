@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="img/tiles/grass.svg">
+<title>OptiCraft Heritage — Minecraft para consolas clásicas</title>
+<meta name="description" content="OptiCraft Heritage: Minecraft para Xbox clásica, PS2 y PS3. Progreso, capturas y descargas.">
+<style>
+  @font-face{font-family:'Minecraft';src:url('fonts/minecraft.woff2') format('woff2'),url('fonts/minecraft.woff') format('woff');font-display:swap;unicode-range:U+0-00A0}
+  @font-face{font-family:'Minecraft';src:url('fonts/monocraft.ttf') format('truetype');font-display:swap;unicode-range:U+00A1-024F;size-adjust:86%}
+  :root{--txt:#fff;--sh:#3a3a3a;--btn:#999;--btn-l:#cfcfcf;--btn-d:#565656;--amar:#ffff55;--verde:#63ab3e}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Minecraft','Segoe UI',sans-serif;color:#fff;background:#0c0f13;image-rendering:pixelated;text-shadow:2px 2px 0 var(--sh)}
+  a{color:#fff;text-decoration:none}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+  .scene{position:fixed;inset:-4% -20%;z-index:-2;background:url('img/landscape.svg') center/cover no-repeat;filter:brightness(.82) saturate(1.05);animation:pan 70s linear infinite alternate}
+  @keyframes pan{from{transform:translateX(0)}to{transform:translateX(-14%)}}
+  .vignette{position:fixed;inset:0;z-index:-1;background:radial-gradient(120% 90% at 50% 20%,transparent 40%,rgba(0,0,0,.55) 100%),linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.15) 40%,rgba(0,0,0,.5))}
+  @media(prefers-reduced-motion:reduce){.scene{animation:none}}
+
+  .btn{display:inline-block;font-family:'Minecraft';font-size:18px;color:#fff;background:var(--btn);padding:14px 20px;cursor:pointer;user-select:none;border:2px solid #000;text-align:center;box-shadow:inset 2px 2px 0 var(--btn-l),inset -2px -2px 0 var(--btn-d),0 4px 0 #000;text-shadow:2px 2px 0 #2b2b2b}
+  .btn:hover{background:#86a86f;box-shadow:inset 2px 2px 0 #c7eaa8,inset -2px -2px 0 #3c5a2a,0 4px 0 #000;color:#ffffcc}
+  .btn:active{transform:translateY(3px);box-shadow:inset 2px 2px 0 var(--btn-l),inset -2px -2px 0 var(--btn-d)}
+  .btn.wide{width:380px;max-width:86vw}.btn.half{width:184px;max-width:41vw}
+
+  header{position:sticky;top:0;z-index:30;background:rgba(16,16,16,.86);border-bottom:3px solid #000}
+  .nav{display:flex;align-items:center;gap:6px;padding:9px 16px;max-width:1000px;margin:0 auto;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;font-size:18px;margin-right:auto}
+  .brand .blk{width:26px;height:26px;background:url('img/tiles/grass.svg') center/cover;border:2px solid #000}
+  .nav a.link{font-size:14px;color:#ccc;padding:8px 10px}.nav a.link:hover{color:var(--amar)}
+  .langs{display:flex;gap:4px;margin-left:8px}
+  .lang{font-family:'Minecraft';font-size:12px;color:#bbb;background:#2a2a2a;border:2px solid #000;padding:5px 8px;cursor:pointer;box-shadow:inset 1px 1px 0 #555,inset -1px -1px 0 #111}
+  .lang.on{color:#fff;background:#5a7a44;box-shadow:inset 1px 1px 0 #9fd07f,inset -1px -1px 0 #2c4420}
+
+  .menu{min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 16px 90px;position:relative}
+  .logo{font-size:min(13vw,86px);line-height:.98;color:#fff;letter-spacing:3px;text-shadow:5px 5px 0 #1f1f1f,8px 8px 0 #000,0 0 3px #000}
+  .logo .c{color:#bff0a0}
+  .tagline{margin-top:10px;font-size:20px;color:#eaf6e3;text-shadow:3px 3px 0 #222}
+  .splash{color:var(--amar);font-size:22px;transform:rotate(-15deg);text-shadow:3px 3px 0 #3a3a00;margin-top:14px;animation:bob .9s ease-in-out infinite;display:inline-block}
+  @keyframes bob{0%,100%{transform:rotate(-15deg) scale(1)}50%{transform:rotate(-15deg) scale(1.12)}}
+  .stack{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:30px}
+  .row{display:flex;gap:12px}
+  .corner{position:absolute;bottom:14px;font-size:14px;color:#dcdcdc;text-shadow:2px 2px 0 #000}
+  .corner.l{left:18px}.corner.r{right:18px;color:#b9c6b2}
+  .scrolldown{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-size:14px;color:#cde8bf;animation:dn 1.4s ease-in-out infinite}
+  @keyframes dn{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,6px)}}
+
+  section{padding:54px 0}
+  .panel{background:rgba(16,16,16,.86);border:3px solid #000;padding:24px;box-shadow:inset 2px 2px 0 #3a3a3a,inset -2px -2px 0 #111}
+  h2.sh{font-size:22px;margin-bottom:18px}h2.sh small{display:block;font-size:13px;color:#9fdc7b;margin-top:6px}
+  .grid{display:grid;gap:14px}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:760px){.g3,.g2{grid-template-columns:1fr}}
+  .card{background:rgba(0,0,0,.5);border:2px solid #000;padding:16px;box-shadow:inset 2px 2px 0 #333,inset -2px -2px 0 #000}
+  .card h3{font-size:15px;margin-bottom:8px;color:#ffff9e}.card p{font-size:16px;color:#dfe7da;text-shadow:1px 1px 0 #222}
+  .big{font-size:20px;color:var(--verde)}
+  .bar{height:16px;background:#000;border:2px solid #000;margin-top:10px}.bar i{display:block;height:100%;background:url('img/tiles/grass.svg');background-size:16px 16px}
+  .shot{cursor:zoom-in}.shot:hover{border-color:#fff}.shot:focus{outline:3px solid var(--verde)}
+  .lb{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:16px}
+  .lb[hidden]{display:none}
+  .lb-box{margin:0;max-width:min(1100px,100%);border:3px solid #000;box-shadow:inset 2px 2px 0 #555,0 0 0 3px #333;background:#111;position:relative}
+  .lb-box img{display:block;max-width:100%;max-height:78vh;margin:0 auto}
+  .lb-box figcaption{background:rgba(0,0,0,.85);color:#ffff9e;font-size:18px;padding:12px 16px;text-shadow:1px 1px 0 #000}
+  .lb-count{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.7);color:#fff;font-size:13px;padding:4px 8px}
+  .lb-nav,.lb-x{position:absolute;z-index:2;color:#fff;background:rgba(60,60,60,.85);border:2px solid #000;box-shadow:inset 2px 2px 0 #999,inset -2px -2px 0 #333;cursor:pointer;font-family:inherit;line-height:1}
+  .lb-nav{top:50%;transform:translateY(-50%);width:48px;height:64px;font-size:38px}.lb-prev{left:12px}.lb-next{right:12px}
+  .lb-x{top:12px;right:12px;width:44px;height:44px;font-size:30px}
+  .lb-nav:hover,.lb-x:hover{background:rgba(110,130,200,.9)}
+  @media(max-width:600px){.lb-nav{width:36px;height:48px;font-size:28px}.lb-box figcaption{font-size:14px}}
+  .shot.off{display:none}
+  .pager{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:14px}
+  .pg,.pg-tab{font-family:inherit;color:#fff;background:#6d6d6d;border:2px solid #000;box-shadow:inset 2px 2px 0 #aaa,inset -2px -2px 0 #444;cursor:pointer;text-shadow:1px 1px 0 #333}
+  .pg,.pg-tab,.lb-nav,.lb-x{display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1}
+  .pg{width:44px;height:40px;font-size:28px;padding-bottom:10px}.lb-nav{padding-bottom:10px}.pg-tab{min-width:40px;height:40px;font-size:16px;margin:0 3px;padding-top:2px}
+  .pg:hover,.pg-tab:hover{background:#7e8fd0}.pg-tab.on{background:var(--verde);color:#111;text-shadow:none}
+  .pg:disabled{opacity:.35;cursor:default}
+  @media(max-width:600px){
+    .corner{left:0!important;right:0!important;text-align:center;font-size:12px}
+    .corner.l{bottom:30px}.corner.r{bottom:10px}
+    .scrolldown{bottom:58px;white-space:nowrap}
+    .dl-row{flex-direction:column;align-items:stretch}
+    .dl-row .btn.half{width:100%;max-width:none}
+  }
+  .steps{margin:12px 0 0 22px;color:#dfe7da;font-size:16px;line-height:1.6}
+  .wf-ip{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  .wf-ip label{color:#ffff9e;font-size:15px}
+  .wf-ip input{font-family:inherit;font-size:18px;padding:10px 12px;width:220px;max-width:100%;background:#000;color:#fff;border:2px solid #a0a0a0;outline:none}
+  .wf-ip input:focus{border-color:#fff}
+  .wf-msg{color:#ff8080;min-height:1.2em;margin-top:8px;font-size:15px}
+  .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:760px){.shots{grid-template-columns:repeat(2,1fr)}}
+  .shot{aspect-ratio:4/3;background:rgba(0,0,0,.55);border:3px solid #000;box-shadow:inset 2px 2px 0 #333;display:flex;align-items:center;justify-content:center;color:#8a8a8a;font-size:12px;text-align:center;padding:8px;overflow:hidden}
+  .shot{position:relative}
+  .shot img{width:100%;height:100%;object-fit:cover;image-rendering:auto}
+  .shot figcaption{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.82);color:#ffd24a;font-size:13px;padding:7px;opacity:0;transition:opacity .15s;text-shadow:1px 1px 0 #000}
+  .shot:hover figcaption{opacity:1}
+  .news .card{border-left:6px solid var(--verde)}.news .date{color:var(--amar);font-size:13px}
+  footer{border-top:3px solid #000;background:rgba(16,16,16,.86);padding:24px 16px;text-align:center;color:#b9c6b2;font-size:14px}
+</style>
+</head>
+<body>
+<div class="scene"></div><div class="vignette"></div>
+
+<header><nav class="nav">
+  <span class="brand"><span class="blk"></span> OptiCraft</span>
+  <a class="link" href="#progreso" data-i18n="nav.progreso">Progreso</a>
+  <a class="link" href="#capturas" data-i18n="nav.capturas">Capturas</a>
+  <a class="link" href="#que-trae" data-i18n="nav.quetrae">Qué trae</a>
+  <a class="link" href="#novedades" data-i18n="nav.novedades">Novedades</a>
+  <a class="link" href="progreso.html" data-i18n="nav.estado">Estado</a>
+  <a class="link" href="https://ko-fi.com/xeodeo" target="_blank" rel="noopener" style="color:#ff8aa8" data-i18n="nav.donar">♥ Donar</a>
+  <span class="langs">
+    <span class="lang" data-lang="es">ES</span>
+    <span class="lang" data-lang="en">EN</span>
+    <span class="lang" data-lang="pt">PT</span>
+  </span>
+</nav></header>
+
+<div class="menu">
+  <div class="logo">OPTI<span class="c">CRAFT</span></div>
+  <div class="tagline" data-i18n="hero.tagline">HERITAGE EDITION · Xbox clásica · PS2 · PS3</div>
+  <div class="splash" data-i18n="hero.splash">¡como si saliera en tu Xbox!</div>
+  <div class="stack">
+    <a class="btn wide" href="#descargas" data-i18n="btn.jugar">Jugar / Descargar</a>
+    <div class="row">
+      <a class="btn half" href="#progreso" data-i18n="nav.progreso">Progreso</a>
+      <a class="btn half" href="#capturas" data-i18n="nav.capturas">Capturas</a>
+    </div>
+    <div class="row">
+      <a class="btn half" href="#novedades" data-i18n="nav.novedades">Novedades</a>
+      <a class="btn half" href="progreso.html" data-i18n="nav.estado">Estado</a>
+    </div>
+  </div>
+  <div class="corner l">OptiCraft Heritage 1.5.2 / 1.2.5</div>
+  <div class="corner r" data-i18n="footer.fans">Proyecto de fans · no afiliado a Mojang</div>
+  <div class="scrolldown" data-i18n="menu.scroll">▼ desliza para ver más</div>
+</div>
+
+<main class="wrap">
+  <section id="progreso">
+    <h2 class="sh"><span data-i18n="sec.prog.title">Progreso del port</span> <small data-i18n="sec.prog.sub">Xbox clásica · PS2 · PS3 — versiones 1.2.5 y 1.5.2</small></h2>
+    <div class="grid g3">
+      <div class="card"><h3>Xbox 1.5.2</h3><div class="big" data-i18n="state.playable">Jugable</div><div class="bar"><i style="width:88%"></i></div><p data-i18n="card.x152">60 fps con niebla y nubes. Modo admin, chocobos, mods, texturas Modrinth.</p></div>
+      <div class="card"><h3>Xbox 1.2.5</h3><div class="big" data-i18n="state.playable">Jugable</div><div class="bar"><i style="width:92%"></i></div><p data-i18n="card.x125">Base estable, crafteo de consola, pantalla dividida.</p></div>
+      <div class="card"><h3>PS2 / PS3</h3><div class="big" data-i18n="state.wip">En marcha</div><div class="bar"><i style="width:45%"></i></div><p data-i18n="card.ps">Port en progreso; PS3 con SDK listo.</p></div>
+    </div>
+    <p style="margin-top:16px"><a class="btn" href="progreso.html" data-i18n="btn.verprog">Ver progreso completo →</a></p>
+  </section>
+
+  <section id="capturas"><div class="panel">
+    <h2 class="sh" data-i18n="nav.capturas">Capturas</h2>
+    <div class="shots" id="shots">
+      <figure class="shot" tabindex="0"><img src="img/shots/01.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.1">Menú principal de OptiCraft Heritage Edition</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/02.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.2">El letrero gigante de Minecraft en el mundo tutorial</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/03.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.3">Llegando a la aldea entre árboles y flores</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/04.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.4">La aldea vista desde la colina</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/05.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.5">La herrería y las casas de la aldea</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/06.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.6">Casas de madera, vallas y caminos de grava</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/07.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.7">La calle principal de la aldea</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/08.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.8">Un jugador con skin propia entre flores y vallas</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/09.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.9">Dentro de una casa: cama, antorcha y ventanas</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/10.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.10">El porche de madera junto al agua</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/11.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.11">La biblioteca con vistas al lago</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/3.png" alt="" loading="lazy"><figcaption data-i18n="shot.12">El menú principal en español</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/1.png" alt="" loading="lazy"><figcaption data-i18n="shot.13">Fase temprana: el primer mundo en la Xbox</figcaption></figure>
+    </div>
+    <div class="pager" id="pager"><button class="pg pg-prev" aria-label="&lt;">&lsaquo;</button><span class="pg-tabs" id="pg-tabs"></span><button class="pg pg-next" aria-label="&gt;">&rsaquo;</button></div>
+    <p style="margin-top:12px;font-size:14px;color:#9aa894" data-i18n="cap.note">Capturas reales en el emulador, en el mundo tutorial (build 1.5.2).</p>
+  </div></section>
+
+  <section id="que-trae">
+    <h2 class="sh" data-i18n="nav.quetrae">Qué trae</h2>
+    <div class="grid g2">
+      <div class="card"><h3 data-i18n="feat.gameplay.t">Jugabilidad</h3><p data-i18n="feat.gameplay.d">Chocobos (ChocoCraft), mods (minimapa, Herobrine), combate 1.5.2, pociones, encantamientos, aldeanos y comercio, pantalla dividida.</p></div>
+      <div class="card"><h3 data-i18n="feat.online.t">Online</h3><p data-i18n="feat.online.d">Entra a servidores 1.12.2 por el traductor de protocolo. Descarga texturas desde Modrinth en la consola.</p></div>
+      <div class="card"><h3 data-i18n="feat.perf.t">Rendimiento</h3><p data-i18n="feat.perf.d">Chunks asíncronos, texturas animadas optimizadas, 60 fps de referencia en 1.5.2.</p></div>
+      <div class="card"><h3 data-i18n="feat.legacy.t">Estilo Legacy</h3><p data-i18n="feat.legacy.d">Menús con el look de la Legacy Console Edition: skins DLC, logros, selector de skins 3D.</p></div>
+    </div>
+  </section>
+
+  <section id="novedades" class="news">
+    <h2 class="sh" data-i18n="nav.novedades">Novedades</h2>
+    <div class="grid">
+      <div class="card"><div class="date">24-11-2026</div><p data-i18n="news.1">Modo admin con menú por pestañas y NoFall, integrado en las dos versiones.</p></div>
+      <div class="card"><div class="date">23-11-2026</div><p data-i18n="news.2">Chocobos completos, bloques y mobs de 1.5.2, descarga de packs desde la consola.</p></div>
+      <div class="card"><div class="date">22-11-2026</div><p data-i18n="news.3">UI estilo Legacy para los menús nuevos y catálogo de mods.</p></div>
+    </div>
+  </section>
+
+  <section id="descargas"><div class="panel">
+    <h2 class="sh" data-i18n="nav.descargas">Descargas</h2>
+    <p style="color:#dfe7da" data-i18n="dl.desc">Builds para Xbox clásica (480p y 720p), normal y experimental.</p>
+    <div class="row dl-row" style="margin-top:16px;flex-wrap:wrap">
+      <a class="btn half" href="https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition/releases" target="_blank" rel="noopener">Xbox 1.5.2</a>
+      <a class="btn half" href="https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition/releases" target="_blank" rel="noopener">Xbox 1.2.5</a>
+      <a class="btn half" href="https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition#readme" target="_blank" rel="noopener" data-i18n="dl.how">Cómo instalar</a>
+    </div>
+  </div></section>
+
+  <section id="wifi"><div class="panel">
+    <h2 class="sh" data-i18n="wf.title">Instalar desde el celular</h2>
+    <p style="color:#dfe7da" data-i18n="wf.desc">La Xbox se baja sola la última build por la red, archivo por archivo y comprobado. Sin zip, sin PC.</p>
+    <ol class="steps">
+      <li data-i18n="wf.s1">Conecta la Xbox al router y el celular al mismo WiFi.</li>
+      <li data-i18n="wf.s2">Abre OptiCraft en la Xbox: arriba a la izquierda sale «WiFi: http://192.168…».</li>
+      <li data-i18n="wf.s3">Escribe ese número aquí y elige qué instalar.</li>
+    </ol>
+    <div class="wf-ip"><label for="wf-ip" data-i18n="wf.ip">IP de tu Xbox</label><input id="wf-ip" inputmode="decimal" placeholder="192.168.0.3" autocomplete="off"></div>
+    <div class="row dl-row" style="margin-top:14px;flex-wrap:wrap">
+      <a class="btn half wf-go" data-v="1.5.2" href="#">1.5.2</a>
+      <a class="btn half wf-go" data-v="1.2.5" href="#">1.2.5</a>
+      <a class="btn half wf-go" data-v="todo" href="#" data-i18n="wf.all">Todo</a>
+    </div>
+    <p class="wf-msg" id="wf-msg"></p>
+    <p style="font-size:14px;color:#9aa894;margin-top:10px" data-i18n="wf.note">También puedes pulsar Y en el lanzador. Si algo falla, no se toca lo que ya tenías.</p>
+  </div></section>
+
+  <section id="apoya"><div class="panel" style="text-align:center">
+    <h2 class="sh" style="justify-content:center" data-i18n="sup.title">Apoya el proyecto</h2>
+    <p style="color:#dfe7da;max-width:620px;margin:0 auto 18px" data-i18n="sup.desc">OptiCraft es gratis y hecho por fans. Si te gusta y quieres ayudar a que siga creciendo, puedes invitarnos a un café.</p>
+    <a class="btn" href="https://ko-fi.com/xeodeo" target="_blank" rel="noopener" style="background:#13c3ff;box-shadow:inset 2px 2px 0 #adeeff,inset -2px -2px 0 #0a6e94,0 4px 0 #000" data-i18n="sup.btn">♥ Donar en Ko-fi</a>
+  </div></section>
+</main>
+
+<footer>
+  <div style="font-size:16px;color:#fff">OptiCraft Heritage</div>
+  <span data-i18n="footer.legal">Proyecto de fans. No afiliado a Mojang ni a Microsoft. Minecraft es marca de Mojang AB.</span>
+</footer>
+
+<div class="lb" id="lb" hidden>
+  <button class="lb-x" aria-label="Cerrar">&times;</button>
+  <button class="lb-nav lb-prev" aria-label="&lt;">&lsaquo;</button>
+  <figure class="lb-box"><img id="lb-img" alt=""><figcaption id="lb-cap"></figcaption><div class="lb-count" id="lb-count"></div></figure>
+  <button class="lb-nav lb-next" aria-label="&gt;">&rsaquo;</button>
+</div>
+<script>
+const I18N={
+ es:{
+  "wf.title":"Instalar desde el celular","wf.desc":"La Xbox se baja sola la última build por la red, archivo por archivo y comprobado. Sin zip, sin PC.","wf.s1":"Conecta la Xbox al router y el celular al mismo WiFi.","wf.s2":"Abre OptiCraft en la Xbox: arriba a la izquierda sale «WiFi: http://192.168…».","wf.s3":"Escribe ese número aquí y elige qué instalar.","wf.ip":"IP de tu Xbox","wf.all":"Todo","wf.note":"También puedes pulsar Y en el lanzador. Si algo falla, no se toca lo que ya tenías.","wf.bad":"Escribe la IP que sale en la tele (por ejemplo 192.168.0.3).",
+  "shot.12":"El menú principal en español","shot.13":"Fase temprana: el primer mundo en la Xbox",
+  "shot.1":"Menú principal de OptiCraft Heritage Edition","shot.2":"El letrero gigante de Minecraft en el mundo tutorial","shot.3":"Llegando a la aldea entre árboles y flores","shot.4":"La aldea vista desde la colina","shot.5":"La herrería y las casas de la aldea","shot.6":"Casas de madera, vallas y caminos de grava","shot.7":"La calle principal de la aldea","shot.8":"Un jugador con skin propia entre flores y vallas","shot.9":"Dentro de una casa: cama, antorcha y ventanas","shot.10":"El porche de madera junto al agua","shot.11":"La biblioteca con vistas al lago",
+  "nav.progreso":"Progreso","nav.capturas":"Capturas","nav.quetrae":"Qué trae","nav.novedades":"Novedades","nav.estado":"Estado","nav.descargas":"Descargas","nav.donar":"♥ Donar",
+  "hero.tagline":"HERITAGE EDITION · Xbox clásica · PS2 · PS3","hero.splash":"¡como si saliera en tu Xbox!",
+  "btn.jugar":"Jugar / Descargar","menu.scroll":"▼ desliza para ver más","footer.fans":"Proyecto de fans · no afiliado a Mojang",
+  "sec.prog.title":"Progreso del port","sec.prog.sub":"Xbox clásica · PS2 · PS3 — versiones 1.2.5 y 1.5.2",
+  "state.playable":"Jugable","state.wip":"En marcha",
+  "card.x152":"60 fps con niebla y nubes. Modo admin, chocobos, mods, texturas Modrinth.","card.x125":"Base estable, crafteo de consola, pantalla dividida.","card.ps":"Port en progreso; PS3 con SDK listo.",
+  "btn.verprog":"Ver progreso completo →","cap.note":"Capturas reales en el emulador, en el mundo tutorial (build 1.5.2).","cap.early":"Fase temprana","cap.soon":"Próximamente",
+  "feat.gameplay.t":"Jugabilidad","feat.gameplay.d":"Chocobos (ChocoCraft), mods (minimapa, Herobrine), combate 1.5.2, pociones, encantamientos, aldeanos y comercio, pantalla dividida.",
+  "feat.online.t":"Online","feat.online.d":"Entra a servidores 1.12.2 por el traductor de protocolo. Descarga texturas desde Modrinth en la consola.",
+  "feat.perf.t":"Rendimiento","feat.perf.d":"Chunks asíncronos, texturas animadas optimizadas, 60 fps de referencia en 1.5.2.",
+  "feat.legacy.t":"Estilo Legacy","feat.legacy.d":"Menús con el look de la Legacy Console Edition: skins DLC, logros, selector de skins 3D.",
+  "news.1":"Modo admin con menú por pestañas y NoFall, integrado en las dos versiones.","news.2":"Chocobos completos, bloques y mobs de 1.5.2, descarga de packs desde la consola.","news.3":"UI estilo Legacy para los menús nuevos y catálogo de mods.",
+  "dl.desc":"Builds para Xbox clásica (480p y 720p), normal y experimental.","dl.how":"Cómo instalar",
+  "sup.title":"Apoya el proyecto","sup.desc":"OptiCraft es gratis y hecho por fans. Si te gusta y quieres ayudar a que siga creciendo, puedes invitarnos a un café.","sup.btn":"♥ Donar en Ko-fi",
+  "footer.legal":"Proyecto de fans. No afiliado a Mojang ni a Microsoft. Minecraft es marca de Mojang AB."
+ },
+ en:{
+  "wf.title":"Install from your phone","wf.desc":"The Xbox downloads the newest build by itself over the network, file by file and checked. No zip, no PC.","wf.s1":"Plug the Xbox into your router and put your phone on the same WiFi.","wf.s2":"Open OptiCraft on the Xbox: the top-left corner shows “WiFi: http://192.168…”.","wf.s3":"Type that number here and choose what to install.","wf.ip":"Your Xbox IP","wf.all":"Everything","wf.note":"You can also press Y in the launcher. If anything fails, what you had is left untouched.","wf.bad":"Type the IP shown on the TV (for example 192.168.0.3).",
+  "shot.12":"The main menu in Spanish","shot.13":"Early build: the first world on the Xbox",
+  "shot.1":"OptiCraft Heritage Edition main menu","shot.2":"The giant Minecraft sign in the tutorial world","shot.3":"Arriving at the village among trees and flowers","shot.4":"The village seen from the hill","shot.5":"The blacksmith and the village houses","shot.6":"Wooden houses, fences and gravel paths","shot.7":"The village main street","shot.8":"A player with a custom skin among flowers and fences","shot.9":"Inside a house: bed, torch and windows","shot.10":"The wooden porch by the water","shot.11":"The library overlooking the lake",
+  "nav.progreso":"Progress","nav.capturas":"Screenshots","nav.quetrae":"Features","nav.novedades":"News","nav.estado":"Status","nav.descargas":"Downloads","nav.donar":"♥ Donate",
+  "hero.tagline":"HERITAGE EDITION · Classic Xbox · PS2 · PS3","hero.splash":"like it launched on your Xbox!",
+  "btn.jugar":"Play / Download","menu.scroll":"▼ scroll for more","footer.fans":"Fan project · not affiliated with Mojang",
+  "sec.prog.title":"Port progress","sec.prog.sub":"Classic Xbox · PS2 · PS3 — versions 1.2.5 and 1.5.2",
+  "state.playable":"Playable","state.wip":"In progress",
+  "card.x152":"60 fps with fog and clouds. Admin mode, chocobos, mods, Modrinth textures.","card.x125":"Stable base, console crafting, split screen.","card.ps":"Port in progress; PS3 SDK ready.",
+  "btn.verprog":"See full progress →","cap.note":"Real screenshots in the emulator, in the tutorial world (1.5.2 build).","cap.early":"Early build","cap.soon":"Coming soon",
+  "feat.gameplay.t":"Gameplay","feat.gameplay.d":"Chocobos (ChocoCraft), mods (minimap, Herobrine), 1.5.2 combat, potions, enchanting, villagers and trading, split screen.",
+  "feat.online.t":"Online","feat.online.d":"Join 1.12.2 servers through the protocol translator. Download textures from Modrinth on the console.",
+  "feat.perf.t":"Performance","feat.perf.d":"Async chunks, optimized animated textures, 60 fps target on 1.5.2.",
+  "feat.legacy.t":"Legacy look","feat.legacy.d":"Menus with the Legacy Console Edition look: DLC skins, achievements, 3D skin picker.",
+  "news.1":"Admin mode with tabbed menu and NoFall, integrated in both versions.","news.2":"Full chocobos, 1.5.2 blocks and mobs, pack downloads from the console.","news.3":"Legacy-style UI for the new menus and mod catalog.",
+  "dl.desc":"Builds for classic Xbox (480p and 720p), normal and experimental.","dl.how":"How to install",
+  "sup.title":"Support the project","sup.desc":"OptiCraft is free and made by fans. If you like it and want to help it grow, you can buy us a coffee.","sup.btn":"♥ Donate on Ko-fi",
+  "footer.legal":"Fan project. Not affiliated with Mojang or Microsoft. Minecraft is a trademark of Mojang AB."
+ },
+ pt:{
+  "wf.title":"Instalar pelo celular","wf.desc":"O Xbox baixa sozinho a build mais nova pela rede, arquivo por arquivo e verificado. Sem zip, sem PC.","wf.s1":"Ligue o Xbox ao roteador e o celular no mesmo WiFi.","wf.s2":"Abra o OptiCraft no Xbox: no canto superior esquerdo aparece “WiFi: http://192.168…”.","wf.s3":"Digite esse número aqui e escolha o que instalar.","wf.ip":"IP do seu Xbox","wf.all":"Tudo","wf.note":"Você também pode apertar Y no launcher. Se algo falhar, o que você tinha não é tocado.","wf.bad":"Digite o IP que aparece na TV (por exemplo 192.168.0.3).",
+  "shot.12":"O menu principal em espanhol","shot.13":"Fase inicial: o primeiro mundo no Xbox",
+  "shot.1":"Menu principal do OptiCraft Heritage Edition","shot.2":"A placa gigante do Minecraft no mundo tutorial","shot.3":"Chegando à vila entre árvores e flores","shot.4":"A vila vista da colina","shot.5":"O ferreiro e as casas da vila","shot.6":"Casas de madeira, cercas e caminhos de cascalho","shot.7":"A rua principal da vila","shot.8":"Um jogador com skin própria entre flores e cercas","shot.9":"Dentro de uma casa: cama, tocha e janelas","shot.10":"A varanda de madeira junto à água","shot.11":"A biblioteca com vista para o lago",
+  "nav.progreso":"Progresso","nav.capturas":"Capturas","nav.quetrae":"Recursos","nav.novedades":"Novidades","nav.estado":"Estado","nav.descargas":"Downloads","nav.donar":"♥ Doar",
+  "hero.tagline":"HERITAGE EDITION · Xbox clássico · PS2 · PS3","hero.splash":"como se saísse no seu Xbox!",
+  "btn.jugar":"Jogar / Baixar","menu.scroll":"▼ deslize para ver mais","footer.fans":"Projeto de fãs · não afiliado à Mojang",
+  "sec.prog.title":"Progresso do port","sec.prog.sub":"Xbox clássico · PS2 · PS3 — versões 1.2.5 e 1.5.2",
+  "state.playable":"Jogável","state.wip":"Em andamento",
+  "card.x152":"60 fps com névoa e nuvens. Modo admin, chocobos, mods, texturas Modrinth.","card.x125":"Base estável, craft de console, tela dividida.","card.ps":"Port em andamento; PS3 com SDK pronto.",
+  "btn.verprog":"Ver progresso completo →","cap.note":"Capturas reais no emulador, no mundo tutorial (build 1.5.2).","cap.early":"Fase inicial","cap.soon":"Em breve",
+  "feat.gameplay.t":"Jogabilidade","feat.gameplay.d":"Chocobos (ChocoCraft), mods (minimapa, Herobrine), combate 1.5.2, poções, encantamentos, aldeões e comércio, tela dividida.",
+  "feat.online.t":"Online","feat.online.d":"Entre em servidores 1.12.2 pelo tradutor de protocolo. Baixe texturas do Modrinth no console.",
+  "feat.perf.t":"Desempenho","feat.perf.d":"Chunks assíncronos, texturas animadas otimizadas, 60 fps de referência no 1.5.2.",
+  "feat.legacy.t":"Estilo Legacy","feat.legacy.d":"Menus com o visual da Legacy Console Edition: skins DLC, conquistas, seletor de skins 3D.",
+  "news.1":"Modo admin com menu em abas e NoFall, integrado nas duas versões.","news.2":"Chocobos completos, blocos e mobs do 1.5.2, download de packs pelo console.","news.3":"UI estilo Legacy para os novos menus e catálogo de mods.",
+  "dl.desc":"Builds para Xbox clássico (480p e 720p), normal e experimental.","dl.how":"Como instalar",
+  "sup.title":"Apoie o projeto","sup.desc":"OptiCraft é grátis e feito por fãs. Se você gosta e quer ajudar a crescer, pode nos pagar um café.","sup.btn":"♥ Doar no Ko-fi",
+  "footer.legal":"Projeto de fãs. Não afiliado à Mojang nem à Microsoft. Minecraft é marca da Mojang AB."
+ }
+};
+function setLang(l){
+ if(!I18N[l])l='es';
+ document.documentElement.lang=l;
+ document.querySelectorAll('[data-i18n]').forEach(function(el){
+   var k=el.getAttribute('data-i18n'); if(I18N[l][k]!==undefined) el.textContent=I18N[l][k];
+ });
+ document.querySelectorAll('.lang').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-lang')===l);});
+ try{localStorage.setItem('oc_lang',l);}catch(e){}
+}
+document.querySelectorAll('.lang').forEach(function(b){b.addEventListener('click',function(){setLang(b.getAttribute('data-lang'));});});
+(function(){var l;try{l=localStorage.getItem('oc_lang');}catch(e){}
+ if(!l){var n=(navigator.language||'es').slice(0,2);l=['es','en','pt'].indexOf(n)>=0?n:'es';}
+ setLang(l);})();
+(function(){var figs=[].slice.call(document.querySelectorAll('#shots .shot')),lb=document.getElementById('lb'),im=document.getElementById('lb-img'),cap=document.getElementById('lb-cap'),cnt=document.getElementById('lb-count'),i=0;
+ function show(k){i=(k+figs.length)%figs.length;var f=figs[i];im.src=f.querySelector('img').src;cap.textContent=f.querySelector('figcaption').textContent;cnt.textContent=(i+1)+' / '+figs.length;if(window.ocShotPage)window.ocShotPage(i);}
+ function open(k){show(k);lb.hidden=false;document.body.style.overflow='hidden';}
+ function close(){lb.hidden=true;document.body.style.overflow='';}
+ figs.forEach(function(f,k){f.addEventListener('click',function(){open(k);});f.addEventListener('keydown',function(e){if(e.key==='Enter'){open(k);}});});
+ lb.querySelector('.lb-prev').addEventListener('click',function(e){e.stopPropagation();show(i-1);});
+ lb.querySelector('.lb-next').addEventListener('click',function(e){e.stopPropagation();show(i+1);});
+ lb.querySelector('.lb-x').addEventListener('click',close);
+ lb.addEventListener('click',function(e){if(e.target===lb)close();});
+ document.addEventListener('keydown',function(e){if(lb.hidden)return;if(e.key==='Escape')close();else if(e.key==='ArrowLeft')show(i-1);else if(e.key==='ArrowRight')show(i+1);});
+ var x0=null;lb.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+ lb.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>40)show(i+(dx<0?1:-1));x0=null;});
+})();
+(function(){var figs=[].slice.call(document.querySelectorAll('#shots .shot')),per=6,pages=Math.ceil(figs.length/per),cur=0,tabs=document.getElementById('pg-tabs'),pager=document.getElementById('pager');
+ if(pages<2){pager.style.display='none';return;}
+ for(var n=0;n<pages;n++){var b=document.createElement('button');b.className='pg-tab';b.textContent=n+1;b.addEventListener('click',(function(n){return function(){go(n);};})(n));tabs.appendChild(b);}
+ var prev=pager.querySelector('.pg-prev'),next=pager.querySelector('.pg-next');
+ function go(n){cur=Math.max(0,Math.min(pages-1,n));figs.forEach(function(f,j){f.classList.toggle('off',Math.floor(j/per)!==cur);});
+  [].forEach.call(tabs.children,function(t,j){t.classList.toggle('on',j===cur);});prev.disabled=cur===0;next.disabled=cur===pages-1;}
+ prev.addEventListener('click',function(){go(cur-1);});next.addEventListener('click',function(){go(cur+1);});
+ window.ocShotPage=function(i){if(Math.floor(i/per)!==cur)go(Math.floor(i/per));};
+ go(0);})();
+(function(){var ip=document.getElementById('wf-ip'),msg=document.getElementById('wf-msg');if(!ip)return;
+ try{ip.value=localStorage.getItem('oc_xbox_ip')||'';}catch(e){}
+ function lang(){return I18N[document.documentElement.lang]||I18N.es;}
+ document.querySelectorAll('.wf-go').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();
+  var v=ip.value.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  if(!/^\d{1,3}(\.\d{1,3}){3}(:\d+)?$/.test(v)){msg.textContent=lang()['wf.bad'];ip.focus();return;}
+  msg.textContent='';try{localStorage.setItem('oc_xbox_ip',v);}catch(e){}
+  window.open('http://'+v+'/instalar?v='+encodeURIComponent(b.getAttribute('data-v')),'_blank','noopener');});});
+})();
+</script>
+</body>
+</html>

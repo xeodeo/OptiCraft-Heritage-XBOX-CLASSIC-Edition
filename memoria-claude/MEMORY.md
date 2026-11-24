@@ -40,3 +40,8 @@
 - [1.6.4 en su carpeta](version-164-carpeta.md) — al empezar 1.6.4: carpeta propia OptiCraft\1.6.4 en lanzador y consola
 - [Modo admin sin candado](modo-admin-sin-candado.md) — cualquier servidor sin op, Dupe + pestañas; no volver a poner la regla
 - [Subir siempre al compilar](subir-siempre-al-compilar.md) — scripts-claude/compilar-y-subir.ps1 compila, copia y sube por FTP
+- [Compilar todas las versiones](compilar-todas-versiones.md) — exp+normal x 1.5.2+1.2.5, nunca solo un preset
+- [Web pública y Ko-fi](web-y-kofi.md) — xeodeo.github.io (rama gh-pages) + ko-fi.com/xeodeo; cómo redeployar; no publicar la caja falsa
+- [Capturas con autopilot](capturas-xemu-autopilot.md) — juego moviéndose solo: captura.ps1 + xemu122.ps1 + autopilot.txt; guía 129
+- [Repos de 3DS](repos-3ds-referencia.md) — mclib/Re-Craft-3DS para el 1.12.2 (121), mc3ds-modern, unistore (solo idea de tienda)
+- [Lanzador con Update](lanzador-update.md) — se actualiza solo desde la release 'ultima'; rama wifi-instalar; buzon 130

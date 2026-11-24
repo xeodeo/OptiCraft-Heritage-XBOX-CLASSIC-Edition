@@ -9,6 +9,19 @@ Documento para cualquier IA o persona que continúe el trabajo: otro chat de Cla
 > Fuentes reutilizables: LCE en `minecraft-legacy original\`, OptiFine 1.5.2 en `mcp-diff\srcOF152\`.
 > Lo de abajo es el contexto de fondo de la 1.2.5 (toolchain, consola real, rendimiento) y sigue valiendo.
 
+> **24-11-2026:** integración de consola al día en `port152-int` (1.5.2, `69b94bc5`) y `opti30-erluza` (1.2.5,
+> `4d28ed75`), ambas del 23-11 con el **modo admin** (sin candado, pestañas, módulos de Nodus, NoFall). Las ramas que
+> aparecen "sin integrar" (`port152-rendimiento`, `-inventario`, `-idiomas`, `-pociones`, `-wither`, etc.) son fuentes
+> del 3-9 nov **ya integradas** por las ramas nuevas; `port152-ps2`/`opti30-ps2` son de PS2. **Dupe en servidor:**
+> investigado a fondo (23/24-11) — con el Paper 1.12.2-1620 del usuario NO hay dupe por botón (el server es autoritativo:
+> recalcula cada clic, nunca añade ítems; se decompiló `PlayerConnection` para confirmarlo). Único fiable = plugin
+> OptiDupe. Pista abierta: el traductor 340 sí pasa NBT al server, así que un libro de título largo podría dar
+> crash→rollback, pero falta reenviar `MC|BSign`/`edit_book` y el cliente es protocolo 29 (sin libro). Detalle en
+> `PENDIENTES-TODO.md`. Logs `MC_LOG_WARN("dupe")` siguen en el código (quitar al cerrar el tema).
+> **Web pública + Ko-fi (24-11):** página en vivo https://xeodeo.github.io/OptiCraft-Heritage-XBOX-CLASSIC-Edition/
+> (rama `gh-pages`, fuente en `buzon-xbox\web\`), Ko-fi en ko-fi.com/xeodeo, README de main enlaza ambos. Detalle y cómo
+> redeployar: `128-WEB-Y-KOFI.md`. Capturas pendientes vía agy (encargo 127). No publicar la portada falsa de marca oficial.
+>
 > **20-11-2026:** el GitHub de OptiJuegos cayó por DMCA (14-10); su continuación es el fork
 > https://bolha.dev/erluza/OptiCraftHeritage (en local `erluza/main`). De ahí se trajeron arreglos y optimizaciones a las
 > dos versiones (encargo 87; ramas de prueba `port152-erluza` en `wt-152-rend` y `opti30-erluza` en `wt-opti30`).

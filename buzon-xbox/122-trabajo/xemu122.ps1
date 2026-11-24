@@ -1,4 +1,4 @@
-param([int]$Seconds = 420, [string]$Wt = "wt-152-choco", [string]$Data = "C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\wt-152-codex\build\xbox-release\port152-data", [string]$Tag = "run1")
+param([int]$Seconds = 420, [string]$Wt = "wt-152-choco", [string]$Data = "C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\wt-152-codex\build\xbox-release\port152-data", [string]$Tag = "run1", [switch]$NoMinimap)
 $lock = "C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\buzon-xbox\BUILD.lock"
 $cm = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
 $top = "C:\Users\xeodeo\Desktop\Minecraft en xboox clasico"
@@ -28,6 +28,8 @@ try {
   }
   New-Item -ItemType Directory -Force "$root\bin\xbox-autotest\iso" | Out-Null
   Copy-Item "$work\autopilot.txt" "$root\bin\xbox-autotest\iso\autopilot.txt" -Force
+  $nm = "$root\bin\xbox-autotest\iso\nominimap.txt"
+  if ($NoMinimap) { Set-Content -Encoding ascii $nm "on" } elseif (Test-Path $nm) { Remove-Item $nm -Force }
   Set-Content -Encoding ascii "$root\bin\xbox-autotest\iso\probe122.txt" "on"
   Get-ChildItem "$root\bin\xbox-autotest\iso" -Filter "probe1*.txt" | Where-Object { $_.Name -ne "probe122.txt" } | Remove-Item -Force
   if (Test-Path "$root\bin\xbox-autotest\OptiCraft.exe") { Remove-Item "$root\bin\xbox-autotest\OptiCraft.exe" -Force }

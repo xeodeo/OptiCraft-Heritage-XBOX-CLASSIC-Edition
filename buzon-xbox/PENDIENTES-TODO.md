@@ -1,7 +1,17 @@
-# TODO lo pendiente (23-11-2026, 21:20)
+# TODO lo pendiente (24-11-2026)
 
 Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-ENCARGO-*.md`) y en
 `ESTADO-OPTICRAFT.html`. Qué rehacer en cada consola: `PLATAFORMAS-QUE-HACER.md`.
+
+## Web pública + Ko-fi (24-11) — detalle en `128-WEB-Y-KOFI.md`
+- Web EN VIVO: https://xeodeo.github.io/OptiCraft-Heritage-XBOX-CLASSIC-Edition/ (rama `gh-pages` del repo xbox; fuente en
+  `web\`). Menú estilo Minecraft consola, ES/EN/PT, progreso público (`progreso.html`, NO el panel real). README de main ya
+  enlaza Website + Ko-fi.
+- Ko-fi: ko-fi.com/xeodeo (morado, banner propio, post con portada propia). PayPal lo puso el usuario.
+- PENDIENTE: capturas bonitas para `web\img\3-6.png`. Método (anotado en `129-COMO-SACAR-CAPTURAS.md`): autopilot
+  (juego moviéndose solo) + `captura.ps1`/`xemu122.ps1`. agy (encargo 127) se canceló por dar vueltas; rehacer con el
+  pipeline de 129 y redeployar.
+- Portada falsa "Minecraft Xbox Edition" (logos oficiales): la sube el usuario si quiere (`portada-reddit.png`); Claude no.
 
 ## Subido a la consola (23-11 noche) — 1.2.5 y 1.5.2, normal y exp, 480p/720p
 - Servidores 1.12.2 (SMP minecraft3ds.org): en Multijugador «Server version: Auto/1.2.5/1.12.2». Entra al SMP (121).
@@ -15,6 +25,20 @@ Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-
   Objetos, Otros; Blanco/Negro cambian). Módulo Dupe (Mano / Llenar pila / Inventario): directo en mundo local; en
   servidor manda /optidupe al plugin OptiDupe (servidor-plugins\OptiDupe, puesto en servidor-1.12.2\plugins; el
   1.2.5 vanilla no carga plugins). Commits f722475b (152) y a484ddd4 (125), juntados en port152-int / opti30-erluza.
+  DUPE SIN PLUGIN (SMP de 3DS, server propio del usuario) — INVESTIGADO 23/24-11:
+    · Probado en vivo: con logs de diagnóstico (TX WindowClick / RX Transaction accepted / RX SetSlot). El server
+      SIEMPRE responde accepted=1 → no rechaza, ejecuta el clic como válido; mi secuencia (coger+tirar) es un drop
+      legítimo, 0 copias.
+    · Analizado el código de Paper 1.12.2-1620 (decompilado PlayerConnection): el server recalcula cada clic con
+      Container.a, solo confirma si coincide con lo que dice el cliente, y NUNCA añade ítems; el cursor es del server.
+      → CONCLUSIÓN: no existe dupe por botón/paquetes en ese Paper. Lo único fiable = plugin OptiDupe.
+    · PISTA abierta (lo que preguntó el usuario): el traductor 340 `convertSlotFromNative` SÍ reenvía el NBT del ítem
+      al server (descomprime gzip y lo escribe). Idea: libro con título largo → crash de container_set_slot → rollback
+      dupe (como el repo RooXChicken/papermc-dupe-patch, que es de 1.21). Falta: el traductor NO reenvía MC|BSign/
+      edit_book todavía, y el cliente habla protocolo 29 (sin libro-y-pluma); habría que añadirlo (feature grande, agy)
+      y comprobar si 1620 lo tiene parcheado. Dudoso pero es la única vía sin plugin.
+    · Logs de diagnóstico siguen en el código (MC_LOG_WARN "dupe" en PlayerControllerMP y NetClientHandler); quitarlos
+      cuando se cierre el tema. Secuencia actual del botón = experimento cofre (coger+cerrar), compilado sin subir.
 - Chocobos completos (113/117/119), bloques y mobs 1.5.2 (108), Modrinth con «Para <versión>» y búsqueda más rápida.
 
 ## Probado en consola 1.2.5 (usuario 23-11 mañana)

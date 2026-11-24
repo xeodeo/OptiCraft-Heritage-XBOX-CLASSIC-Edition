@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="img/tiles/grass.svg">
+<title>404 — OptiCraft</title>
+<style>
+  @font-face{font-family:'Minecraft';src:url('fonts/minecraft.woff2') format('woff2'),url('fonts/minecraft.woff') format('woff');font-display:swap;unicode-range:U+0-00A0}
+  @font-face{font-family:'Minecraft';src:url('fonts/monocraft.ttf') format('truetype');font-display:swap;unicode-range:U+00A1-024F;size-adjust:86%}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Minecraft','Segoe UI',sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;gap:18px;padding:30px;
+    background:#0c0f13;image-rendering:pixelated;text-shadow:2px 2px 0 #3a3a3a;overflow:hidden}
+  .scene{position:fixed;inset:-4% -20%;z-index:-2;background:url('img/landscape.svg') center/cover no-repeat;filter:brightness(.4) blur(3px);animation:pan 70s linear infinite alternate}
+  @keyframes pan{from{transform:translateX(0)}to{transform:translateX(-14%)}}
+  .vig{position:fixed;inset:0;z-index:-1;background:radial-gradient(120% 90% at 50% 30%,transparent 35%,rgba(0,0,0,.65))}
+  .creeper{width:168px;height:168px;background:url('img/creeper.svg') center/cover;image-rendering:pixelated;
+    filter:drop-shadow(0 6px 0 rgba(0,0,0,.6));animation:hiss 2.4s ease-in-out infinite}
+  @keyframes hiss{0%,70%,100%{transform:scale(1);filter:none}80%{transform:scale(1.08);filter:brightness(1.6) saturate(1.4)}90%{transform:scale(1.02)}}
+  h1{font-size:64px;text-shadow:5px 5px 0 #000}
+  p{font-size:20px;color:#eaf6e3}
+  .btn{display:inline-block;font-family:'Minecraft';font-size:18px;color:#fff;background:#999;padding:14px 22px;
+    border:2px solid #000;box-shadow:inset 2px 2px 0 #cfcfcf,inset -2px -2px 0 #565656,0 4px 0 #000;text-shadow:2px 2px 0 #2b2b2b;margin-top:6px}
+  .btn:hover{background:#86a86f;box-shadow:inset 2px 2px 0 #c7eaa8,inset -2px -2px 0 #3c5a2a,0 4px 0 #000;color:#ffffcc}
+  a{text-decoration:none}
+</style>
+</head>
+<body>
+  <div class="scene"></div><div class="vig"></div>
+  <div class="creeper"></div>
+  <h1>404</h1>
+  <p>Aaawww man… este chunk no se generó.</p>
+  <a class="btn" href="index.html">Volver al menú</a>
+</body>
+</html>
