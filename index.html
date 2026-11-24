@@ -57,7 +57,10 @@
   .bar{height:16px;background:#000;border:2px solid #000;margin-top:10px}.bar i{display:block;height:100%;background:url('img/tiles/grass.svg');background-size:16px 16px}
   .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:760px){.shots{grid-template-columns:repeat(2,1fr)}}
   .shot{aspect-ratio:4/3;background:rgba(0,0,0,.55);border:3px solid #000;box-shadow:inset 2px 2px 0 #333;display:flex;align-items:center;justify-content:center;color:#8a8a8a;font-size:12px;text-align:center;padding:8px;overflow:hidden}
+  .shot{position:relative}
   .shot img{width:100%;height:100%;object-fit:cover;image-rendering:auto}
+  .shot figcaption{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.82);color:#ffd24a;font-size:13px;padding:7px;opacity:0;transition:opacity .15s;text-shadow:1px 1px 0 #000}
+  .shot:hover figcaption{opacity:1}
   .news .card{border-left:6px solid var(--verde)}.news .date{color:var(--amar);font-size:13px}
   footer{border-top:3px solid #000;background:rgba(16,16,16,.86);padding:24px 16px;text-align:center;color:#b9c6b2;font-size:14px}
 </style>
@@ -114,10 +117,14 @@
   <section id="capturas"><div class="panel">
     <h2 class="sh" data-i18n="nav.capturas">Capturas</h2>
     <div class="shots">
-      <div class="shot">img/1.png</div><div class="shot">img/2.png</div><div class="shot">img/3.png</div>
-      <div class="shot">img/4.png</div><div class="shot">img/5.png</div><div class="shot">img/6.png</div>
+      <figure class="shot"><img src="img/1.png" alt="OptiCraft Heritage"><figcaption data-i18n="cap.early">Fase temprana</figcaption></figure>
+      <figure class="shot"><img src="img/2.png" alt="OptiCraft Heritage"><figcaption data-i18n="cap.early">Fase temprana</figcaption></figure>
+      <div class="shot" data-i18n="cap.soon">Próximamente</div>
+      <div class="shot" data-i18n="cap.soon">Próximamente</div>
+      <div class="shot" data-i18n="cap.soon">Próximamente</div>
+      <div class="shot" data-i18n="cap.soon">Próximamente</div>
     </div>
-    <p style="margin-top:12px;font-size:14px;color:#9aa894" data-i18n="cap.note">Próximamente capturas reales del juego.</p>
+    <p style="margin-top:12px;font-size:14px;color:#9aa894" data-i18n="cap.note">Capturas reales del juego (fases tempranas); pronto más bonitas.</p>
   </div></section>
 
   <section id="que-trae">
@@ -143,9 +150,9 @@
     <h2 class="sh" data-i18n="nav.descargas">Descargas</h2>
     <p style="color:#dfe7da" data-i18n="dl.desc">Builds para Xbox clásica (480p y 720p), normal y experimental. Pon aquí tus enlaces.</p>
     <div class="row" style="margin-top:16px;flex-wrap:wrap">
-      <a class="btn half" href="#">Xbox 1.5.2</a>
-      <a class="btn half" href="#">Xbox 1.2.5</a>
-      <a class="btn half" href="#" data-i18n="dl.how">Cómo instalar</a>
+      <a class="btn half" href="https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition" target="_blank" rel="noopener">Xbox 1.5.2</a>
+      <a class="btn half" href="https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition" target="_blank" rel="noopener">Xbox 1.2.5</a>
+      <a class="btn half" href="https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition#readme" target="_blank" rel="noopener" data-i18n="dl.how">Cómo instalar</a>
     </div>
   </div></section>
 
@@ -170,7 +177,7 @@ const I18N={
   "sec.prog.title":"Progreso del port","sec.prog.sub":"Xbox clásica · PS2 · PS3 — versiones 1.2.5 y 1.5.2",
   "state.playable":"Jugable","state.wip":"En marcha",
   "card.x152":"60 fps con niebla y nubes. Modo admin, chocobos, mods, texturas Modrinth.","card.x125":"Base estable, crafteo de consola, pantalla dividida.","card.ps":"Port en progreso; PS3 con SDK listo.",
-  "btn.verprog":"Ver progreso completo →","cap.note":"Próximamente capturas reales del juego.",
+  "btn.verprog":"Ver progreso completo →","cap.note":"Capturas reales del juego (fases tempranas); pronto más bonitas.","cap.early":"Fase temprana","cap.soon":"Próximamente",
   "feat.gameplay.t":"Jugabilidad","feat.gameplay.d":"Chocobos (ChocoCraft), mods (minimapa, Herobrine), combate 1.5.2, pociones, encantamientos, aldeanos y comercio, pantalla dividida.",
   "feat.online.t":"Online","feat.online.d":"Entra a servidores 1.12.2 por el traductor de protocolo. Descarga texturas desde Modrinth en la consola.",
   "feat.perf.t":"Rendimiento","feat.perf.d":"Chunks asíncronos, texturas animadas optimizadas, 60 fps de referencia en 1.5.2.",
@@ -187,7 +194,7 @@ const I18N={
   "sec.prog.title":"Port progress","sec.prog.sub":"Classic Xbox · PS2 · PS3 — versions 1.2.5 and 1.5.2",
   "state.playable":"Playable","state.wip":"In progress",
   "card.x152":"60 fps with fog and clouds. Admin mode, chocobos, mods, Modrinth textures.","card.x125":"Stable base, console crafting, split screen.","card.ps":"Port in progress; PS3 SDK ready.",
-  "btn.verprog":"See full progress →","cap.note":"Real in-game screenshots coming soon.",
+  "btn.verprog":"See full progress →","cap.note":"Real in-game screenshots (early builds); prettier ones soon.","cap.early":"Early build","cap.soon":"Coming soon",
   "feat.gameplay.t":"Gameplay","feat.gameplay.d":"Chocobos (ChocoCraft), mods (minimap, Herobrine), 1.5.2 combat, potions, enchanting, villagers and trading, split screen.",
   "feat.online.t":"Online","feat.online.d":"Join 1.12.2 servers through the protocol translator. Download textures from Modrinth on the console.",
   "feat.perf.t":"Performance","feat.perf.d":"Async chunks, optimized animated textures, 60 fps target on 1.5.2.",
@@ -204,7 +211,7 @@ const I18N={
   "sec.prog.title":"Progresso do port","sec.prog.sub":"Xbox clássico · PS2 · PS3 — versões 1.2.5 e 1.5.2",
   "state.playable":"Jogável","state.wip":"Em andamento",
   "card.x152":"60 fps com névoa e nuvens. Modo admin, chocobos, mods, texturas Modrinth.","card.x125":"Base estável, craft de console, tela dividida.","card.ps":"Port em andamento; PS3 com SDK pronto.",
-  "btn.verprog":"Ver progresso completo →","cap.note":"Em breve capturas reais do jogo.",
+  "btn.verprog":"Ver progresso completo →","cap.note":"Capturas reais do jogo (fases iniciais); em breve mais bonitas.","cap.early":"Fase inicial","cap.soon":"Em breve",
   "feat.gameplay.t":"Jogabilidade","feat.gameplay.d":"Chocobos (ChocoCraft), mods (minimapa, Herobrine), combate 1.5.2, poções, encantamentos, aldeões e comércio, tela dividida.",
   "feat.online.t":"Online","feat.online.d":"Entre em servidores 1.12.2 pelo tradutor de protocolo. Baixe texturas do Modrinth no console.",
   "feat.perf.t":"Desempenho","feat.perf.d":"Chunks assíncronos, texturas animadas otimizadas, 60 fps de referência no 1.5.2.",
