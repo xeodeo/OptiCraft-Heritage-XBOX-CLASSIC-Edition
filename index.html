@@ -56,18 +56,18 @@
   .card h3{font-size:15px;margin-bottom:8px;color:#ffff9e}.card p{font-size:16px;color:#dfe7da;text-shadow:1px 1px 0 #222}
   .big{font-size:20px;color:var(--verde)}
   .bar{height:16px;background:#000;border:2px solid #000;margin-top:10px}.bar i{display:block;height:100%;background:url('img/tiles/grass.svg');background-size:16px 16px}
-  .carousel{position:relative;border:3px solid #000;box-shadow:inset 2px 2px 0 #333;background:#000;overflow:hidden;aspect-ratio:4/3;max-width:900px;margin:0 auto}
-  .carousel .track{display:flex;height:100%;transition:transform .45s ease}
-  .carousel .slide{flex:0 0 100%;height:100%;position:relative;margin:0}
-  .carousel .slide img{width:100%;height:100%;object-fit:cover;display:block}
-  .carousel figcaption{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.78);color:#ffff9e;font-size:16px;padding:10px 14px;text-shadow:1px 1px 0 #000}
-  .carousel .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:56px;font-size:34px;line-height:1;color:#fff;background:rgba(60,60,60,.8);border:2px solid #000;box-shadow:inset 2px 2px 0 #999,inset -2px -2px 0 #333;cursor:pointer;font-family:inherit}
-  .carousel .nav:hover{background:rgba(110,130,200,.9)}
-  .carousel .prev{left:8px}.carousel .next{right:8px}
-  .carousel .count{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);color:#fff;font-size:13px;padding:4px 8px}
-  .dots{display:flex;justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap}
-  .dot{width:14px;height:14px;background:#555;border:2px solid #000;cursor:pointer;padding:0}.dot.on{background:var(--verde)}
-  @media(max-width:600px){.carousel figcaption{font-size:13px;padding:7px}.carousel .nav{width:34px;height:44px;font-size:26px}}
+  .shot{cursor:zoom-in}.shot:hover{border-color:#fff}.shot:focus{outline:3px solid var(--verde)}
+  .lb{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:16px}
+  .lb[hidden]{display:none}
+  .lb-box{margin:0;max-width:min(1100px,100%);border:3px solid #000;box-shadow:inset 2px 2px 0 #555,0 0 0 3px #333;background:#111;position:relative}
+  .lb-box img{display:block;max-width:100%;max-height:78vh;margin:0 auto}
+  .lb-box figcaption{background:rgba(0,0,0,.85);color:#ffff9e;font-size:18px;padding:12px 16px;text-shadow:1px 1px 0 #000}
+  .lb-count{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.7);color:#fff;font-size:13px;padding:4px 8px}
+  .lb-nav,.lb-x{position:absolute;z-index:2;color:#fff;background:rgba(60,60,60,.85);border:2px solid #000;box-shadow:inset 2px 2px 0 #999,inset -2px -2px 0 #333;cursor:pointer;font-family:inherit;line-height:1}
+  .lb-nav{top:50%;transform:translateY(-50%);width:48px;height:64px;font-size:38px}.lb-prev{left:12px}.lb-next{right:12px}
+  .lb-x{top:12px;right:12px;width:44px;height:44px;font-size:30px}
+  .lb-nav:hover,.lb-x:hover{background:rgba(110,130,200,.9)}
+  @media(max-width:600px){.lb-nav{width:36px;height:48px;font-size:28px}.lb-box figcaption{font-size:14px}}
   .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:760px){.shots{grid-template-columns:repeat(2,1fr)}}
   .shot{aspect-ratio:4/3;background:rgba(0,0,0,.55);border:3px solid #000;box-shadow:inset 2px 2px 0 #333;display:flex;align-items:center;justify-content:center;color:#8a8a8a;font-size:12px;text-align:center;padding:8px;overflow:hidden}
   .shot{position:relative}
@@ -129,27 +129,21 @@
 
   <section id="capturas"><div class="panel">
     <h2 class="sh" data-i18n="nav.capturas">Capturas</h2>
-    <div class="carousel" id="carousel">
-      <div class="track">
-        <figure class="slide"><img src="img/shots/01.jpg" alt="" loading="eager"><figcaption data-i18n="shot.1">Menú principal de OptiCraft Heritage Edition</figcaption></figure>
-        <figure class="slide"><img src="img/shots/02.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.2">El letrero gigante de Minecraft en el mundo tutorial</figcaption></figure>
-        <figure class="slide"><img src="img/shots/03.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.3">Llegando a la aldea entre árboles y flores</figcaption></figure>
-        <figure class="slide"><img src="img/shots/04.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.4">La aldea vista desde la colina</figcaption></figure>
-        <figure class="slide"><img src="img/shots/05.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.5">La herrería y las casas de la aldea</figcaption></figure>
-        <figure class="slide"><img src="img/shots/06.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.6">Casas de madera, vallas y caminos de grava</figcaption></figure>
-        <figure class="slide"><img src="img/shots/07.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.7">La calle principal de la aldea</figcaption></figure>
-        <figure class="slide"><img src="img/shots/08.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.8">Un jugador con skin propia entre flores y vallas</figcaption></figure>
-        <figure class="slide"><img src="img/shots/09.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.9">Dentro de una casa: cama, antorcha y ventanas</figcaption></figure>
-        <figure class="slide"><img src="img/shots/10.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.10">El porche de madera junto al agua</figcaption></figure>
-        <figure class="slide"><img src="img/shots/11.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.11">La biblioteca con vistas al lago</figcaption></figure>
-        <figure class="slide"><img src="img/3.png" alt="" loading="lazy"><figcaption data-i18n="shot.12">El menú principal en español</figcaption></figure>
-        <figure class="slide"><img src="img/1.png" alt="" loading="lazy"><figcaption data-i18n="shot.13">Fase temprana: el primer mundo en la Xbox</figcaption></figure>
-      </div>
-      <button class="nav prev" aria-label="&lt;">&lsaquo;</button>
-      <button class="nav next" aria-label="&gt;">&rsaquo;</button>
-      <div class="count"><span id="ci">1</span> / 13</div>
+    <div class="shots" id="shots">
+      <figure class="shot" tabindex="0"><img src="img/shots/01.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.1">Menú principal de OptiCraft Heritage Edition</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/02.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.2">El letrero gigante de Minecraft en el mundo tutorial</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/03.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.3">Llegando a la aldea entre árboles y flores</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/04.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.4">La aldea vista desde la colina</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/05.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.5">La herrería y las casas de la aldea</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/06.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.6">Casas de madera, vallas y caminos de grava</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/07.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.7">La calle principal de la aldea</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/08.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.8">Un jugador con skin propia entre flores y vallas</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/09.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.9">Dentro de una casa: cama, antorcha y ventanas</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/10.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.10">El porche de madera junto al agua</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/shots/11.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.11">La biblioteca con vistas al lago</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/3.png" alt="" loading="lazy"><figcaption data-i18n="shot.12">El menú principal en español</figcaption></figure>
+      <figure class="shot" tabindex="0"><img src="img/1.png" alt="" loading="lazy"><figcaption data-i18n="shot.13">Fase temprana: el primer mundo en la Xbox</figcaption></figure>
     </div>
-    <div class="dots"><button class="dot" aria-label="1"></button><button class="dot" aria-label="2"></button><button class="dot" aria-label="3"></button><button class="dot" aria-label="4"></button><button class="dot" aria-label="5"></button><button class="dot" aria-label="6"></button><button class="dot" aria-label="7"></button><button class="dot" aria-label="8"></button><button class="dot" aria-label="9"></button><button class="dot" aria-label="10"></button><button class="dot" aria-label="11"></button><button class="dot" aria-label="12"></button><button class="dot" aria-label="13"></button></div>
     <p style="margin-top:12px;font-size:14px;color:#9aa894" data-i18n="cap.note">Capturas reales en el emulador, en el mundo tutorial (build 1.5.2).</p>
   </div></section>
 
@@ -194,6 +188,12 @@
   <span data-i18n="footer.legal">Proyecto de fans. No afiliado a Mojang ni a Microsoft. Minecraft es marca de Mojang AB.</span>
 </footer>
 
+<div class="lb" id="lb" hidden>
+  <button class="lb-x" aria-label="Cerrar">&times;</button>
+  <button class="lb-nav lb-prev" aria-label="&lt;">&lsaquo;</button>
+  <figure class="lb-box"><img id="lb-img" alt=""><figcaption id="lb-cap"></figcaption><div class="lb-count" id="lb-count"></div></figure>
+  <button class="lb-nav lb-next" aria-label="&gt;">&rsaquo;</button>
+</div>
 <script>
 const I18N={
  es:{
@@ -267,17 +267,19 @@ document.querySelectorAll('.lang').forEach(function(b){b.addEventListener('click
 (function(){var l;try{l=localStorage.getItem('oc_lang');}catch(e){}
  if(!l){var n=(navigator.language||'es').slice(0,2);l=['es','en','pt'].indexOf(n)>=0?n:'es';}
  setLang(l);})();
-(function(){var c=document.getElementById('carousel');if(!c)return;
- var t=c.querySelector('.track'),n=t.children.length,i=0,ds=document.querySelectorAll('.dots .dot'),ci=document.getElementById('ci'),timer;
- function go(k){i=(k+n)%n;t.style.transform='translateX('+(-100*i)+'%)';ci.textContent=i+1;ds.forEach(function(d,j){d.classList.toggle('on',j===i);});}
- function auto(){clearInterval(timer);timer=setInterval(function(){go(i+1);},6000);}
- c.querySelector('.prev').addEventListener('click',function(){go(i-1);auto();});
- c.querySelector('.next').addEventListener('click',function(){go(i+1);auto();});
- ds.forEach(function(d,j){d.addEventListener('click',function(){go(j);auto();});});
- var x0=null;c.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
- c.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>40){go(i+(dx<0?1:-1));auto();}x0=null;});
- c.addEventListener('mouseenter',function(){clearInterval(timer);});c.addEventListener('mouseleave',auto);
- go(0);auto();})();
+(function(){var figs=[].slice.call(document.querySelectorAll('#shots .shot')),lb=document.getElementById('lb'),im=document.getElementById('lb-img'),cap=document.getElementById('lb-cap'),cnt=document.getElementById('lb-count'),i=0;
+ function show(k){i=(k+figs.length)%figs.length;var f=figs[i];im.src=f.querySelector('img').src;cap.textContent=f.querySelector('figcaption').textContent;cnt.textContent=(i+1)+' / '+figs.length;}
+ function open(k){show(k);lb.hidden=false;document.body.style.overflow='hidden';}
+ function close(){lb.hidden=true;document.body.style.overflow='';}
+ figs.forEach(function(f,k){f.addEventListener('click',function(){open(k);});f.addEventListener('keydown',function(e){if(e.key==='Enter'){open(k);}});});
+ lb.querySelector('.lb-prev').addEventListener('click',function(e){e.stopPropagation();show(i-1);});
+ lb.querySelector('.lb-next').addEventListener('click',function(e){e.stopPropagation();show(i+1);});
+ lb.querySelector('.lb-x').addEventListener('click',close);
+ lb.addEventListener('click',function(e){if(e.target===lb)close();});
+ document.addEventListener('keydown',function(e){if(lb.hidden)return;if(e.key==='Escape')close();else if(e.key==='ArrowLeft')show(i-1);else if(e.key==='ArrowRight')show(i+1);});
+ var x0=null;lb.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+ lb.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>40)show(i+(dx<0?1:-1));x0=null;});
+})();
 </script>
 </body>
 </html>
