@@ -743,18 +743,7 @@ void AdminModeMod::onTick()
     refreshFlags();
 
     if (!m_allowed)
-    {
-        bool wanted = false;
-        for (int i = 0; i < COUNT; ++i)
-            wanted = wanted || m_state[i];
-        if (wanted && !m_blockedWarned)
-        {
-            m_blockedWarned = true;
-            chat("\xc2\xa7" "cServidor ajeno: el modo admin no hace nada aqui.",
-                 "\xc2\xa7" "cSomeone else's server: admin mode does nothing here.");
-        }
         return;
-    }
 
     if (!g_any)
         return;

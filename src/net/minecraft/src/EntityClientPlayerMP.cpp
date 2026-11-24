@@ -1,4 +1,5 @@
 #include "EntityClientPlayerMP.h"
+#include "mods/adminmode/AdminHooks.h"
 
 #include "AxisAlignedBB.h"
 #include "client/Minecraft.h"
@@ -88,6 +89,13 @@ void EntityClientPlayerMP::sendMotionUpdates()
 	{
 		sendQueue->addToSendQueue(new Packet19EntityAction(this, sneaking ? 1 : 2));
 		wasSneaking = sneaking;
+	}
+	// Admin mode Freecam: the body stays where it was for the server (no rubber-band
+	// when the camera goes through blocks); only a keep-alive flying packet.
+	if (AdminHooks::onFor(AdminHooks::Freecam, this))
+	{
+		sendQueue->addToSendQueue(new Packet10Flying(true));
+		return;
 	}
 	double d = posX - oldPosX;
 	double d1 = boundingBox->minY - field_9378_bz;

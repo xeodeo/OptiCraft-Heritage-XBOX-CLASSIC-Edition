@@ -151,11 +151,6 @@ std::string GuiAdminMenu::statusLine(int_t &color) const
         color = static_cast<int_t>(0xff505050u);
         return es ? "Fuera de partida: se aplica al entrar en un mundo" : "Not in a world: applies when you join one";
     }
-    if (!mod->worldAllowed())
-    {
-        color = static_cast<int_t>(0xffa02010u);
-        return es ? "Servidor ajeno: el modo admin no hace nada aqui" : "Someone else's server: admin mode does nothing here";
-    }
     color = static_cast<int_t>(0xff207020u);
     if (mc->theWorld->multiplayerWorld)
         return es ? "Servidor: activo" : "Server: active";
