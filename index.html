@@ -75,6 +75,13 @@
   .pg{width:44px;height:40px;font-size:28px;padding-bottom:10px}.lb-nav{padding-bottom:10px}.pg-tab{min-width:40px;height:40px;font-size:16px;margin:0 3px;padding-top:2px}
   .pg:hover,.pg-tab:hover{background:#7e8fd0}.pg-tab.on{background:var(--verde);color:#111;text-shadow:none}
   .pg:disabled{opacity:.35;cursor:default}
+  @media(max-width:600px){
+    .corner{left:0!important;right:0!important;text-align:center;font-size:12px}
+    .corner.l{bottom:30px}.corner.r{bottom:10px}
+    .scrolldown{bottom:58px;white-space:nowrap}
+    .dl-row{flex-direction:column;align-items:stretch}
+    .dl-row .btn.half{width:100%;max-width:none}
+  }
   .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:760px){.shots{grid-template-columns:repeat(2,1fr)}}
   .shot{aspect-ratio:4/3;background:rgba(0,0,0,.55);border:3px solid #000;box-shadow:inset 2px 2px 0 #333;display:flex;align-items:center;justify-content:center;color:#8a8a8a;font-size:12px;text-align:center;padding:8px;overflow:hidden}
   .shot{position:relative}
@@ -176,8 +183,8 @@
 
   <section id="descargas"><div class="panel">
     <h2 class="sh" data-i18n="nav.descargas">Descargas</h2>
-    <p style="color:#dfe7da" data-i18n="dl.desc">Builds para Xbox clásica (480p y 720p), normal y experimental. Pon aquí tus enlaces.</p>
-    <div class="row" style="margin-top:16px;flex-wrap:wrap">
+    <p style="color:#dfe7da" data-i18n="dl.desc">Builds para Xbox clásica (480p y 720p), normal y experimental.</p>
+    <div class="row dl-row" style="margin-top:16px;flex-wrap:wrap">
       <a class="btn half" href="https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition/releases" target="_blank" rel="noopener">Xbox 1.5.2</a>
       <a class="btn half" href="https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition/releases" target="_blank" rel="noopener">Xbox 1.2.5</a>
       <a class="btn half" href="https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition#readme" target="_blank" rel="noopener" data-i18n="dl.how">Cómo instalar</a>
@@ -219,7 +226,7 @@ const I18N={
   "feat.perf.t":"Rendimiento","feat.perf.d":"Chunks asíncronos, texturas animadas optimizadas, 60 fps de referencia en 1.5.2.",
   "feat.legacy.t":"Estilo Legacy","feat.legacy.d":"Menús con el look de la Legacy Console Edition: skins DLC, logros, selector de skins 3D.",
   "news.1":"Modo admin con menú por pestañas y NoFall, integrado en las dos versiones.","news.2":"Chocobos completos, bloques y mobs de 1.5.2, descarga de packs desde la consola.","news.3":"UI estilo Legacy para los menús nuevos y catálogo de mods.",
-  "dl.desc":"Builds para Xbox clásica (480p y 720p), normal y experimental. Pon aquí tus enlaces.","dl.how":"Cómo instalar",
+  "dl.desc":"Builds para Xbox clásica (480p y 720p), normal y experimental.","dl.how":"Cómo instalar",
   "sup.title":"Apoya el proyecto","sup.desc":"OptiCraft es gratis y hecho por fans. Si te gusta y quieres ayudar a que siga creciendo, puedes invitarnos a un café.","sup.btn":"♥ Donar en Ko-fi",
   "footer.legal":"Proyecto de fans. No afiliado a Mojang ni a Microsoft. Minecraft es marca de Mojang AB."
  },
@@ -238,7 +245,7 @@ const I18N={
   "feat.perf.t":"Performance","feat.perf.d":"Async chunks, optimized animated textures, 60 fps target on 1.5.2.",
   "feat.legacy.t":"Legacy look","feat.legacy.d":"Menus with the Legacy Console Edition look: DLC skins, achievements, 3D skin picker.",
   "news.1":"Admin mode with tabbed menu and NoFall, integrated in both versions.","news.2":"Full chocobos, 1.5.2 blocks and mobs, pack downloads from the console.","news.3":"Legacy-style UI for the new menus and mod catalog.",
-  "dl.desc":"Builds for classic Xbox (480p and 720p), normal and experimental. Put your links here.","dl.how":"How to install",
+  "dl.desc":"Builds for classic Xbox (480p and 720p), normal and experimental.","dl.how":"How to install",
   "sup.title":"Support the project","sup.desc":"OptiCraft is free and made by fans. If you like it and want to help it grow, you can buy us a coffee.","sup.btn":"♥ Donate on Ko-fi",
   "footer.legal":"Fan project. Not affiliated with Mojang or Microsoft. Minecraft is a trademark of Mojang AB."
  },
@@ -257,7 +264,7 @@ const I18N={
   "feat.perf.t":"Desempenho","feat.perf.d":"Chunks assíncronos, texturas animadas otimizadas, 60 fps de referência no 1.5.2.",
   "feat.legacy.t":"Estilo Legacy","feat.legacy.d":"Menus com o visual da Legacy Console Edition: skins DLC, conquistas, seletor de skins 3D.",
   "news.1":"Modo admin com menu em abas e NoFall, integrado nas duas versões.","news.2":"Chocobos completos, blocos e mobs do 1.5.2, download de packs pelo console.","news.3":"UI estilo Legacy para os novos menus e catálogo de mods.",
-  "dl.desc":"Builds para Xbox clássico (480p e 720p), normal e experimental. Coloque seus links aqui.","dl.how":"Como instalar",
+  "dl.desc":"Builds para Xbox clássico (480p e 720p), normal e experimental.","dl.how":"Como instalar",
   "sup.title":"Apoie o projeto","sup.desc":"OptiCraft é grátis e feito por fãs. Se você gosta e quer ajudar a crescer, pode nos pagar um café.","sup.btn":"♥ Doar no Ko-fi",
   "footer.legal":"Projeto de fãs. Não afiliado à Mojang nem à Microsoft. Minecraft é marca da Mojang AB."
  }
