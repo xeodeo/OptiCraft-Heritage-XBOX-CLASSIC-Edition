@@ -27,6 +27,7 @@ protected:
 
 public:
 	void drawScreen(int_t mouseX, int_t mouseY, float_t partialTick) override;
+	TileEntitySign *getSign() const { return entitySign; } // admin mode AutoSign
 
 protected:
 	std::string screenTitle;

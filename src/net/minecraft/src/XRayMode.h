@@ -11,5 +11,8 @@ void reset();
 bool isVisibleBlock(int blockID);
 
 bool comboEnabled();
+// Admin mode CaveFinder (Nodus): draw only stone so caves stand out.
+void setCaveMode(bool on);
+bool caveMode();
 void setComboEnabled(bool enabled);
 }

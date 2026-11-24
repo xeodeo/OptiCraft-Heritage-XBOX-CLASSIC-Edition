@@ -1,4 +1,5 @@
 #include "net/minecraft/src/WorldSettings.h"
+#include "mods/adminmode/AdminHooks.h"
 #include "net/minecraft/src/WorldType.h"
 #include "net/minecraft/src/WorldInfo.h"
 #include "net/minecraft/src/NBTTagCompound.h"
@@ -1726,6 +1727,8 @@ void Minecraft::clickMouse(int_t i)
             if (playerController->sendPlaceBlock(thePlayer, theWorld, itemstack1, j, k, lv, i1))
             {
                 flag = false;
+                if (AdminHooks::on(AdminHooks::Build))
+                    AdminHooks::onBlockPlaced(j, k, lv, i1);
                 thePlayer->swingItem();
                 if (itemstack1 == nullptr)
                     return;

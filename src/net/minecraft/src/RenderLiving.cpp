@@ -1,4 +1,5 @@
 #include "RenderLiving.h"
+#include "mods/adminmode/AdminHooks.h"
 #include "ModelBase.h"
 #include "EntityLiving.h"
 #include "MathHelper.h"
@@ -54,6 +55,9 @@ void RenderLiving::setRenderPassModel(ModelBase* modelbase) {
 }
 
 void RenderLiving::doRenderLiving(EntityLiving* entityliving, double d, double d1, double d2, float f, float f1) {
+    const bool adminWallHack = AdminHooks::on(AdminHooks::WallHack) && !AdminHooks::isLocal(entityliving);
+    if (adminWallHack)
+        renderDisable(RenderCapability::DepthTest);
     renderPushMatrix();
     renderDisable(RenderCapability::CullFace);
     mainModel->onGround = getSwingProgress(entityliving, f1);
@@ -233,6 +237,8 @@ void RenderLiving::doRenderLiving(EntityLiving* entityliving, double d, double d
     OpenGlHelper::setActiveTexture(OpenGlHelper::defaultTexUnit);
     renderEnable(RenderCapability::CullFace);
     renderPopMatrix();
+    if (adminWallHack)
+        renderEnable(RenderCapability::DepthTest);
     resetLivingRenderGLState();
     passSpecialRender(entityliving, d, d1, d2);
     resetLivingRenderGLState();
@@ -304,6 +310,7 @@ void RenderLiving::passSpecialRender(EntityLiving* entityliving, double d, doubl
 }
 
 void RenderLiving::renderLivingLabel(EntityLiving* entityliving, std::string s, double d, double d1, double d2, int i) {
+    if (AdminHooks::on(AdminHooks::DisableNametags)) return;
     if (entityliving == nullptr || renderManager->livingPlayer == nullptr) return;
     float f = entityliving->getDistanceToEntity(renderManager->livingPlayer);
     if (f > (float)i) {

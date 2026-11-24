@@ -220,6 +220,11 @@ struct ClientboundOut
 void translateClientbound(Session &s, uint32_t id, const uint8_t *payload, std::size_t len,
                           ClientboundOut &out);
 
+// Op permission level the server gave the local player (Entity Status 24..28),
+// -1 until it says; reset on every login. The admin mode mod reads it.
+int localOpLevel();
+void resetLocalOpLevel();
+
 bool statusToNative(const std::string &statusJson, std::string &motdOut, int &onlineOut, int &maxOut,
                     int *protocolOut = nullptr);
 

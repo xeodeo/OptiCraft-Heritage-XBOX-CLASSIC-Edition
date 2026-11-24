@@ -1,4 +1,5 @@
 #include "EntityLiving.h"
+#include "mods/adminmode/AdminHooks.h"
 #include "GameRules.h"
 
 #include <cmath>
@@ -1182,6 +1183,8 @@ jstring EntityLiving::getDeathSound()
 
 void EntityLiving::knockBack(Entity *entity, int_t i, double d, double d1)
 {
+	if (AdminHooks::onFor(AdminHooks::NoFlinch, this))
+		return;
 	isAirBorne = true;
 #if PLATFORM_FLOAT_ENTITY_CORE_MATH
 	const float df = (float)d;
@@ -1750,6 +1753,8 @@ bool EntityLiving::isClientWorld() const
 void EntityLiving::jump()
 {
 	motionY = 0.41999998688697815;
+	if (AdminHooks::onFor(AdminHooks::HighJump, this))
+		motionY *= (double)AdminHooks::highJumpFactor();
 	Potion::initPotions();
 	PotionEffect *jumpEffect = getActivePotionEffect(Potion::jump);
 	if (jumpEffect != nullptr)

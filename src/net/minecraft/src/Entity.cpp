@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include "mods/adminmode/AdminHooks.h"
 #include "java/Arithmetic.h"
 
 #include <cmath>
@@ -625,6 +626,8 @@ void Entity::moveEntity(double d, double d1, double d2)
 	ySize *= 0.4f;
 	double d3 = posX;
 	double d4 = posZ;
+	if (isInWeb && AdminHooks::onFor(AdminHooks::NoSlowDown, this))
+		isInWeb = false;
 	if (isInWeb)
 	{
 		isInWeb = false;
@@ -1529,6 +1532,8 @@ bool Entity::isEntityAlive()
 
 bool Entity::isEntityInsideOpaqueBlock()
 {
+	if (noClip && AdminHooks::onFor(AdminHooks::Freecam, this))
+		return false;
 	for (int_t i = 0; i < 8; i++)
 	{
 		float f  = ((float)((i >> 0) % 2) - 0.5f) * width * 0.8f;
