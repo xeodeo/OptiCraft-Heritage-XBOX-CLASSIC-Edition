@@ -2822,6 +2822,19 @@ void World::queueEntityForDestruction(Entity *entity)
 		unloadedEntityList.push_back(entity);
 }
 
+void World::forgetEntityPointer(Entity *entity)
+{
+    if (entity == nullptr)
+        return;
+    loadedEntityList.erase(std::remove(loadedEntityList.begin(), loadedEntityList.end(), entity), loadedEntityList.end());
+    untrackLoadedEntityPointer(entity);
+    entityCountsDirty = true;
+    unloadedEntityList.erase(std::remove(unloadedEntityList.begin(), unloadedEntityList.end(), entity), unloadedEntityList.end());
+    weatherEffects.erase(std::remove(weatherEffects.begin(), weatherEffects.end(), entity), weatherEffects.end());
+    playerEntities.erase(std::remove_if(playerEntities.begin(), playerEntities.end(),
+        [entity](EntityPlayer *p) { return static_cast<Entity *>(p) == entity; }), playerEntities.end());
+}
+
 void World::detachEntityForWorldChange(Entity *entity)
 {
     if (entity == nullptr)

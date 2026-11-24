@@ -18,6 +18,7 @@ class File;
 
 class PlayerController;
 class World;
+class Entity;
 class WorldSettings;
 class RenderGlobal;
 class EntityPlayerSP;
@@ -208,6 +209,11 @@ public:
     std::vector<GuiScreen *> ownedGuiScreens;    // every screen we showed; purged when the stack is abandoned
     std::vector<GuiScreen *> guiScreensToDelete; // deferred frees; flushed at runTick start (never delete a screen mid-handler)
     std::vector<EntityPlayerSP *> playersToDelete; // deferred player frees; portal/world change can run while player update is on the stack
+    // Local players that respawn() replaced (multiplayer dimension changes). Their
+    // pointer can still sit in an abandoned world's lists; forgotten there before
+    // that world is deleted, so only the current world deletes them (crash 23-11 on
+    // a 1.12.2 server: two dimension changes on respawn -> double delete).
+    std::vector<Entity *> retiredLocalPlayers;
     std::vector<World *> worldsToDelete;         // deferred world frees; flushed at runTick start (changeWorld can run mid-tick via MP packet handling -> never delete the world being ticked)
     LoadingScreenRenderer *loadingScreen;
     EntityRenderer *entityRenderer;
