@@ -93,7 +93,7 @@ std::string GuiAdminMenu::statusLine(int_t &color) const
     }
     color = static_cast<int_t>(0xff207020u);
     if (mc->theWorld->multiplayerWorld)
-        return es ? "Servidor propio (op): activo" : "Own server (op): active";
+        return es ? "Servidor: activo" : "Server: active";
     return es ? "Mundo local: activo" : "Local world: active";
 }
 

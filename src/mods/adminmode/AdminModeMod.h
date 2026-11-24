@@ -15,9 +15,9 @@ class EntityPlayerSP;
 
 // "Admin mode (testing)" (encargo 122): the Nodus 1.5.2 client modules (Fly,
 // NoFall, FullBright, Freecam, Nuker, ESP...) as one catalog mod for testing
-// the game with a controller. Works only in a local world / split screen, or
-// on a server where the player is op; on someone else's server it does nothing
-// and says so. X-Ray and waypoints are the existing X-Ray and Minimap mods.
+// the game with a controller. Works in any world or server, no op needed
+// (Nuker and Build only in a local world: they write client-side blocks).
+// Dupe: direct in a local world; on a server it sends /optidupe (OptiDupe plugin). X-Ray and waypoints are the existing X-Ray and Minimap mods.
 class AdminModeMod : public IMod
 {
 public:
@@ -81,6 +81,7 @@ private:
     void tickBlockEsp(EntityPlayerSP *p);
     void tickNotifications(EntityPlayerSP *p);
     void tickAutoEnchant(EntityPlayerSP *p);
+    void doDupe(EntityPlayerSP *p, int mode);
 
     bool isTarget(EntityPlayerSP *p, Entity *e, int mode) const;
     EntityLiving *nearestTarget(EntityPlayerSP *p, double range, int mode, bool needVisible) const;
