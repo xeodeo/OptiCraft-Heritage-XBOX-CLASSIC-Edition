@@ -266,6 +266,46 @@ struct Entry {
     std::string asset;
 };
 
+// "1.5.2" for "1.5.2\OptiCraft.xbe"; "" for files beside the launcher (default.xbe, data\...).
+std::string folderOf(const std::string& path)
+{
+    const size_t slash = path.find('\\');
+    if (slash == std::string::npos) return std::string();
+    const std::string first = path.substr(0, slash);
+    return first == "data" ? std::string() : first;
+}
+
+std::vector<Entry> parseManifest(const std::string& manifest, char* build, int buildSize)
+{
+    std::vector<Entry> entries;
+    size_t pos = 0;
+    while (pos < manifest.size()) {
+        size_t nl = manifest.find('\n', pos);
+        if (nl == std::string::npos) nl = manifest.size();
+        std::string line = manifest.substr(pos, nl - pos);
+        pos = nl + 1;
+        while (!line.empty() && (line.back() == '\r' || line.back() == ' ')) line.pop_back();
+        if (line.empty()) continue;
+        if (line[0] == '#') {
+            if (build && line.compare(0, 8, "# build ") == 0) std::snprintf(build, buildSize, "%s", line.c_str() + 8);
+            continue;
+        }
+        char path[200], sha[80], asset[200];
+        unsigned long long size = 0;
+        if (std::sscanf(line.c_str(), "%199s %llu %79s %199s", path, &size, sha, asset) != 4) continue;
+        Entry e;
+        e.path = path;
+        for (char& ch : e.path)
+            if (ch == '/') ch = '\\';
+        if (e.path.find("..") != std::string::npos || e.path[0] == '\\' || e.path.find(':') != std::string::npos) continue;
+        e.size = size;
+        e.sha = sha;
+        e.asset = asset;
+        entries.push_back(e);
+    }
+    return entries;
+}
+
 void makeDirs(const std::string& fullPath)
 {
     for (size_t i = 3; i < fullPath.size(); ++i)
@@ -282,6 +322,101 @@ bool canWrite(const std::string& root)
     return true;
 }
 
+// D: is the launcher's own folder. Run from a disc (or xemu's ISO) it is
+// read-only: then the files go to T: so the download can still be tried.
+std::string installRoot(bool* test)
+{
+    if (canWrite("D:\\")) {
+        if (test) *test = false;
+        return "D:\\";
+    }
+    CreateDirectoryA("T:\\wifi-prueba", NULL);
+    if (test) *test = true;
+    return "T:\\wifi-prueba\\";
+}
+
+// What is known to be installed: "<path> <size> <sha256>" per file, in
+// <root>instalado.txt, so checking for updates does not hash every file.
+struct Installed {
+    std::vector<std::string> path, sha;
+    std::vector<unsigned long long> size;
+
+    int find(const std::string& p) const
+    {
+        for (size_t i = 0; i < path.size(); ++i)
+            if (_stricmp(path[i].c_str(), p.c_str()) == 0) return static_cast<int>(i);
+        return -1;
+    }
+    void set(const Entry& e)
+    {
+        const int i = find(e.path);
+        if (i >= 0) {
+            sha[i] = e.sha;
+            size[i] = e.size;
+        } else {
+            path.push_back(e.path);
+            sha.push_back(e.sha);
+            size.push_back(e.size);
+        }
+    }
+    void load(const std::string& root)
+    {
+        HANDLE f = CreateFileA((root + "instalado.txt").c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+        if (f == INVALID_HANDLE_VALUE) return;
+        const DWORD n = GetFileSize(f, NULL);
+        std::string text(n, '\0');
+        DWORD got = 0;
+        ReadFile(f, &text[0], n, &got, NULL);
+        CloseHandle(f);
+        size_t pos = 0;
+        while (pos < text.size()) {
+            size_t nl = text.find('\n', pos);
+            if (nl == std::string::npos) nl = text.size();
+            char p[200], s[80];
+            unsigned long long z = 0;
+            if (std::sscanf(text.substr(pos, nl - pos).c_str(), "%199s %llu %79s", p, &z, s) == 3) {
+                Entry e;
+                e.path = p;
+                e.size = z;
+                e.sha = s;
+                set(e);
+            }
+            pos = nl + 1;
+        }
+    }
+    void save(const std::string& root) const
+    {
+        std::string text;
+        for (size_t i = 0; i < path.size(); ++i) {
+            char line[320];
+            std::snprintf(line, sizeof(line), "%s %llu %s\n", path[i].c_str(), size[i], sha[i].c_str());
+            text += line;
+        }
+        HANDLE f = CreateFileA((root + "instalado.txt").c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+        if (f == INVALID_HANDLE_VALUE) return;
+        DWORD out = 0;
+        WriteFile(f, text.data(), static_cast<DWORD>(text.size()), &out, NULL);
+        CloseHandle(f);
+    }
+    // Same file as the manifest entry? Uses the record when the size on disk
+    // still matches; hashes the file only when there is no record. `learn`
+    // stores what a hash found.
+    bool matches(const std::string& root, const Entry& e, bool* learned)
+    {
+        HANDLE f = CreateFileA((root + e.path).c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+        if (f == INVALID_HANDLE_VALUE) return false;
+        const DWORD onDisk = GetFileSize(f, NULL);
+        CloseHandle(f);
+        if (onDisk != e.size) return false;
+        const int i = find(e.path);
+        if (i >= 0 && size[i] == e.size) return sha[i] == e.sha;
+        if (fileSha(root + e.path, e.size) != e.sha) return false;
+        set(e);
+        if (learned) *learned = true;
+        return true;
+    }
+};
+
 void finish(LauncherWifi::State st)
 {
     {
@@ -290,6 +425,61 @@ void finish(LauncherWifi::State st)
     }
     InterlockedExchange(&g_finished, 1);
     XboxTls::shutdown();
+}
+
+// Result of the last update check, per version folder.
+const int kMaxFolders = 8;
+struct Check {
+    LauncherWifi::CheckState state;
+    char folder[kMaxFolders][24];
+    bool outdated[kMaxFolders];
+    int count;
+    bool launcherOutdated;
+    char build[64];
+};
+Check g_check;
+
+DWORD WINAPI checkThread(void*)
+{
+    {
+        Lock l;
+        g_check.state = LauncherWifi::CheckState::Checking;
+    }
+    std::string manifest;
+    const std::string err = httpGet(std::string(kReleaseBase) + "manifest.txt", memorySink, &manifest, nullptr);
+    XboxTls::shutdown();
+    if (!err.empty()) {
+        Lock l;
+        g_check.state = LauncherWifi::CheckState::Failed;
+        return 0;
+    }
+    Check c;
+    memset(&c, 0, sizeof(c));
+    const std::vector<Entry> entries = parseManifest(manifest, c.build, sizeof(c.build));
+    const std::string root = installRoot(nullptr);
+    Installed inst;
+    inst.load(root);
+    bool learned = false;
+    for (const Entry& e : entries) {
+        const std::string folder = folderOf(e.path);
+        const bool ok = inst.matches(root, e, &learned);
+        if (folder.empty()) {
+            if (!ok) c.launcherOutdated = true;
+            continue;
+        }
+        int i = 0;
+        while (i < c.count && strcmp(c.folder[i], folder.c_str()) != 0) ++i;
+        if (i == c.count) {
+            if (c.count == kMaxFolders) continue;
+            std::snprintf(c.folder[c.count++], sizeof(c.folder[0]), "%s", folder.c_str());
+        }
+        if (!ok) c.outdated[i] = true;
+    }
+    if (learned) inst.save(root);
+    c.state = LauncherWifi::CheckState::Done;
+    Lock l;
+    g_check = c;
+    return 0;
 }
 
 DWORD WINAPI installThread(void*)
@@ -301,73 +491,44 @@ DWORD WINAPI installThread(void*)
     }
     const bool all = strcmp(version, "todo") == 0;
     if (!XboxNetwork::hasLink()) {
-        setMessage("Sin red: conecta la Xbox al router y vuelve a intentarlo.");
+        setMessage("No network: plug the Xbox into your router and try again.");
         finish(LauncherWifi::State::Failed);
         return 0;
     }
 
-    setMessage("Bajando la lista de archivos...");
+    setMessage("Getting the file list...");
     std::string manifest;
     std::string err = httpGet(std::string(kReleaseBase) + "manifest.txt", memorySink, &manifest, nullptr);
     if (!err.empty()) {
-        setMessage("No se pudo bajar la lista: %s", err.c_str());
+        setMessage("Could not get the file list: %s", err.c_str());
         finish(LauncherWifi::State::Failed);
         return 0;
     }
-
+    char build[64] = "";
     std::vector<Entry> entries;
-    size_t pos = 0;
-    while (pos < manifest.size()) {
-        size_t nl = manifest.find('\n', pos);
-        if (nl == std::string::npos) nl = manifest.size();
-        std::string line = manifest.substr(pos, nl - pos);
-        pos = nl + 1;
-        while (!line.empty() && (line.back() == '\r' || line.back() == ' ')) line.pop_back();
-        if (line.empty()) continue;
-        if (line[0] == '#') {
-            if (line.compare(0, 8, "# build ") == 0) {
-                Lock l;
-                std::snprintf(g_progress.build, sizeof(g_progress.build), "%s", line.c_str() + 8);
-            }
-            continue;
-        }
-        char path[200], sha[80], asset[200];
-        unsigned long long size = 0;
-        if (std::sscanf(line.c_str(), "%199s %llu %79s %199s", path, &size, sha, asset) != 4) continue;
-        Entry e;
-        e.path = path;
-        for (char& ch : e.path)
-            if (ch == '/') ch = '\\';
-        const std::string prefix = std::string(version) + "\\";
-        if (!all && e.path.compare(0, prefix.size(), prefix) != 0) continue;
-        if (e.path.find("..") != std::string::npos || e.path[0] == '\\' || e.path.find(':') != std::string::npos) continue;
-        e.size = size;
-        e.sha = sha;
-        e.asset = asset;
-        entries.push_back(e);
+    for (const Entry& e : parseManifest(manifest, build, sizeof(build)))
+        if (all || folderOf(e.path) == version) entries.push_back(e);
+    {
+        Lock l;
+        std::snprintf(g_progress.build, sizeof(g_progress.build), "%s", build);
     }
     if (entries.empty()) {
-        setMessage("La release no tiene archivos para %s.", version);
+        setMessage("The release has no files for %s.", version);
         finish(LauncherWifi::State::Failed);
         return 0;
     }
 
-    // D: is the launcher's own folder. Run from a disc (or xemu's ISO) it is
-    // read-only: then the files go to T: so the download can still be tried.
-    std::string root = "D:\\";
     bool test = false;
-    if (!canWrite(root)) {
-        root = "T:\\wifi-prueba\\";
-        CreateDirectoryA("T:\\wifi-prueba", NULL);
-        test = true;
-    }
+    const std::string root = installRoot(&test);
+    Installed inst;
+    inst.load(root);
 
     // Skip what is already installed and identical.
-    setMessage("Comprobando lo que ya tienes...");
+    setMessage("Checking what you already have...");
     std::vector<Entry> todo;
     unsigned long long total = 0;
     for (const Entry& e : entries) {
-        if (fileSha(root + e.path, e.size) == e.sha) continue;
+        if (inst.matches(root, e, nullptr)) continue;
         todo.push_back(e);
         total += e.size;
     }
@@ -378,7 +539,8 @@ DWORD WINAPI installThread(void*)
         g_progress.bytes = 0;
     }
     if (todo.empty()) {
-        setMessage("Ya tienes la ultima version de %s. Nada que bajar.", version);
+        inst.save(root);
+        setMessage("You already have the newest %s. Nothing to download.", all ? "build" : version);
         finish(LauncherWifi::State::Done);
         return 0;
     }
@@ -391,13 +553,13 @@ DWORD WINAPI installThread(void*)
             g_progress.fileIndex = static_cast<int>(i) + 1;
             std::snprintf(g_progress.file, sizeof(g_progress.file), "%s", e.path.c_str());
         }
-        setMessage("Bajando %s (%d de %d)", e.path.c_str(), static_cast<int>(i) + 1, static_cast<int>(todo.size()));
+        setMessage("Downloading %s (%d of %d)", e.path.c_str(), static_cast<int>(i) + 1, static_cast<int>(todo.size()));
         const std::string part = root + e.path + ".part";
         makeDirs(part);
         FileSink fs;
         fs.file = CreateFileA(part.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
         if (fs.file == INVALID_HANDLE_VALUE) {
-            setMessage("No se puede escribir %s (disco lleno?)", e.path.c_str());
+            setMessage("Cannot write %s (disk full?)", e.path.c_str());
             finish(LauncherWifi::State::Failed);
             return 0;
         }
@@ -413,17 +575,17 @@ DWORD WINAPI installThread(void*)
         char hex[65];
         toHex(d, 32, hex);
         if (err.empty() && (fs.written != e.size || e.sha != hex))
-            err = "el archivo llego danado";
+            err = "the file arrived damaged";
         if (!err.empty()) {
             DeleteFileA(part.c_str());
-            setMessage("Fallo %s: %s. No se cambio nada.", e.path.c_str(), err.c_str());
+            setMessage("%s failed: %s. Nothing was changed.", e.path.c_str(), err.c_str());
             finish(LauncherWifi::State::Failed);
             return 0;
         }
     }
 
     // All good: swap them in.
-    setMessage("Instalando...");
+    setMessage("Installing...");
     for (const Entry& e : todo) {
         const std::string dst = root + e.path;
         const std::string bak = dst + ".bak";
@@ -431,17 +593,27 @@ DWORD WINAPI installThread(void*)
         MoveFileA(dst.c_str(), bak.c_str());
         if (!MoveFileA((dst + ".part").c_str(), dst.c_str())) {
             MoveFileA(bak.c_str(), dst.c_str());
-            setMessage("No se pudo reemplazar %s.", e.path.c_str());
+            setMessage("Could not replace %s.", e.path.c_str());
+            inst.save(root);
             finish(LauncherWifi::State::Failed);
             return 0;
         }
         DeleteFileA(bak.c_str());
+        inst.set(e);
+    }
+    inst.save(root);
+    {
+        // The check result is stale now: whatever was installed is current.
+        Lock l;
+        for (int i = 0; i < g_check.count; ++i)
+            if (all || strcmp(g_check.folder[i], version) == 0) g_check.outdated[i] = false;
+        if (all) g_check.launcherOutdated = false;
     }
     if (test)
-        setMessage("Prueba OK: %d archivos bajados y comprobados en T: (desde disco no se puede instalar).",
+        setMessage("Test OK: %d files downloaded and checked into T: (a disc cannot be updated).",
                    static_cast<int>(todo.size()));
     else
-        setMessage("Listo: %s actualizada (%d archivos).", version, static_cast<int>(todo.size()));
+        setMessage("Done: %s updated (%d files).", all ? "everything" : version, static_cast<int>(todo.size()));
     finish(LauncherWifi::State::Done);
     return 0;
 }
@@ -584,6 +756,7 @@ DWORD WINAPI serverThread(void*)
         }
         Sleep(1000);
     }
+    LauncherWifi::startCheck();
     SOCKET srv = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (srv == INVALID_SOCKET) return 0;
     sockaddr_in sa;
@@ -653,6 +826,43 @@ bool startInstall(const char* version)
     }
     CloseHandle(t);
     return true;
+}
+
+void startCheck()
+{
+    {
+        Lock l;
+        if (g_check.state == CheckState::Checking || g_progress.state == State::Running) return;
+        g_check.state = CheckState::Checking;
+    }
+    HANDLE t = CreateThread(NULL, 256 * 1024, checkThread, NULL, 0, NULL);
+    if (t) CloseHandle(t);
+}
+
+CheckState checkState()
+{
+    Lock l;
+    return g_check.state;
+}
+
+bool updateAvailable(const char* folder)
+{
+    Lock l;
+    if (g_check.state != CheckState::Done) return false;
+    if (!folder || !*folder) {
+        for (int i = 0; i < g_check.count; ++i)
+            if (g_check.outdated[i]) return true;
+        return g_check.launcherOutdated;
+    }
+    for (int i = 0; i < g_check.count; ++i)
+        if (_stricmp(g_check.folder[i], folder) == 0) return g_check.outdated[i];
+    return true;   // the release has it and this console does not
+}
+
+void latestBuild(char* out, int size)
+{
+    Lock l;
+    std::snprintf(out, size, "%s", g_check.build);
 }
 
 void clear()

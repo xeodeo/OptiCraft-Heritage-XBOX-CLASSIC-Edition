@@ -14,6 +14,7 @@
 namespace LauncherWifi
 {
 enum class State { Idle, Running, Done, Failed };
+enum class CheckState { NotYet, Checking, Done, Failed };
 
 struct Progress
 {
@@ -33,6 +34,13 @@ void address(char* out, int size);
 void progress(Progress& out);
 // Starts an install in the background; false if one is already running.
 bool startInstall(const char* version);
+// Looks for a newer build (only the file list; files with no record are hashed
+// once). start() runs it when the network comes up.
+void startCheck();
+CheckState checkState();
+// Newer files for that folder ("1.5.2"), or for anything when folder is "".
+bool updateAvailable(const char* folder);
+void latestBuild(char* out, int size);
 // Back to Idle after a finished/failed install (the TV hides the result).
 void clear();
 // True once after an install finished, so the launcher re-reads its folders.

@@ -457,7 +457,7 @@ const float kBarTop = 376.0f;
 struct State {
     int selected = 0;
     bool listOpen = false;
-    bool focusPlay = true;
+    int focus = 1;          // 0 version list, 1 Play, 2 Update
     float scroll = 0.0f;
     const char* error = nullptr;
 };
@@ -548,24 +548,36 @@ void drawLogo()
 
 const float kDropX = 36, kDropY = 410, kDropW = 212, kDropH = 30;
 const float kPlayX = 262, kPlayY = 400, kPlayW = 150;
+const float kUpdX = 426, kUpdW = 180;
 
 void drawBar(const State& st)
 {
     text("Version:", kDropX, 388, 2, 0xFFFFFFFF);
-    const bool dropFocus = !st.focusPlay || st.listOpen;
+    const bool dropFocus = st.focus == 0 || st.listOpen;
     fill(kDropX, kDropY, kDropW, kDropH, 0xFF000000);
     frame(kDropX, kDropY, kDropW, kDropH, dropFocus ? 0xFFFFFFFF : 0xFF808080);
     if (g_versionCount) text(g_versions[st.selected].name, kDropX + 8, kDropY + 7, 2, 0xFFFFFFFF);
     text(st.listOpen ? "^" : "v", kDropX + kDropW - 20, kDropY + 7, 2, 0xFFC0C0C0);
 
-    button(kPlayX, kPlayY, kPlayW, "Play", st.focusPlay && !st.listOpen);
+    button(kPlayX, kPlayY, kPlayW, "Play", st.focus == 1 && !st.listOpen);
 
-    text("Ready to play", 426, 394, 2, 0xFFFFFFFF);
-    if (g_versionCount && g_versions[st.selected].folder[0]) {
-        char line[64];
-        std::snprintf(line, sizeof(line), "Minecraft %s", g_versions[st.selected].folder);
-        text(line, 426, 416, 2, 0xFFC0C0C0);
+    // Update: like the Classic Xbox Store, the console downloads the newest
+    // build itself (XboxLauncherWifi.cpp).
+    const char* folder = g_versionCount ? g_versions[st.selected].folder : "";
+    const bool newer = LauncherWifi::updateAvailable(folder);
+    button(kUpdX, kPlayY, kUpdW, newer ? "Update!" : "Update", st.focus == 2 && !st.listOpen);
+    const char* status = "Checking...";
+    D3DCOLOR color = 0xFFC0C0C0;
+    switch (LauncherWifi::checkState()) {
+    case LauncherWifi::CheckState::NotYet: status = "No network yet"; break;
+    case LauncherWifi::CheckState::Checking: break;
+    case LauncherWifi::CheckState::Failed: status = "Offline"; color = 0xFFFFB040; break;
+    case LauncherWifi::CheckState::Done:
+        status = newer ? "New build!" : "Up to date";
+        color = newer ? 0xFF80FF60 : 0xFFC0C0C0;
+        break;
     }
+    text(status, kUpdX + 4, 446, 2, color);
 
     if (st.listOpen && g_versionCount) {
         const float rowH = 28;
@@ -614,6 +626,13 @@ void launch(State& st)
     g_dev->PersistDisplay();
     XLaunchNewImage(g_versions[i].file, NULL);
     st.error = "Could not start that version.";   // only reached if the launch failed
+}
+
+// The selected version's folder, or everything when nothing is installed yet.
+void startUpdate(const State& st)
+{
+    const char* v = g_versionCount && g_versions[st.selected].folder[0] ? g_versions[st.selected].folder : "todo";
+    LauncherWifi::startInstall(v);
 }
 
 } // namespace
@@ -685,10 +704,7 @@ void __cdecl main()
                 continue;
             }
         }
-        if (pressed & kY) {
-            const char* v = g_versionCount && g_versions[st.selected].folder[0] ? g_versions[st.selected].folder : "todo";
-            LauncherWifi::startInstall(v);
-        }
+        if (pressed & kY) startUpdate(st);
         if ((pressed & (kUp | kDown)) && g_versionCount) {
             st.listOpen = true;
             st.error = nullptr;
@@ -696,7 +712,9 @@ void __cdecl main()
         }
         if (pressed & (kLeft | kRight)) {
             st.listOpen = false;
-            st.focusPlay = (pressed & kRight) != 0;
+            st.focus += (pressed & kRight) ? 1 : -1;
+            if (st.focus < 0) st.focus = 0;
+            if (st.focus > 2) st.focus = 2;
         }
         if (pressed & kB) st.listOpen = false;
         if (pressed & kStart) {
@@ -705,9 +723,11 @@ void __cdecl main()
         } else if (pressed & kA) {
             if (st.listOpen) {
                 st.listOpen = false;
-                st.focusPlay = true;
-            } else if (!st.focusPlay) {
+                st.focus = 1;
+            } else if (st.focus == 0) {
                 st.listOpen = true;
+            } else if (st.focus == 2) {
+                startUpdate(st);
             } else {
                 launch(st);
             }
