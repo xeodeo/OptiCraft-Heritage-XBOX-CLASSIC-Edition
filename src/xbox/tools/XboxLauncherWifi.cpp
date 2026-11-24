@@ -7,6 +7,10 @@
 
 #include "mbedtls/sha256.h"
 
+#ifndef XBOX_LAUNCHER_WEB
+#define XBOX_LAUNCHER_WEB 0
+#endif
+
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -322,10 +326,33 @@ bool canWrite(const std::string& root)
     return true;
 }
 
+void deleteTree(const std::string& dir)
+{
+    WIN32_FIND_DATAA fd;
+    HANDLE h = FindFirstFileA((dir + "*").c_str(), &fd);
+    if (h != INVALID_HANDLE_VALUE) {
+        do {
+            if (fd.cFileName[0] == '.') continue;
+            const std::string path = dir + fd.cFileName;
+            if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) deleteTree(path + "\\");
+            else DeleteFileA(path.c_str());
+        } while (FindNextFileA(h, &fd));
+        FindClose(h);
+    }
+    RemoveDirectoryA(dir.substr(0, dir.size() - 1).c_str());
+}
+
 // D: is the launcher's own folder. Run from a disc (or xemu's ISO) it is
 // read-only: then the files go to T: so the download can still be tried.
+// Tests: D:\wifi-limpiar.txt empties that T: folder first (a "nothing installed" console).
 std::string installRoot(bool* test)
 {
+    static bool cleaned = false;
+    if (!cleaned) {
+        cleaned = true;
+        if (GetFileAttributesA("D:\\wifi-limpiar.txt") != (DWORD)-1 && !canWrite("D:\\"))
+            deleteTree("T:\\wifi-prueba\\");
+    }
     if (canWrite("D:\\")) {
         if (test) *test = false;
         return "D:\\";
@@ -433,6 +460,7 @@ struct Check {
     LauncherWifi::CheckState state;
     char folder[kMaxFolders][24];
     bool outdated[kMaxFolders];
+    unsigned long long bytes[kMaxFolders];
     int count;
     bool launcherOutdated;
     char build[64];
@@ -474,6 +502,7 @@ DWORD WINAPI checkThread(void*)
             std::snprintf(c.folder[c.count++], sizeof(c.folder[0]), "%s", folder.c_str());
         }
         if (!ok) c.outdated[i] = true;
+        c.bytes[i] += e.size;
     }
     if (learned) inst.save(root);
     c.state = LauncherWifi::CheckState::Done;
@@ -618,7 +647,10 @@ DWORD WINAPI installThread(void*)
     return 0;
 }
 
-// --- web server -----------------------------------------------------------------------
+// --- network thread ------------------------------------------------------------------
+
+#if XBOX_LAUNCHER_WEB
+// Optional page for a phone (off: the user wants the console to do it all by itself).
 
 const char* const kVersions[] = {"1.5.2", "1.2.5", "todo"};
 
@@ -741,6 +773,8 @@ void handle(SOCKET c)
     closesocket(c);
 }
 
+#endif
+
 DWORD WINAPI serverThread(void*)
 {
     if (!XboxNetwork::initialize()) return 0;
@@ -757,6 +791,7 @@ DWORD WINAPI serverThread(void*)
         Sleep(1000);
     }
     LauncherWifi::startCheck();
+#if XBOX_LAUNCHER_WEB
     SOCKET srv = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (srv == INVALID_SOCKET) return 0;
     sockaddr_in sa;
@@ -778,6 +813,9 @@ DWORD WINAPI serverThread(void*)
         }
         handle(c);
     }
+#else
+    return 0;
+#endif
 }
 
 } // namespace
@@ -857,6 +895,23 @@ bool updateAvailable(const char* folder)
     for (int i = 0; i < g_check.count; ++i)
         if (_stricmp(g_check.folder[i], folder) == 0) return g_check.outdated[i];
     return true;   // the release has it and this console does not
+}
+
+int releaseFolders(char (*names)[24], unsigned* megabytes, int max)
+{
+    Lock l;
+    if (g_check.state != CheckState::Done) return 0;
+    int n = 0;
+    for (int i = 0; i < g_check.count && n < max; ++i, ++n) {
+        std::snprintf(names[n], 24, "%s", g_check.folder[i]);
+        if (megabytes) megabytes[n] = static_cast<unsigned>((g_check.bytes[i] + 1048575) / 1048576);
+    }
+    return n;
+}
+
+void installRootPath(char* out, int size)
+{
+    std::snprintf(out, size, "%s", installRoot(nullptr).c_str());
 }
 
 void latestBuild(char* out, int size)

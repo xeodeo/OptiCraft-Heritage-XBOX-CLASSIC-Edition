@@ -8,9 +8,10 @@
 // them are good do they replace the installed ones. Files that already match
 // are skipped, so an update only downloads what changed. No zip.
 //
-// A phone on the same network starts it: the launcher serves a small web page
-// on port 80 (http://<console IP>/) with one button per version, and the
-// project's GitHub page links there. The pad can start it too (Y).
+// Everything happens on the console, like the Classic Xbox Store: the launcher
+// checks for a newer build when the network comes up and the Update button (or
+// Y) installs it. A page for a phone (port 80) exists behind XBOX_LAUNCHER_WEB,
+// off by default.
 namespace LauncherWifi
 {
 enum class State { Idle, Running, Done, Failed };
@@ -41,6 +42,10 @@ CheckState checkState();
 // Newer files for that folder ("1.5.2"), or for anything when folder is "".
 bool updateAvailable(const char* folder);
 void latestBuild(char* out, int size);
+// Version folders the release has ("1.2.5", "1.5.2"...) and their size; 0 before the check is done.
+int releaseFolders(char (*names)[24], unsigned* megabytes, int max);
+// Where installs go: "D:\" (the launcher's folder), or "T:\wifi-prueba\" when D: is a disc.
+void installRootPath(char* out, int size);
 // Back to Idle after a finished/failed install (the TV hides the result).
 void clear();
 // True once after an install finished, so the launcher re-reads its folders.

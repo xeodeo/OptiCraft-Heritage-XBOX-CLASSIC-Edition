@@ -72,6 +72,7 @@ struct Version {
     char folder[48];    // "" for an XBE beside default.xbe
     char file[128];     // full path for XLaunchNewImage
     char text[400];
+    bool remote;        // in the release, not on this console yet: A downloads it
 };
 
 // The list opens upwards above the bar, 28 px a row: 13 rows fit.
@@ -79,6 +80,7 @@ const int kMaxVersions = 13;
 Version g_versions[kMaxVersions];
 int g_versionCount;
 bool g_720pAllowed;
+char g_root[64] = "D:\\";   // where downloads go (LauncherWifi::installRootPath)
 
 bool versionIsHd(int i) { return strstr(g_versions[i].file, "720") != nullptr; }
 
@@ -90,12 +92,12 @@ bool fileExists(const char* path)
 bool readFile(const char* path, std::vector<unsigned char>& out);
 
 // Adds every game XBE the folder has. `folder` is "" for D:\ itself.
-void addFolder(const char* folder)
+void addFolder(const char* root, const char* folder)
 {
     char custom[400] = "";
     if (*folder) {
         char path[128];
-        std::snprintf(path, sizeof(path), "D:\\%s\\version.txt", folder);
+        std::snprintf(path, sizeof(path), "%s%s\\version.txt", root, folder);
         std::vector<unsigned char> bytes;
         if (readFile(path, bytes)) {
             const size_t n = bytes.size() < sizeof(custom) - 1 ? bytes.size() : sizeof(custom) - 1;
@@ -107,24 +109,26 @@ void addFolder(const char* folder)
     for (int v = 0; v < kVariantCount && g_versionCount < kMaxVersions; ++v) {
         Version& out = g_versions[g_versionCount];
         if (*folder)
-            std::snprintf(out.file, sizeof(out.file), "D:\\%s\\%s", folder, kVariants[v].file);
+            std::snprintf(out.file, sizeof(out.file), "%s%s\\%s", root, folder, kVariants[v].file);
         else
-            std::snprintf(out.file, sizeof(out.file), "D:\\%s", kVariants[v].file);
+            std::snprintf(out.file, sizeof(out.file), "%s%s", root, kVariants[v].file);
         if (!fileExists(out.file)) continue;
         std::snprintf(out.name, sizeof(out.name), "%s%s", *folder ? folder : "OptiCraft", kVariants[v].label);
         std::snprintf(out.folder, sizeof(out.folder), "%s", folder);
         std::snprintf(out.text, sizeof(out.text), "%s", *custom ? custom : kVariants[v].text);
+        out.remote = false;
         ++g_versionCount;
     }
 }
 
-void findVersions()
+void scanRoot(const char* root)
 {
-    g_versionCount = 0;
     char folders[kMaxVersions][48];
     int count = 0;
+    char pattern[80];
+    std::snprintf(pattern, sizeof(pattern), "%s*", root);
     WIN32_FIND_DATAA fd;
-    HANDLE h = FindFirstFileA("D:\\*", &fd);
+    HANDLE h = FindFirstFileA(pattern, &fd);
     if (h != INVALID_HANDLE_VALUE) {
         do {
             if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) || fd.cFileName[0] == '.') continue;
@@ -141,8 +145,38 @@ void findVersions()
             memcpy(folders[j], folders[j - 1], sizeof(tmp));
             memcpy(folders[j - 1], tmp, sizeof(tmp));
         }
-    for (int i = 0; i < count; ++i) addFolder(folders[i]);
-    addFolder("");
+    for (int i = 0; i < count; ++i) addFolder(root, folders[i]);
+    addFolder(root, "");
+}
+
+bool haveFolder(const char* folder)
+{
+    for (int i = 0; i < g_versionCount; ++i)
+        if (_stricmp(g_versions[i].folder, folder) == 0) return true;
+    return false;
+}
+
+void findVersions()
+{
+    g_versionCount = 0;
+    scanRoot("D:\\");
+    if (_stricmp(g_root, "D:\\") != 0) scanRoot(g_root);
+    // Versions the release has and this console does not: listed to download.
+    char names[8][24];
+    unsigned mb[8];
+    const int n = LauncherWifi::releaseFolders(names, mb, 8);
+    for (int i = 0; i < n && g_versionCount < kMaxVersions; ++i) {
+        if (haveFolder(names[i])) continue;
+        Version& out = g_versions[g_versionCount++];
+        std::snprintf(out.name, sizeof(out.name), "%s (get)", names[i]);
+        std::snprintf(out.folder, sizeof(out.folder), "%s", names[i]);
+        out.file[0] = 0;
+        std::snprintf(out.text, sizeof(out.text),
+                      "Not on this console yet. Press A to download Minecraft %s from the internet (%u MB). "
+                      "Only its files are downloaded, each one checked, straight into its folder.",
+                      names[i], mb[i]);
+        out.remote = true;
+    }
 }
 
 // --- textures -----------------------------------------------------------------
@@ -559,7 +593,8 @@ void drawBar(const State& st)
     if (g_versionCount) text(g_versions[st.selected].name, kDropX + 8, kDropY + 7, 2, 0xFFFFFFFF);
     text(st.listOpen ? "^" : "v", kDropX + kDropW - 20, kDropY + 7, 2, 0xFFC0C0C0);
 
-    button(kPlayX, kPlayY, kPlayW, "Play", st.focus == 1 && !st.listOpen);
+    const bool remote = g_versionCount && g_versions[st.selected].remote;
+    button(kPlayX, kPlayY, kPlayW, remote ? "Download" : "Play", st.focus == 1 && !st.listOpen);
 
     // Update: like the Classic Xbox Store, the console downloads the newest
     // build itself (XboxLauncherWifi.cpp).
@@ -600,13 +635,7 @@ void draw(const State& st, const char* overlay = nullptr)
     drawLogo();
     drawNews(st);
     drawBar(st);
-    char ip[20];
-    LauncherWifi::address(ip, sizeof(ip));
-    if (ip[0]) {
-        char line[64];
-        std::snprintf(line, sizeof(line), "WiFi: http://%s", ip);
-        text(line, 10, 8, 2, 0xFFB0E0A0);
-    }
+
     if (overlay) {
         fill(0, 0, kWidth, kHeight, 0xC0000000);
         textCentered(overlay, kWidth / 2.0f, kHeight / 2.0f - 12, 3, 0xFFFFFFFF);
@@ -615,10 +644,16 @@ void draw(const State& st, const char* overlay = nullptr)
     present();
 }
 
+void startUpdate(const State& st);
+
 void launch(State& st)
 {
     if (g_versionCount == 0) return;
     const int i = st.selected;
+    if (g_versions[i].remote) {
+        startUpdate(st);
+        return;
+    }
     char overlay[96];
     std::snprintf(overlay, sizeof(overlay), "Starting %s...", g_versions[i].name);
     draw(st, overlay);
@@ -649,8 +684,10 @@ void __cdecl main()
     loadImage("D:\\data\\assets\\legacy\\panorama.png", g_panorama);
     loadImage("D:\\data\\assets\\legacy\\title.png", g_logo);
 
-    findVersions();
     LauncherWifi::start();
+    LauncherWifi::installRootPath(g_root, sizeof(g_root));
+    findVersions();
+    LauncherWifi::CheckState lastCheck = LauncherWifi::CheckState::NotYet;
     g_720pAllowed = (XGetVideoFlags() & XC_VIDEO_FLAGS_HDTV_720p) != 0;
 
     State st;   // opens on the first folder's normal build
@@ -687,6 +724,14 @@ void __cdecl main()
         }
         previous = held;
 
+        const LauncherWifi::CheckState cs = LauncherWifi::checkState();
+        if (cs != lastCheck) {
+            lastCheck = cs;
+            if (cs == LauncherWifi::CheckState::Done) {
+                findVersions();
+                if (st.selected >= g_versionCount) st.selected = 0;
+            }
+        }
         if (LauncherWifi::takeFinished()) {
             findVersions();
             if (st.selected >= g_versionCount) st.selected = 0;
