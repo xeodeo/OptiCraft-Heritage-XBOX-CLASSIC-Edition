@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Progreso — OptiCraft Heritage</title>
+<meta name="description" content="Progreso del port de OptiCraft Heritage para Xbox clásica, PS2 y PS3.">
+<style>
+  @font-face{font-family:'Minecraft';src:url('fonts/minecraft.woff2') format('woff2'),url('fonts/minecraft.woff') format('woff');font-display:swap}
+  :root{--txt:#fff;--sh:#3a3a3a;--btn:#999;--btn-l:#cfcfcf;--btn-d:#565656;--amar:#ffff55;--verde:#63ab3e}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Minecraft','Segoe UI',sans-serif;color:#fff;image-rendering:pixelated;text-shadow:2px 2px 0 var(--sh)}
+  a{color:#fff;text-decoration:none}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+  .scene{position:fixed;inset:-4% -20%;z-index:-2;background:url('img/landscape.svg') center/cover no-repeat;filter:brightness(.5) blur(2px);animation:pan 70s linear infinite alternate}
+  @keyframes pan{from{transform:translateX(0)}to{transform:translateX(-14%)}}
+  .vig{position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.35) 40%,rgba(0,0,0,.6))}
+  @media(prefers-reduced-motion:reduce){.scene{animation:none}}
+
+  header{position:sticky;top:0;z-index:30;background:rgba(16,16,16,.86);border-bottom:3px solid #000}
+  .nav{display:flex;align-items:center;gap:6px;padding:9px 16px;max-width:1000px;margin:0 auto;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;font-size:18px;margin-right:auto}
+  .brand .blk{width:26px;height:26px;background:url('img/tiles/grass.svg') center/cover;border:2px solid #000}
+  .nav a.link{font-size:14px;color:#ccc;padding:8px 10px}.nav a.link:hover{color:var(--amar)}
+
+  .btn{display:inline-block;font-family:'Minecraft';font-size:17px;color:#fff;background:var(--btn);padding:12px 18px;cursor:pointer;border:2px solid #000;text-align:center;box-shadow:inset 2px 2px 0 var(--btn-l),inset -2px -2px 0 var(--btn-d),0 4px 0 #000;text-shadow:2px 2px 0 #2b2b2b}
+  .btn:hover{background:#86a86f;box-shadow:inset 2px 2px 0 #c7eaa8,inset -2px -2px 0 #3c5a2a,0 4px 0 #000;color:#ffffcc}
+
+  .head{text-align:center;padding:56px 16px 20px}
+  .head h1{font-size:min(10vw,52px);text-shadow:4px 4px 0 #1f1f1f,6px 6px 0 #000}
+  .head p{font-size:19px;color:#eaf6e3;margin-top:8px}
+
+  section{padding:26px 0}
+  h2.sh{font-size:20px;margin:0 0 16px;color:#fff}
+  .panel{background:rgba(16,16,16,.86);border:3px solid #000;padding:22px;box-shadow:inset 2px 2px 0 #3a3a3a,inset -2px -2px 0 #111}
+  .grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(2,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:760px){.g2{grid-template-columns:1fr}.g4{grid-template-columns:repeat(2,1fr)}}
+
+  .plat{background:rgba(0,0,0,.5);border:2px solid #000;padding:16px;text-align:center;box-shadow:inset 2px 2px 0 #333,inset -2px -2px 0 #000}
+  .plat .name{font-size:15px;color:#fff}
+  .plat .state{font-size:15px;margin:6px 0}
+  .plat .state.ok{color:var(--verde)} .plat .state.go{color:#ffd24a} .plat .state.soon{color:#9ad1ff}
+
+  .barwrap{margin:14px 0}
+  .barlabel{display:flex;justify-content:space-between;font-size:16px;margin-bottom:6px}
+  .barlabel b{color:var(--amar)}
+  .bar{height:18px;background:#000;border:2px solid #000}
+  .bar i{display:block;height:100%;background:url('img/tiles/grass.svg');background-size:18px 18px}
+  .feat{font-size:15px;color:#cfe0c6;margin-top:8px;line-height:1.5}
+  .feat .done::before{content:"✔ ";color:var(--verde)}
+  .feat .wip::before{content:"➤ ";color:#ffd24a}
+
+  .road li{list-style:none;font-size:16px;color:#dfe7da;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+  .road li::before{content:"▪ ";color:#9ad1ff}
+  .center{text-align:center;margin:30px 0 10px}
+  footer{border-top:3px solid #000;background:rgba(16,16,16,.86);padding:22px 16px;text-align:center;color:#b9c6b2;font-size:14px;margin-top:30px}
+  .legend{font-size:13px;color:#9aa894;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="scene"></div><div class="vig"></div>
+
+<header><nav class="nav">
+  <span class="brand"><span class="blk"></span> OptiCraft</span>
+  <a class="link" href="index.html">Inicio</a>
+  <a class="link" href="index.html#capturas">Capturas</a>
+  <a class="link" href="index.html#descargas">Descargas</a>
+</nav></header>
+
+<div class="head">
+  <h1>Progreso del port</h1>
+  <p>Minecraft en Xbox clásica, PS2 y PS3 · versiones 1.2.5 y 1.5.2</p>
+</div>
+
+<main class="wrap">
+
+  <section>
+    <div class="grid g4">
+      <div class="plat"><div class="name">Xbox · 1.5.2</div><div class="state ok">Jugable</div><div class="bar"><i style="width:88%"></i></div></div>
+      <div class="plat"><div class="name">Xbox · 1.2.5</div><div class="state ok">Jugable</div><div class="bar"><i style="width:92%"></i></div></div>
+      <div class="plat"><div class="name">PlayStation 2</div><div class="state go">En desarrollo</div><div class="bar"><i style="width:40%"></i></div></div>
+      <div class="plat"><div class="name">PlayStation 3</div><div class="state go">En desarrollo</div><div class="bar"><i style="width:45%"></i></div></div>
+    </div>
+  </section>
+
+  <section><div class="panel">
+    <h2 class="sh">Por áreas</h2>
+
+    <div class="barwrap">
+      <div class="barlabel"><span>Mundo y generación</span><b>100%</b></div>
+      <div class="bar"><i style="width:100%"></i></div>
+      <div class="feat"><span class="done">Biomas, cuevas y estructuras</span> · <span class="done">superplano personalizable</span> · <span class="done">portales y dimensiones</span></div>
+    </div>
+
+    <div class="barwrap">
+      <div class="barlabel"><span>Jugabilidad</span><b>90%</b></div>
+      <div class="bar"><i style="width:90%"></i></div>
+      <div class="feat"><span class="done">Combate 1.5.2</span> · <span class="done">pociones y encantamientos</span> · <span class="done">aldeanos y comercio</span> · <span class="done">logros</span></div>
+    </div>
+
+    <div class="barwrap">
+      <div class="barlabel"><span>Criaturas</span><b>95%</b></div>
+      <div class="bar"><i style="width:95%"></i></div>
+      <div class="feat"><span class="done">Todos los mobs de 1.5.2</span> · <span class="done">Chocobos (ChocoCraft)</span> · <span class="done">Herobrine opcional</span></div>
+    </div>
+
+    <div class="barwrap">
+      <div class="barlabel"><span>Multijugador</span><b>85%</b></div>
+      <div class="bar"><i style="width:85%"></i></div>
+      <div class="feat"><span class="done">Servidores 1.12.2 por traductor</span> · <span class="done">pantalla dividida</span></div>
+    </div>
+
+    <div class="barwrap">
+      <div class="barlabel"><span>Personalización</span><b>90%</b></div>
+      <div class="bar"><i style="width:90%"></i></div>
+      <div class="feat"><span class="done">Skins DLC estilo Legacy y selector 3D</span> · <span class="done">texturas Modrinth desde la consola</span> · <span class="done">minimapa</span></div>
+    </div>
+
+    <div class="barwrap">
+      <div class="barlabel"><span>Rendimiento</span><b>85%</b></div>
+      <div class="bar"><i style="width:85%"></i></div>
+      <div class="feat"><span class="done">60 fps con niebla y nubes</span> · <span class="done">carga de chunks asíncrona</span> · <span class="wip">optimización PS2/PS3</span></div>
+    </div>
+    <div class="legend">Los porcentajes son una estimación del equipo y pueden cambiar.</div>
+  </div></section>
+
+  <section><div class="panel">
+    <h2 class="sh">Próximamente</h2>
+    <ul class="road">
+      <li>Más optimización en PS2 y PS3</li>
+      <li>Nuevas versiones (1.6.4) en su propia carpeta</li>
+      <li>Más texturas y packs desde la consola</li>
+      <li>Pulido de multijugador y menús Legacy</li>
+    </ul>
+  </div></section>
+
+  <div class="center"><a class="btn" href="index.html#descargas">Descargar OptiCraft</a></div>
+</main>
+
+<footer>
+  <div style="font-size:16px;color:#fff">OptiCraft Heritage</div>
+  Proyecto de fans. No afiliado a Mojang ni a Microsoft. Minecraft es marca de Mojang AB.
+</footer>
+</body>
+</html>

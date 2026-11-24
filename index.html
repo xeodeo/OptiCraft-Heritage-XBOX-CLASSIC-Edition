@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OptiCraft Heritage — Minecraft para consolas clásicas</title>
+<meta name="description" content="OptiCraft Heritage: Minecraft para Xbox clásica, PS2 y PS3. Progreso, capturas y descargas.">
+<style>
+  @font-face{font-family:'Minecraft';src:url('fonts/minecraft.woff2') format('woff2'),url('fonts/minecraft.woff') format('woff');font-display:swap}
+  :root{
+    --txt:#fff; --sh:#3a3a3a;
+    --btn:#999; --btn-l:#cfcfcf; --btn-d:#565656; --btn-hi:#7fa968;
+    --panel:rgba(16,16,16,.86); --amar:#ffff55; --verde:#63ab3e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Minecraft','Segoe UI',sans-serif;color:var(--txt);background:#0c0f13;image-rendering:pixelated;text-shadow:2px 2px 0 var(--sh)}
+  a{color:#fff;text-decoration:none}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+  img,.px{image-rendering:pixelated}
+
+  /* fondo paisaje paneando (compartido) */
+  .scene{position:fixed;inset:-4% -20%;z-index:-2;background:url('img/landscape.svg') center/cover no-repeat;
+    filter:brightness(.82) saturate(1.05);animation:pan 70s linear infinite alternate}
+  .scene.blur{filter:brightness(.5) blur(3px)}
+  @keyframes pan{from{transform:translateX(0)}to{transform:translateX(-14%)}}
+  .vignette{position:fixed;inset:0;z-index:-1;background:
+    radial-gradient(120% 90% at 50% 20%,transparent 40%,rgba(0,0,0,.55) 100%),
+    linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.15) 40%,rgba(0,0,0,.5))}
+  @media(prefers-reduced-motion:reduce){.scene{animation:none}}
+
+  /* ---- botones GUI ---- */
+  .btn{display:inline-block;font-family:'Minecraft';font-size:18px;color:#fff;background:var(--btn);
+    padding:14px 20px;cursor:pointer;user-select:none;border:2px solid #000;text-align:center;
+    box-shadow:inset 2px 2px 0 var(--btn-l),inset -2px -2px 0 var(--btn-d),0 4px 0 #000;text-shadow:2px 2px 0 #2b2b2b}
+  .btn:hover{background:#86a86f;box-shadow:inset 2px 2px 0 #c7eaa8,inset -2px -2px 0 #3c5a2a,0 4px 0 #000;color:#ffffcc}
+  .btn:active{transform:translateY(3px);box-shadow:inset 2px 2px 0 var(--btn-l),inset -2px -2px 0 var(--btn-d)}
+  .btn.wide{width:380px;max-width:86vw}
+  .btn.half{width:184px;max-width:41vw}
+
+  /* ---- barra superior ---- */
+  header{position:sticky;top:0;z-index:30;background:var(--panel);border-bottom:3px solid #000}
+  .nav{display:flex;align-items:center;gap:6px;padding:9px 16px;max-width:1000px;margin:0 auto;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;font-size:18px;margin-right:auto}
+  .brand .blk{width:26px;height:26px;background:url('img/tiles/grass.svg') center/cover;border:2px solid #000}
+  .nav a.link{font-size:14px;color:#cccccc;padding:8px 10px}
+  .nav a.link:hover{color:var(--amar)}
+
+  /* ---- HERO menú ---- */
+  .menu{min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 16px 90px;position:relative}
+  .logo{font-size:min(13vw,86px);line-height:.98;color:#fff;letter-spacing:3px;
+    text-shadow:5px 5px 0 #1f1f1f, 8px 8px 0 #000, 0 0 3px #000}
+  .logo .c{color:#bff0a0}
+  .tagline{margin-top:10px;font-size:20px;color:#eaf6e3;text-shadow:3px 3px 0 #222}
+  .splash{color:var(--amar);font-size:22px;transform:rotate(-15deg);text-shadow:3px 3px 0 #3a3a00;
+    margin-top:14px;animation:bob .9s ease-in-out infinite;display:inline-block}
+  @keyframes bob{0%,100%{transform:rotate(-15deg) scale(1)}50%{transform:rotate(-15deg) scale(1.12)}}
+  .stack{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:30px}
+  .row{display:flex;gap:12px}
+  .corner{position:absolute;bottom:14px;font-size:14px;color:#dcdcdc;text-shadow:2px 2px 0 #000}
+  .corner.l{left:18px} .corner.r{right:18px;color:#b9c6b2}
+  .scrolldown{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-size:14px;color:#cde8bf;animation:dn 1.4s ease-in-out infinite}
+  @keyframes dn{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,6px)}}
+
+  /* ---- secciones ---- */
+  section{padding:54px 0}
+  .panel{background:var(--panel);border:3px solid #000;padding:24px;box-shadow:inset 2px 2px 0 #3a3a3a,inset -2px -2px 0 #111}
+  h2.sh{font-size:22px;margin-bottom:18px}
+  h2.sh small{display:block;font-size:13px;color:#9fdc7b;margin-top:6px}
+  .grid{display:grid;gap:14px}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:760px){.g3,.g2{grid-template-columns:1fr}}
+  .card{background:rgba(0,0,0,.5);border:2px solid #000;padding:16px;box-shadow:inset 2px 2px 0 #333,inset -2px -2px 0 #000}
+  .card h3{font-size:15px;margin-bottom:8px;color:#ffff9e}
+  .card p{font-size:16px;color:#dfe7da;text-shadow:1px 1px 0 #222}
+  .big{font-size:20px;color:var(--verde)}
+  .bar{height:16px;background:#000;border:2px solid #000;margin-top:10px}
+  .bar i{display:block;height:100%;background:url('img/tiles/grass.svg');background-size:16px 16px}
+  .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:760px){.shots{grid-template-columns:repeat(2,1fr)}}
+  .shot{aspect-ratio:4/3;background:rgba(0,0,0,.55);border:3px solid #000;box-shadow:inset 2px 2px 0 #333;display:flex;align-items:center;justify-content:center;color:#8a8a8a;font-size:12px;text-align:center;padding:8px;overflow:hidden}
+  .shot img{width:100%;height:100%;object-fit:cover;image-rendering:auto}
+  .news .card{border-left:6px solid var(--verde)} .news .date{color:var(--amar);font-size:13px}
+  footer{border-top:3px solid #000;background:var(--panel);padding:24px 16px;text-align:center;color:#b9c6b2;font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="scene"></div>
+<div class="vignette"></div>
+
+<header>
+  <nav class="nav">
+    <span class="brand"><span class="blk"></span> OptiCraft</span>
+    <a class="link" href="#progreso">Progreso</a>
+    <a class="link" href="#capturas">Capturas</a>
+    <a class="link" href="#que-trae">Qué trae</a>
+    <a class="link" href="#novedades">Novedades</a>
+    <a class="link" href="progreso.html">Estado</a>
+    <a class="link" href="https://ko-fi.com/opticraft" target="_blank" rel="noopener" style="color:#ff8aa8">♥ Donar</a>
+  </nav>
+</header>
+
+<div class="menu">
+  <div class="logo">OPTI<span class="c">CRAFT</span></div>
+  <div class="tagline">HERITAGE EDITION · Xbox clásica · PS2 · PS3</div>
+  <div class="splash">¡como si saliera en tu Xbox!</div>
+  <div class="stack">
+    <a class="btn wide" href="#descargas">Jugar / Descargar</a>
+    <div class="row">
+      <a class="btn half" href="#progreso">Progreso</a>
+      <a class="btn half" href="#capturas">Capturas</a>
+    </div>
+    <div class="row">
+      <a class="btn half" href="#novedades">Novedades</a>
+      <a class="btn half" href="progreso.html">Estado</a>
+    </div>
+  </div>
+  <div class="corner l">OptiCraft Heritage 1.5.2 / 1.2.5</div>
+  <div class="corner r">Proyecto de fans · no afiliado a Mojang</div>
+  <div class="scrolldown">▼ desliza para ver más</div>
+</div>
+
+<main class="wrap">
+  <section id="progreso">
+    <h2 class="sh">Progreso del port <small>Xbox clásica · PS2 · PS3 — versiones 1.2.5 y 1.5.2</small></h2>
+    <div class="grid g3">
+      <div class="card"><h3>Xbox 1.5.2</h3><div class="big">Jugable</div><div class="bar"><i style="width:88%"></i></div><p>60 fps con niebla y nubes. Modo admin, chocobos, mods, texturas Modrinth.</p></div>
+      <div class="card"><h3>Xbox 1.2.5</h3><div class="big">Jugable</div><div class="bar"><i style="width:92%"></i></div><p>Base estable, crafteo de consola, pantalla dividida.</p></div>
+      <div class="card"><h3>PS2 / PS3</h3><div class="big">En marcha</div><div class="bar"><i style="width:45%"></i></div><p>Port en progreso; PS3 con SDK listo.</p></div>
+    </div>
+    <p style="margin-top:16px"><a class="btn" href="progreso.html">Ver progreso completo →</a></p>
+  </section>
+
+  <section id="capturas"><div class="panel">
+    <h2 class="sh">Capturas</h2>
+    <div class="shots">
+      <div class="shot">img/1.png</div><div class="shot">img/2.png</div><div class="shot">img/3.png</div>
+      <div class="shot">img/4.png</div><div class="shot">img/5.png</div><div class="shot">img/6.png</div>
+    </div>
+    <p style="margin-top:12px;font-size:14px;color:#9aa894">Mete tus PNG en <b>web/img/</b> y cambia el texto por <b>&lt;img src="img/1.png"&gt;</b>.</p>
+  </div></section>
+
+  <section id="que-trae">
+    <h2 class="sh">Qué trae</h2>
+    <div class="grid g2">
+      <div class="card"><h3>Jugabilidad</h3><p>Chocobos (ChocoCraft), mods (minimapa, Herobrine), combate 1.5.2, pociones, encantamientos, aldeanos y comercio, pantalla dividida.</p></div>
+      <div class="card"><h3>Online</h3><p>Entra a servidores 1.12.2 por el traductor de protocolo. Descarga texturas desde Modrinth en la consola.</p></div>
+      <div class="card"><h3>Rendimiento</h3><p>Chunks asíncronos, texturas animadas optimizadas, 60 fps de referencia en 1.5.2.</p></div>
+      <div class="card"><h3>Estilo Legacy</h3><p>Menús con el look de la Legacy Console Edition: skins DLC, logros, selector de skins 3D.</p></div>
+    </div>
+  </section>
+
+  <section id="novedades" class="news">
+    <h2 class="sh">Novedades</h2>
+    <div class="grid">
+      <div class="card"><div class="date">24-11-2026</div><p>Modo admin con menú por pestañas y NoFall, integrado en las dos versiones.</p></div>
+      <div class="card"><div class="date">23-11-2026</div><p>Chocobos completos, bloques y mobs de 1.5.2, descarga de packs desde la consola.</p></div>
+      <div class="card"><div class="date">22-11-2026</div><p>UI estilo Legacy para los menús nuevos y catálogo de mods.</p></div>
+    </div>
+  </section>
+
+  <section id="descargas"><div class="panel">
+    <h2 class="sh">Descargas</h2>
+    <p style="color:#dfe7da">Builds para Xbox clásica (480p y 720p), normal y experimental. Pon aquí tus enlaces.</p>
+    <div class="row" style="margin-top:16px;flex-wrap:wrap">
+      <a class="btn half" href="#">Xbox 1.5.2</a>
+      <a class="btn half" href="#">Xbox 1.2.5</a>
+      <a class="btn half" href="#">Cómo instalar</a>
+    </div>
+  </div></section>
+
+  <section id="apoya"><div class="panel" style="text-align:center">
+    <h2 class="sh" style="justify-content:center">Apoya el proyecto</h2>
+    <p style="color:#dfe7da;max-width:620px;margin:0 auto 18px">OptiCraft es gratis y hecho por fans. Si te gusta y quieres
+    ayudar a que siga creciendo (consolas nuevas, más contenido), puedes invitarnos a un café.</p>
+    <a class="btn" href="https://ko-fi.com/opticraft" target="_blank" rel="noopener" style="background:#13c3ff;box-shadow:inset 2px 2px 0 #adeeff,inset -2px -2px 0 #0a6e94,0 4px 0 #000">♥ Donar en Ko-fi</a>
+    <p style="font-size:13px;color:#9aa894;margin-top:12px">Cambia el enlace por tu Ko-fi real: <b>ko-fi.com/TUUSUARIO</b></p>
+  </div></section>
+</main>
+
+<footer>
+  <div style="font-size:16px;color:#fff">OptiCraft Heritage</div>
+  Proyecto de fans. No afiliado a Mojang ni a Microsoft. Minecraft es marca de Mojang AB.
+</footer>
+
+</body>
+</html>
