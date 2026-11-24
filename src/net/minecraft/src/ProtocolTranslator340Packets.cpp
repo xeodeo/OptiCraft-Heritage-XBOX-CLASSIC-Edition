@@ -4,6 +4,7 @@
 // cross-checked against plushmonkey/mclib (Protocol_1_12_1 tables).
 
 #include "ProtocolTranslator340.h"
+#include "platform/Log.h"
 
 #include <cmath>
 #include <cstdarg>
@@ -1106,9 +1107,14 @@ void translateClientbound(Session &s, uint32_t id, const uint8_t *payload, std::
 			return;
 		{
 			std::lock_guard<std::mutex> guard(s.lock);
+			const double prevX = s.posX, prevY = s.posY, prevZ = s.posZ;
 			if (flags & 0x01) x += s.posX;
 			if (flags & 0x02) y += s.posY;
 			if (flags & 0x04) z += s.posZ;
+			// Server corrections (rubber-banding near slabs, 23-11): log how far the
+			// server moved us and from where, to see which movement it rejects.
+			MC_LOG_WARN("net340", "server teleport flags=%u from %.3f %.3f %.3f to %.3f %.3f %.3f (dy=%.3f)\n",
+			            static_cast<unsigned>(flags), prevX, prevY, prevZ, x, y, z, y - prevY);
 			if (flags & 0x08) yaw += s.yaw;
 			if (flags & 0x10) pitch += s.pitch;
 			s.posX = x;
