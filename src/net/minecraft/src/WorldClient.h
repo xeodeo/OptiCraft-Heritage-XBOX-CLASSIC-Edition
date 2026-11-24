@@ -54,6 +54,10 @@ public:
 	ulong_t getDeferredEntityChunkPromotions() const { return deferredEntityChunkPromotions; }
 	bool entityJoinedWorld(Entity *entity) override;
 	void setEntityDead(Entity *entity) override;
+	// The local player crossing a dimension change must also leave knownEntities:
+	// ~WorldClient hands every known entity back to World for deletion.
+	void detachEntityForWorldChange(Entity *entity) override;
+	void forgetEntityPointer(Entity *entity) override;
 	void unloadEntities(const std::vector<Entity *> &list) override;
 	void addEntityToWorld(int_t entityId, Entity *entity);
 	void applyNetworkPosition(Entity *entity, double x, double y, double z, float yaw, float pitch);

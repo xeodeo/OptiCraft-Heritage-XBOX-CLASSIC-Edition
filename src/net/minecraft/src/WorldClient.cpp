@@ -995,6 +995,25 @@ bool WorldClient::entityJoinedWorld(Entity *entity)
 	return added || preRegistered;
 }
 
+void WorldClient::detachEntityForWorldChange(Entity *entity)
+{
+	if (entity == nullptr)
+		return;
+	knownEntities.remove(entity);
+	entitySpawnQueue.remove(entity);
+	World::detachEntityForWorldChange(entity);
+}
+
+void WorldClient::forgetEntityPointer(Entity *entity)
+{
+	if (entity == nullptr)
+		return;
+	// Pointer-only: the object may already be freed by the world that owns it now.
+	knownEntities.remove(entity);
+	entitySpawnQueue.remove(entity);
+	World::forgetEntityPointer(entity);
+}
+
 void WorldClient::setEntityDead(Entity *entity)
 {
 	if (entity == nullptr)

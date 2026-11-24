@@ -1932,6 +1932,17 @@ void Minecraft::runTick()
         // again immediately before destroying the abandoned worlds: packet handling may
         // have replaced/respawned it after changeWorld() performed its first detach.
         // This also makes the ownership rule explicit for every path that queues a World.
+        // Players replaced by respawn() belong to the current world only (it deletes
+        // them once, dead); drop any pointer an abandoned world still keeps.
+        for (World *w : worldsToDelete)
+            if (w != nullptr && w != theWorld)
+                for (Entity *retired : retiredLocalPlayers)
+                    w->forgetEntityPointer(retired);
+        // Keep the last few: a retired player can outlive several flushes inside
+        // worlds abandoned later (two dimension changes per respawn). A stale entry
+        // only ever removes a pointer from a world that is about to be deleted.
+        if (retiredLocalPlayers.size() > 16)
+            retiredLocalPlayers.erase(retiredLocalPlayers.begin(), retiredLocalPlayers.end() - 16);
         if (thePlayer != nullptr && theWorld != nullptr)
         {
             for (World *w : worldsToDelete)
@@ -3227,6 +3238,14 @@ void Minecraft::respawn(bool flag, int_t i, bool copyPlayerState)
     {
         j = thePlayer->entityId;
         theWorld->setEntityDead(thePlayer);
+        if (theWorld->multiplayerWorld)
+        {
+            // No world owns the replaced player any more: it is freed exactly once by
+            // flushDeferredPlayers(), even if its world is abandoned before ticking.
+            theWorld->detachEntityForWorldChange(thePlayer);
+            retiredLocalPlayers.push_back(thePlayer);
+            playersToDelete.push_back(thePlayer);
+        }
     }
 
     renderViewEntity = nullptr;

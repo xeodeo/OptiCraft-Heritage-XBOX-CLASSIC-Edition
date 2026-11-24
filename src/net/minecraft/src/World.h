@@ -325,7 +325,11 @@ public:
 	bool isLoadedEntityPointer(const Entity *entity) const;
 	std::uint32_t getEntityUntrackGeneration() const { return entityUntrackGeneration; }
 	bool isLoadedTileEntityPointer(const TileEntity *tileEntity) const;
-	void detachEntityForWorldChange(Entity *entity);
+	virtual void detachEntityForWorldChange(Entity *entity);
+	// Drops a pointer from every world-owned entity list WITHOUT touching the object
+	// (it may already be freed by its other world). Used before deleting abandoned
+	// worlds so a local player that crossed a dimension change is deleted only once.
+	virtual void forgetEntityPointer(Entity *entity);
 	void addWorldAccess(IWorldAccess *iworldaccess);
 	void removeWorldAccess(IWorldAccess *iworldaccess);
 	std::vector<AxisAlignedBB *> &getCollidingBoundingBoxes(Entity *entity, AxisAlignedBB *axisalignedbb);
