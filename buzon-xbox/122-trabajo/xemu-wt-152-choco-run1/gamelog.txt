@@ -1,0 +1,25 @@
+﻿python : Traceback (most recent call last):
+En C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\buzon-xbox\122-trabajo\xemu122.ps1: 54 Carácter: 3
++   python "$spike\gdblog.py" $map.FullName 60000 2>&1 | Out-File -Enco ...
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\OptiCraftHeritageEdition\xbox-spike\gdblog.py", line 40, in 
+<module>
+    main()
+    ~~~~^^
+  File "C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\OptiCraftHeritageEdition\xbox-spike\gdblog.py", line 19, in 
+main
+    g = Gdb()
+  File "C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\OptiCraftHeritageEdition\xbox-spike\gdbpeek.py", line 40, 
+in __init__
+    self.s = socket.create_connection((host, port), timeout=5)
+             ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\xeodeo\AppData\Local\Programs\Python\Python314\Lib\socket.py", line 874, in create_connection
+    raise exceptions[0]
+  File "C:\Users\xeodeo\AppData\Local\Programs\Python\Python314\Lib\socket.py", line 859, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] No se puede establecer una conexi¾n ya que el equipo de destino deneg¾ 
+expresamente dicha conexi¾n

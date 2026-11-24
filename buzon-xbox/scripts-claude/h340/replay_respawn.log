@@ -1,0 +1,70 @@
+listening 25567
+client ('192.168.0.18', 56647)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+round 2 : respawn -1 then 0
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 57726)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+round 2 : respawn -1 then 0
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 58198)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+round 2 : respawn -1 then 0
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 59018)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+round 2 : respawn -1 then 0
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 59664)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 60441)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+conn end timed out
+client ('192.168.0.18', 62553)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 62999)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 63497)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+round 2 : respawn -1 then 0
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 63969)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 64722)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+round 2 : respawn -1 then 0
+done rounds
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 65466)
+replayed; chunks 441 spawn (-31.500884573991037, 109.0, -64.51802506753727)
+round 0 : respawn -1 then 0
+round 1 : respawn -1 then 0
+round 2 : respawn -1 then 0
+done rounds
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto

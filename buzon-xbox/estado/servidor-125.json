@@ -1,1 +1,1 @@
-{"version": "1.2.5", "estado": "falta", "area": "Red", "nombre": "Pruebas de servidor 1.2.5", "nota": "Pendiente según el usuario (23-11).", "ref": "", "orden": 30}
+{"version": "1.2.5", "estado": "en_marcha", "area": "Red", "nombre": "Pruebas de servidor 1.2.5", "nota": "Servidor 1.2.5 encendido en el PC (servidor-1.2.5\\iniciar.bat, Orca «servidor-1.2.5») en 192.168.0.18:25565, 23-11 15:22. Falta probar desde la consola.", "ref": "", "orden": 30}

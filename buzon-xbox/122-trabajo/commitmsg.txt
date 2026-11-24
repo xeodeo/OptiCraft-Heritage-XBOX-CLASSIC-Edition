@@ -1,0 +1,22 @@
+Admin mode (testing) mod: Nodus 1.5.2 modules for controller testing
+
+New catalog mod "adminmode", off by default. Ports the Nodus 1.5.2 client
+modules (Aimbot, AutoEgg, AutoEnchant, AutoFish, AutoMine, AutoSign,
+AutoTool, AutoWalk, BlockESP, BowAimbot, Build pole/wall/floor, CaveFinder,
+ChestFinder, ClickAimbot, Day, Derp, Disable Nametags, ESP, FastBreak,
+FastPlace, Flood, Fly, Forcefield, Freecam, FullBright, Health, HighJump,
+NoFall, NoFlinch, NoRender, NoSwing, Notifications, Nuker, NoSlowDown,
+Sneak, Spider, Sprint, Step, Timer, Tracers, WallHack, Water, Weather).
+X-Ray and waypoints stay in the existing X-Ray and minimap mods.
+
+Only active in a local world / split screen or on a server that made the
+player op (level >= 2, read from the 1.12.2 translator's entity status
+24..28); on someone else's server it does nothing and says so. Nuker and
+Build only in a local world. Mod off = every hook reads false and the
+module side effects are undone.
+
+Menu in Java and Legacy looks, full controller (D-pad, A toggle, Left/Right
+setting, LB/RB page, X all off, B back), opened with Back+X (each split
+screen player its own) or F9 on PC. Engine hooks are single bool reads.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

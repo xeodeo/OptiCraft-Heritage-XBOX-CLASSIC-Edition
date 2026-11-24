@@ -1,0 +1,10 @@
+listening 25567
+client ('192.168.0.18', 62770)
+replayed 3637 frames
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 62937)
+replayed 3637 frames
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+client ('192.168.0.18', 63350)
+replayed 3637 frames
+conn end [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto

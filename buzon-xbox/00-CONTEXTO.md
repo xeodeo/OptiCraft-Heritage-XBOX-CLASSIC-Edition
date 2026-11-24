@@ -245,3 +245,8 @@ Pendientes completos: `PENDIENTES-TODO.md` (22-11 17:55).
 Ramas buenas: 1.5.2 `port152-int` `6121e6c`, 1.2.5 `opti30-erluza` `a20d430` (encargos 113, 114, 115, 116 y 111.5
 juntados). En el lanzador, SIN subir a la consola. Resumen en `ESTADO-ACTUAL.md` («AHORA»); pendientes en
 `PENDIENTES-TODO.md` (22-11 20:45).
+
+## 23-11 noche
+En la consola (1.2.5 y 1.5.2, normal+exp): servidores 1.12.2 (121), modo admin (122, con candado op/mundo propio),
+arreglos de cuelgue al morir y al descargar chunk, losas de arriba/escaleras en 1.2.5. Pendiente: tirón de losas en
+1.5.2 (log «server teleport»), memoria justa en la spawn del SMP (124). Ramas buenas: port152-int y opti30-erluza.

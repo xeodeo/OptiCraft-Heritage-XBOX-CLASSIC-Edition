@@ -1,0 +1,405 @@
+﻿006 [MC][I][mods] [PROBE] starting world
+006 [MC][I][mods] [PROBE] world ready legacyUI=1 pos=81.2 65.6 139.3
+008 [MC][I][mods] [PROBE] starting world
+008 [MC][I][mods] [PROBE] world ready legacyUI=1 pos=81.2 65.6 139.3
+008 [MC][I][mods] [PROBE] phase 0 done: settle
+010 [MC][I][mods] [PROBE] starting world
+010 [MC][I][mods] [PROBE] world ready legacyUI=1 pos=81.2 65.6 139.3
+010 [MC][I][mods] [PROBE] phase 0 done: settle
+012 [MC][I][mods] [PROBE] starting world
+012 [MC][I][mods] [PROBE] world ready legacyUI=1 pos=81.2 65.6 139.3
+012 [MC][I][mods] [PROBE] phase 0 done: settle
+012 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+012 [MC][I][mods] [PROBE] phase 1 done: combo ok
+012 [MC][I][mods] [PROBE] SHOT menu legacy
+014 [MC][I][mods] [PROBE] starting world
+014 [MC][I][mods] [PROBE] world ready legacyUI=1 pos=81.2 65.6 139.3
+014 [MC][I][mods] [PROBE] phase 0 done: settle
+014 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+014 [MC][I][mods] [PROBE] phase 1 done: combo ok
+014 [MC][I][mods] [PROBE] SHOT menu legacy
+014 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+014 [MC][I][mods] [PROBE] SHOT menu java
+016 [MC][I][mods] [PROBE] starting world
+016 [MC][I][mods] [PROBE] world ready legacyUI=1 pos=81.2 65.6 139.3
+016 [MC][I][mods] [PROBE] phase 0 done: settle
+016 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+016 [MC][I][mods] [PROBE] phase 1 done: combo ok
+016 [MC][I][mods] [PROBE] SHOT menu legacy
+016 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+016 [MC][I][mods] [PROBE] SHOT menu java
+016 [MC][I][mods] [PROBE] phase 3 done: menu java
+016 [MC][I][mods] [PROBE] visual on
+016 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+018 [MC][I][mods] [PROBE] starting world
+018 [MC][I][mods] [PROBE] world ready legacyUI=1 pos=81.2 65.6 139.3
+018 [MC][I][mods] [PROBE] phase 0 done: settle
+018 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+018 [MC][I][mods] [PROBE] phase 1 done: combo ok
+018 [MC][I][mods] [PROBE] SHOT menu legacy
+018 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+018 [MC][I][mods] [PROBE] SHOT menu java
+018 [MC][I][mods] [PROBE] phase 3 done: menu java
+018 [MC][I][mods] [PROBE] visual on
+018 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+018 [MC][I][mods] [PROBE] phase 4 done: visual
+018 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+020 [MC][I][mods] [PROBE] starting world
+020 [MC][I][mods] [PROBE] world ready legacyUI=1 pos=81.2 65.6 139.3
+020 [MC][I][mods] [PROBE] phase 0 done: settle
+020 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+020 [MC][I][mods] [PROBE] phase 1 done: combo ok
+020 [MC][I][mods] [PROBE] SHOT menu legacy
+020 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+020 [MC][I][mods] [PROBE] SHOT menu java
+020 [MC][I][mods] [PROBE] phase 3 done: menu java
+020 [MC][I][mods] [PROBE] visual on
+020 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+020 [MC][I][mods] [PROBE] phase 4 done: visual
+020 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+020 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+020 [MC][I][mods] [PROBE] phase 5 done: forcefield
+020 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+022 [MC][I][mods] [PROBE] starting world
+022 [MC][I][mods] [PROBE] world ready legacyUI=1 pos=81.2 65.6 139.3
+022 [MC][I][mods] [PROBE] phase 0 done: settle
+022 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+022 [MC][I][mods] [PROBE] phase 1 done: combo ok
+022 [MC][I][mods] [PROBE] SHOT menu legacy
+022 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+022 [MC][I][mods] [PROBE] SHOT menu java
+022 [MC][I][mods] [PROBE] phase 3 done: menu java
+022 [MC][I][mods] [PROBE] visual on
+022 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+022 [MC][I][mods] [PROBE] phase 4 done: visual
+022 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+022 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+022 [MC][I][mods] [PROBE] phase 5 done: forcefield
+022 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+022 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+022 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+022 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+022 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+022 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+022 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+022 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+024 [MC][I][mods] [PROBE] phase 0 done: settle
+024 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+024 [MC][I][mods] [PROBE] phase 1 done: combo ok
+024 [MC][I][mods] [PROBE] SHOT menu legacy
+024 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+024 [MC][I][mods] [PROBE] SHOT menu java
+024 [MC][I][mods] [PROBE] phase 3 done: menu java
+024 [MC][I][mods] [PROBE] visual on
+024 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+024 [MC][I][mods] [PROBE] phase 4 done: visual
+024 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+024 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+024 [MC][I][mods] [PROBE] phase 5 done: forcefield
+024 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+024 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+024 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+024 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+024 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+024 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+024 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+024 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+024 [MC][I][mods] [PROBE] cavefinder off xray=0
+024 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+026 [MC][I][mods] [PROBE] phase 0 done: settle
+026 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+026 [MC][I][mods] [PROBE] phase 1 done: combo ok
+026 [MC][I][mods] [PROBE] SHOT menu legacy
+026 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+026 [MC][I][mods] [PROBE] SHOT menu java
+026 [MC][I][mods] [PROBE] phase 3 done: menu java
+026 [MC][I][mods] [PROBE] visual on
+026 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+026 [MC][I][mods] [PROBE] phase 4 done: visual
+026 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+026 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+026 [MC][I][mods] [PROBE] phase 5 done: forcefield
+026 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+026 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+026 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+026 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+026 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+026 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+026 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+026 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+026 [MC][I][mods] [PROBE] cavefinder off xray=0
+026 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+026 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+026 [MC][I][mods] [PROBE] SHOT remote message (chat)
+026 [MC][I][mods] [PROBE] phase 9 done: remote
+028 [MC][I][mods] [PROBE] phase 0 done: settle
+028 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+028 [MC][I][mods] [PROBE] phase 1 done: combo ok
+028 [MC][I][mods] [PROBE] SHOT menu legacy
+028 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+028 [MC][I][mods] [PROBE] SHOT menu java
+028 [MC][I][mods] [PROBE] phase 3 done: menu java
+028 [MC][I][mods] [PROBE] visual on
+028 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+028 [MC][I][mods] [PROBE] phase 4 done: visual
+028 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+028 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+028 [MC][I][mods] [PROBE] phase 5 done: forcefield
+028 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+028 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+028 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+028 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+028 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+028 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+028 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+028 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+028 [MC][I][mods] [PROBE] cavefinder off xray=0
+028 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+028 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+028 [MC][I][mods] [PROBE] SHOT remote message (chat)
+028 [MC][I][mods] [PROBE] phase 9 done: remote
+030 [MC][I][mods] [PROBE] phase 0 done: settle
+030 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+030 [MC][I][mods] [PROBE] phase 1 done: combo ok
+030 [MC][I][mods] [PROBE] SHOT menu legacy
+030 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+030 [MC][I][mods] [PROBE] SHOT menu java
+030 [MC][I][mods] [PROBE] phase 3 done: menu java
+030 [MC][I][mods] [PROBE] visual on
+030 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+030 [MC][I][mods] [PROBE] phase 4 done: visual
+030 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+030 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+030 [MC][I][mods] [PROBE] phase 5 done: forcefield
+030 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+030 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+030 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+030 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+030 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+030 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+030 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+030 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+030 [MC][I][mods] [PROBE] cavefinder off xray=0
+030 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+030 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+030 [MC][I][mods] [PROBE] SHOT remote message (chat)
+030 [MC][I][mods] [PROBE] phase 9 done: remote
+032 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+032 [MC][I][mods] [PROBE] phase 1 done: combo ok
+032 [MC][I][mods] [PROBE] SHOT menu legacy
+032 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+032 [MC][I][mods] [PROBE] SHOT menu java
+032 [MC][I][mods] [PROBE] phase 3 done: menu java
+032 [MC][I][mods] [PROBE] visual on
+032 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+032 [MC][I][mods] [PROBE] phase 4 done: visual
+032 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+032 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+032 [MC][I][mods] [PROBE] phase 5 done: forcefield
+032 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+032 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+032 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+032 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+032 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+032 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+032 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+032 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+032 [MC][I][mods] [PROBE] cavefinder off xray=0
+032 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+032 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+032 [MC][I][mods] [PROBE] SHOT remote message (chat)
+032 [MC][I][mods] [PROBE] phase 9 done: remote
+034 [MC][I][mods] [PROBE] COMBO Back+X opened GuiAdminMenu after 262 ticks
+034 [MC][I][mods] [PROBE] phase 1 done: combo ok
+034 [MC][I][mods] [PROBE] SHOT menu legacy
+034 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+034 [MC][I][mods] [PROBE] SHOT menu java
+034 [MC][I][mods] [PROBE] phase 3 done: menu java
+034 [MC][I][mods] [PROBE] visual on
+034 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+034 [MC][I][mods] [PROBE] phase 4 done: visual
+034 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+034 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+034 [MC][I][mods] [PROBE] phase 5 done: forcefield
+034 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+034 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+034 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+034 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+034 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+034 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+034 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+034 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+034 [MC][I][mods] [PROBE] cavefinder off xray=0
+034 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+034 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+034 [MC][I][mods] [PROBE] SHOT remote message (chat)
+034 [MC][I][mods] [PROBE] phase 9 done: remote
+036 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+036 [MC][I][mods] [PROBE] SHOT menu java
+036 [MC][I][mods] [PROBE] phase 3 done: menu java
+036 [MC][I][mods] [PROBE] visual on
+036 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+036 [MC][I][mods] [PROBE] phase 4 done: visual
+036 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+036 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+036 [MC][I][mods] [PROBE] phase 5 done: forcefield
+036 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+036 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+036 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+036 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+036 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+036 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+036 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+036 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+036 [MC][I][mods] [PROBE] cavefinder off xray=0
+036 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+036 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+036 [MC][I][mods] [PROBE] SHOT remote message (chat)
+036 [MC][I][mods] [PROBE] phase 9 done: remote
+038 [MC][I][mods] [PROBE] phase 2 done: menu legacy
+038 [MC][I][mods] [PROBE] SHOT menu java
+038 [MC][I][mods] [PROBE] phase 3 done: menu java
+038 [MC][I][mods] [PROBE] visual on
+038 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+038 [MC][I][mods] [PROBE] phase 4 done: visual
+038 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+038 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+038 [MC][I][mods] [PROBE] phase 5 done: forcefield
+038 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+038 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+038 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+038 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+038 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+038 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+038 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+038 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+038 [MC][I][mods] [PROBE] cavefinder off xray=0
+038 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+038 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+038 [MC][I][mods] [PROBE] SHOT remote message (chat)
+038 [MC][I][mods] [PROBE] phase 9 done: remote
+040 [MC][I][mods] [PROBE] phase 3 done: menu java
+040 [MC][I][mods] [PROBE] visual on
+040 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+040 [MC][I][mods] [PROBE] phase 4 done: visual
+040 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+040 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+040 [MC][I][mods] [PROBE] phase 5 done: forcefield
+040 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+040 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+040 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+040 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+040 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+040 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+040 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+040 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+040 [MC][I][mods] [PROBE] cavefinder off xray=0
+040 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+040 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+040 [MC][I][mods] [PROBE] SHOT remote message (chat)
+040 [MC][I][mods] [PROBE] phase 9 done: remote
+042 [MC][I][mods] [PROBE] SHOT esp/fullbright flying=0 allowFly=1 step=1.00 time=1110 rain=0.00 raining=0 blockHits=79 mobs16=4
+042 [MC][I][mods] [PROBE] phase 4 done: visual
+042 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+042 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+042 [MC][I][mods] [PROBE] phase 5 done: forcefield
+042 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+042 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+042 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+042 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+042 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+042 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+042 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+042 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+042 [MC][I][mods] [PROBE] cavefinder off xray=0
+042 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+042 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+042 [MC][I][mods] [PROBE] SHOT remote message (chat)
+042 [MC][I][mods] [PROBE] phase 9 done: remote
+044 [MC][I][mods] [PROBE] phase 4 done: visual
+044 [MC][I][mods] [PROBE] forcefield on, mobs within 4: 3
+044 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+044 [MC][I][mods] [PROBE] phase 5 done: forcefield
+044 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+044 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+044 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+044 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+044 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+044 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+044 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+044 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+044 [MC][I][mods] [PROBE] cavefinder off xray=0
+044 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+044 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+044 [MC][I][mods] [PROBE] SHOT remote message (chat)
+044 [MC][I][mods] [PROBE] phase 9 done: remote
+046 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+046 [MC][I][mods] [PROBE] phase 5 done: forcefield
+046 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+046 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+046 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+046 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+046 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+046 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+046 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+046 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+046 [MC][I][mods] [PROBE] cavefinder off xray=0
+046 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+046 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+046 [MC][I][mods] [PROBE] SHOT remote message (chat)
+046 [MC][I][mods] [PROBE] phase 9 done: remote
+048 [MC][I][mods] [PROBE] FORCEFIELD mobs within 4: before=3 after=0 flying=0
+048 [MC][I][mods] [PROBE] phase 5 done: forcefield
+048 [MC][I][mods] [PROBE] HIGHJUMP x3 rise=0.00 blocks (vanilla ~1.25)
+048 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+048 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+048 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+048 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+048 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+048 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+048 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+048 [MC][I][mods] [PROBE] cavefinder off xray=0
+048 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+048 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+048 [MC][I][mods] [PROBE] SHOT remote message (chat)
+048 [MC][I][mods] [PROBE] phase 9 done: remote
+050 [MC][I][mods] [PROBE] FREECAM noClip=1 inOpaque=0 y=59.42 (start 65.62)
+050 [MC][I][mods] [PROBE] FREECAM off back=81.17,65.62,139.32 start=81.17,65.62,139.32 noClip=0
+050 [MC][I][mods] [PROBE] phase 6 done: jump+freecam
+050 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+050 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+050 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+050 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+050 [MC][I][mods] [PROBE] cavefinder off xray=0
+050 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+050 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+050 [MC][I][mods] [PROBE] SHOT remote message (chat)
+050 [MC][I][mods] [PROBE] phase 9 done: remote
+052 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+052 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+052 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+052 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+052 [MC][I][mods] [PROBE] cavefinder off xray=0
+052 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+052 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+052 [MC][I][mods] [PROBE] SHOT remote message (chat)
+052 [MC][I][mods] [PROBE] phase 9 done: remote
+054 [MC][I][mods] [PROBE] NUKER blocks around before=85 after=14
+054 [MC][I][mods] [PROBE] BUILD pole cobble count=6 (want 6)
+054 [MC][I][mods] [PROBE] phase 7 done: nuker+build
+054 [MC][I][mods] [PROBE] SHOT cavefinder xray=1 cave=1
+054 [MC][I][mods] [PROBE] cavefinder off xray=0
+054 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+054 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+054 [MC][I][mods] [PROBE] SHOT remote message (chat)
+054 [MC][I][mods] [PROBE] phase 9 done: remote
+056 [MC][I][mods] [PROBE] cavefinder off xray=0
+056 [MC][I][mods] [PROBE] phase 8 done: cavefinder
+056 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+056 [MC][I][mods] [PROBE] SHOT remote message (chat)
+056 [MC][I][mods] [PROBE] phase 9 done: remote
+058 [MC][I][mods] [PROBE] REMOTE allowed=0 any=0 ESP=0 step=0.50 flying=0
+058 [MC][I][mods] [PROBE] SHOT remote message (chat)
+058 [MC][I][mods] [PROBE] phase 9 done: remote
+060 [MC][I][mods] [PROBE] SHOT remote message (chat)
+060 [MC][I][mods] [PROBE] phase 9 done: remote

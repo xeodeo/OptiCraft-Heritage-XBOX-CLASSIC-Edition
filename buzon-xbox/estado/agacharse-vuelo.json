@@ -1,1 +1,1 @@
-{"version": "ambas", "estado": "por_probar", "area": "Controles", "nombre": "Volando o montado, agacharse siempre es mantener (aunque esté en alternar)", "nota": "Antes con «alternar» volando bajabas hasta el suelo (189b801 / 0944064).", "ref": "118", "orden": 7}
+{"version": "ambas", "estado": "por_probar", "area": "Controles", "nombre": "Volando o montado, agacharse siempre es mantener (aunque esté en alternar)", "nota": "Antes con «alternar» volando bajabas hasta el suelo (189b801 / 0944064).", "ref": "118", "orden": 7, "estado_125": "probado"}

@@ -35,3 +35,12 @@ del commit.
 ## TRASPASO (Claude, 22-11 15:57)
 agy-2 se quedó sin cuota (vuelve ~19:07) leyendo las clases Java (BlockLog, BlockSnow, ItemSnow…); no escribió nada:
 `wt-152-mods` limpio en `ac018fe` (rama `port152-blq`). Al volver: empezar el encargo desde el principio.
+
+## REANUDACIÓN (Claude, 23-11 tarde) — para agy con el modelo Gemini 4 Argon
+- `wt-152-mods`, rama `port152-blq` recreada desde `port152-int` `2e8d265` (1.5.2 con TODO lo último: chocobos 117,
+  mods por mundo, Modrinth, reglas de juego LCE…). Empieza desde el principio.
+- Compilar: `powershell -File "C:\Users\xeodeo\Desktop\Minecraft en xboox clasico\buzon-xbox\build108.ps1"`
+  (coge/espera `BUILD.lock` solo; compila `wt-152-mods` normal y exp; logs `%TEMP%\bld-wt-152-mods-*.log`;
+  "SSE2 left in" 13–14 normal).
+- Trabajan a la vez: un subagente de Claude en `wt-152-choco`/`wt-125-choco` (ChocoCraft) y Claude en `wt-opti30` y
+  `wt-build-152`. NO toques esas carpetas. No toques `src/mods/chococraft/` ni la pantalla de crear mundo.

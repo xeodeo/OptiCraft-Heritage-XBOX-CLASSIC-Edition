@@ -1,0 +1,377 @@
+﻿[log] 33674 bytes written; last 33674:
+[MC][I][xbox] crash log installed (main thread 12)
+[MC][I][xbox] D: -> \Device\CdRom0 (status 00000000)
+[MC][I][xbox] BUILD 1.5.2 23-11 17:54 217e5394+
+[MC][I][xbox] writable root T:, debug.log disabled, build Nov 23 2026 17:55:50
+[MC][I][xbox] cpu: cpuid_sse2=0 isa=0->0 sse2_math=0 mxcsr=1f80->1f80
+[MC][I][xbox.selftest] step fpu cw=027f sw=0000
+[MC][I][xbox.selftest] step int ok (42); next %.0f 0.0
+[MC][I][xbox.selftest] step zero ok (0); next controlfp
+[MC][I][xbox.selftest] step controlfp ok (0009001f); next fegetenv
+[MC][I][xbox.selftest] step fegetenv ok; next feholdexcept
+[MC][I][xbox.selftest] step feholdexcept ok; next fesetenv
+[MC][I][xbox.selftest] step fesetenv ok; next log10
+[MC][I][xbox.selftest] step log10 ok (301); next ceil
+[MC][I][xbox.selftest] step ceil ok (1); next %.0f 2.0
+[MC][I][xbox.selftest] step two ok (2); next %.3f 1.5
+[MC][I][xbox.selftest] snprintf(%.3f,1.5) ret=5 chars=49,46,53,48,48
+[MC][I][xbox.selftest] PASS Random(42).nextInt got=-1170105035 expected=-1170105035
+[MC][I][xbox.selftest] PASS Random(42).nextDouble got=0.72756368003286809 expected=0.72756368003286809
+[MC][I][xbox.selftest] PASS Random(0).nextLong got=-4.9627684656763822e+18 expected=-4.9627684656763822e+18
+[MC][I][xbox.selftest] PASS int64 mul got=3.1129510725363425e+18 expected=3.1129510725363425e+18
+[MC][I][xbox.selftest] PASS int64 mask48 got=119305093197809 expected=119305093197809
+[MC][I][xbox.selftest] PASS int64 sar got=-4 expected=-4
+[MC][I][xbox.selftest] PASS floor_double(-1.5) got=-2 expected=-2
+[MC][I][xbox.selftest] PASS floor_double(2.7) got=2 expected=2
+[MC][I][xbox.selftest] PASS (int)-2.7 got=-2 expected=-2
+[MC][I][xbox.selftest] PASS (int)1e10 saturates java-style got=10000000000 expected=10000000000
+[MC][I][xbox.selftest] PASS sqrt(2) got=1.4142135623730951 expected=1.4142135623730951
+[MC][I][xbox.selftest] PASS 1/3*3 got=1 expected=1
+[MC][I][xbox.selftest] PASS sin(0.5) got=0.47942553860420301 expected=0.47942553860420301
+[MC][I][xbox.selftest] PASS atan2(1,0.5) got=1.1071487177940904 expected=1.1071487177940904
+[MC][I][xbox.selftest] PASS MathHelper::sin(1) got=0.84145140647888184 expected=0.8414709848078965
+[MC][I][xbox.selftest] PASS MathHelper::sqrt_double(16) got=4 expected=4
+[MC][I][xbox.selftest] done: 0 failure(s)
+[MC][I][xbox] main() entered
+[MC][I][xbox] initializing display...
+[MC][I][xbox] video: image asks 720p=0, dashboard flags=00000009 -> 640x480
+[MC][I][xbox] CreateDevice hr=00000000 device=004C9CD0 video=00000009
+[MC][I][xbox] display ready
+[MC][I][xbox] handing off to Minecraft::start()
+[MC][I][client.boot] [CLIENT] ctor: static init begin
+[MC][I][assets] [pak] no D:/assets.pak; reading loose files
+[MC][I][recipe] 228 recipes
+[MC][I][game] 27 achievements
+[MC][I][client.boot] [CLIENT] ctor: static init done, allocating subsystems
+[MC][I][client.boot] [CLIENT] ctor: done
+[MC][I][client.boot] [CLIENT] run() begin
+[MC][I][client.boot] [CLIENT] startGame begin
+[MC][I][client.boot] [CLIENT] getMinecraftDir begin
+[MC][I][client.boot] [CLIENT] getMinecraftDir ready: T:/.minecraft
+[MC][I][client.boot] [CLIENT] SaveConverter begin
+[MC][I][client.boot] [CLIENT] SaveConverter ready
+[MC][I][client.boot] [CLIENT] GameSettings begin
+[MC][I][client.boot] [CLIENT] GameSettings ready
+[MC][I][client.boot] [CLIENT] TexturePackList begin
+[MC][I][client.boot] [CLIENT] TexturePackList ready
+[MC][I][client.boot] [CLIENT] RenderEngine begin
+[MC][I][client.boot] [CLIENT] RenderEngine ready
+[MC][I][client.boot] [CLIENT] FontRenderer begin
+[MC][I][client.boot] [CLIENT] FontRenderer ready
+[MC][I][client.boot] [CLIENT] Colorizers begin
+[MC][I][client.boot] [CLIENT] Colorizers ready
+[MC][I][client.boot] [CLIENT] render helpers begin
+[MC][I][client.boot] [CLIENT] render helpers ready
+[MC][I][client.boot] [CLIENT] sound settings begin
+[MC][I][audio] DirectSound ready (16 voices, stream ok, stereo)
+[MC][I][client.boot] [CLIENT] sound settings ready
+[MC][I][client.boot] [CLIENT] startup presentation begin
+[MC][I][xbox.fpu] frame=1 cw=027f sw=0100 tag=ffff double53=1 freeKB=44376
+[MC][I][xbox.tex] id=6 640x480 storage=1024x512 cpuKB=0 totalKB=2048 dynamic=0
+[MC][I][xbox.mem] lists=0 (0KB) vbPools=0 textures=6 (2305KB)
+[MC][I][xbox.fpu] frame=301 cw=027f sw=0100 tag=ffff double53=1 freeKB=44116
+[MC][I][xbox.mem] lists=0 (0KB) vbPools=0 textures=6 (2305KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.01ms
+[MC][I][xbox.tex] uploads per s=1.4 (partial 0.0) | per frame lock=0.00ms swizzle=0.01ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=1 upVerts=6 viewSets=0
+[MC][I][xbox.perf] fps=62.0 frame=16.1ms present=15.8ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (0.0 tps) lighting=0.0ms render=0.0ms display=0.0ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=601 cw=027f sw=0100 tag=ffff double53=1 freeKB=44116
+[MC][I][xbox.mem] lists=0 (0KB) vbPools=0 textures=6 (2305KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.03ms
+[MC][I][xbox.tex] uploads per s=0.2 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=1 upVerts=5 viewSets=0
+[MC][I][xbox.perf] fps=61.3 frame=16.3ms present=15.9ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (0.0 tps) lighting=0.0ms render=0.0ms display=0.0ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][client.boot] [CLIENT] startup presentation done
+[MC][I][client.boot] [CLIENT] render capabilities ready
+[MC][I][client.boot] [CLIENT] texture FX begin
+[MC][I][client.boot] [CLIENT] texture FX core ready
+[MC][I][client.boot] [CLIENT] texture FX ready
+[MC][I][client.boot] [CLIENT] RenderGlobal begin
+[MC][I][xbox.render] compact vertex shaders ready/ready
+[MC][I][client.boot] [CLIENT] RenderGlobal ready
+[MC][I][client.boot] [CLIENT] IngameGUI begin
+[MC][I][client.boot] [CLIENT] IngameGUI ready
+[MC][I][client.boot] [CLIENT] ModManager init begin
+[MC][I][mods] Rei & Xaero Minimap initialized (enabled=1, mem=80 KB)
+[MC][I][mods] ChocoCraft 4.1.5 items, blocks & recipes registered (blocks=210..212, items=2156..2177)
+[MC][I][mods] ModManager initialized with 10 mods.
+[MC][I][client.boot] [CLIENT] ModManager init ready
+[MC][I][client.boot] [CLIENT] displayGuiScreen begin
+[MC][I][gui] screen -> class GuiMainMenu
+[MC][I][client.boot] [CLIENT] startGame end currentScreen=00C9FFD0
+[MC][I][xbox.spike] frame=60ms ticks=50.0ms(2) world=23.7ms {dynTex=23.5 mouseOver=0.2 stats=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=10.0ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=0.1ms
+[MC][I][xbox.fpu] frame=901 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.tex] id=11 1230x216 storage=2048x256 cpuKB=0 totalKB=2048 dynamic=0
+[MC][I][xbox.tex] id=12 995x205 storage=1024x256 cpuKB=0 totalKB=1024 dynamic=0
+[MC][I][xbox.tex] id=13 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=14 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=15 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=16 256x256 storage=256x256 cpuKB=256 totalKB=512 dynamic=1
+[MC][I][xbox.tex] id=17 256x256 storage=256x256 cpuKB=256 totalKB=512 dynamic=1
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.01ms textureStage=0.03ms
+[MC][I][xbox.tex] uploads per s=1.8 (partial 0.0) | per frame lock=0.00ms swizzle=0.01ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=30 upVerts=699 viewSets=1
+[MC][I][xbox.perf] fps=59.3 frame=16.9ms present=14.6ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.2ms (11.0 tps) lighting=0.0ms render=1.9ms display=8.7ms
+[MC][I][xbox.perf] world per frame: entities=0.1ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.spike] frame=61ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=35.9ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=25.4ms
+[MC][I][xbox.spike] frame=93ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=67.5ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=25.6ms
+[MC][I][xbox.spike] frame=66ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=65.6ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=0.8ms
+[MC][I][xbox.spike] frame=67ms ticks=0.1ms(1) world=0.0ms {dynTex=0.0 mouseOver=0.0 stats=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=36.0ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=30.4ms
+[MC][I][xbox.spike] frame=66ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=36.3ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=29.6ms
+[MC][I][xbox.spike] frame=62ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=33.6ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=28.9ms
+[MC][I][xbox.spike] frame=54ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=39.4ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=14.2ms
+[MC][I][xbox.fpu] frame=1201 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.01ms textureStage=0.16ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=73.4 frame=13.6ms present=13.9ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (21.1 tps) lighting=0.0ms render=3.4ms display=13.9ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.spike] frame=51ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=46.0ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=5.2ms
+[MC][I][xbox.spike] frame=76ms ticks=0.1ms(1) world=0.1ms {dynTex=0.1 mouseOver=0.0 stats=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=35.0ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=40.4ms
+[MC][I][xbox.spike] frame=65ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=14.1ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=51.0ms
+[MC][I][xbox.fpu] frame=1501 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=71.3 frame=14.0ms present=14.2ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.1ms (20.2 tps) lighting=0.0ms render=2.6ms display=14.2ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=1801 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.05ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=63.5 frame=15.7ms present=14.3ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (18.6 tps) lighting=0.0ms render=2.1ms display=14.4ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=2101 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.05ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=62.3 frame=16.1ms present=14.4ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (19.4 tps) lighting=0.0ms render=2.1ms display=14.5ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=2401 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.input] text pressed=0040 held=0040
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.04ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=62.8 frame=15.9ms present=14.3ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.0 tps) lighting=0.0ms render=2.3ms display=14.3ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.input] text pressed=0020 held=0060
+[MC][I][xbox.fpu] frame=2701 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=61.6 frame=16.2ms present=14.6ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (19.5 tps) lighting=0.0ms render=2.0ms display=14.6ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.spike] frame=67ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=1.9ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=64.9ms
+[MC][I][xbox.fpu] frame=3001 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.input] text pressed=0040 held=0040
+[MC][I][xbox.input] text pressed=0020 held=0060
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.05ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=63.4 frame=15.8ms present=14.6ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.6 tps) lighting=0.0ms render=2.1ms display=14.7ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=3301 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.05ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=63.2 frame=15.8ms present=14.4ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (19.9 tps) lighting=0.0ms render=2.2ms display=14.4ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.input] text pressed=0040 held=0040
+[MC][I][xbox.input] text pressed=0020 held=0060
+[MC][I][xbox.fpu] frame=3601 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.02ms textureStage=0.05ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=61.8 frame=16.2ms present=14.7ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (19.7 tps) lighting=0.0ms render=1.8ms display=14.7ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=3901 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.input] text pressed=0040 held=0040
+[MC][I][xbox.input] text pressed=0020 held=0060
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.06ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=61.9 frame=16.1ms present=14.6ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.0 tps) lighting=0.0ms render=1.9ms display=14.6ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=4201 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.04ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=62.8 frame=15.9ms present=14.4ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.0 tps) lighting=0.0ms render=2.1ms display=14.4ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=4501 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.input] text pressed=0040 held=0040
+[MC][I][xbox.input] text pressed=0020 held=0060
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.08ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=62.8 frame=15.9ms present=14.2ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.2 tps) lighting=0.0ms render=2.3ms display=14.2ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=4801 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.input] text pressed=0040 held=0040
+[MC][I][xbox.input] text pressed=0020 held=0060
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.05ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=62.3 frame=16.0ms present=14.5ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.0 tps) lighting=0.0ms render=2.1ms display=14.5ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=5101 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.05ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=62.1 frame=16.1ms present=14.5ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (19.8 tps) lighting=0.0ms render=2.0ms display=14.5ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=5401 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.input] text pressed=0040 held=0040
+[MC][I][xbox.input] text pressed=0020 held=0060
+[MC][I][xbox.fpu] frame=5701 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.06ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=63.4 frame=15.8ms present=14.5ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.4 tps) lighting=0.0ms render=2.0ms display=14.5ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=6001 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.04ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=62.6 frame=16.0ms present=14.5ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.0 tps) lighting=0.0ms render=2.1ms display=14.5ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.input] text pressed=0040 held=0040
+[MC][I][xbox.input] text pressed=0020 held=0060
+[MC][I][xbox.fpu] frame=6301 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.spike] frame=50ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=1.8ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=48.2ms
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.08ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=62.5 frame=16.0ms present=14.6ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.0 tps) lighting=0.0ms render=1.9ms display=14.7ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.input] text pressed=0040 held=0040
+[MC][I][xbox.input] text pressed=0020 held=0060
+[MC][I][xbox.fpu] frame=6601 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.03ms textureStage=0.05ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=62.7 frame=16.0ms present=14.5ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.0 tps) lighting=0.0ms render=2.0ms display=14.5ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.spike] frame=48ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=2.9ms [build=0.0 opaque=0.0 ent=0.0 hud=0.0 sky=0.0 transl=0.0 hand=0.0 particles=0.0 weather=0.0 clouds=0.0 screen=0.0] display=45.3ms
+[MC][I][xbox.fpu] frame=6901 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.08ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=62.4 frame=16.0ms present=14.6ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.0 tps) lighting=0.0ms render=2.0ms display=14.6ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.input] text pressed=0040 held=0040
+[MC][I][xbox.input] text pressed=0020 held=0060
+[MC][I][xbox.fpu] frame=7201 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.03ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=61.4 frame=16.3ms present=14.8ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (19.6 tps) lighting=0.0ms render=1.7ms display=14.9ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=7501 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+[MC][I][xbox.input] text pressed=0040 held=0040
+[MC][I][xbox.input] text pressed=0020 held=0060
+[MC][I][xbox.terrain] per frame: visibility=0.00ms sort=0.00ms select=0.00ms submit=0.00ms
+[MC][I][xbox.mesh] per frame: queue=0 steps=0 (0.00ms) | sections published in 5.0s: 0
+[MC][I][xbox.draw] per frame: lists=0 replay=0.00ms setTransform=0.00ms textureStage=0.04ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=0 (in D3D 0.00ms) upDraws=48 upVerts=1120 viewSets=2
+[MC][I][xbox.perf] fps=62.5 frame=16.0ms present=14.4ms | sky=0.0 frustum=0.0 build=0.0 opaque=0.0 ent=0.0 transl=0.0 hand=0.0 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=0.0ms (20.2 tps) lighting=0.0ms render=2.1ms display=14.5ms
+[MC][I][xbox.perf] world per frame: entities=0.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=7801 cw=027f sw=0100 tag=ffff double53=1 freeKB=39776
+[MC][I][xbox.mem] lists=3 (42KB) vbPools=0 textures=14 (5153KB)
+

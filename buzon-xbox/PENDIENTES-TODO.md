@@ -1,7 +1,18 @@
-# TODO lo pendiente (22-11-2026, 20:45)
+# TODO lo pendiente (23-11-2026, 21:20)
 
 Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-ENCARGO-*.md`) y en
 `ESTADO-OPTICRAFT.html`. Qué rehacer en cada consola: `PLATAFORMAS-QUE-HACER.md`.
+
+## Subido a la consola (23-11 noche) — 1.2.5 y 1.5.2, normal y exp, 480p/720p
+- Servidores 1.12.2 (SMP minecraft3ds.org): en Multijugador «Server version: Auto/1.2.5/1.12.2». Entra al SMP (121).
+- Arreglos de cuelgue: al morir en el servidor (jugador borrado dos veces) y al descargar un chunk con jugador
+  liberado en la lista (6fa1c4b/59b1481, 65669ad/fc81537). Probado el 1.º en xemu.
+- Losas: losas de arriba y escaleras al revés ya no te pegan/empujan en la 1.2.5 (ef44334). En 1.5.2 el mismo tirón
+  puede seguir; el log ahora apunta cada corrección de posición del servidor («server teleport») para diagnosticarlo.
+- Modo admin (mod «adminmode», encargo 122, 2958e68/c7653bf): utilidades de Nodus; combo Back+X o desde el catálogo.
+  SOLO en tu mundo, pantalla partida o servidor 1.12.2 siendo op; en servidor ajeno sale el menú pero todo apagado.
+  Esa restricción (op / mundo propio) NO se quita: es a propósito.
+- Chocobos completos (113/117/119), bloques y mobs 1.5.2 (108), Modrinth con «Para <versión>» y búsqueda más rápida.
 
 ## Probado en consola 1.2.5 (usuario 23-11 mañana)
 - BIEN: minimapa, creeper (sonidos), personaje animado, chunks/memoria (11-18 MB libres), cambios de dimensión

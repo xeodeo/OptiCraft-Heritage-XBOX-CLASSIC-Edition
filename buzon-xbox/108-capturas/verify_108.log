@@ -1,0 +1,329 @@
+[log] 143109 bytes written; last 65000:
+ck=4.7 worldTick=2.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.0ms render=35.4ms [build=3.5 opaque=4.4 ent=0.4 hud=0.0 sky=0.4 transl=0.0 hand=0.2 particles=0.1 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=61ms ticks=17.0ms(1) world=16.7ms {mouseOver=8.9 entities=4.2 entTick=4.2} gen=0.0ms pop=0.0ms load=0.2ms save=0.0ms light=2.8ms render=40.8ms [build=3.3 opaque=4.5 ent=0.4 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.1 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.gen] per chunk (avg of 32): biomes=16.3ms noise=20.2ms fill=4.6ms surface=4.3ms caves=16.1ms ravines=0.4ms
+[MC][I][xbox.spike] frame=64ms ticks=34.0ms(1) world=33.9ms {worldTick=29.5 chunkUnload=26.3 entities=3.6} gen=26.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.6ms render=27.7ms [build=14.4 opaque=5.1 ent=0.6 hud=0.1 sky=0.2 transl=0.0 hand=0.5 particles=0.1 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=46ms ticks=8.6ms(1) world=8.4ms {entities=4.2 entTick=4.2 worldTick=3.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.6ms render=35.0ms [build=3.0 opaque=11.2 ent=0.4 hud=0.1 sky=0.4 transl=0.0 hand=0.4 particles=0.1 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=47ms ticks=7.1ms(1) world=6.9ms {entities=4.2 entTick=4.1 worldTick=1.6} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.9ms render=36.6ms [build=3.2 opaque=25.0 ent=0.7 hud=0.1 sky=0.3 transl=0.0 hand=0.3 particles=0.1 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=50ms ticks=7.8ms(1) world=7.6ms {worldTick=3.5 entities=3.2 entTick=3.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.3ms render=40.0ms [build=3.0 opaque=5.5 ent=0.6 hud=0.1 sky=0.5 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=51ms ticks=19.4ms(1) world=19.3ms {entities=14.4 entTick=14.4 worldTick=4.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.8ms render=29.0ms [build=3.0 opaque=3.5 ent=0.3 hud=0.0 sky=0.4 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][mods] Spawned wild Yellow Chocobo at (185,67,271)
+[MC][I][xbox.spike] frame=56ms ticks=22.9ms(1) world=22.3ms {erTick=11.8 entities=5.3 entTick=5.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.8ms render=30.2ms [build=3.1 opaque=20.6 ent=0.4 hud=0.0 sky=0.3 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=48ms ticks=12.2ms(1) world=12.1ms {worldTick=6.1 entities=4.9 entTick=4.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.2ms render=30.9ms [build=3.0 opaque=4.7 ent=6.0 hud=0.1 sky=8.5 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=46ms ticks=10.0ms(1) world=10.0ms {entities=7.1 entTick=7.1 worldTick=2.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.5ms render=33.6ms [build=23.4 opaque=3.5 ent=0.4 hud=0.0 sky=0.3 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=46ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.5ms render=42.7ms [build=31.0 opaque=3.9 ent=0.4 hud=0.1 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.3ms
+[MC][I][xbox.terrain] per frame: visibility=5.58ms sort=0.00ms select=0.30ms submit=0.85ms
+[MC][I][xbox.mesh] per frame: queue=1223 steps=1 (5.84ms) | sections published in 5.0s: 72
+[MC][I][xbox.draw] per frame: lists=45 replay=0.92ms setTransform=0.02ms textureStage=0.11ms
+[MC][I][xbox.tex] uploads per s=2.6 (partial 2.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=73 (in D3D 0.15ms) upDraws=188 upVerts=5322 viewSets=131
+[MC][I][xbox.perf] fps=38.4 frame=26.1ms present=0.0ms | sky=0.4 frustum=0.9 build=6.3 opaque=6.5 ent=0.8 transl=0.0 hand=0.5 hud=0.6
+[MC][I][xbox.perf] loop per frame: ticks=6.3ms (19.5 tps) lighting=3.9ms render=24.6ms display=0.1ms
+[MC][I][xbox.perf] world per frame: entities=6.0ms mesh=0.0ms(0) gen=0.2ms(4) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.spike] frame=53ms ticks=9.2ms(1) world=9.1ms {entities=5.3 entTick=5.2 worldTick=3.1} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.4ms render=41.8ms [build=3.0 opaque=4.2 ent=0.5 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=50ms ticks=11.6ms(1) world=11.5ms {worldTick=5.3 entities=5.3 entTick=5.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.8ms render=34.4ms [build=3.1 opaque=4.5 ent=0.5 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=52ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.1ms render=48.5ms [build=31.8 opaque=8.5 ent=0.5 hud=0.1 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=55ms ticks=19.8ms(1) world=19.7ms {entities=15.1 entTick=15.0 worldTick=4.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.6ms render=31.6ms [build=3.1 opaque=4.8 ent=16.2 hud=0.1 sky=0.4 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=81ms ticks=9.7ms(1) world=9.5ms {entities=5.3 entTick=5.2 worldTick=3.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=8.1ms render=62.9ms [build=3.1 opaque=5.6 ent=44.5 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=219ms ticks=22.8ms(1) world=22.6ms {worldTick=14.6 randomBlocks=13.6 entities=6.9} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.4ms render=92.1ms [build=3.3 opaque=6.8 ent=72.1 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=99.2ms
+[MC][I][xbox.spike] frame=56ms ticks=31.7ms(2) world=30.6ms {entities=15.0 entTick=14.9 worldTick=12.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=5.1ms render=19.0ms [build=3.4 opaque=5.5 ent=1.1 hud=0.1 sky=0.3 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.6 screen=0.0] display=0.0ms
+[MC][I][xbox.ent] entTick=219.5ms entities=44 top: EntityItem x2 201.2ms EntityZombie x17 14.5ms EntityCreeper x13 1.5ms EntitySkeleton x8 1.3ms EntityPlayerSP x1 0.3ms
+[MC][I][xbox.ent] slowest: EntityItem 201.1ms at 160.1 69.6 251.9 chunkChanges=0
+[MC][I][xbox.spike] frame=402ms ticks=226.7ms(1) world=226.5ms {entities=220.0 entTick=219.9 worldTick=5.6} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.7ms render=170.9ms [build=140.0 opaque=5.3 ent=1.3 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.6 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=304ms ticks=24.7ms(2) world=24.4ms {entities=13.8 entTick=13.7 worldTick=8.6} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=6.6ms render=272.1ms [build=3.0 opaque=6.1 ent=1.4 hud=0.1 sky=0.3 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=93ms ticks=65.6ms(2) world=65.1ms {worldTick=51.0 randomBlocks=49.2 entities=12.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=5.2ms render=21.5ms [build=3.5 opaque=5.6 ent=1.2 hud=0.1 sky=0.3 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=2.1 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=243ms ticks=30.9ms(2) world=30.5ms {entities=15.0 entTick=14.9 worldTick=13.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=7.9ms render=203.1ms [build=3.5 opaque=5.8 ent=1.2 hud=0.1 sky=0.3 transl=0.0 hand=0.7 particles=0.0 weather=0.0 clouds=181.6 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=150ms ticks=122.2ms(2) world=121.7ms {entities=110.4 entTick=110.4 worldTick=9.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=5.6ms render=21.2ms [build=3.0 opaque=6.2 ent=1.6 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.2ms
+[MC][I][xbox.spike] frame=79ms ticks=48.7ms(2) world=48.4ms {entities=25.3 entTick=25.2 worldTick=20.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=6.8ms render=23.3ms [build=6.9 opaque=5.7 ent=1.2 hud=0.1 sky=0.4 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=522ms ticks=25.9ms(2) world=25.5ms {entities=14.3 entTick=14.3 worldTick=9.1} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=7.7ms render=487.7ms [build=3.3 opaque=6.7 ent=1.3 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.3ms
+[MC][I][xbox.spike] frame=147ms ticks=102.7ms(2) world=102.3ms {worldTick=87.9 chunkUnload=78.1 entities=12.5} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.5ms render=38.8ms [build=3.2 opaque=16.5 ent=1.4 hud=0.1 sky=0.4 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=83ms ticks=26.4ms(2) world=25.9ms {entities=12.2 entTick=12.1 worldTick=11.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.0ms render=51.9ms [build=3.2 opaque=38.0 ent=1.3 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=56ms ticks=30.8ms(2) world=30.4ms {worldTick=14.6 entities=13.1 entTick=13.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.2ms render=19.6ms [build=3.4 opaque=5.3 ent=1.2 hud=0.1 sky=0.4 transl=0.0 hand=0.3 particles=0.1 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=120ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.0ms render=115.4ms [build=21.4 opaque=66.2 ent=1.2 hud=0.1 sky=0.3 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=18.8 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=419ms ticks=369.5ms(2) world=369.0ms {worldTick=355.5 randomBlocks=353.6 entities=11.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=5.5ms render=43.0ms [build=3.0 opaque=29.3 ent=1.6 hud=0.1 sky=0.4 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.async] workerMs=0 sync=1 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.spike] frame=97ms ticks=32.5ms(2) world=32.2ms {entities=18.6 entTick=18.5 worldTick=11.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=7.7ms render=55.7ms [build=3.3 opaque=41.1 ent=1.3 hud=0.1 sky=0.4 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=46ms ticks=15.6ms(1) world=15.1ms {worldTick=7.5 entities=6.6 entTick=6.6} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=5.4ms render=24.3ms [build=3.4 opaque=7.4 ent=1.7 hud=0.1 sky=0.4 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.7 screen=0.0] display=0.1ms
+[MC][I][xbox.ent] entTick=56.2ms entities=44 top: EntityCreeper x13 51.8ms EntityZombie x17 2.1ms EntitySkeleton x8 1.3ms EntityPlayerSP x1 0.3ms EntityWitch x2 0.2ms
+[MC][I][xbox.ent] slowest: EntityCreeper 50.4ms at 102.5 16.0 235.5 chunkChanges=0
+[MC][I][xbox.spike] frame=85ms ticks=63.4ms(1) world=63.2ms {entities=56.6 entTick=56.6 worldTick=5.5} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.2ms render=17.4ms [build=3.3 opaque=5.3 ent=1.0 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=444ms ticks=99.7ms(1) world=99.5ms {worldTick=93.0 chunkUnload=79.2 blockUpdates=7.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.6ms render=26.8ms [build=3.3 opaque=13.4 ent=1.1 hud=0.1 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=312.5ms
+[MC][I][xbox.spike] frame=420ms ticks=31.3ms(2) world=30.8ms {entities=15.8 entTick=15.7 worldTick=12.9} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=5.3ms render=380.3ms [build=3.3 opaque=366.2 ent=1.4 hud=0.1 sky=0.4 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=2.0ms
+[MC][I][xbox.ent] entTick=1041.8ms entities=44 top: EntityZombie x17 1038.3ms EntityCreeper x13 1.5ms EntitySkeleton x8 1.1ms EntityPlayerSP x1 0.3ms EntityWitch x2 0.2ms
+[MC][I][xbox.ent] slowest: EntityZombie 1036.2ms at 130.4 49.0 193.0 chunkChanges=0
+[MC][I][xbox.spike] frame=1104ms ticks=1071.1ms(2) world=1070.7ms {entities=1048.1 entTick=1048.0 worldTick=20.7} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=5.8ms render=26.2ms [build=3.1 opaque=12.3 ent=1.3 hud=0.1 sky=0.4 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=59ms ticks=25.5ms(2) world=25.0ms {worldTick=11.5 entities=11.2 entTick=11.1} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=5.3ms render=27.5ms [build=5.5 opaque=6.9 ent=1.4 hud=0.1 sky=0.4 transl=0.0 hand=0.7 particles=0.1 weather=0.0 clouds=3.9 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=49ms ticks=16.2ms(1) world=16.0ms {entities=8.1 entTick=8.1 worldTick=6.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.8ms render=27.0ms [build=9.4 opaque=5.7 ent=1.6 hud=0.1 sky=0.6 transl=0.0 hand=0.5 particles=0.2 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=61ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.6ms render=56.7ms [build=24.6 opaque=21.8 ent=1.2 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=53ms ticks=13.3ms(1) world=13.1ms {entities=6.3 entTick=6.3 worldTick=5.7} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.0ms render=35.5ms [build=2.9 opaque=5.4 ent=1.1 hud=0.1 sky=0.4 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.6 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=52ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=5.6ms render=46.5ms [build=3.5 opaque=14.1 ent=1.2 hud=0.1 sky=18.7 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=63ms ticks=38.9ms(1) world=38.7ms {worldTick=31.9 randomBlocks=30.8 entities=5.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.0ms render=19.9ms [build=3.1 opaque=5.9 ent=1.1 hud=0.1 sky=0.6 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=54ms ticks=14.6ms(1) world=14.4ms {worldTick=6.9 entities=6.1 entTick=6.1} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.2ms render=34.8ms [build=3.4 opaque=5.2 ent=1.2 hud=0.1 sky=0.4 transl=0.0 hand=0.6 particles=0.0 weather=0.0 clouds=15.3 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=54ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.5ms render=50.0ms [build=3.1 opaque=36.4 ent=1.3 hud=0.1 sky=0.4 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=48ms ticks=11.5ms(1) world=11.1ms {entities=5.1 worldTick=5.0 entTick=5.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.9ms render=31.9ms [build=5.6 opaque=15.4 ent=1.3 hud=0.1 sky=0.3 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=49ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.4ms render=45.6ms [build=20.7 opaque=14.1 ent=1.4 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=63ms ticks=12.8ms(1) world=12.7ms {entities=6.5 entTick=6.1 worldTick=5.1} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=5.7ms render=43.8ms [build=27.7 opaque=5.6 ent=1.2 hud=0.1 sky=0.3 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=55ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=19.3ms render=35.1ms [build=7.8 opaque=5.1 ent=1.2 hud=0.1 sky=4.4 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=49ms ticks=14.7ms(1) world=14.3ms {worldTick=7.3 entities=5.8 entTick=5.7} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.9ms render=29.3ms [build=3.2 opaque=15.7 ent=1.0 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=46ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.9ms render=41.6ms [build=3.3 opaque=5.4 ent=1.6 hud=0.1 sky=22.8 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=47ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.4ms render=43.6ms [build=2.9 opaque=30.9 ent=1.3 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=57ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.1ms render=53.9ms [build=3.0 opaque=12.7 ent=1.2 hud=0.1 sky=0.2 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=45ms ticks=13.2ms(1) world=13.1ms {entities=7.6 entTick=7.5 worldTick=4.6} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.3ms render=27.4ms [build=3.1 opaque=4.6 ent=1.0 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=52ms ticks=11.2ms(1) world=10.9ms {worldTick=5.6 randomBlocks=4.7 entities=4.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.1ms render=37.0ms [build=23.8 opaque=4.8 ent=1.2 hud=0.1 sky=0.4 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.fpu] frame=1501 cw=027f sw=0300 tag=ffff double53=1 freeKB=26792
+[MC][I][xbox.tex] id=13 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=14 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=15 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=16 256x256 storage=256x256 cpuKB=256 totalKB=512 dynamic=1
+[MC][I][xbox.tex] id=17 256x256 storage=256x256 cpuKB=256 totalKB=512 dynamic=1
+[MC][I][xbox.tex] id=21 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=23 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=27 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=29 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.mem] lists=230 (3280KB) vbPools=8 textures=24 (3310KB)
+[MC][I][gui] screen -> (none)
+[MC][I][gui] screen -> (none)
+[MC][I][verify108] FILA15_FURNACE_XP: entitiesBefore=44 entitiesAfter=45 (+1 XP orbs)
+[MC][I][gui] screen -> class GuiFurnace
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=52ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=10.6ms render=41.2ms [build=2.9 opaque=31.6 ent=1.3 hud=0.1 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=57ms ticks=19.5ms(1) world=19.4ms {entities=14.9 entTick=14.9 worldTick=3.6} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.0ms render=35.7ms [build=7.2 opaque=20.5 ent=1.5 hud=0.1 sky=0.7 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=63ms ticks=35.5ms(1) world=35.3ms {worldTick=29.8 randomBlocks=20.0 blockUpdates=9.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.0ms render=23.9ms [build=2.9 opaque=3.7 ent=1.4 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=47ms ticks=9.9ms(1) world=9.7ms {entities=4.8 entTick=4.7 worldTick=3.9} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.5ms render=33.5ms [build=3.1 opaque=23.0 ent=1.1 hud=0.1 sky=0.4 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.terrain] per frame: visibility=10.17ms sort=0.00ms select=0.47ms submit=1.35ms
+[MC][I][xbox.mesh] per frame: queue=1225 steps=1 (6.45ms) | sections published in 5.0s: 41
+[MC][I][xbox.draw] per frame: lists=56 replay=2.06ms setTransform=0.03ms textureStage=0.16ms
+[MC][I][xbox.tex] uploads per s=4.4 (partial 3.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=136 (in D3D 0.25ms) upDraws=217 upVerts=5411 viewSets=151
+[MC][I][xbox.perf] fps=29.8 frame=33.6ms present=2.8ms | sky=0.8 frustum=1.0 build=6.8 opaque=11.6 ent=2.0 transl=0.0 hand=0.4 hud=0.1
+[MC][I][xbox.perf] loop per frame: ticks=22.2ms (19.8 tps) lighting=4.2ms render=37.9ms display=2.9ms
+[MC][I][xbox.perf] world per frame: entities=22.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.spike] frame=48ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.6ms render=44.7ms [build=10.9 opaque=4.2 ent=1.0 hud=0.1 sky=0.3 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=23.5 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=48ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=11.3ms render=37.0ms [build=2.9 opaque=28.4 ent=0.9 hud=0.1 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=46ms ticks=10.9ms(1) world=10.7ms {entities=5.6 entTick=5.5 worldTick=4.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.1ms render=31.7ms [build=22.0 opaque=3.8 ent=0.7 hud=0.0 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=49ms ticks=8.2ms(1) world=8.1ms {entities=4.2 entTick=4.2 worldTick=3.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.4ms render=38.4ms [build=3.8 opaque=4.1 ent=0.9 hud=0.1 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.1ms
+[MC][I][mods] Spawned wild Yellow Chocobo at (139,67,228)
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=49ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.1ms render=46.1ms [build=2.9 opaque=10.5 ent=1.2 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=49ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.5ms render=45.9ms [build=3.3 opaque=4.5 ent=6.5 hud=0.1 sky=27.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=48ms ticks=9.9ms(1) world=9.8ms {worldTick=5.1 randomBlocks=4.0 entities=3.7} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.9ms render=35.3ms [build=22.2 opaque=4.8 ent=1.5 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=51ms ticks=11.6ms(1) world=11.6ms {entities=7.2 entTick=7.2 worldTick=3.7} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.8ms render=36.7ms [build=27.1 opaque=4.2 ent=1.1 hud=0.0 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.spike] frame=48ms ticks=6.9ms(1) world=6.7ms {entities=3.3 entTick=3.2 worldTick=2.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.1ms render=38.0ms [build=5.3 opaque=4.7 ent=0.8 hud=0.0 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=54ms ticks=11.1ms(1) world=10.9ms {entities=5.6 entTick=5.6 worldTick=4.1} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.8ms render=38.7ms [build=23.7 opaque=6.5 ent=1.5 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=55ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.8ms render=50.7ms [build=35.2 opaque=7.6 ent=1.2 hud=0.1 sky=0.4 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.2ms
+[MC][I][xbox.spike] frame=46ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.9ms render=43.0ms [build=8.0 opaque=5.1 ent=1.4 hud=0.1 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=45ms ticks=11.0ms(1) world=10.7ms {entities=5.2 entTick=5.2 worldTick=4.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.4ms render=30.5ms [build=3.1 opaque=19.4 ent=1.4 hud=0.1 sky=0.4 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=45ms ticks=6.6ms(1) world=6.5ms {entities=3.5 entTick=3.4 worldTick=2.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=1.9ms render=36.7ms [build=3.2 opaque=4.2 ent=1.3 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=50ms ticks=7.4ms(1) world=7.3ms {entities=3.4 entTick=3.3 worldTick=3.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=1.5ms render=41.2ms [build=3.1 opaque=3.4 ent=1.0 hud=0.1 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=47ms ticks=7.0ms(1) world=6.8ms {entities=3.3 entTick=3.3 worldTick=2.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.0ms render=36.7ms [build=3.0 opaque=4.0 ent=1.1 hud=0.1 sky=0.4 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.terrain] per frame: visibility=7.07ms sort=0.00ms select=0.50ms submit=0.82ms
+[MC][I][xbox.mesh] per frame: queue=1222 steps=1 (6.53ms) | sections published in 5.0s: 93
+[MC][I][xbox.draw] per frame: lists=63 replay=1.41ms setTransform=0.02ms textureStage=0.20ms
+[MC][I][xbox.tex] uploads per s=0.4 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=161 (in D3D 0.47ms) upDraws=171 upVerts=4514 viewSets=120
+[MC][I][xbox.perf] fps=41.8 frame=23.9ms present=0.0ms | sky=0.5 frustum=1.4 build=7.1 opaque=8.1 ent=1.6 transl=0.0 hand=0.5 hud=0.1
+[MC][I][xbox.perf] loop per frame: ticks=4.5ms (19.2 tps) lighting=2.9ms render=26.6ms display=0.2ms
+[MC][I][xbox.perf] world per frame: entities=4.4ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.spike] frame=48ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=48.1ms [build=3.2 opaque=4.9 ent=33.1 hud=0.1 sky=0.3 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=49ms ticks=7.9ms(1) world=7.8ms {entities=3.6 entTick=3.5 worldTick=3.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.3ms render=40.3ms [build=3.0 opaque=31.3 ent=0.7 hud=0.0 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=47ms ticks=9.2ms(1) world=8.9ms {entities=4.7 entTick=4.6 worldTick=3.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.8ms render=36.1ms [build=3.2 opaque=4.1 ent=1.0 hud=0.1 sky=0.3 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.6ms
+[MC][I][xbox.spike] frame=49ms ticks=14.7ms(1) world=14.5ms {entities=5.5 entTick=5.3 worldTick=4.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.8ms render=29.3ms [build=3.2 opaque=7.2 ent=1.4 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.1ms
+[MC][I][xbox.fpu] frame=1801 cw=027f sw=0300 tag=ffff double53=1 freeKB=26024
+[MC][I][xbox.tex] id=13 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=14 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=15 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=16 256x256 storage=256x256 cpuKB=256 totalKB=512 dynamic=1
+[MC][I][xbox.tex] id=17 256x256 storage=256x256 cpuKB=256 totalKB=512 dynamic=1
+[MC][I][xbox.tex] id=21 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=23 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=27 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=29 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=31 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.mem] lists=294 (3984KB) vbPools=9 textures=25 (3566KB)
+[MC][I][xbox.player] pos=160.000 69.000 249.000 motionY=0.0000 onGround=0 menu=1
+[MC][I][xbox.spike] frame=49ms ticks=13.3ms(1) world=13.2ms {worldTick=7.0 randomBlocks=6.0 entities=5.1} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=4.8ms render=30.6ms [build=2.9 opaque=21.3 ent=1.2 hud=0.1 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=52ms ticks=8.3ms(1) world=8.2ms {worldTick=4.5 randomBlocks=3.2 entities=2.9} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.6ms render=43.2ms [build=28.7 opaque=6.4 ent=1.7 hud=0.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.6 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=50ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=49.4ms [build=33.7 opaque=4.9 ent=1.1 hud=0.1 sky=0.2 transl=0.0 hand=4.9 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=49ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=48.7ms [build=37.3 opaque=5.2 ent=1.1 hud=0.1 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=45ms ticks=8.4ms(1) world=8.3ms {entities=3.9 entTick=3.8 worldTick=3.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=1.4ms render=34.9ms [build=2.8 opaque=3.7 ent=0.8 hud=0.1 sky=0.4 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][gui] screen -> (none)
+[MC][I][gui] screen -> (none)
+[MC][I][verify108] SCENE5_GAMEPLAY_START tick=650 freeKB=26024
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.spike] frame=47ms ticks=9.1ms(1) world=8.9ms {entities=4.6 entTick=4.6 worldTick=3.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=1.9ms render=35.8ms [build=25.7 opaque=4.4 ent=1.0 hud=1.4 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=46ms ticks=7.7ms(1) world=7.6ms {entities=3.6 entTick=3.5 worldTick=3.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.5ms render=37.6ms [build=3.3 opaque=4.7 ent=0.9 hud=1.1 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=46ms ticks=8.2ms(1) world=8.0ms {worldTick=3.9 entities=3.4 entTick=3.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.4ms render=37.5ms [build=28.0 opaque=4.9 ent=0.9 hud=1.1 sky=0.3 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=58ms ticks=13.4ms(1) world=13.3ms {mouseOver=7.4 entities=3.2 entTick=3.1} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.0ms render=41.5ms [build=2.8 opaque=3.6 ent=1.0 hud=1.2 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=50ms ticks=7.1ms(1) world=7.0ms {worldTick=3.2 entities=3.0 entTick=3.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.5ms render=41.9ms [build=27.0 opaque=5.4 ent=1.1 hud=1.2 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][mods] Spawned wild Yellow Chocobo at (188,72,248)
+[MC][I][xbox.spike] frame=48ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=47.7ms [build=37.0 opaque=5.8 ent=1.0 hud=1.0 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=50ms ticks=7.1ms(1) world=6.9ms {entities=3.2 entTick=3.2 worldTick=2.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.5ms render=42.1ms [build=4.6 opaque=10.6 ent=0.9 hud=1.0 sky=0.3 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=48ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=48.2ms [build=3.1 opaque=29.5 ent=1.4 hud=1.7 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=47ms ticks=5.8ms(1) world=5.6ms {entities=3.2 entTick=3.1 worldTick=1.7} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.4ms render=40.9ms [build=31.8 opaque=4.2 ent=0.9 hud=1.2 sky=0.3 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][verify108] SUMMARY108: FILA13: logMetaX=4 logMetaZ=8 stackedSnowMeta=2 doorFullL=2 doorFullR=2 signAllowed167=1 | FILA14_17: skullValid=1 babySheepColor=1 babySheepWidth=0.45 wolfCollar=11 wolfBeg=1 endermanScream=1 golemRose=400 chickenSeeds=1 | FILA15: armorShiftClick=1 dragSplit64=16,16,16,16 ironXp=0.70 | FILA15_FURNACE_XP: entitiesBefore=44 entitiesAfter=45 (+1 XP orbs) | freeKB=24384
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=51ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=1.1ms render=50.1ms [build=8.6 opaque=12.7 ent=1.3 hud=1.7 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=47ms ticks=33.2ms(1) world=33.1ms {worldTick=28.9 randomBlocks=28.3 entities=3.6} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.6ms render=13.3ms [build=3.0 opaque=5.9 ent=0.8 hud=1.2 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=48ms ticks=14.6ms(1) world=14.5ms {entities=10.4 entTick=10.3 worldTick=3.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.4ms render=32.9ms [build=2.9 opaque=6.2 ent=1.2 hud=1.7 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=47ms ticks=6.9ms(1) world=6.7ms {entities=3.5 entTick=3.5 worldTick=2.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.5ms render=39.3ms [build=21.9 opaque=4.2 ent=8.9 hud=1.4 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=45ms ticks=10.4ms(1) world=10.4ms {worldTick=6.3 entities=3.3 entTick=3.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.3ms render=34.1ms [build=3.1 opaque=5.4 ent=21.9 hud=1.0 sky=0.2 transl=0.0 hand=0.3 particles=0.1 weather=0.0 clouds=0.2 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=60ms ticks=27.5ms(1) world=9.1ms {entities=4.2 entTick=4.2 worldTick=4.1} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.2ms render=32.3ms [build=2.8 opaque=22.9 ent=2.1 hud=1.6 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.2ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.terrain] per frame: visibility=6.41ms sort=0.00ms select=0.47ms submit=1.55ms
+[MC][I][xbox.mesh] per frame: queue=1157 steps=1 (7.03ms) | sections published in 5.0s: 124
+[MC][I][xbox.draw] per frame: lists=125 replay=2.32ms setTransform=0.04ms textureStage=0.13ms
+[MC][I][xbox.tex] uploads per s=5.4 (partial 4.2) | per frame lock=0.10ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=259 (in D3D 0.90ms) upDraws=89 upVerts=3937 viewSets=156
+[MC][I][xbox.perf] fps=48.6 frame=20.6ms present=0.0ms | sky=0.6 frustum=1.4 build=7.6 opaque=8.1 ent=1.7 transl=0.0 hand=0.7 hud=1.6
+[MC][I][xbox.perf] loop per frame: ticks=4.4ms (20.9 tps) lighting=0.8ms render=26.7ms display=0.1ms
+[MC][I][xbox.perf] world per frame: entities=4.2ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.spike] frame=46ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=46.3ms [build=4.6 opaque=4.9 ent=1.3 hud=1.8 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=48ms ticks=11.0ms(1) world=10.9ms {worldTick=6.2 entities=4.0 randomBlocks=4.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.4ms render=36.8ms [build=3.1 opaque=24.9 ent=1.2 hud=5.2 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=61ms ticks=26.8ms(1) world=7.8ms {entities=3.4 entTick=3.4 worldTick=3.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=1.2ms render=32.6ms [build=3.4 opaque=24.0 ent=0.8 hud=1.0 sky=0.4 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.2ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=49ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=48.4ms [build=38.0 opaque=4.7 ent=1.2 hud=1.6 sky=0.1 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=50ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=49.6ms [build=5.4 opaque=6.5 ent=1.1 hud=1.6 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=50ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=50.1ms [build=4.7 opaque=31.4 ent=1.2 hud=1.6 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=61ms ticks=17.8ms(1) world=17.5ms {worldTick=11.9 randomBlocks=11.2 entities=4.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.5ms render=43.0ms [build=29.9 opaque=6.2 ent=1.1 hud=1.9 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=48ms ticks=10.6ms(1) world=10.5ms {entities=5.0 entTick=4.9 worldTick=4.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.2ms render=37.5ms [build=3.6 opaque=27.2 ent=1.2 hud=1.7 sky=0.3 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=47ms ticks=13.6ms(1) world=13.5ms {entities=5.2 entTick=5.1 worldTick=4.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.2ms render=32.6ms [build=3.3 opaque=8.4 ent=1.2 hud=1.6 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=51ms ticks=9.4ms(1) world=9.3ms {entities=5.1 entTick=5.0 worldTick=3.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.7ms render=40.7ms [build=4.0 opaque=4.3 ent=0.7 hud=1.4 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=50ms ticks=10.3ms(1) world=10.2ms {entities=4.7 entTick=4.7 worldTick=4.6} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=7.8ms render=31.8ms [build=21.1 opaque=4.4 ent=1.1 hud=1.7 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=49ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=3.7ms render=45.4ms [build=6.4 opaque=6.4 ent=1.3 hud=1.8 sky=0.5 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.fpu] frame=2101 cw=027f sw=0400 tag=ffff double53=1 freeKB=23888
+[MC][I][xbox.tex] id=13 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=14 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=15 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=16 256x256 storage=256x256 cpuKB=256 totalKB=512 dynamic=1
+[MC][I][xbox.tex] id=17 256x256 storage=256x256 cpuKB=256 totalKB=512 dynamic=1
+[MC][I][xbox.tex] id=21 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=23 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=27 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=29 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.tex] id=31 256x256 storage=256x256 cpuKB=0 totalKB=256 dynamic=0
+[MC][I][xbox.mem] lists=457 (6057KB) vbPools=13 textures=26 (3574KB)
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.spike] frame=50ms ticks=7.2ms(1) world=7.1ms {entities=3.6 entTick=3.5 worldTick=2.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.4ms render=40.3ms [build=28.6 opaque=4.4 ent=0.8 hud=1.3 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=55ms ticks=8.4ms(1) world=8.3ms {entities=4.0 entTick=4.0 worldTick=3.5} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.4ms render=45.7ms [build=3.0 opaque=6.6 ent=1.2 hud=1.5 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=55ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=54.5ms [build=9.1 opaque=5.2 ent=1.3 hud=1.2 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=48ms ticks=10.2ms(1) world=10.1ms {entities=5.5 entTick=5.4 worldTick=3.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.3ms render=37.8ms [build=2.9 opaque=4.6 ent=0.7 hud=8.6 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=46ms ticks=7.4ms(1) world=7.3ms {worldTick=3.3 entities=3.2 entTick=3.1} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.1ms render=35.9ms [build=2.7 opaque=9.2 ent=0.8 hud=1.5 sky=0.2 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=48ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=47.8ms [build=8.7 opaque=6.5 ent=1.2 hud=2.4 sky=0.3 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=25.8 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=45ms ticks=27.7ms(1) world=27.6ms {entities=22.1 entTick=22.1 worldTick=4.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.3ms render=17.0ms [build=3.0 opaque=5.4 ent=4.0 hud=1.5 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.7 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=47ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=46.8ms [build=12.6 opaque=4.2 ent=0.9 hud=1.2 sky=0.1 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=46ms ticks=11.0ms(1) world=10.9ms {worldTick=5.8 randomBlocks=4.6 entities=4.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.3ms render=33.8ms [build=3.0 opaque=4.3 ent=0.8 hud=23.2 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][verify108] SUMMARY108: FILA13: logMetaX=4 logMetaZ=8 stackedSnowMeta=2 doorFullL=2 doorFullR=2 signAllowed167=1 | FILA14_17: skullValid=1 babySheepColor=1 babySheepWidth=0.45 wolfCollar=11 wolfBeg=1 endermanScream=1 golemRose=400 chickenSeeds=1 | FILA15: armorShiftClick=1 dragSplit64=16,16,16,16 ironXp=0.70 | FILA15_FURNACE_XP: entitiesBefore=44 entitiesAfter=45 (+1 XP orbs) | freeKB=23888
+[MC][I][xbox.spike] frame=50ms ticks=20.8ms(1) world=20.7ms {entities=15.9 entTick=15.9 worldTick=4.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.3ms render=29.2ms [build=5.0 opaque=18.8 ent=0.7 hud=1.5 sky=0.3 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=50ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=49.7ms [build=6.6 opaque=6.1 ent=1.0 hud=1.2 sky=32.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=46ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.1ms render=45.4ms [build=3.0 opaque=4.5 ent=1.3 hud=1.1 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=26.1 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=47ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=46.5ms [build=5.7 opaque=4.6 ent=5.4 hud=2.2 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=45ms ticks=10.6ms(1) world=10.4ms {worldTick=5.1 randomBlocks=4.3 entities=4.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.4ms render=33.9ms [build=24.6 opaque=4.2 ent=0.8 hud=1.7 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=51ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=50.5ms [build=8.2 opaque=5.6 ent=0.9 hud=2.1 sky=30.9 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][mods] Spawned wild Yellow Chocobo at (132,67,229)
+[MC][I][xbox.terrain] per frame: visibility=7.44ms sort=0.00ms select=0.48ms submit=2.03ms
+[MC][I][xbox.mesh] per frame: queue=1110 steps=1 (7.14ms) | sections published in 5.0s: 87
+[MC][I][xbox.draw] per frame: lists=170 replay=3.04ms setTransform=0.15ms textureStage=0.28ms
+[MC][I][xbox.tex] uploads per s=1.0 (partial 0.6) | per frame lock=0.08ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=323 (in D3D 0.88ms) upDraws=46 upVerts=3634 viewSets=187
+[MC][I][xbox.perf] fps=49.1 frame=20.4ms present=0.0ms | sky=0.7 frustum=1.3 build=7.7 opaque=9.6 ent=1.5 transl=0.0 hand=0.4 hud=2.5
+[MC][I][xbox.perf] loop per frame: ticks=4.2ms (20.8 tps) lighting=0.6ms render=28.0ms display=0.2ms
+[MC][I][xbox.perf] world per frame: entities=4.1ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.spike] frame=54ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=12.1ms render=42.2ms [build=3.5 opaque=32.6 ent=1.3 hud=1.6 sky=0.2 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=51ms ticks=35.8ms(1) world=35.7ms {entities=25.4 entTick=25.3 worldTick=9.7} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.9ms render=14.2ms [build=5.5 opaque=4.3 ent=0.7 hud=1.2 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=48ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=48.0ms [build=20.4 opaque=16.4 ent=7.3 hud=1.5 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=47ms ticks=7.6ms(1) world=7.6ms {entities=4.3 entTick=4.3 worldTick=2.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.4ms render=39.3ms [build=5.5 opaque=4.0 ent=0.9 hud=1.0 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=48ms ticks=8.8ms(1) world=8.6ms {entities=4.1 entTick=4.0 worldTick=3.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.5ms render=38.3ms [build=27.0 opaque=5.5 ent=1.0 hud=1.7 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=46ms ticks=11.1ms(1) world=11.0ms {worldTick=5.1 entities=5.0 entTick=4.9} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.9ms render=33.8ms [build=2.9 opaque=6.6 ent=1.3 hud=2.1 sky=0.5 transl=0.0 hand=0.6 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=47ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=47.1ms [build=28.0 opaque=14.0 ent=0.8 hud=1.8 sky=0.1 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=46ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=45.6ms [build=6.1 opaque=4.1 ent=0.7 hud=1.6 sky=0.3 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=49ms ticks=9.7ms(1) world=9.6ms {entities=5.5 entTick=5.4 worldTick=3.2} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.4ms render=36.6ms [build=3.2 opaque=25.7 ent=1.3 hud=1.5 sky=1.6 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=46ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=45.8ms [build=30.6 opaque=10.2 ent=0.9 hud=1.4 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=60ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=59.7ms [build=3.6 opaque=38.9 ent=0.8 hud=1.5 sky=0.2 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=48ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=47.9ms [build=3.1 opaque=35.0 ent=1.2 hud=1.4 sky=0.2 transl=0.0 hand=4.3 particles=0.0 weather=0.0 clouds=1.2 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.spike] frame=60ms ticks=8.3ms(1) world=8.2ms {worldTick=3.9 entities=3.5 entTick=3.5} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.6ms render=48.7ms [build=3.1 opaque=4.8 ent=0.9 hud=1.2 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=53ms ticks=11.1ms(1) world=11.0ms {worldTick=5.4 entities=4.7 entTick=4.6} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=1.6ms render=40.0ms [build=26.4 opaque=5.8 ent=1.2 hud=3.3 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=50ms ticks=7.8ms(1) world=7.8ms {entities=4.5 entTick=4.5 worldTick=2.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.1ms render=39.8ms [build=6.4 opaque=4.7 ent=0.8 hud=1.3 sky=0.2 transl=0.0 hand=5.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=53ms ticks=8.0ms(1) world=7.9ms {worldTick=3.5 entities=3.5 entTick=3.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.3ms render=45.0ms [build=7.7 opaque=5.5 ent=3.4 hud=1.1 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=54ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=54.2ms [build=14.0 opaque=35.2 ent=1.1 hud=1.2 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.fpu] frame=2401 cw=027f sw=0400 tag=ffff double53=1 freeKB=23396
+[MC][I][xbox.mem] lists=475 (6330KB) vbPools=14 textures=26 (3574KB)
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=48ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=47.5ms [build=3.0 opaque=6.0 ent=27.2 hud=1.3 sky=0.3 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=50ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=49.8ms [build=6.6 opaque=4.0 ent=0.9 hud=1.5 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=46ms ticks=10.1ms(1) world=9.9ms {entities=5.5 entTick=5.4 worldTick=3.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.5ms render=35.7ms [build=26.1 opaque=4.5 ent=0.8 hud=1.2 sky=0.4 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.1ms
+[MC][I][verify108] SUMMARY108: FILA13: logMetaX=4 logMetaZ=8 stackedSnowMeta=2 doorFullL=2 doorFullR=2 signAllowed167=1 | FILA14_17: skullValid=1 babySheepColor=1 babySheepWidth=0.45 wolfCollar=11 wolfBeg=1 endermanScream=1 golemRose=400 chickenSeeds=1 | FILA15: armorShiftClick=1 dragSplit64=16,16,16,16 ironXp=0.70 | FILA15_FURNACE_XP: entitiesBefore=44 entitiesAfter=45 (+1 XP orbs) | freeKB=23396
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=45ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=45.0ms [build=3.0 opaque=4.7 ent=1.1 hud=1.7 sky=0.3 transl=0.0 hand=0.5 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=53ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.1ms render=52.8ms [build=9.7 opaque=31.8 ent=1.1 hud=1.7 sky=0.1 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=54ms ticks=7.4ms(1) world=7.3ms {entities=3.6 entTick=3.5 worldTick=3.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.5ms render=46.4ms [build=34.2 opaque=6.5 ent=1.2 hud=1.7 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=54ms ticks=8.4ms(1) world=8.3ms {entities=4.4 entTick=4.4 worldTick=2.9} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.4ms render=45.3ms [build=3.1 opaque=5.0 ent=0.9 hud=1.1 sky=0.3 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=62ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=61.7ms [build=35.8 opaque=4.1 ent=0.7 hud=1.4 sky=16.6 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.terrain] per frame: visibility=7.57ms sort=0.00ms select=0.40ms submit=2.10ms
+[MC][I][xbox.mesh] per frame: queue=1100 steps=1 (7.02ms) | sections published in 5.0s: 72
+[MC][I][xbox.draw] per frame: lists=180 replay=3.10ms setTransform=0.03ms textureStage=0.21ms
+[MC][I][xbox.tex] uploads per s=0.4 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=333 (in D3D 0.97ms) upDraws=46 upVerts=3630 viewSets=197
+[MC][I][xbox.perf] fps=48.8 frame=20.5ms present=0.0ms | sky=0.6 frustum=1.7 build=7.8 opaque=9.8 ent=1.9 transl=0.0 hand=0.6 hud=1.9
+[MC][I][xbox.perf] loop per frame: ticks=3.9ms (20.4 tps) lighting=0.5ms render=29.0ms display=0.1ms
+[MC][I][xbox.perf] world per frame: entities=3.9ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=52ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=51.8ms [build=15.1 opaque=5.2 ent=0.9 hud=1.7 sky=0.2 transl=0.0 hand=26.6 particles=0.1 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=47ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=28.0ms [build=11.9 opaque=9.2 ent=1.1 hud=1.7 sky=0.3 transl=0.0 hand=0.5 particles=0.1 weather=0.0 clouds=0.4 screen=0.0] display=18.5ms
+[MC][I][xbox.spike] frame=49ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=49.0ms [build=3.0 opaque=5.4 ent=0.9 hud=1.5 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.2ms
+[MC][I][xbox.spike] frame=55ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=54.7ms [build=6.7 opaque=5.8 ent=1.4 hud=1.6 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=47ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=47.2ms [build=9.5 opaque=5.5 ent=0.7 hud=28.9 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=51ms ticks=11.7ms(1) world=11.6ms {entities=6.6 entTick=6.5 worldTick=3.9} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.4ms render=38.1ms [build=2.9 opaque=4.1 ent=21.5 hud=1.1 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=48ms ticks=11.5ms(1) world=11.4ms {entities=6.1 entTick=6.0 worldTick=4.4} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=1.0ms render=35.6ms [build=6.4 opaque=5.0 ent=1.2 hud=2.1 sky=0.4 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=47ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=46.9ms [build=30.5 opaque=5.0 ent=1.1 hud=1.7 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=48ms ticks=8.5ms(1) world=8.3ms {entities=4.7 entTick=4.7 worldTick=2.8} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.3ms render=38.8ms [build=4.2 opaque=4.2 ent=0.6 hud=0.9 sky=0.4 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=51ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=50.6ms [build=42.5 opaque=3.8 ent=1.0 hud=1.0 sky=0.1 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=58ms ticks=7.5ms(1) world=7.4ms {entities=4.4 entTick=4.4 worldTick=2.1} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.3ms render=50.2ms [build=7.3 opaque=6.1 ent=0.8 hud=1.0 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=47ms ticks=7.9ms(1) world=7.8ms {entities=4.2 entTick=4.1 worldTick=3.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=2.7ms render=36.0ms [build=20.6 opaque=10.9 ent=0.9 hud=1.1 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=46ms ticks=7.3ms(1) world=7.2ms {entities=3.6 entTick=3.5 worldTick=3.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.2ms render=38.4ms [build=2.9 opaque=3.9 ent=0.8 hud=0.9 sky=0.4 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.2 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=46ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=45.6ms [build=30.4 opaque=5.0 ent=1.3 hud=5.8 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][mods] Spawned wild Yellow Chocobo at (154,70,210)
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=46ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=46.2ms [build=36.5 opaque=4.1 ent=0.9 hud=1.6 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.5 screen=0.0] display=0.0ms
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.spike] frame=46ms ticks=8.9ms(1) world=8.8ms {entities=5.3 entTick=5.3 worldTick=2.6} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.2ms render=36.3ms [build=20.9 opaque=4.5 ent=0.8 hud=1.2 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=45ms ticks=0.0ms(0) world=0.0ms {stats=0.0 mouseOver=0.0 dynTex=0.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=45.0ms [build=4.2 opaque=4.5 ent=1.7 hud=1.5 sky=0.3 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.spike] frame=48ms ticks=30.8ms(1) world=30.7ms {worldTick=25.0 chunkUnload=21.9 entities=5.0} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.5ms render=16.6ms [build=4.7 opaque=6.3 ent=1.1 hud=1.6 sky=0.2 transl=0.0 hand=0.4 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=160.500 69.500 246.500 motionY=0.0000 onGround=0 menu=0
+[MC][I][xbox.spike] frame=52ms ticks=40.4ms(1) world=40.3ms {entities=27.7 entTick=27.6 worldTick=11.9} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.5ms render=11.0ms [build=2.8 opaque=4.1 ent=0.9 hud=0.9 sky=0.2 transl=0.0 hand=0.2 particles=0.0 weather=0.0 clouds=0.3 screen=0.0] display=0.1ms
+[MC][I][xbox.spike] frame=45ms ticks=6.2ms(1) world=6.1ms {entities=2.8 entTick=2.8 worldTick=2.5} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.4ms render=38.8ms [build=28.1 opaque=4.7 ent=1.0 hud=2.0 sky=0.2 transl=0.0 hand=0.3 particles=0.0 weather=0.0 clouds=0.4 screen=0.0] display=0.0ms
+

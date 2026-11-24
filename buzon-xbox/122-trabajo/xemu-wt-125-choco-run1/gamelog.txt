@@ -1,0 +1,683 @@
+﻿[log] 185524 bytes written; last 60000:
+ hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.9ms (20.2 tps) lighting=0.0ms render=10.7ms display=2.9ms
+[MC][I][xbox.perf] world per frame: entities=2.9ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=13501 cw=027f sw=0200 tag=ffff double53=1 freeKB=10676
+[MC][I][xbox.mem] lists=2647 (9936KB) vbPools=40 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=2.88ms sort=0.00ms select=0.21ms submit=0.52ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (2.21ms) | sections published in 5.0s: 91
+[MC][I][xbox.draw] per frame: lists=72 replay=0.63ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.8 (partial 0.8) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.18ms) upDraws=159 upVerts=4310 viewSets=104
+[MC][I][xbox.perf] fps=64.1 frame=15.6ms present=3.2ms | sky=0.2 frustum=0.3 build=2.2 opaque=3.4 ent=0.9 transl=0.0 hand=0.2 hud=0.1
+[MC][I][xbox.perf] loop per frame: ticks=3.0ms (19.8 tps) lighting=0.0ms render=10.5ms display=3.2ms
+[MC][I][xbox.perf] world per frame: entities=2.9ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=13801 cw=027f sw=0300 tag=ffff double53=1 freeKB=10680
+[MC][I][xbox.mem] lists=2647 (9936KB) vbPools=40 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=14101 cw=027f sw=0300 tag=ffff double53=1 freeKB=10680
+[MC][I][xbox.mem] lists=2647 (9936KB) vbPools=40 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.44ms sort=0.00ms select=0.21ms submit=0.52ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (2.13ms) | sections published in 5.0s: 82
+[MC][I][xbox.draw] per frame: lists=72 replay=0.63ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.2 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4294 viewSets=104
+[MC][I][xbox.perf] fps=66.4 frame=15.1ms present=2.8ms | sky=0.2 frustum=0.4 build=2.1 opaque=4.0 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.8ms (20.1 tps) lighting=0.0ms render=11.0ms display=2.8ms
+[MC][I][xbox.perf] world per frame: entities=2.8ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=14401 cw=027f sw=0300 tag=ffff double53=1 freeKB=10680
+[MC][I][xbox.mem] lists=2647 (9936KB) vbPools=40 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=2.94ms sort=0.00ms select=0.20ms submit=0.52ms
+[MC][I][xbox.mesh] per frame: queue=4 steps=0 (2.68ms) | sections published in 5.0s: 108
+[MC][I][xbox.draw] per frame: lists=72 replay=0.64ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.18ms) upDraws=159 upVerts=4252 viewSets=104
+[MC][I][xbox.perf] fps=65.2 frame=15.3ms present=2.7ms | sky=0.2 frustum=0.4 build=2.7 opaque=3.5 ent=0.9 transl=0.0 hand=0.2 hud=0.1
+[MC][I][xbox.perf] loop per frame: ticks=2.8ms (20.0 tps) lighting=0.0ms render=11.1ms display=2.7ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=14701 cw=027f sw=0300 tag=ffff double53=1 freeKB=10680
+[MC][I][xbox.mem] lists=2647 (9936KB) vbPools=40 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.10ms sort=0.00ms select=0.22ms submit=0.53ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.86ms) | sections published in 5.0s: 89
+[MC][I][xbox.draw] per frame: lists=72 replay=0.63ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.18ms) upDraws=159 upVerts=4329 viewSets=104
+[MC][I][xbox.perf] fps=65.6 frame=15.3ms present=3.2ms | sky=0.2 frustum=0.4 build=1.9 opaque=3.7 ent=0.9 transl=0.0 hand=0.2 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.9ms (20.2 tps) lighting=0.0ms render=10.3ms display=3.3ms
+[MC][I][xbox.perf] world per frame: entities=2.9ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=15001 cw=027f sw=0200 tag=ffff double53=1 freeKB=10680
+[MC][I][xbox.mem] lists=2647 (9935KB) vbPools=40 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.22ms sort=0.00ms select=0.20ms submit=0.52ms
+[MC][I][xbox.mesh] per frame: queue=4 steps=0 (2.02ms) | sections published in 5.0s: 97
+[MC][I][xbox.draw] per frame: lists=72 replay=0.64ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.18ms) upDraws=159 upVerts=4310 viewSets=104
+[MC][I][xbox.perf] fps=64.6 frame=15.5ms present=3.3ms | sky=0.2 frustum=0.3 build=2.1 opaque=3.8 ent=0.9 transl=0.0 hand=0.1 hud=0.1
+[MC][I][xbox.perf] loop per frame: ticks=2.7ms (19.7 tps) lighting=0.0ms render=10.5ms display=3.3ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=15301 cw=027f sw=0200 tag=ffff double53=1 freeKB=11192
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.21ms sort=0.00ms select=0.20ms submit=0.52ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (2.08ms) | sections published in 5.0s: 76
+[MC][I][xbox.draw] per frame: lists=72 replay=0.62ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.2 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4261 viewSets=104
+[MC][I][xbox.perf] fps=65.2 frame=15.3ms present=3.1ms | sky=0.2 frustum=0.4 build=2.1 opaque=3.8 ent=0.8 transl=0.0 hand=0.1 hud=0.1
+[MC][I][xbox.perf] loop per frame: ticks=2.8ms (20.0 tps) lighting=0.0ms render=10.7ms display=3.1ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=15601 cw=027f sw=0200 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][mods] ChocoCraft: 2 wild Yellow chocobos at 137,221
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.46ms sort=0.00ms select=0.19ms submit=0.51ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.93ms) | sections published in 5.0s: 73
+[MC][I][xbox.draw] per frame: lists=72 replay=0.68ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.2 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.18ms) upDraws=159 upVerts=4303 viewSets=104
+[MC][I][xbox.perf] fps=67.0 frame=14.9ms present=2.8ms | sky=0.3 frustum=0.5 build=1.9 opaque=4.0 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.9ms (20.4 tps) lighting=0.0ms render=10.8ms display=2.8ms
+[MC][I][xbox.perf] world per frame: entities=2.8ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=15901 cw=027f sw=0200 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.24ms sort=0.00ms select=0.21ms submit=0.56ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.63ms) | sections published in 5.0s: 64
+[MC][I][xbox.draw] per frame: lists=72 replay=0.71ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.23ms) upDraws=159 upVerts=4301 viewSets=104
+[MC][I][xbox.perf] fps=65.8 frame=15.2ms present=3.4ms | sky=0.3 frustum=0.4 build=1.7 opaque=3.8 ent=0.9 transl=0.0 hand=0.2 hud=0.1
+[MC][I][xbox.perf] loop per frame: ticks=2.8ms (20.1 tps) lighting=0.0ms render=10.4ms display=3.4ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=16201 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.14ms sort=0.00ms select=0.20ms submit=0.51ms
+[MC][I][xbox.mesh] per frame: queue=1 steps=0 (1.39ms) | sections published in 5.0s: 60
+[MC][I][xbox.draw] per frame: lists=72 replay=0.62ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.4 (partial 0.4) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4243 viewSets=104
+[MC][I][xbox.perf] fps=65.1 frame=15.4ms present=3.9ms | sky=0.2 frustum=0.3 build=1.4 opaque=3.7 ent=0.9 transl=0.0 hand=0.2 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.9ms (19.6 tps) lighting=0.0ms render=9.7ms display=3.9ms
+[MC][I][xbox.perf] world per frame: entities=2.8ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.fpu] frame=16501 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.27ms sort=0.00ms select=0.20ms submit=0.51ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.85ms) | sections published in 5.0s: 82
+[MC][I][xbox.draw] per frame: lists=71 replay=0.62ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.2 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=102 (in D3D 0.17ms) upDraws=159 upVerts=4267 viewSets=103
+[MC][I][xbox.perf] fps=65.5 frame=15.3ms present=3.2ms | sky=0.2 frustum=0.4 build=1.9 opaque=3.8 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.9ms (20.0 tps) lighting=0.0ms render=10.4ms display=3.2ms
+[MC][I][xbox.perf] world per frame: entities=2.9ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=16801 cw=027f sw=0200 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9935KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.spike] frame=51ms ticks=31.8ms(1) world=31.5ms {entities=28.7 entTick=28.7 worldTick=1.3} gen=0.0ms pop=0.0ms load=0.0ms save=0.0ms light=0.0ms render=18.7ms [build=2.7 opaque=2.9 ent=0.5 hud=0.1 sky=0.3 transl=0.0 hand=0.3 particles=0.4 weather=0.0 clouds=0.3 screen=0.0] display=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.04ms sort=0.00ms select=0.19ms submit=0.54ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.40ms) | sections published in 5.0s: 64
+[MC][I][xbox.draw] per frame: lists=66 replay=0.62ms setTransform=0.01ms textureStage=0.06ms
+[MC][I][xbox.tex] uploads per s=0.2 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=66 (in D3D 0.16ms) upDraws=159 upVerts=4245 viewSets=98
+[MC][I][xbox.perf] fps=66.0 frame=15.1ms present=3.5ms | sky=0.3 frustum=0.8 build=1.4 opaque=3.6 ent=0.7 transl=0.0 hand=0.2 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.8ms (20.1 tps) lighting=0.0ms render=10.2ms display=3.6ms
+[MC][I][xbox.perf] world per frame: entities=2.8ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=17101 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.28ms sort=0.00ms select=0.20ms submit=0.53ms
+[MC][I][xbox.mesh] per frame: queue=3 steps=0 (1.58ms) | sections published in 5.0s: 74
+[MC][I][xbox.draw] per frame: lists=72 replay=0.71ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.6 (partial 0.6) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.18ms) upDraws=159 upVerts=4291 viewSets=104
+[MC][I][xbox.perf] fps=65.8 frame=15.2ms present=3.3ms | sky=0.3 frustum=0.3 build=1.6 opaque=3.9 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.9ms (20.2 tps) lighting=0.0ms render=10.4ms display=3.3ms
+[MC][I][xbox.perf] world per frame: entities=2.9ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=17401 cw=027f sw=0200 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=17701 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.21ms sort=0.00ms select=0.19ms submit=0.51ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.21ms) | sections published in 5.0s: 49
+[MC][I][xbox.draw] per frame: lists=72 replay=0.63ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4290 viewSets=104
+[MC][I][xbox.perf] fps=65.2 frame=15.3ms present=4.0ms | sky=0.2 frustum=0.4 build=1.2 opaque=3.8 ent=0.9 transl=0.0 hand=0.1 hud=0.1
+[MC][I][xbox.perf] loop per frame: ticks=2.7ms (19.7 tps) lighting=0.0ms render=9.7ms display=4.0ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=18001 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.31ms sort=0.00ms select=0.20ms submit=0.52ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.41ms) | sections published in 5.0s: 65
+[MC][I][xbox.draw] per frame: lists=72 replay=0.69ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.18ms) upDraws=159 upVerts=4299 viewSets=104
+[MC][I][xbox.perf] fps=65.7 frame=15.2ms present=3.4ms | sky=0.3 frustum=0.4 build=1.4 opaque=3.9 ent=0.9 transl=0.0 hand=0.2 hud=0.1
+[MC][I][xbox.perf] loop per frame: ticks=2.8ms (20.2 tps) lighting=0.0ms render=10.3ms display=3.4ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=18301 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9935KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.17ms sort=0.00ms select=0.19ms submit=0.51ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (2.04ms) | sections published in 5.0s: 85
+[MC][I][xbox.draw] per frame: lists=72 replay=0.64ms setTransform=0.01ms textureStage=0.09ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4334 viewSets=104
+[MC][I][xbox.perf] fps=65.8 frame=15.2ms present=3.1ms | sky=0.3 frustum=0.3 build=2.1 opaque=3.7 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.8ms (19.9 tps) lighting=0.0ms render=10.6ms display=3.1ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=18601 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9935KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.12ms sort=0.00ms select=0.23ms submit=0.51ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.53ms) | sections published in 5.0s: 61
+[MC][I][xbox.draw] per frame: lists=72 replay=0.62ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4300 viewSets=104
+[MC][I][xbox.perf] fps=64.8 frame=15.4ms present=3.8ms | sky=0.3 frustum=0.4 build=1.5 opaque=3.7 ent=0.9 transl=0.0 hand=0.2 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.7ms (19.9 tps) lighting=0.0ms render=9.9ms display=3.9ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=18901 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9935KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.21ms sort=0.00ms select=0.20ms submit=0.53ms
+[MC][I][xbox.mesh] per frame: queue=1 steps=0 (1.23ms) | sections published in 5.0s: 47
+[MC][I][xbox.draw] per frame: lists=72 replay=0.62ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4265 viewSets=104
+[MC][I][xbox.perf] fps=65.7 frame=15.2ms present=3.9ms | sky=0.2 frustum=0.3 build=1.2 opaque=3.7 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.8ms (20.2 tps) lighting=0.0ms render=9.8ms display=4.0ms
+[MC][I][xbox.perf] world per frame: entities=2.8ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=19201 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9935KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.44ms sort=0.00ms select=0.22ms submit=0.52ms
+[MC][I][xbox.mesh] per frame: queue=3 steps=0 (1.83ms) | sections published in 5.0s: 78
+[MC][I][xbox.draw] per frame: lists=72 replay=0.68ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.18ms) upDraws=159 upVerts=4305 viewSets=104
+[MC][I][xbox.perf] fps=66.8 frame=15.0ms present=2.8ms | sky=0.3 frustum=0.4 build=1.8 opaque=4.0 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=3.1ms (20.1 tps) lighting=0.0ms render=10.6ms display=2.8ms
+[MC][I][xbox.perf] world per frame: entities=3.0ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=19501 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9935KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.21ms sort=0.00ms select=0.21ms submit=0.56ms
+[MC][I][xbox.mesh] per frame: queue=4 steps=0 (2.02ms) | sections published in 5.0s: 82
+[MC][I][xbox.draw] per frame: lists=72 replay=0.69ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.20ms) upDraws=159 upVerts=4314 viewSets=104
+[MC][I][xbox.perf] fps=65.9 frame=15.2ms present=2.7ms | sky=0.3 frustum=0.4 build=2.0 opaque=3.8 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=3.0ms (20.0 tps) lighting=0.0ms render=10.9ms display=2.7ms
+[MC][I][xbox.perf] world per frame: entities=2.9ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.fpu] frame=19801 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9935KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.35ms sort=0.00ms select=0.20ms submit=0.52ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.67ms) | sections published in 5.0s: 68
+[MC][I][xbox.draw] per frame: lists=72 replay=0.67ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.18ms) upDraws=159 upVerts=4263 viewSets=104
+[MC][I][xbox.perf] fps=65.9 frame=15.2ms present=3.3ms | sky=0.3 frustum=0.4 build=1.7 opaque=3.9 ent=0.9 transl=0.0 hand=0.2 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.9ms (20.2 tps) lighting=0.0ms render=10.3ms display=3.3ms
+[MC][I][xbox.perf] world per frame: entities=2.9ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=20101 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.42ms sort=0.00ms select=0.22ms submit=0.55ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.07ms) | sections published in 5.0s: 45
+[MC][I][xbox.draw] per frame: lists=72 replay=0.68ms setTransform=0.01ms textureStage=0.09ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.19ms) upDraws=159 upVerts=4273 viewSets=104
+[MC][I][xbox.perf] fps=65.7 frame=15.2ms present=3.9ms | sky=0.2 frustum=0.3 build=1.1 opaque=4.0 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.9ms (20.0 tps) lighting=0.0ms render=9.8ms display=3.9ms
+[MC][I][xbox.perf] world per frame: entities=2.8ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=20401 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.31ms sort=0.00ms select=0.20ms submit=0.57ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.08ms) | sections published in 5.0s: 51
+[MC][I][xbox.draw] per frame: lists=72 replay=0.78ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.22ms) upDraws=159 upVerts=4288 viewSets=104
+[MC][I][xbox.perf] fps=65.7 frame=15.2ms present=3.7ms | sky=0.3 frustum=0.6 build=1.1 opaque=3.9 ent=0.9 transl=0.0 hand=0.2 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.8ms (19.8 tps) lighting=0.0ms render=10.0ms display=3.8ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.fpu] frame=20701 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9933KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=21001 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.44ms sort=0.00ms select=0.21ms submit=0.53ms
+[MC][I][xbox.mesh] per frame: queue=3 steps=0 (1.54ms) | sections published in 5.0s: 60
+[MC][I][xbox.draw] per frame: lists=72 replay=0.65ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.2 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4277 viewSets=104
+[MC][I][xbox.perf] fps=66.2 frame=15.1ms present=3.5ms | sky=0.2 frustum=0.4 build=1.6 opaque=4.0 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.8ms (20.1 tps) lighting=0.0ms render=10.3ms display=3.5ms
+[MC][I][xbox.perf] world per frame: entities=2.8ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=21301 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.34ms sort=0.00ms select=0.20ms submit=0.56ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.51ms) | sections published in 5.0s: 67
+[MC][I][xbox.draw] per frame: lists=72 replay=0.67ms setTransform=0.01ms textureStage=0.09ms
+[MC][I][xbox.tex] uploads per s=0.4 (partial 0.4) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.18ms) upDraws=159 upVerts=4298 viewSets=104
+[MC][I][xbox.perf] fps=65.8 frame=15.2ms present=3.4ms | sky=0.2 frustum=0.4 build=1.5 opaque=3.9 ent=0.9 transl=0.0 hand=0.2 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.9ms (20.2 tps) lighting=0.0ms render=10.3ms display=3.4ms
+[MC][I][xbox.perf] world per frame: entities=2.9ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=21601 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.34ms sort=0.00ms select=0.19ms submit=0.52ms
+[MC][I][xbox.mesh] per frame: queue=1 steps=0 (1.57ms) | sections published in 5.0s: 63
+[MC][I][xbox.draw] per frame: lists=72 replay=0.65ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.2 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4289 viewSets=104
+[MC][I][xbox.perf] fps=65.2 frame=15.3ms present=3.7ms | sky=0.2 frustum=0.3 build=1.6 opaque=3.9 ent=0.8 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.7ms (19.7 tps) lighting=0.0ms render=10.1ms display=3.7ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=21901 cw=027f sw=0200 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.84ms sort=0.00ms select=0.18ms submit=0.49ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (0.85ms) | sections published in 5.0s: 43
+[MC][I][xbox.draw] per frame: lists=72 replay=0.65ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.2 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4300 viewSets=104
+[MC][I][xbox.perf] fps=67.3 frame=14.9ms present=3.8ms | sky=0.3 frustum=0.5 build=0.9 opaque=4.4 ent=0.8 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.7ms (20.4 tps) lighting=0.0ms render=10.0ms display=3.9ms
+[MC][I][xbox.perf] world per frame: entities=2.6ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=22201 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9935KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.23ms sort=0.00ms select=0.19ms submit=0.50ms
+[MC][I][xbox.mesh] per frame: queue=1 steps=0 (1.13ms) | sections published in 5.0s: 53
+[MC][I][xbox.draw] per frame: lists=72 replay=0.62ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.4 (partial 0.4) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4306 viewSets=104
+[MC][I][xbox.perf] fps=65.3 frame=15.3ms present=4.1ms | sky=0.2 frustum=0.5 build=1.1 opaque=3.8 ent=0.9 transl=0.0 hand=0.2 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.7ms (19.8 tps) lighting=0.0ms render=9.7ms display=4.1ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=22501 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9935KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.45ms sort=0.00ms select=0.19ms submit=0.51ms
+[MC][I][xbox.mesh] per frame: queue=1 steps=0 (0.92ms) | sections published in 5.0s: 35
+[MC][I][xbox.draw] per frame: lists=72 replay=0.62ms setTransform=0.01ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.0 (partial 0.0) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4250 viewSets=104
+[MC][I][xbox.perf] fps=65.6 frame=15.2ms present=4.2ms | sky=0.2 frustum=0.4 build=0.9 opaque=4.0 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.7ms (20.1 tps) lighting=0.0ms render=9.6ms display=4.3ms
+[MC][I][xbox.perf] world per frame: entities=2.6ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=22801 cw=027f sw=0200 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9935KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.24ms sort=0.00ms select=0.19ms submit=0.53ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (1.11ms) | sections published in 5.0s: 64
+[MC][I][xbox.draw] per frame: lists=72 replay=0.65ms setTransform=0.04ms textureStage=0.07ms
+[MC][I][xbox.tex] uploads per s=0.2 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.17ms) upDraws=159 upVerts=4277 viewSets=104
+[MC][I][xbox.perf] fps=64.9 frame=15.4ms present=4.2ms | sky=0.2 frustum=0.3 build=1.1 opaque=3.8 ent=0.9 transl=0.0 hand=0.1 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.7ms (19.8 tps) lighting=0.0ms render=9.6ms display=4.2ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=23101 cw=027f sw=0300 tag=ffff double53=1 freeKB=11188
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.terrain] per frame: visibility=3.41ms sort=0.00ms select=0.21ms submit=0.52ms
+[MC][I][xbox.mesh] per frame: queue=2 steps=0 (0.92ms) | sections published in 5.0s: 46
+[MC][I][xbox.draw] per frame: lists=72 replay=0.64ms setTransform=0.01ms textureStage=0.09ms
+[MC][I][xbox.tex] uploads per s=0.2 (partial 0.2) | per frame lock=0.00ms swizzle=0.00ms
+[MC][I][xbox.draw] per frame: vbDraws=106 (in D3D 0.18ms) upDraws=159 upVerts=4222 viewSets=104
+[MC][I][xbox.perf] fps=64.8 frame=15.4ms present=4.1ms | sky=0.3 frustum=0.4 build=0.9 opaque=4.0 ent=0.9 transl=0.0 hand=0.2 hud=0.0
+[MC][I][xbox.perf] loop per frame: ticks=2.7ms (19.8 tps) lighting=0.0ms render=9.7ms display=4.1ms
+[MC][I][xbox.perf] world per frame: entities=2.7ms mesh=0.0ms(0) gen=0.0ms(0) pop=0.0ms load=0.0ms save=0.0ms
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.fpu] frame=23401 cw=027f sw=0200 tag=ffff double53=1 freeKB=11192
+[MC][I][xbox.mem] lists=2647 (9934KB) vbPools=39 textures=32 (2944KB)
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.async] workerMs=0 sync=0 async=0 queued=0 qFull=0 popN=0 adopted=0 pending=0 done=0
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+[MC][I][xbox.player] pos=81.167 65.620 139.317 motionY=-0.0784 onGround=1 menu=1
+
