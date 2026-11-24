@@ -29,11 +29,46 @@ bool adminMenuIsSpanish()
 }
 
 const int_t kDoneId = 900;
+const int_t kTabId = 800;
+
+using namespace AdminHooks;
+const int kTabCombat[] = {Aimbot, BowAimbot, ClickAimbot, Forcefield, AutoEgg, NoFlinch, Health};
+const int kTabMove[] = {Fly, Freecam, Sprint, NoFall, HighJump, Step, Spider, Water, NoSlowDown, Sneak, AutoWalk, Timer};
+const int kTabVisual[] = {ESP, Tracers, BlockESP, ChestFinder, CaveFinder, FullBright, WallHack, NoRender,
+                          DisableNametags, NoSwing, Day, Weather};
+const int kTabWorld[] = {Nuker, Build, FastBreak, FastPlace, AutoMine};
+const int kTabItems[] = {Dupe, AutoTool, AutoEnchant, AutoFish, AutoSign};
+const int kTabOther[] = {Notifications, Flood, Derp};
+
+struct AdminTab
+{
+    const char *es;
+    const char *en;
+    const int *mods;
+    int count;
+};
+#define ADMIN_TAB(es, en, arr) {es, en, arr, (int)(sizeof(arr) / sizeof(arr[0]))}
+const AdminTab kTabs[] = {
+    ADMIN_TAB("Combate", "Combat", kTabCombat),
+    ADMIN_TAB("Mover", "Move", kTabMove),
+    ADMIN_TAB("Visual", "Visual", kTabVisual),
+    ADMIN_TAB("Mundo", "World", kTabWorld),
+    ADMIN_TAB("Objetos", "Items", kTabItems),
+    ADMIN_TAB("Otros", "Other", kTabOther),
+};
+#undef ADMIN_TAB
+const int_t kTabCount = (int_t)(sizeof(kTabs) / sizeof(kTabs[0]));
+static_assert(sizeof(kTabCombat) + sizeof(kTabMove) + sizeof(kTabVisual) + sizeof(kTabWorld) +
+              sizeof(kTabItems) + sizeof(kTabOther) == sizeof(int) * COUNT,
+              "every admin module must be in exactly one tab");
+// Last tab used, kept while the game runs.
+int_t s_lastTab = 0;
 }
 
 GuiAdminMenu::GuiAdminMenu(GuiScreen *parent, int playerIndex)
     : m_parent(parent)
     , m_playerIndex(playerIndex)
+    , m_tab(s_lastTab)
     , m_selectedIndex(0)
     , m_scrollOffset(0)
     , m_javaRows(0)
@@ -57,11 +92,41 @@ bool GuiAdminMenu::usesSpecializedMenuNavigation() const
 
 int_t GuiAdminMenu::itemCount() const
 {
-    return AdminModeMod::moduleCount();
+    return kTabs[std::clamp<int_t>(m_tab, 0, kTabCount - 1)].count;
+}
+
+int_t GuiAdminMenu::moduleAt(int_t idx) const
+{
+    const AdminTab &t = kTabs[std::clamp<int_t>(m_tab, 0, kTabCount - 1)];
+    return (idx >= 0 && idx < t.count) ? t.mods[idx] : -1;
+}
+
+std::string GuiAdminMenu::tabLabel(int_t t) const
+{
+    std::string label = adminMenuIsSpanish() ? kTabs[t].es : kTabs[t].en;
+    int on = 0;
+    if (AdminModeMod *mod = AdminModeMod::getInstance())
+        for (int i = 0; i < kTabs[t].count; ++i)
+            on += mod->moduleState(kTabs[t].mods[i]) ? 1 : 0;
+    if (on > 0)
+        label += " \xc2\xa7" "a" + std::to_string(on);
+    return label;
+}
+
+void GuiAdminMenu::switchTab(int_t dir)
+{
+    m_tab = ((m_tab + dir) % kTabCount + kTabCount) % kTabCount;
+    s_lastTab = m_tab;
+    m_selectedIndex = 0;
+    m_scrollOffset = 0;
+    if (mc != nullptr && mc->sndManager != nullptr)
+        mc->sndManager->playSoundFX("random.focus", 1.0f, 1.2f);
+    refreshJavaButtons();
 }
 
 std::string GuiAdminMenu::rowLabel(int_t idx, bool selected) const
 {
+    idx = moduleAt(idx);
     std::string label = AdminModeMod::moduleName(idx);
     AdminModeMod *mod = AdminModeMod::getInstance();
     if (mod != nullptr && AdminModeMod::optionCount(idx) > 0)
@@ -117,6 +182,7 @@ void GuiAdminMenu::toggleItem(int_t idx)
     AdminModeMod *mod = AdminModeMod::getInstance();
     if (mod == nullptr || idx < 0 || idx >= itemCount())
         return;
+    idx = moduleAt(idx);
     const bool on = !mod->moduleState(idx);
     mod->setModuleState(idx, on);
     refreshJavaButtons();
@@ -126,6 +192,7 @@ void GuiAdminMenu::toggleItem(int_t idx)
 void GuiAdminMenu::changeOption(int_t idx, int_t dir)
 {
     AdminModeMod *mod = AdminModeMod::getInstance();
+    idx = moduleAt(idx);
     if (mod == nullptr || AdminModeMod::optionCount(idx) <= 0)
         return;
     mod->setModuleOption(idx, mod->moduleOption(idx) + (dir >= 0 ? 1 : -1));
@@ -150,6 +217,14 @@ void GuiAdminMenu::refreshJavaButtons()
     const bool es = adminMenuIsSpanish();
     for (GuiButton *btn : controlList)
     {
+        if (btn != nullptr && btn->id >= kTabId && btn->id < kTabId + kTabCount)
+        {
+            const int_t t = btn->id - kTabId;
+            btn->displayString = std::string(t == m_tab ? "\xc2\xa7" "e" : "") + tabLabel(t);
+            btn->enabled = true;
+            btn->setKeyboardSelected(t == m_tab);
+            continue;
+        }
         if (btn == nullptr || btn->id < 0 || btn->id >= m_javaRows)
             continue;
         const int_t idx = m_scrollOffset + btn->id;
@@ -159,7 +234,7 @@ void GuiAdminMenu::refreshJavaButtons()
             btn->displayString = "";
             continue;
         }
-        const bool on = mod != nullptr && mod->moduleState(idx);
+        const bool on = mod != nullptr && mod->moduleState(moduleAt(idx));
         btn->displayString = rowLabel(idx, idx == m_selectedIndex) + ": " +
             (on ? (es ? "\xc2\xa7" "aSI" : "\xc2\xa7" "aON") : (es ? "NO" : "OFF"));
         btn->setKeyboardSelected(idx == m_selectedIndex);
@@ -173,7 +248,10 @@ void GuiAdminMenu::initGui()
     m_javaRows = 0;
     if (!isLegacyMode())
     {
-        const int_t top = 40;
+        const int_t tabW = 280 / kTabCount;
+        for (int_t t = 0; t < kTabCount; ++t)
+            controlList.push_back(new GuiButton(kTabId + t, width / 2 - 140 + t * tabW, 34, tabW - 2, 20, ""));
+        const int_t top = 60;
         const int_t bottom = height - 58;
         m_javaRows = std::max<int_t>(3, (bottom - top) / 22);
         for (int_t i = 0; i < m_javaRows; ++i)
@@ -216,6 +294,11 @@ void GuiAdminMenu::actionPerformed(GuiButton *button)
         closeScreen();
         return;
     }
+    if (button->id >= kTabId && button->id < kTabId + kTabCount)
+    {
+        switchTab(button->id - kTabId - m_tab);
+        return;
+    }
     if (button->id >= 0 && button->id < m_javaRows)
     {
         const int_t idx = m_scrollOffset + button->id;
@@ -241,6 +324,8 @@ void GuiAdminMenu::keyTyped(char_t c, int_t key)
     if (key == lwjgl::Keyboard::KEY_RIGHT) { changeOption(m_selectedIndex, 1); return; }
     if (key == lwjgl::Keyboard::KEY_RETURN || key == lwjgl::Keyboard::KEY_SPACE) { toggleItem(m_selectedIndex); return; }
     if (key == lwjgl::Keyboard::KEY_DELETE) { allOff(); return; }
+    if (key == lwjgl::Keyboard::KEY_TAB || key == lwjgl::Keyboard::KEY_NEXT) { switchTab(1); return; }
+    if (key == lwjgl::Keyboard::KEY_PRIOR) { switchTab(-1); return; }
 #endif
     GuiScreen::keyTyped(c, key);
 }
@@ -269,9 +354,9 @@ void GuiAdminMenu::handleSpecializedMenuInput()
     else if (pad.pressed & PLATFORM_TEXT_DOWN)
         moveSelection(1);
     else if (pad.pressed & PLATFORM_TEXT_PREV_PAGE)
-        moveSelection(-std::min<int_t>(m_selectedIndex, 8));
+        switchTab(-1);
     else if (pad.pressed & PLATFORM_TEXT_NEXT_PAGE)
-        moveSelection(std::min<int_t>(itemCount() - 1 - m_selectedIndex, 8));
+        switchTab(1);
     else if (pad.pressed & PLATFORM_TEXT_LEFT)
         changeOption(m_selectedIndex, -1);
     else if (pad.pressed & PLATFORM_TEXT_RIGHT)
@@ -293,31 +378,40 @@ void GuiAdminMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
     const int_t count = itemCount();
     m_selectedIndex = std::clamp<int_t>(m_selectedIndex, 0, count - 1);
 
-    std::string desc = AdminModeMod::moduleDesc(m_selectedIndex);
+    std::string desc = AdminModeMod::moduleDesc(moduleAt(m_selectedIndex));
 
     if (!isLegacyMode())
     {
         drawDefaultBackground();
         drawCenteredString(fontRenderer, title, width / 2, 10, 0xFFFFFF);
-        drawCenteredString(fontRenderer, status, width / 2, 24, statusColor & 0xFFFFFF);
+        drawCenteredString(fontRenderer, status, width / 2, 22, statusColor & 0xFFFFFF);
         GuiScreen::drawScreen(mouseX, mouseY, partialTick);
         drawCenteredString(fontRenderer, desc, width / 2, height - 54, 0xCCCCCC);
         drawCenteredString(fontRenderer,
-            es ? "\xc2\xa7" "7A: activar   Izq/Der: ajuste   X: apagar todo   B: volver"
-               : "\xc2\xa7" "7A: toggle   Left/Right: setting   X: all off   B: back",
+            es ? "\xc2\xa7" "7Blanco/Negro: pestana   A: activar   Izq/Der: ajuste   X: apagar todo   B: volver"
+               : "\xc2\xa7" "7White/Black: tab   A: toggle   Left/Right: setting   X: all off   B: back",
             width / 2, height - 42, 0xAAAAAA);
         return;
     }
 
     legacyDrawMenuBackdrop(mc, width, height, partialTick);
     const bool compact = (height < 180);
-    const int_t headerH = compact ? 24 : 32;
-    const LegacyMenuLayout l = legacyMenuLayout(mc, width, height, 300, count, headerH, compact ? 12 : 22);
+    const int_t headerH = compact ? 40 : 52;
+    const LegacyMenuLayout l = legacyMenuLayout(mc, width, height, 340, count, headerH, compact ? 12 : 22);
     legacyDrawMenuPanel(l.panelX, l.panelY, l.panelW, l.panelH);
     legacyDrawPanelTitle(fontRenderer, title, l.panelX + l.panelW / 2, l.titleY);
     const std::string st = legacyFitText(fontRenderer, status, l.contentW);
     legacyDrawPanelText(fontRenderer, st, l.panelX + (l.panelW - fontRenderer->getStringWidth(st)) / 2,
         l.titleY + (compact ? 9 : 12), statusColor);
+
+    // Tabs.
+    {
+        const int_t tabY = l.titleY + (compact ? 20 : 26);
+        const int_t tabW = l.contentW / kTabCount;
+        for (int_t t = 0; t < kTabCount; ++t)
+            legacyDrawMenuTab(mc, l.contentX + t * tabW, tabY, tabW - 2, 14,
+                legacyFitText(fontRenderer, tabLabel(t), tabW - 6), t == m_tab);
+    }
 
     m_scrollOffset = legacyMenuKeepVisible(m_selectedIndex, count, l.visibleRows, m_scrollOffset);
     for (int_t vi = 0; vi < l.visibleRows; ++vi)
@@ -326,7 +420,7 @@ void GuiAdminMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         if (idx >= count)
             break;
         const bool sel = (idx == m_selectedIndex);
-        const bool on = mod != nullptr && mod->moduleState(idx);
+        const bool on = mod != nullptr && mod->moduleState(moduleAt(idx));
         legacyDrawMenuCheckbox(mc, l.contentX + 4, l.rowY(vi), l.contentW - 12, l.rowH,
             legacyFitText(fontRenderer, rowLabel(idx, sel), l.contentW - 40), on, sel);
     }
@@ -337,17 +431,17 @@ void GuiAdminMenu::drawScreen(int_t mouseX, int_t mouseY, float_t partialTick)
         static_cast<int_t>(0xff404040u), compact ? 1 : 2);
 
 #if PLATFORM_XBOX
-    const std::string btns[] = {"D-Pad", "A", "X", "B"};
+    const std::string btns[] = {"White/Black", "A", "X", "B"};
     const std::string acts[] = {
-        es ? "Mover" : "Move",
+        es ? "Pestana" : "Tab",
         es ? "Activar" : "Toggle",
         es ? "Apagar" : "All off",
         es ? "Volver" : "Back"};
     drawControlHintRow(mc, width, l.hintY, btns, acts, 4);
 #else
-    const std::string btns[] = {"Arrows", "Enter", "Del", "Esc"};
+    const std::string btns[] = {"Tab", "Enter", "Del", "Esc"};
     const std::string acts[] = {
-        es ? "Mover" : "Move",
+        es ? "Pestana" : "Tab",
         es ? "Activar" : "Toggle",
         es ? "Apagar" : "All off",
         es ? "Volver" : "Back"};

@@ -3,9 +3,10 @@
 #include "net/minecraft/src/GuiScreen.h"
 #include <string>
 
-// Admin mode menu: one row per Nodus module (switch + its setting), Java and
-// Legacy looks, full controller: D-Pad move, A switch, Left/Right setting,
-// LB/RB page, X all off, B back. Player 2 gets its own copy in split screen.
+// Admin mode menu: modules grouped in tabs (Combat, Move, Visual, World,
+// Items, Other), one row per module (switch + its setting), Java and Legacy
+// looks, full controller: D-Pad move, A switch, Left/Right setting,
+// White/Black tab, X all off, B back. Player 2 gets its own copy in split screen.
 class GuiAdminMenu : public GuiScreen
 {
 public:
@@ -25,6 +26,9 @@ protected:
 private:
     bool isLegacyMode() const;
     int_t itemCount() const;
+    int_t moduleAt(int_t idx) const;
+    void switchTab(int_t dir);
+    std::string tabLabel(int_t t) const;
     std::string rowLabel(int_t idx, bool selected) const;
     std::string statusLine(int_t &color) const;
     void moveSelection(int_t delta);
@@ -37,6 +41,7 @@ private:
 
     GuiScreen *m_parent;
     int m_playerIndex;
+    int_t m_tab;
     int_t m_selectedIndex;
     int_t m_scrollOffset;
     int_t m_javaRows;
