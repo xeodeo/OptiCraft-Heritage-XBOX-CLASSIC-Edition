@@ -1,4 +1,5 @@
 #include "EffectRenderer.h"
+#include "mods/adminmode/AdminHooks.h"
 #include "ActiveRenderInfo.h"
 
 #include <algorithm>
@@ -39,6 +40,11 @@ void EffectRenderer::addEffect(EntityFX *entityfx)
 {
 	if (entityfx == nullptr)
 		return;
+	if (AdminHooks::on(AdminHooks::NoRender))
+	{
+		delete entityfx;
+		return;
+	}
 #if PLATFORM_XBOX
 	static unsigned s_fxMemCheck = 0;
 	static bool s_fxLowMem = false;

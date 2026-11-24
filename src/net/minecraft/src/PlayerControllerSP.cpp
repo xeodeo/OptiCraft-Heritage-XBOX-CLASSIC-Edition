@@ -1,4 +1,5 @@
 #include "PlayerControllerSP.h"
+#include "mods/adminmode/AdminHooks.h"
 
 #include <cmath>
 
@@ -98,13 +99,16 @@ void PlayerControllerSP::sendBlockRemoving(int_t i, int_t j, int_t k, int_t l)
 		if (std::fmod(field_1069_h, 4.0f) == 0.0f && block != nullptr)
 			mc->sndManager->playSound(block->stepSound->getStepSound(), (float)i + 0.5f, (float)j + 0.5f, (float)k + 0.5f, (block->stepSound->getVolume() + 1.0f) / 8.0f, block->stepSound->getPitch() * 0.5f);
 		field_1069_h++;
-		if (curBlockDamage >= 1.0f)
+		const bool adminFast = AdminHooks::on(AdminHooks::FastBreak);
+		if (adminFast && AdminHooks::fastBreakInstant())
+			curBlockDamage = 1.0f;
+		if (curBlockDamage >= (adminFast ? 0.55f : 1.0f))
 		{
 			sendBlockRemoved(i, j, k, l);
 			curBlockDamage = 0.0f;
 			prevBlockDamage = 0.0f;
 			field_1069_h = 0.0f;
-			blockHitWait = 5;
+			blockHitWait = adminFast ? 0 : 5;
 		}
 	}
 	else

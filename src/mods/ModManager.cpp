@@ -19,6 +19,7 @@
 #include "strongholdlocator/StrongholdLocatorMod.h"
 #include "villagelocator/VillageLocatorMod.h"
 #include "serverutils/ServerUtilsMod.h"
+#include "adminmode/AdminModeMod.h"
 
 #include "net/minecraft/src/WorldInfo.h"
 #include "net/minecraft/src/World.h"
@@ -218,6 +219,8 @@ void ModManager::init(Minecraft *mcInstance)
         registerMod(std::make_unique<VillageLocatorMod>());
     if (getMod("serverutils") == nullptr)
         registerMod(std::make_unique<ServerUtilsMod>());
+    if (getMod("adminmode") == nullptr)
+        registerMod(std::make_unique<AdminModeMod>());
 
     // Scan and load installed .ochpack packages from the persistent game mods directory
     scanAndLoadPacks();

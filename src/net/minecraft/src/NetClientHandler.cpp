@@ -119,6 +119,7 @@
 #include "Packet6SpawnPosition.h"
 #include "Packet39AttachEntity.h"
 #include "Packet38EntityStatus.h"
+#include "ProtocolTranslator340.h"
 #include "Packet8UpdateHealth.h"
 #include "Packet9Respawn.h"
 #include "Packet60Explosion.h"
@@ -143,6 +144,7 @@
 
 NetClientHandler::NetClientHandler(Minecraft* minecraft, const std::string& host, int port, int protocolVersion)
 {
+    translator340::resetLocalOpLevel(); // new connection: not op until the server says so
     disconnected = false;
     terrainDownloaded = false;
     netManager = nullptr;

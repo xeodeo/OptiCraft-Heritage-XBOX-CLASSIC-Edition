@@ -1,4 +1,5 @@
 #include "RenderItem.h"
+#include "mods/adminmode/AdminHooks.h"
 #include "java/Arithmetic.h"
 #include "java/System.h"
 
@@ -446,5 +447,6 @@ void RenderItem::renderTexturedQuad(int i, int j, int k, int l, int i1, int j1) 
 }
 
 void RenderItem::doRender(Entity* entity, double d, double d1, double d2, float f, float f1) {
+    if (AdminHooks::on(AdminHooks::NoRender) && AdminHooks::noRenderItems()) return;
     doRenderItem((EntityItem*)entity, d, d1, d2, f, f1);
 }
