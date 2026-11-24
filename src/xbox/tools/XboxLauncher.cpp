@@ -22,6 +22,7 @@
 // It always opens on the first folder's normal build.
 
 #include "XboxXtl.h"
+#include "xbox/tools/XboxLauncherWifi.h"
 
 #include <xgraphics.h>
 #include <mmintrin.h>
@@ -119,6 +120,7 @@ void addFolder(const char* folder)
 
 void findVersions()
 {
+    g_versionCount = 0;
     char folders[kMaxVersions][48];
     int count = 0;
     WIN32_FIND_DATAA fd;
@@ -393,7 +395,7 @@ void initVideo()
 // --- input ----------------------------------------------------------------------
 
 enum : unsigned {
-    kUp = 1, kDown = 2, kLeft = 4, kRight = 8, kA = 16, kB = 32, kStart = 64,
+    kUp = 1, kDown = 2, kLeft = 4, kRight = 8, kA = 16, kB = 32, kStart = 64, kY = 128,
 };
 
 HANDLE g_pads[4];
@@ -427,6 +429,7 @@ unsigned readButtons(bool* plugged = nullptr)
         if (g.wButtons & XINPUT_GAMEPAD_START) bits |= kStart;
         if (g.bAnalogButtons[XINPUT_GAMEPAD_A] > 30) bits |= kA;
         if (g.bAnalogButtons[XINPUT_GAMEPAD_B] > 30) bits |= kB;
+        if (g.bAnalogButtons[XINPUT_GAMEPAD_Y] > 30) bits |= kY;
         // In-game reset: LT + RT + Back + Start goes back to the dashboard.
         // (or Back + Start + White + Black, the other usual IGR combo).
         const bool backStart = (g.wButtons & XINPUT_GAMEPAD_BACK) && (g.wButtons & XINPUT_GAMEPAD_START);
@@ -492,10 +495,33 @@ void drawNews(const State& st)
     fill(x, y, w, h, 0xB0000000);
     frame(x, y, w, h, 0x60FFFFFF);
 
+    LauncherWifi::Progress wp;
+    LauncherWifi::progress(wp);
+    if (wp.state != LauncherWifi::State::Idle) {
+        const bool failed = wp.state == LauncherWifi::State::Failed;
+        char title[64];
+        std::snprintf(title, sizeof(title), "Update %s", wp.version);
+        text(title, x + 14, y + 12, 3, failed ? 0xFFFF6060 : 0xFFFFFF55);
+        float ty = paragraph(wp.message, x + 14, y + 46, w - 28, 2, 0xFFE0E0E0);
+        if (wp.state == LauncherWifi::State::Running && wp.total) {
+            const float bw = w - 28, by = ty + 10;
+            fill(x + 14, by, bw, 16, 0xFF000000);
+            frame(x + 14, by, bw, 16, 0xFF808080);
+            fill(x + 16, by + 2, (bw - 4) * (float(wp.bytes) / float(wp.total)), 12, 0xFF5BB33A);
+            char line[64];
+            std::snprintf(line, sizeof(line), "%u / %u KB", wp.bytes / 1024, wp.total / 1024);
+            text(line, x + 14, by + 22, 2, 0xFFC0C0C0);
+        }
+        if (wp.state != LauncherWifi::State::Running)
+            text("B close", x + 14, y + h - 22, 2, 0xFF909090);
+        return;
+    }
     if (g_versionCount == 0) {
         text("No versions found", x + 14, y + 12, 3, 0xFFFF6060);
-        paragraph("Put each version in its own folder next to default.xbe, "
+        const float ty = paragraph("Put each version in its own folder next to default.xbe, "
                   "for example 1.2.5\\OptiCraft.xbe with its data.", x + 14, y + 46, w - 28, 2, 0xFFE0E0E0);
+        paragraph("Or press Y to download the newest build over the network.", x + 14, ty + 8, w - 28, 2,
+                  0xFFB0E0A0);
         return;
     }
     const int sel = st.selected;
@@ -506,7 +532,7 @@ void drawNews(const State& st)
                   0xFFFFB040);
     }
     if (st.error) paragraph(st.error, x + 14, y + h - 52, w - 28, 2, 0xFFFF6060);
-    text("A choose   B back   START play", x + 14, y + h - 22, 2, 0xFF909090);
+    text("A choose  B back  START play  Y update", x + 14, y + h - 22, 2, 0xFF909090);
 }
 
 void drawLogo()
@@ -562,6 +588,13 @@ void draw(const State& st, const char* overlay = nullptr)
     drawLogo();
     drawNews(st);
     drawBar(st);
+    char ip[20];
+    LauncherWifi::address(ip, sizeof(ip));
+    if (ip[0]) {
+        char line[64];
+        std::snprintf(line, sizeof(line), "WiFi: http://%s", ip);
+        text(line, 10, 8, 2, 0xFFB0E0A0);
+    }
     if (overlay) {
         fill(0, 0, kWidth, kHeight, 0xC0000000);
         textCentered(overlay, kWidth / 2.0f, kHeight / 2.0f - 12, 3, 0xFFFFFFFF);
@@ -598,6 +631,7 @@ void __cdecl main()
     loadImage("D:\\data\\assets\\legacy\\title.png", g_logo);
 
     findVersions();
+    LauncherWifi::start();
     g_720pAllowed = (XGetVideoFlags() & XC_VIDEO_FLAGS_HDTV_720p) != 0;
 
     State st;   // opens on the first folder's normal build
@@ -634,6 +668,27 @@ void __cdecl main()
         }
         previous = held;
 
+        if (LauncherWifi::takeFinished()) {
+            findVersions();
+            if (st.selected >= g_versionCount) st.selected = 0;
+        }
+        {
+            LauncherWifi::Progress wp;
+            LauncherWifi::progress(wp);
+            if (wp.state == LauncherWifi::State::Running) {
+                draw(st);   // only the progress while it installs
+                continue;
+            }
+            if (wp.state != LauncherWifi::State::Idle && (pressed & (kB | kA))) {
+                LauncherWifi::clear();
+                draw(st);
+                continue;
+            }
+        }
+        if (pressed & kY) {
+            const char* v = g_versionCount && g_versions[st.selected].folder[0] ? g_versions[st.selected].folder : "todo";
+            LauncherWifi::startInstall(v);
+        }
         if ((pressed & (kUp | kDown)) && g_versionCount) {
             st.listOpen = true;
             st.error = nullptr;

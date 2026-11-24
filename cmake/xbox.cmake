@@ -91,8 +91,15 @@ if(XBOX_BRINGUP)
     set(XBOX_SOURCES "${CMAKE_SOURCE_DIR}/src/xbox/tools/XboxBringup.cpp")
     message(STATUS "Xbox build: BRINGUP (toolchain smoke test only)")
 elseif(XBOX_LAUNCHER)
-    set(XBOX_SOURCES "${CMAKE_SOURCE_DIR}/src/xbox/tools/XboxLauncher.cpp")
-    message(STATUS "Xbox build: LAUNCHER (version picker only)")
+    set(XBOX_SOURCES
+        "${CMAKE_SOURCE_DIR}/src/xbox/tools/XboxLauncher.cpp"
+        # Install / update over the network (src/xbox/tools/XboxLauncherWifi.h).
+        "${CMAKE_SOURCE_DIR}/src/xbox/tools/XboxLauncherWifi.cpp"
+        "${CMAKE_SOURCE_DIR}/src/xbox/system/XboxNetwork.cpp"
+        "${CMAKE_SOURCE_DIR}/src/xbox/system/XboxTls.cpp")
+    file(GLOB XBOX_MBEDTLS_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/external/mbedtls/library/*.c")
+    list(APPEND XBOX_SOURCES ${XBOX_MBEDTLS_SOURCES})
+    message(STATUS "Xbox build: LAUNCHER (version picker + WiFi install)")
 else()
     mcbeta_collect_platform_sources(XBOX_SOURCES xbox)
     # The runtime glue is added explicitly below; the smoke test is its own shape.
