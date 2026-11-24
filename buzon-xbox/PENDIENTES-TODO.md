@@ -15,7 +15,9 @@ Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-
   `web\`). Menú estilo Minecraft consola, ES/EN/PT, progreso público (`progreso.html`, NO el panel real). README de main ya
   enlaza Website + Ko-fi.
 - Ko-fi: ko-fi.com/xeodeo (morado, banner propio, post con portada propia). PayPal lo puso el usuario.
-- PENDIENTE: capturas bonitas para `web\img\3-6.png`. Método (anotado en `129-COMO-SACAR-CAPTURAS.md`): autopilot
+- HECHO 24-11: 13 capturas elegidas por el usuario (`web\img\shots\`) en cuadrícula de 6 por página + visor; fondo
+  por zonas (cueva/Nether/End, "versión A") y barras con efecto portal del End. Lo de abajo queda como historia.
+- (antes) PENDIENTE: capturas bonitas para `web\img\3-6.png`. Método (anotado en `129-COMO-SACAR-CAPTURAS.md`): autopilot
   (juego moviéndose solo) + `captura.ps1`/`xemu122.ps1`. agy (encargo 127) se canceló por dar vueltas; rehacer con el
   pipeline de 129 y redeployar.
 - Portada falsa "Minecraft Xbox Edition" (logos oficiales): la sube el usuario si quiere (`portada-reddit.png`); Claude no.
