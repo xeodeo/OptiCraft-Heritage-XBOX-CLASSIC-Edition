@@ -13,12 +13,15 @@ Legacy console menus, split screen, 720p, Dolby Digital 5.1 and ~60 FPS on a 733
 [![FPS](https://img.shields.io/badge/~60-FPS-F9A825?style=for-the-badge)](#-features)
 [![License](https://img.shields.io/badge/license-GPL--2.0-informational?style=for-the-badge)](LICENSE)
 
+[**🌐 Website**](https://xeodeo.github.io/OptiCraft-Heritage-XBOX-CLASSIC-Edition/) ·
 [**⬇️ Download**](https://github.com/xeodeo/OptiCraft-Heritage-XBOX-CLASSIC-Edition/releases) ·
 [**✨ Features**](#-features) ·
 [**🎮 Install**](#-install-on-your-xbox) ·
 [**🕹️ Controls**](#%EF%B8%8F-controls) ·
 [**🛠️ Build it**](#%EF%B8%8F-building-from-source) ·
 [**🙏 Credits**](#-credits)
+
+**Website:** https://xeodeo.github.io/OptiCraft-Heritage-XBOX-CLASSIC-Edition/ · **Support:** https://ko-fi.com/xeodeo
 
 </div>
 
