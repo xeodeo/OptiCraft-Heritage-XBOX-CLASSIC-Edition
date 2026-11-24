@@ -48,7 +48,10 @@
   .barlabel{display:flex;justify-content:space-between;font-size:16px;margin-bottom:6px}
   .barlabel b{color:var(--amar)}
   .bar{height:18px;background:#000;border:2px solid #000}
-  .bar i{display:block;height:100%;background:url('img/tiles/grass.svg');background-size:18px 18px}
+  .bar i{display:block;height:100%;background:url('img/depth/pf_white.png') 0 0/128px,url('img/depth/pf_teal.png') 0 0/96px,url('img/depth/pf_purple.png') 0 0/160px,url('img/depth/portal_base.png') 0 0/48px;animation:endbar 7s linear infinite;filter:brightness(1.05) saturate(1.5);transition:width 1.6s cubic-bezier(.2,.8,.2,1);box-shadow:inset 0 0 8px rgba(160,255,240,.5)}
+  .bar{height:22px;box-shadow:0 0 10px rgba(90,230,210,.25)}
+  @keyframes endbar{to{background-position:128px 0,-96px 48px,160px -80px,48px 48px}}
+  @media(prefers-reduced-motion:reduce){.bar i{animation:none}}
   .feat{font-size:15px;color:#cfe0c6;margin-top:8px;line-height:1.5}
   .feat .done::before{content:"✔ ";color:var(--verde)}
   .feat .wip::before{content:"➤ ";color:#ffd24a}
@@ -144,5 +147,13 @@
   <div style="font-size:16px;color:#fff">OptiCraft Heritage</div>
   Proyecto de fans. No afiliado a Mojang ni a Microsoft. Minecraft es marca de Mojang AB.
 </footer>
+<script>
+(function(){var bars=[].slice.call(document.querySelectorAll('.bar i'));if(!bars.length)return;
+ var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;if(reduce||!('IntersectionObserver' in window))return;
+ bars.forEach(function(b){b.dataset.w=b.style.width||'100%';b.style.width='0';});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var b=e.target;
+  setTimeout(function(){b.style.width=b.dataset.w;},80);io.unobserve(b);}});},{threshold:.4});
+ bars.forEach(function(b){io.observe(b);});})();
+</script>
 </body>
 </html>

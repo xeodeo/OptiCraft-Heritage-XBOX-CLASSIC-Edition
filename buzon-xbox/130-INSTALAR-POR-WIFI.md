@@ -51,3 +51,25 @@ como hace Yakara (yakaracolombia.github.io/esp32-online-tool/blueretro.html: fla
 - Probado en xemu: release local con un archivo nuevo → "New build!" sin tocar nada → Update → bajó SOLO ese
   archivo → "Up to date". Textos de la tele en inglés (como el resto del lanzador).
 - La página del celular (puerto 80) sigue existiendo como extra.
+
+## 24-11 mediodía: consola vacía → baja la versión que elijas (commit en `wifi-instalar`, subido)
+- Sin nada instalado, la lista muestra las versiones de la release como `1.2.5 (get)` / `1.5.2 (get)` y Play pasa a
+  **Download**. PROBADO en xemu con el usuario: lanzador solo (sin carpetas) → eligió 1.5.2 → bajó XBE + version.txt,
+  comprobados → pasó a "1.5.2" instalada, "Up to date", y 1.2.5 sigue como "(get)".
+- Página del celular APAGADA (`XBOX_LAUNCHER_WEB=0`) y sin IP en pantalla: el usuario no la quiere.
+- Pruebas desde ISO: `D:\wifi-base.txt` (URL de la release local) y `D:\wifi-limpiar.txt` (vacía T:\wifi-prueba al arrancar).
+
+## Qué baja y qué falta comprobar (aclarado con el usuario, 24-11)
+- Baja TODO lo que tenga la carpeta de esa versión en la release: OptiCraft.xbe, _720p, _exp, _exp_720p, assets.pak,
+  texturepacks\, skins\, version.txt, default.tbn. Las 4 variantes aparecen luego en la lista (normal/720p/Exp/Exp 720p).
+- Update = solo los archivos que cambiaron (normalmente los XBE; assets.pak y packs casi nunca).
+- Primera instalación de 1.5.2 completa ≈ 100 MB. En xemu la red NAT va a ~100 KB/s (≈15 min); en la consola real más rápido.
+- La prueba de xemu SOLO llevaba OptiCraft.xbe + version.txt (rápida): esa 1.5.2 de prueba no tiene assets.pak y no
+  arrancaría. Pendiente: probar una carpeta completa (xemu o consola) y la descarga desde GitHub real.
+
+## Pendientes para usarlo de verdad
+1. OK del usuario para crear/subir la release `ultima` (no hay `gh` ni token aquí: token o subida a mano). Montarla con
+   `python scripts-claude\montar_ultima.py <carpeta OptiCraft con builds PÚBLICAS> <salida> --build "..."`.
+2. Meter este lanzador (`wt-wifi\bin\xbox-launcher\iso\default.xbe`) en la carpeta OptiCraft y pasarlo a la consola una vez.
+3. Probar en la consola real: instalar desde vacío, Update, que D: (disco duro) se escriba bien.
+4. Unir la rama `wifi-instalar` a `port152-int` (y el lanzador de 1.2.5 si se compila aparte).

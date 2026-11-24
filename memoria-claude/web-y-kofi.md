@@ -26,3 +26,9 @@ para que la suba el usuario en su cuenta si quiere. Lo demás del proyecto (SDK/
 al entregarlas, verificar que no sean negras/con menú y **redeploy**.
 
 Ver [[compilar-todas-versiones]] y [[subir-siempre-al-compilar]] para los builds.
+
+**24-11 tarde:** capturas en cuadrícula de 6 por página + visor al hacer clic (13 fotos elegidas por el usuario en
+`img/shots/`); fondo **versión A** (zonas que cambian con fundido y se mueven lento: superficie→cueva→obsidiana→Nether→End;
+`?fondo=b` = versión que baja con el scroll, al usuario le mareaba); barras con efecto portal del End (texturas del juego en
+`img/depth/`) que se llenan al verse. Tarjetas casi opacas: con textura detrás el texto transparente "da vómito".
+Sección `#wifi` (instalar desde el celular) está en index.html con `hidden` hasta que exista la release `ultima`.

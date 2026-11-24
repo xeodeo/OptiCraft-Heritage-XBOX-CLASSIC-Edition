@@ -3,6 +3,13 @@
 Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-ENCARGO-*.md`) y en
 `ESTADO-OPTICRAFT.html`. Qué rehacer en cada consola: `PLATAFORMAS-QUE-HACER.md`.
 
+## Lanzador con Update por internet (24-11) — detalle en `130-INSTALAR-POR-WIFI.md`
+- Rama `wifi-instalar` (wt-wifi, subida a xbox). El lanzador mira solo si hay build nueva ("Update!"/"New build!"),
+  baja SOLO lo que cambió, archivo por archivo con SHA-256, sin zip ni ISO; con la consola vacía lista "1.2.5 (get)" /
+  "1.5.2 (get)" y Play pasa a Download. Sin celular (página del móvil apagada). Probado en xemu con release local.
+- FALTA: OK para subir la release `ultima` (no hay gh/token) con `scripts-claude\montar_ultima.py`; pasar el lanzador
+  a la consola; probar en la real (carpeta completa ~100 MB, desde GitHub); unir a port152-int.
+
 ## Web pública + Ko-fi (24-11) — detalle en `128-WEB-Y-KOFI.md`
 - Web EN VIVO: https://xeodeo.github.io/OptiCraft-Heritage-XBOX-CLASSIC-Edition/ (rama `gh-pages` del repo xbox; fuente en
   `web\`). Menú estilo Minecraft consola, ES/EN/PT, progreso público (`progreso.html`, NO el panel real). README de main ya

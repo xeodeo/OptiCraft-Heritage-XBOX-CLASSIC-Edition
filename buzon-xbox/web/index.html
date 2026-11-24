@@ -15,7 +15,7 @@
   body{font-family:'Minecraft','Segoe UI',sans-serif;color:#fff;background:#0c0f13;image-rendering:pixelated;text-shadow:2px 2px 0 var(--sh)}
   a{color:#fff;text-decoration:none}
   .wrap{max-width:1000px;margin:0 auto;padding:0 16px}
-  .scene{position:fixed;inset:-4% -20%;z-index:-2;background:url('img/landscape.svg') center/cover no-repeat;filter:brightness(.82) saturate(1.05);animation:pan 70s linear infinite alternate}
+  .scene{position:absolute;inset:-4% -20%;background:url('img/landscape.svg') center/cover no-repeat;filter:brightness(.82) saturate(1.05);animation:pan 70s linear infinite alternate}
   @keyframes pan{from{transform:translateX(0)}to{transform:translateX(-14%)}}
   .vignette{position:fixed;inset:0;z-index:-1;background:radial-gradient(120% 90% at 50% 20%,transparent 40%,rgba(0,0,0,.55) 100%),linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.15) 40%,rgba(0,0,0,.5))}
   @media(prefers-reduced-motion:reduce){.scene{animation:none}}
@@ -48,11 +48,11 @@
   @keyframes dn{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,6px)}}
 
   section{padding:54px 0}
-  .panel{background:rgba(16,16,16,.86);border:3px solid #000;padding:24px;box-shadow:inset 2px 2px 0 #3a3a3a,inset -2px -2px 0 #111}
+  .panel{background:rgba(16,16,16,.93);border:3px solid #000;padding:24px;box-shadow:inset 2px 2px 0 #3a3a3a,inset -2px -2px 0 #111}
   h2.sh{font-size:22px;margin-bottom:18px}h2.sh small{display:block;font-size:13px;color:#9fdc7b;margin-top:6px}
   .grid{display:grid;gap:14px}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
   @media(max-width:760px){.g3,.g2{grid-template-columns:1fr}}
-  .card{background:rgba(0,0,0,.5);border:2px solid #000;padding:16px;box-shadow:inset 2px 2px 0 #333,inset -2px -2px 0 #000}
+  .card{background:rgba(12,12,12,.9);border:2px solid #000;padding:16px;box-shadow:inset 2px 2px 0 #333,inset -2px -2px 0 #000}
   .card h3{font-size:15px;margin-bottom:8px;color:#ffff9e}.card p{font-size:16px;color:#dfe7da;text-shadow:1px 1px 0 #222}
   .big{font-size:20px;color:var(--verde)}
   .bar{height:16px;background:#000;border:2px solid #000;margin-top:10px}.bar i{display:block;height:100%;background:url('img/tiles/grass.svg');background-size:16px 16px}
@@ -88,6 +88,46 @@
   .wf-ip input{font-family:inherit;font-size:18px;padding:10px 12px;width:220px;max-width:100%;background:#000;color:#fff;border:2px solid #a0a0a0;outline:none}
   .wf-ip input:focus{border-color:#fff}
   .wf-msg{color:#ff8080;min-height:1.2em;margin-top:8px;font-size:15px}
+  /* depth parallax: sky -> soil -> caves -> deep -> Nether -> End, moves with the scroll */
+  .depth{position:fixed;left:0;top:0;width:100%;height:600vh;z-index:-3;will-change:transform}
+  .lyr{position:relative;height:100vh;overflow:hidden;background-size:64px 64px;image-rendering:pixelated}
+  .l-sky{background:#6f9ad8}
+  .l-soil{background:linear-gradient(180deg,rgba(0,0,0,0) 0,rgba(0,0,0,.2) 100%),url('img/depth/dirt.png') 0 0/64px}
+  .l-cave{background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.35)),url('img/depth/ore.png') 192px 128px/64px no-repeat,url('img/depth/oreGold.png') 70% 40%/64px no-repeat,url('img/depth/oreRedstone.png') 25% 75%/64px no-repeat,url('img/depth/stone.png') 0 0/64px}
+  .l-deep{filter:brightness(1.5);background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(255,90,0,.08) 55%,rgba(255,100,0,.45)),url('img/depth/obsidian.png') 0 0/64px,#2a1f3a}
+  .l-nether{background:linear-gradient(180deg,rgba(255,80,0,.3),rgba(0,0,0,.1) 40%,rgba(0,0,0,.45)),url('img/depth/netherquartz.png') 60% 30%/64px no-repeat,url('img/depth/netherrack.png') 0 0/64px}
+  .l-nether::after{content:"";position:absolute;left:0;right:0;bottom:0;height:22%;background:url('img/depth/lava.png') 0 0/64px;filter:brightness(1.2);box-shadow:0 -30px 60px rgba(255,120,0,.45);animation:lava 6s linear infinite}
+  @keyframes lava{to{background-position:64px 0}}
+  .l-end{background:url('img/depth/pf_teal.png') 0 0/256px,url('img/depth/pf_purple.png') 0 0/384px,url('img/depth/portal_base.png') 0 0/128px,#06141a;animation:endbg 60s linear infinite}
+  .l-end::after{content:"";position:absolute;left:0;right:0;bottom:0;height:18%;background:linear-gradient(180deg,rgba(0,0,0,.4),transparent 40%),url('img/depth/endstone.png') 0 0/64px}
+  @keyframes endbg{to{background-position:256px 512px,-384px 384px,128px 128px}}
+  .motes{position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:0;transition:opacity .6s;background-size:256px 256px}
+  .motes.cave{opacity:.35;background-image:url('img/depth/pf_white.png')}
+  .motes.nether{opacity:.8;background-image:url('img/depth/pf_ember.png')}
+  .motes.end{opacity:.9;background-image:url('img/depth/pf_purple.png')}
+  /* progress bars: End portal */
+  .bar{height:22px!important;box-shadow:0 0 10px rgba(90,230,210,.25)}
+  .bar i{background:url('img/depth/pf_white.png') 0 0/128px,url('img/depth/pf_teal.png') 0 0/96px,url('img/depth/pf_purple.png') 0 0/160px,url('img/depth/portal_base.png') 0 0/48px;animation:endbar 7s linear infinite;filter:brightness(1.05) saturate(1.5);transition:width 1.6s cubic-bezier(.2,.8,.2,1);box-shadow:inset 0 0 8px rgba(160,255,240,.5)}
+  @keyframes endbar{to{background-position:128px 0,-96px 48px,160px -80px,48px 48px}}
+  @media(prefers-reduced-motion:reduce){.l-end,.l-nether::after,.bar i{animation:none}}
+  /* version A: fixed, cross-fade, slow pan */
+  .fondo-a .depth{height:100vh;transform:none!important}
+  .fondo-a .lyr{position:absolute;inset:0;height:auto;opacity:0;transition:opacity 1.4s ease}
+  .fondo-a .lyr.on{opacity:1}
+  .fondo-a .lyr:not(.l-sky)::before{content:"";position:absolute;inset:0;z-index:1;background:rgba(8,8,10,.45);pointer-events:none}
+  .fondo-a .l-soil,.fondo-a .l-cave,.fondo-a .l-deep,.fondo-a .l-nether{animation:drift 90s linear infinite alternate}
+  @keyframes drift{to{background-position:0 0,384px 128px,70% 40%,25% 75%,384px 128px}}
+  /* version B: soft joins between zones */
+  .fondo-b .lyr:not(.l-sky)::before{content:"";position:absolute;left:0;right:0;top:0;height:35vh;z-index:1;pointer-events:none}
+  .fondo-b .l-soil::before{background:linear-gradient(180deg,#6f9ad8,rgba(111,154,216,0))}
+  .fondo-b .l-cave::before{background:linear-gradient(180deg,#3b2a1c,rgba(59,42,28,0))}
+  .fondo-b .l-deep::before{background:linear-gradient(180deg,#2c2c2c,rgba(44,44,44,0))}
+  .fondo-b .l-nether::before{background:linear-gradient(180deg,#24182e,rgba(36,24,46,0))}
+  .fondo-b .l-end::before{background:linear-gradient(180deg,#3a0f0f,rgba(58,15,15,0))}
+  /* motes float by themselves, never tied to the scroll */
+  .motes{animation:float 40s linear infinite}
+  @keyframes float{to{background-position:0 -512px}}
+  @media(prefers-reduced-motion:reduce){.motes,.fondo-a .lyr{animation:none}}
   .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:760px){.shots{grid-template-columns:repeat(2,1fr)}}
   .shot{aspect-ratio:4/3;background:rgba(0,0,0,.55);border:3px solid #000;box-shadow:inset 2px 2px 0 #333;display:flex;align-items:center;justify-content:center;color:#8a8a8a;font-size:12px;text-align:center;padding:8px;overflow:hidden}
   .shot{position:relative}
@@ -99,7 +139,15 @@
 </style>
 </head>
 <body>
-<div class="scene"></div><div class="vignette"></div>
+<div class="depth" id="depth" aria-hidden="true">
+  <div class="lyr l-sky"><div class="scene"></div></div>
+  <div class="lyr l-soil"></div>
+  <div class="lyr l-cave"></div>
+  <div class="lyr l-deep"></div>
+  <div class="lyr l-nether"></div>
+  <div class="lyr l-end"></div>
+</div>
+<div class="motes" id="motes" aria-hidden="true"></div><div class="vignette"></div>
 
 <header><nav class="nav">
   <span class="brand"><span class="blk"></span> OptiCraft</span>
@@ -197,7 +245,7 @@
     </div>
   </div></section>
 
-  <section id="wifi"><div class="panel">
+  <section id="wifi" hidden><div class="panel">
     <h2 class="sh" data-i18n="wf.title">Instalar desde el celular</h2>
     <p style="color:#dfe7da" data-i18n="wf.desc">La Xbox se baja sola la última build por la red, archivo por archivo y comprobado. Sin zip, sin PC.</p>
     <ol class="steps">
@@ -340,6 +388,28 @@ document.querySelectorAll('.lang').forEach(function(b){b.addEventListener('click
   msg.textContent='';try{localStorage.setItem('oc_xbox_ip',v);}catch(e){}
   window.open('http://'+v+'/instalar?v='+encodeURIComponent(b.getAttribute('data-v')),'_blank','noopener');});});
 })();
+(function(){var d=document.getElementById('depth'),m=document.getElementById('motes');if(!d)return;
+ // ?fondo=a : fixed background, each zone fades in and pans slowly by itself.
+ // ?fondo=b : the background goes down with the page, eased (no jumps).
+ var q=(location.search.match(/fondo=([ab])/)||[])[1];
+ var mode=q==='b'?'b':'a';document.body.classList.add('fondo-'+mode);
+ var L=[].slice.call(d.children),N=L.length,cur=0,target=0,run=false,lastZone=-1;
+ function prog(){var h=document.documentElement.scrollHeight-innerHeight;return h>0?Math.min(1,Math.max(0,scrollY/h)):0;}
+ function zone(p){var z=Math.round(p*(N-1)),c=z>=5?'end':z>=4?'nether':z>=2?'cave':'';
+  if(z!==lastZone){lastZone=z;m.className='motes '+c;if(mode==='a')L.forEach(function(l,i){l.classList.toggle('on',i===z);});}}
+ function step(){var k=cur+(target-cur)*0.07;if(Math.abs(target-k)<0.5)k=target;cur=k;
+  d.style.transform='translate3d(0,'+cur.toFixed(1)+'px,0)';if(cur!==target)requestAnimationFrame(step);else run=false;}
+ function upd(){var p=prog();zone(p);if(mode==='b'){target=-p*(N-1)*innerHeight;if(!run){run=true;requestAnimationFrame(step);}}}
+ addEventListener('scroll',upd,{passive:true});addEventListener('resize',upd);upd();if(mode==='b'){cur=target;d.style.transform='translate3d(0,'+cur+'px,0)';}
+})();
+</script>
+<script>
+(function(){var bars=[].slice.call(document.querySelectorAll('.bar i'));if(!bars.length)return;
+ var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;if(reduce||!('IntersectionObserver' in window))return;
+ bars.forEach(function(b){b.dataset.w=b.style.width||'100%';b.style.width='0';});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var b=e.target;
+  setTimeout(function(){b.style.width=b.dataset.w;},80);io.unobserve(b);}});},{threshold:.4});
+ bars.forEach(function(b){io.observe(b);});})();
 </script>
 </body>
 </html>
