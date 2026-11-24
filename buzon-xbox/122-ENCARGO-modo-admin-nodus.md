@@ -11,13 +11,8 @@ AutoFish, AutoWalk, AutoEnchant, HighJump, NoSlowDown, NoRender (partículas/cli
 AutoSign, Notifications. Comportamiento como Nodus (léelo del jar), adaptado a mando (menú propio estilo LCE, igual que
 los demás mods, en las dos interfaces; combo para abrirlo que no choque con los existentes) y pantalla partida.
 
-## También (decidido por el usuario 23-11, con la misma restricción)
-AimBot, BowAimbot, ClickAimbot, ForceField (kill aura), Nuker, Derp: SOLO en mundos propios / pantalla partida /
-servidor propio siendo admin (contra mobs y bloques de tu mundo). En servidores ajenos, apagados.
-
-## Restricción
-Solo activo en mundos de un jugador / pantalla partida y en servidores propios donde el jugador sea admin
-(op / host). En un servidor ajeno el mod no hace nada y lo dice. Ya existen X-Ray y minimapa: no duplicar.
+## Dónde funciona
+En cualquier mundo y servidor, sin op (decidido por el usuario el 23-11). Ya existen X-Ray y minimapa: no duplicar.
 
 ## Reglas
 Ambas versiones (1.5.2 primero, luego 1.2.5); registrar el mod en `ModManager` (y en el apagado de mods del encargo

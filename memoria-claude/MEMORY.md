@@ -38,3 +38,5 @@
 - [Qué rehacer por consola](plataformas-que-hacer.md) — buzon-xbox/PLATAFORMAS-QUE-HACER.md; PS2 auditada (informe 106)
 - [Classic Xbox Store](classic-xbox-store.md) — nuestra app de Xbox con HTTPS (mbedTLS); reutilizar su Http.cpp para descargas
 - [1.6.4 en su carpeta](version-164-carpeta.md) — al empezar 1.6.4: carpeta propia OptiCraft\1.6.4 en lanzador y consola
+- [Modo admin sin candado](modo-admin-sin-candado.md) — cualquier servidor sin op, Dupe + pestañas; no volver a poner la regla
+- [Subir siempre al compilar](subir-siempre-al-compilar.md) — scripts-claude/compilar-y-subir.ps1 compila, copia y sube por FTP

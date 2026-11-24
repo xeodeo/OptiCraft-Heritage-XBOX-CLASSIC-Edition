@@ -7,15 +7,9 @@ Mod nuevo del catálogo, id `adminmode`, **apagado por defecto**, en 1.5.2 (`wt-
 Código: `src/mods/adminmode/` (`AdminModeMod`, `AdminHooks.h`, `GuiAdminMenu`). Config en `adminmode.txt`
 (junto a `mods.txt`): estado y ajuste de cada módulo.
 
-## Restricción (obligatoria)
-- Solo actúa en **mundo local / pantalla partida**, o en un **servidor donde el jugador es op (nivel ≥ 2)**. El
-  nivel de op sale del traductor 1.12.2 (Entity Status 24..28 → `translator340::localOpLevel()`; se pone a -1 en
-  cada conexión). En servidores ajenos (o servidores 1.5.2 nativos, que no dicen el nivel) **no hace nada**: el
-  menú lo dice en rojo («Servidor ajeno: el modo admin no hace nada aquí») y sale un aviso en el chat una vez.
-- Nuker y Build, además, solo en mundo local (escriben bloques en el mundo del cliente).
-- Respeta el apagado de mods (115): `ModManager::isModEnabled("adminmode")`; con el mod apagado todos los ganchos
-  leen `false` y se deshace lo que tocaba (vuelo, altura de paso, Timer, noClip, modo cueva).
-- No es «mod de contenido» (no deja nada en el mundo) → no entra en el aviso de mods por mundo.
+## Dónde funciona
+En cualquier mundo y servidor, sin op (decidido por el usuario el 23-11). Respeta el apagado de mods (115):
+con el mod apagado todos los ganchos leen `false` y se deshace lo que tocaba (vuelo, altura de paso, Timer, noClip, modo cueva).
 
 ## Menú y combo
 - **Combo: Back + X** (jugador 1 y jugador 2 en pantalla partida, cada uno su menú). No choca: Back+cruceta =
@@ -23,7 +17,7 @@ Código: `src/mods/adminmode/` (`AdminModeMod`, `AdminHooks.h`, `GuiAdminMenu`).
   mesa de crafteo mientras se mantiene Back. En PC: F9. También desde el catálogo de Mods (botón de configurar).
 - Menú en las dos interfaces: Legacy (panel LCE con TickBox, barra de scroll, descripción y fila de ayudas) y Java
   (lista de botones con scroll). Mando: cruceta = mover, A = activar, Izq/Der = ajuste del módulo, LB/RB = saltar 8,
-  X = apagar todo, B = volver. Arriba se ve el estado (mundo local activo / servidor propio / servidor ajeno / mod
+  X = apagar todo, B = volver. Arriba se ve el estado (mundo local activo / servidor / mod
   apagado). En partida, lista verde de módulos activos arriba a la izquierda (como la «Enabled Mods» de Nodus;
   se oculta con F3).
 
@@ -69,12 +63,6 @@ módulos; el combo lo pulsa el autopiloto del mando). Mismos resultados en 1.5.2
 - **Nuker (Todo)**: 85 → 14 bloques alrededor en 6 s (1.5.2) y 12 → 0 (1.2.5) ✅.
 - **Build (Poste)**: 6 bloques de alto ✅ (05).
 - **CaveFinder + WallHack + NoRender**: solo piedra, criaturas a través de la pared ✅ (04, 09).
-- **Servidor ajeno** (simulado en la sonda): permitido=0, todos los módulos a 0, se deshace Step/vuelo ✅. El mismo
-  camino es el de «mod apagado» (la fase de la sonda que apagaba el mod no llegó a escribir el log porque al apagar
-  el mod ya no recibe ticks; error de la sonda, no del mod).
-- Ojo: si el usuario vio en pantalla el aviso «Servidor ajeno», era esta fase de prueba simulada en xemu; en mundo
-  propio funciona. En un servidor 1.12.2 hay que ser **op** (el servidor manda el nivel al entrar); en servidores
-  1.5.2 nativos no hay forma de saberlo y queda bloqueado.
 - Compilan las 4 builds (152/125, normal/exp); «SSE2 left in» 13–15, ninguno en código del mod.
 
 **No probado** (necesita manos o servidor): AutoTool, AutoMine, FastBreak/FastPlace, AutoFish, AutoEgg, AutoEnchant,
@@ -92,3 +80,10 @@ No hace falta parchear el `assets.pak`: no hay texturas ni cadenas nuevas (los t
 - 1.2.5 `wt-125-choco`, rama `opti30-admin`: **c7653bfb** (rebasado encima de opti30-erluza fc815376, con 6fa1c4b;
   sin conflictos).
 - Sin push, sin lanzador. Señal: CIENTOVEINTIDOS-LISTO.
+
+## Cambio 23-11 noche (Claude, decidido por el usuario): sin candado
+La restricción de arriba ya NO existe: el modo admin funciona en cualquier mundo y servidor, sin op. Nuker y Build
+también en servidor (Nuker manda inicio+fin de picar; Build pone de verdad clicando un vecino con el bloque de la
+mano). Menú por pestañas (Blanco/Negro). Módulo nuevo Dupe (pestaña Objetos): Mano / Llenar pila / Inventario;
+directo en mundo local, en servidor manda `/optidupe <mano|llenar|inv>` al plugin OptiDupe
+(`servidor-plugins\OptiDupe`, ya en `servidor-1.12.2\plugins`, carga al reiniciar el servidor).

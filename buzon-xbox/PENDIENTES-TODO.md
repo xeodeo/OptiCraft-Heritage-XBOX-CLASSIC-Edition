@@ -10,8 +10,11 @@ Documento único con todo lo que falta. Detalle de cada cosa en su encargo (`NN-
 - Losas: losas de arriba y escaleras al revés ya no te pegan/empujan en la 1.2.5 (ef44334). En 1.5.2 el mismo tirón
   puede seguir; el log ahora apunta cada corrección de posición del servidor («server teleport») para diagnosticarlo.
 - Modo admin (mod «adminmode», encargo 122, 2958e68/c7653bf): utilidades de Nodus; combo Back+X o desde el catálogo.
-  SOLO en tu mundo, pantalla partida o servidor 1.12.2 siendo op; en servidor ajeno sale el menú pero todo apagado.
-  Esa restricción (op / mundo propio) NO se quita: es a propósito.
+  23-11 noche (decidido por el usuario): SIN candado, funciona en cualquier mundo y servidor, sin op (Nuker y Build
+  también: en servidor mandan los paquetes de romper/poner). Menú por pestañas (Combate, Mover, Visual, Mundo,
+  Objetos, Otros; Blanco/Negro cambian). Módulo Dupe (Mano / Llenar pila / Inventario): directo en mundo local; en
+  servidor manda /optidupe al plugin OptiDupe (servidor-plugins\OptiDupe, puesto en servidor-1.12.2\plugins; el
+  1.2.5 vanilla no carga plugins). Commits f722475b (152) y a484ddd4 (125), juntados en port152-int / opti30-erluza.
 - Chocobos completos (113/117/119), bloques y mobs 1.5.2 (108), Modrinth con «Para <versión>» y búsqueda más rápida.
 
 ## Probado en consola 1.2.5 (usuario 23-11 mañana)
