@@ -1067,9 +1067,11 @@ void WorldClient::unloadEntities(const std::vector<Entity *> &list)
 			untrackLoadedEntityPointer(entity);
 			entityCountsDirty = true;
 			entity->addedToChunk = false;
-#if PLATFORM_PS2
+			// A remote player waiting for its chunk is not in loadedEntityList, so it
+			// must not stay in playerEntities either (all platforms, not just PS2).
 			if (entity->isPlayer())
 				playerEntities.erase(std::remove(playerEntities.begin(), playerEntities.end(), static_cast<EntityPlayer *>(entity)), playerEntities.end());
+#if PLATFORM_PS2
 			MC_LOG_DEBUG("net.entity", "chunk-detach id=%d chunk=%d,%d\n", entity->entityId, entity->chunkCoordX, entity->chunkCoordZ);
 #endif
 			releaseEntitySkin(entity);
