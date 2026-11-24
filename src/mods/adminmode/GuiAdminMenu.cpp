@@ -31,14 +31,14 @@ bool adminMenuIsSpanish()
 const int_t kDoneId = 900;
 const int_t kTabId = 800;
 
-using namespace AdminHooks;
-const int kTabCombat[] = {Aimbot, BowAimbot, ClickAimbot, Forcefield, AutoEgg, NoFlinch, Health};
-const int kTabMove[] = {Fly, Freecam, Sprint, NoFall, HighJump, Step, Spider, Water, NoSlowDown, Sneak, AutoWalk, Timer};
-const int kTabVisual[] = {ESP, Tracers, BlockESP, ChestFinder, CaveFinder, FullBright, WallHack, NoRender,
-                          DisableNametags, NoSwing, Day, Weather};
-const int kTabWorld[] = {Nuker, Build, FastBreak, FastPlace, AutoMine};
-const int kTabItems[] = {Dupe, AutoTool, AutoEnchant, AutoFish, AutoSign};
-const int kTabOther[] = {Notifications, Flood, Derp};
+namespace AH = AdminHooks;
+const int kTabCombat[] = {AH::Aimbot, AH::BowAimbot, AH::ClickAimbot, AH::Forcefield, AH::AutoEgg, AH::NoFlinch, AH::Health};
+const int kTabMove[] = {AH::Fly, AH::Freecam, AH::Sprint, AH::NoFall, AH::HighJump, AH::Step, AH::Spider, AH::Water, AH::NoSlowDown, AH::Sneak, AH::AutoWalk, AH::Timer};
+const int kTabVisual[] = {AH::ESP, AH::Tracers, AH::BlockESP, AH::ChestFinder, AH::CaveFinder, AH::FullBright, AH::WallHack, AH::NoRender,
+                          AH::DisableNametags, AH::NoSwing, AH::Day, AH::Weather};
+const int kTabWorld[] = {AH::Nuker, AH::Build, AH::FastBreak, AH::FastPlace, AH::AutoMine};
+const int kTabItems[] = {AH::Dupe, AH::AutoTool, AH::AutoEnchant, AH::AutoFish, AH::AutoSign};
+const int kTabOther[] = {AH::Notifications, AH::Flood, AH::Derp};
 
 struct AdminTab
 {
@@ -59,7 +59,7 @@ const AdminTab kTabs[] = {
 #undef ADMIN_TAB
 const int_t kTabCount = (int_t)(sizeof(kTabs) / sizeof(kTabs[0]));
 static_assert(sizeof(kTabCombat) + sizeof(kTabMove) + sizeof(kTabVisual) + sizeof(kTabWorld) +
-              sizeof(kTabItems) + sizeof(kTabOther) == sizeof(int) * COUNT,
+              sizeof(kTabItems) + sizeof(kTabOther) == sizeof(int) * AH::COUNT,
               "every admin module must be in exactly one tab");
 // Last tab used, kept while the game runs.
 int_t s_lastTab = 0;
