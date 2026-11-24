@@ -97,6 +97,9 @@ void EntityClientPlayerMP::sendMotionUpdates()
 		sendQueue->addToSendQueue(new Packet10Flying(true));
 		return;
 	}
+	// Admin mode NoFall: tell the server we touch the ground so it clears the fall
+	// distance (no fall damage). Only while airborne, so normal walking is untouched.
+	const bool onGround = (AdminHooks::onFor(AdminHooks::NoFall, this) && !this->onGround) ? true : this->onGround;
 	double d = posX - oldPosX;
 	double d1 = boundingBox->minY - field_9378_bz;
 	double d2 = posY - oldPosY;
