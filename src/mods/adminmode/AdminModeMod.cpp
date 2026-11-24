@@ -24,6 +24,8 @@
 #include "net/minecraft/src/KeyBinding.h"
 #include "net/minecraft/src/MovementInput.h"
 #include "net/minecraft/src/MovingObjectPosition.h"
+#include "net/minecraft/src/NetClientHandler.h"
+#include "net/minecraft/src/Packet14BlockDig.h"
 #include "net/minecraft/src/PlayerController.h"
 #include "net/minecraft/src/SoundManager.h"
 #include "net/minecraft/src/StringTranslate.h"
@@ -148,6 +150,9 @@ const char *const kOreEn[] = {"Diamond", "Gold", "Iron", "Coal", "Redstone", "La
 const int kOreId[] = {56, 14, 15, 16, 73, 21, 129, 52, 11};
 const char *const kBuildEs[] = {"Poste", "Pared", "Suelo"};
 const char *const kBuildEn[] = {"Pole", "Wall", "Floor"};
+const char *const kDupeEs[] = {"Mano", "Llenar pila", "Inventario"};
+const char *const kDupeEn[] = {"Hand", "Fill stack", "Inventory"};
+const char *const kDupeCmd[] = {"mano", "llenar", "inv"};
 const char *const kDerpEs[] = {"Aleatorio", "Girar"};
 const char *const kDerpEn[] = {"Random", "Spin"};
 const char *const kFastEs[] = {"Rapido", "Instantaneo"};
@@ -180,13 +185,14 @@ const ModuleDef kModules[COUNT] = {
     {"autowalk", "AutoWalk", "AutoWalk", "Anda hacia delante solo", "Walks forward by itself", 0, 0, nullptr, nullptr, false},
     {"blockesp", "BlockESP", "BlockESP", "Marca un mineral a 16 bloques a traves de las paredes", "Outlines an ore within 16 blocks through walls", 9, 0, kOreEs, kOreEn, false},
     {"bowaimbot", "BowAimbot", "BowAimbot", "Con el arco tensado apunta al objetivo (con caida)", "While drawing a bow, aims at the target (with drop)", 3, 1, kTargetEs, kTargetEn, false},
-    {"build", "Build", "Build", "Al poner un bloque construye mas (solo mundo local)", "Placing a block builds more (local world only)", 3, 0, kBuildEs, kBuildEn, true},
+    {"build", "Build", "Build", "Al poner un bloque construye mas (en servidor gasta los bloques de la mano)", "Placing a block builds more (on a server it uses the blocks in your hand)", 3, 0, kBuildEs, kBuildEn, false},
     {"cavefinder", "CaveFinder", "CaveFinder", "Solo dibuja piedra: las cuevas se ven", "Draws only stone so caves stand out", 0, 0, nullptr, nullptr, false},
     {"chestfinder", "ChestFinder", "ChestFinder", "Marca los cofres cercanos a traves de las paredes", "Outlines nearby chests through walls", 0, 0, nullptr, nullptr, false},
     {"clickaimbot", "ClickAimbot", "ClickAimbot", "Al pegar al aire, gira y pega al mas cercano (6)", "Hitting the air turns and hits the nearest (6)", 0, 0, nullptr, nullptr, false},
     {"day", "Day", "Day", "Siempre de dia", "Always daytime", 0, 0, nullptr, nullptr, false},
     {"derp", "Derp", "Derp", "La cabeza gira sola (se ve en 3a persona)", "Head spins on its own (seen in 3rd person)", 2, 0, kDerpEs, kDerpEn, false},
     {"nametags", "Disable Nametags", "Disable Nametags", "Oculta los nombres sobre los jugadores", "Hides the names above players", 0, 0, nullptr, nullptr, false},
+    {"dupe", "Dupe", "Dupe", "Duplica (A = hacerlo). En servidor usa el plugin OptiDupe (/optidupe)", "Duplicates (A = do it). On a server it uses the OptiDupe plugin (/optidupe)", 3, 0, kDupeEs, kDupeEn, false},
     {"esp", "ESP", "ESP", "Cajas alrededor de jugadores/criaturas", "Boxes around players/mobs", 3, 1, kTargetEs, kTargetEn, false},
     {"fastbreak", "FastBreak", "FastBreak", "Rompe bloques mas rapido y sin espera", "Breaks blocks faster with no delay", 2, 0, kFastEs, kFastEn, false},
     {"fastplace", "FastPlace", "FastPlace", "Pone bloques sin espera", "Places blocks with no delay", 0, 0, nullptr, nullptr, false},
@@ -202,7 +208,7 @@ const ModuleDef kModules[COUNT] = {
     {"norender", "NoRender", "NoRender", "Sin particulas ni lluvia (mas fps)", "No particles or rain (more fps)", 2, 0, kNoRenderEs, kNoRenderEn, false},
     {"noswing", "NoSwing", "NoSwing", "Sin animacion de brazo", "No arm swing", 0, 0, nullptr, nullptr, false},
     {"notifications", "Notifications", "Notifications", "Avisa cuando un jugador entra o sale de vista", "Says when a player enters or leaves view", 0, 0, nullptr, nullptr, false},
-    {"nuker", "Nuker", "Nuker", "Rompe bloques alrededor (solo mundo local)", "Breaks blocks around you (local world only)", 4, 0, kNukerEs, kNukerEn, true},
+    {"nuker", "Nuker", "Nuker", "Rompe bloques alrededor (en servidor y supervivencia, solo lo que el servidor deja romper al toque)", "Breaks blocks around you (on a survival server, only what it lets you break instantly)", 4, 0, kNukerEs, kNukerEn, false},
     {"noslowdown", "NoSlowDown", "NoSlowDown", "Comer/arco/telarana no frenan", "Eating, bows and webs do not slow you", 0, 0, nullptr, nullptr, false},
     {"sneak", "Sneak", "Sneak", "Siempre agachado (no caes por bordes)", "Always sneaking (no falling off edges)", 0, 0, nullptr, nullptr, false},
     {"spider", "Spider", "Spider", "Trepa paredes", "Climbs walls", 0, 0, nullptr, nullptr, false},
@@ -299,8 +305,8 @@ std::string AdminModeMod::getName() const
 std::string AdminModeMod::getDescription() const
 {
     return adminIsSpanish()
-        ? "Utilidades de Nodus 1.5.2 para probar: volar, sin caida, Freecam, ESP, Nuker... Solo en mundo propio, pantalla partida o servidor propio siendo op. Menu: Back+X."
-        : "Nodus 1.5.2 testing tools: fly, no fall, Freecam, ESP, Nuker... Only in your own world, split screen or your own server as op. Menu: Back+X.";
+        ? "Utilidades de Nodus 1.5.2 para probar: volar, sin caida, Freecam, ESP, Nuker... Funciona en cualquier mundo o servidor. Menu: Back+X."
+        : "Nodus 1.5.2 testing tools: fly, no fall, Freecam, ESP, Nuker... Works in any world or server. Menu: Back+X.";
 }
 
 std::string AdminModeMod::moduleName(int m)
@@ -365,6 +371,65 @@ void AdminModeMod::setModuleState(int m, bool on)
     if (m == Nuker)
         m_nukerBlockId = 0;
     refreshFlags();
+}
+
+void AdminModeMod::doDupe(EntityPlayerSP *p, int mode)
+{
+    if (p == nullptr || p->inventory == nullptr || m_mc == nullptr || m_mc->theWorld == nullptr)
+        return;
+    mode = std::clamp(mode, 0, 2);
+    if (m_mc->theWorld->multiplayerWorld)
+    {
+        // The server owns the inventory: ask the OptiDupe plugin (no op needed).
+        p->sendChatMessage(std::string("/optidupe ") + kDupeCmd[mode]);
+        return;
+    }
+    InventoryPlayer *inv = p->inventory;
+    if (mode == 1)
+    {
+        ItemStack *s = inv->getCurrentItem();
+        if (s == nullptr || s->stackSize <= 0)
+        {
+            chat("Dupe: no tienes nada en la mano", "Dupe: nothing in your hand");
+            return;
+        }
+        if (s->stackSize < s->getMaxStackSize())
+            s->stackSize = s->getMaxStackSize();
+        chat("Dupe: pila llena", "Dupe: stack filled");
+        return;
+    }
+    std::vector<ItemStack *> copies;
+    if (mode == 0)
+    {
+        ItemStack *s = inv->getCurrentItem();
+        if (s != nullptr && s->stackSize > 0)
+            copies.push_back(s->copy());
+    }
+    else
+    {
+        for (int i = 0; i < 36; ++i)
+        {
+            ItemStack *s = inv->mainInventory[i];
+            if (s != nullptr && s->stackSize > 0)
+                copies.push_back(s->copy());
+        }
+    }
+    if (copies.empty())
+    {
+        chat("Dupe: no tienes nada en la mano", "Dupe: nothing in your hand");
+        return;
+    }
+    bool full = false;
+    for (ItemStack *c : copies)
+    {
+        inv->addItemStackToInventory(c);
+        full = full || c->stackSize > 0;
+        delete c; // addItemStackToInventory copies what it keeps
+    }
+    if (full)
+        chat("Dupe: hecho (inventario lleno, lo que no cabe se pierde)", "Dupe: done (inventory full, the rest is lost)");
+    else
+        chat("Dupe: hecho", "Dupe: done");
 }
 
 void AdminModeMod::setModuleOption(int m, int opt)
@@ -525,6 +590,12 @@ void AdminModeMod::onModuleChanged(int m, bool on)
     case Notifications:
         m_seenPlayers.clear();
         break;
+    case Dupe:
+        // One-shot: do it once and switch itself off again.
+        doDupe(p, m_option[Dupe]);
+        m_state[Dupe] = false;
+        saveConfig();
+        break;
     default:
         break;
     }
@@ -660,13 +731,8 @@ void AdminModeMod::onTick()
             m_prevOn[i] = false; // a new world: re-apply every module's start
     }
 
-    // Local world or split screen: always. Server: only if it made us op (level >= 2).
-    bool allowed = !mc->theWorld->multiplayerWorld;
-#if ADMIN_HAS_OP_LEVEL
-    if (!allowed && translator340::localOpLevel() >= 2)
-        allowed = true;
-#endif
-    m_allowed = allowed;
+    // Any world or server, no op needed (decided by the user 23-11).
+    m_allowed = true;
 
     EntityPlayerSP *p1 = mc->inPlayer2Context() ? mc->thePlayerOne : mc->thePlayer;
     EntityPlayerSP *p2 = (mc->isSplitScreenActive() && mc->thePlayer2 != p1) ? mc->thePlayer2 : nullptr;
@@ -1137,9 +1203,21 @@ void AdminModeMod::tickNuker(EntityPlayerSP *p, bool hitEdge)
     Minecraft *mc = m_mc;
     World *w = mc->theWorld;
     PlayerController *pc = mc->playerController;
-    if (pc == nullptr || w->multiplayerWorld)
+    if (pc == nullptr)
         return;
     const int mode = m_option[Nuker];
+    // On a server, ask it to break the block (start + finish dig), then predict it locally.
+    NetClientHandler *net = w->multiplayerWorld ? mc->getSendQueue() : nullptr;
+    if (w->multiplayerWorld && net == nullptr)
+        return;
+    auto nuke = [&](int x, int y, int z) {
+        if (net != nullptr)
+        {
+            net->addToSendQueue(new Packet14BlockDig(0, x, y, z, 1));
+            net->addToSendQueue(new Packet14BlockDig(2, x, y, z, 1));
+        }
+        pc->sendBlockRemoved(x, y, z, 1);
+    };
     MovingObjectPosition *mop = mc->objectMouseOver;
 
     auto breakable = [&](int id) -> bool {
@@ -1159,7 +1237,7 @@ void AdminModeMod::tickNuker(EntityPlayerSP *p, bool hitEdge)
                 {
                     const int x = mop->blockX + dx, y = mop->blockY + dy, z = mop->blockZ + dz;
                     if (y > 0 && breakable(w->getBlockId(x, y, z)))
-                        pc->sendBlockRemoved(x, y, z, 1);
+                        nuke(x, y, z);
                 }
         return;
     }
@@ -1199,7 +1277,7 @@ void AdminModeMod::tickNuker(EntityPlayerSP *p, bool hitEdge)
                 const double ddx = x + 0.5 - p->posX, ddy = y + 0.5 - eyeY, ddz = z + 0.5 - p->posZ;
                 if (ddx * ddx + ddy * ddy + ddz * ddz > 25.0)
                     continue;
-                pc->sendBlockRemoved(x, y, z, 1);
+                nuke(x, y, z);
                 ++broken;
             }
 }
@@ -1260,9 +1338,10 @@ void AdminModeMod::tickNotifications(EntityPlayerSP *p)
 void AdminModeMod::onBlockPlaced(int x, int y, int z, int side)
 {
     Minecraft *mc = m_mc;
-    if (mc == nullptr || mc->theWorld == nullptr || mc->theWorld->multiplayerWorld)
+    if (mc == nullptr || mc->theWorld == nullptr)
         return;
     World *w = mc->theWorld;
+    const bool mp = w->multiplayerWorld;
     static const int offs[6][3] = {{0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1}, {-1, 0, 0}, {1, 0, 0}};
     int px = x, py = y, pz = z;
     if (side >= 0 && side < 6)
@@ -1280,11 +1359,31 @@ void AdminModeMod::onBlockPlaced(int x, int y, int z, int side)
     if (id <= 0)
         return;
     const int meta = w->getBlockMetadata(px, py, pz);
-    auto put = [&](int bx, int by, int bz) {
-        if (by > 0 && by < 256 && w->getBlockId(bx, by, bz) == 0)
-            w->setBlockAndMetadataWithNotify(bx, by, bz, id, meta);
-    };
     EntityPlayerSP *p = mc->thePlayer;
+    auto put = [&](int bx, int by, int bz) {
+        if (by <= 0 || by >= 256 || w->getBlockId(bx, by, bz) != 0)
+            return;
+        if (!mp)
+        {
+            w->setBlockAndMetadataWithNotify(bx, by, bz, id, meta);
+            return;
+        }
+        // Server: place it for real by clicking a solid neighbour with the block in hand.
+        if (p == nullptr || p->inventory == nullptr || mc->playerController == nullptr)
+            return;
+        ItemStack *hand = p->inventory->getCurrentItem();
+        if (hand == nullptr || hand->stackSize <= 0)
+            return;
+        for (int f = 0; f < 6; ++f)
+        {
+            const int nx = bx + offs[f][0], ny = by + offs[f][1], nz = bz + offs[f][2];
+            if (w->getBlockId(nx, ny, nz) == 0)
+                continue;
+            // An emptied stack is freed by Minecraft::clickMouse after this hook (same pointer).
+            mc->playerController->sendPlaceBlock(p, w, hand, nx, ny, nz, f ^ 1);
+            return;
+        }
+    };
     switch (m_option[Build])
     {
     case 0: // pole: 6 tall

@@ -2,8 +2,8 @@
 
 // Cheap flags read by the engine hooks of the "Admin mode (testing)" mod
 // (encargo 122, Nodus 1.5.2 modules). AdminModeMod recomputes g_on[] every
-// tick as: mod enabled && world allowed (local world / split screen / own
-// server as op) && module switched on. Everything is false otherwise, so the
+// tick as: mod enabled && in a world && module switched on (any world or
+// server, no op needed). Everything is false otherwise, so the
 // hooks cost one array read when the mod is off.
 
 class Entity;
@@ -29,6 +29,7 @@ enum Module
     Day,
     Derp,
     DisableNametags,
+    Dupe,
     ESP,
     FastBreak,
     FastPlace,
