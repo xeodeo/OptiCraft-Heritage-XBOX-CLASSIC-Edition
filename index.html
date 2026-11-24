@@ -68,6 +68,12 @@
   .lb-x{top:12px;right:12px;width:44px;height:44px;font-size:30px}
   .lb-nav:hover,.lb-x:hover{background:rgba(110,130,200,.9)}
   @media(max-width:600px){.lb-nav{width:36px;height:48px;font-size:28px}.lb-box figcaption{font-size:14px}}
+  .shot.off{display:none}
+  .pager{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:14px}
+  .pg,.pg-tab{font-family:inherit;color:#fff;background:#6d6d6d;border:2px solid #000;box-shadow:inset 2px 2px 0 #aaa,inset -2px -2px 0 #444;cursor:pointer;text-shadow:1px 1px 0 #333}
+  .pg{width:44px;height:40px;font-size:28px;line-height:1}.pg-tab{min-width:40px;height:40px;font-size:16px;margin:0 3px}
+  .pg:hover,.pg-tab:hover{background:#7e8fd0}.pg-tab.on{background:var(--verde);color:#111;text-shadow:none}
+  .pg:disabled{opacity:.35;cursor:default}
   .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:760px){.shots{grid-template-columns:repeat(2,1fr)}}
   .shot{aspect-ratio:4/3;background:rgba(0,0,0,.55);border:3px solid #000;box-shadow:inset 2px 2px 0 #333;display:flex;align-items:center;justify-content:center;color:#8a8a8a;font-size:12px;text-align:center;padding:8px;overflow:hidden}
   .shot{position:relative}
@@ -144,6 +150,7 @@
       <figure class="shot" tabindex="0"><img src="img/3.png" alt="" loading="lazy"><figcaption data-i18n="shot.12">El menú principal en español</figcaption></figure>
       <figure class="shot" tabindex="0"><img src="img/1.png" alt="" loading="lazy"><figcaption data-i18n="shot.13">Fase temprana: el primer mundo en la Xbox</figcaption></figure>
     </div>
+    <div class="pager" id="pager"><button class="pg pg-prev" aria-label="&lt;">&lsaquo;</button><span class="pg-tabs" id="pg-tabs"></span><button class="pg pg-next" aria-label="&gt;">&rsaquo;</button></div>
     <p style="margin-top:12px;font-size:14px;color:#9aa894" data-i18n="cap.note">Capturas reales en el emulador, en el mundo tutorial (build 1.5.2).</p>
   </div></section>
 
@@ -268,7 +275,7 @@ document.querySelectorAll('.lang').forEach(function(b){b.addEventListener('click
  if(!l){var n=(navigator.language||'es').slice(0,2);l=['es','en','pt'].indexOf(n)>=0?n:'es';}
  setLang(l);})();
 (function(){var figs=[].slice.call(document.querySelectorAll('#shots .shot')),lb=document.getElementById('lb'),im=document.getElementById('lb-img'),cap=document.getElementById('lb-cap'),cnt=document.getElementById('lb-count'),i=0;
- function show(k){i=(k+figs.length)%figs.length;var f=figs[i];im.src=f.querySelector('img').src;cap.textContent=f.querySelector('figcaption').textContent;cnt.textContent=(i+1)+' / '+figs.length;}
+ function show(k){i=(k+figs.length)%figs.length;var f=figs[i];im.src=f.querySelector('img').src;cap.textContent=f.querySelector('figcaption').textContent;cnt.textContent=(i+1)+' / '+figs.length;if(window.ocShotPage)window.ocShotPage(i);}
  function open(k){show(k);lb.hidden=false;document.body.style.overflow='hidden';}
  function close(){lb.hidden=true;document.body.style.overflow='';}
  figs.forEach(function(f,k){f.addEventListener('click',function(){open(k);});f.addEventListener('keydown',function(e){if(e.key==='Enter'){open(k);}});});
@@ -280,6 +287,15 @@ document.querySelectorAll('.lang').forEach(function(b){b.addEventListener('click
  var x0=null;lb.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
  lb.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>40)show(i+(dx<0?1:-1));x0=null;});
 })();
+(function(){var figs=[].slice.call(document.querySelectorAll('#shots .shot')),per=6,pages=Math.ceil(figs.length/per),cur=0,tabs=document.getElementById('pg-tabs'),pager=document.getElementById('pager');
+ if(pages<2){pager.style.display='none';return;}
+ for(var n=0;n<pages;n++){var b=document.createElement('button');b.className='pg-tab';b.textContent=n+1;b.addEventListener('click',(function(n){return function(){go(n);};})(n));tabs.appendChild(b);}
+ var prev=pager.querySelector('.pg-prev'),next=pager.querySelector('.pg-next');
+ function go(n){cur=Math.max(0,Math.min(pages-1,n));figs.forEach(function(f,j){f.classList.toggle('off',Math.floor(j/per)!==cur);});
+  [].forEach.call(tabs.children,function(t,j){t.classList.toggle('on',j===cur);});prev.disabled=cur===0;next.disabled=cur===pages-1;}
+ prev.addEventListener('click',function(){go(cur-1);});next.addEventListener('click',function(){go(cur+1);});
+ window.ocShotPage=function(i){if(Math.floor(i/per)!==cur)go(Math.floor(i/per));};
+ go(0);})();
 </script>
 </body>
 </html>
