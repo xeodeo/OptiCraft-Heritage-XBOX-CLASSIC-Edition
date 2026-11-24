@@ -3563,6 +3563,10 @@ void World::destroyEntity(Entity *entity)
     if (chunkProvider != nullptr)
         chunkProvider->removeEntityFromLoadedChunks(entity);
     entity->addedToChunk = false;
+    // Never leave a freed player in playerEntities: closeContainersUsing() and the
+    // sleep checks walk it (crash 23-11, 1.5.2 on a 1.12.2 server, chunk unload).
+    if (entity->isPlayer())
+        playerEntities.erase(std::remove(playerEntities.begin(), playerEntities.end(), static_cast<EntityPlayer *>(entity)), playerEntities.end());
     deleteWorldOwnedEntity(entity);
 }
 
