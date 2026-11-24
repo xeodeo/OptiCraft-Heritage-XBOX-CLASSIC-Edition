@@ -56,6 +56,18 @@
   .card h3{font-size:15px;margin-bottom:8px;color:#ffff9e}.card p{font-size:16px;color:#dfe7da;text-shadow:1px 1px 0 #222}
   .big{font-size:20px;color:var(--verde)}
   .bar{height:16px;background:#000;border:2px solid #000;margin-top:10px}.bar i{display:block;height:100%;background:url('img/tiles/grass.svg');background-size:16px 16px}
+  .carousel{position:relative;border:3px solid #000;box-shadow:inset 2px 2px 0 #333;background:#000;overflow:hidden;aspect-ratio:4/3;max-width:900px;margin:0 auto}
+  .carousel .track{display:flex;height:100%;transition:transform .45s ease}
+  .carousel .slide{flex:0 0 100%;height:100%;position:relative;margin:0}
+  .carousel .slide img{width:100%;height:100%;object-fit:cover;display:block}
+  .carousel figcaption{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.78);color:#ffff9e;font-size:16px;padding:10px 14px;text-shadow:1px 1px 0 #000}
+  .carousel .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:56px;font-size:34px;line-height:1;color:#fff;background:rgba(60,60,60,.8);border:2px solid #000;box-shadow:inset 2px 2px 0 #999,inset -2px -2px 0 #333;cursor:pointer;font-family:inherit}
+  .carousel .nav:hover{background:rgba(110,130,200,.9)}
+  .carousel .prev{left:8px}.carousel .next{right:8px}
+  .carousel .count{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);color:#fff;font-size:13px;padding:4px 8px}
+  .dots{display:flex;justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .dot{width:14px;height:14px;background:#555;border:2px solid #000;cursor:pointer;padding:0}.dot.on{background:var(--verde)}
+  @media(max-width:600px){.carousel figcaption{font-size:13px;padding:7px}.carousel .nav{width:34px;height:44px;font-size:26px}}
   .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:760px){.shots{grid-template-columns:repeat(2,1fr)}}
   .shot{aspect-ratio:4/3;background:rgba(0,0,0,.55);border:3px solid #000;box-shadow:inset 2px 2px 0 #333;display:flex;align-items:center;justify-content:center;color:#8a8a8a;font-size:12px;text-align:center;padding:8px;overflow:hidden}
   .shot{position:relative}
@@ -117,15 +129,28 @@
 
   <section id="capturas"><div class="panel">
     <h2 class="sh" data-i18n="nav.capturas">Capturas</h2>
-    <div class="shots">
-      <figure class="shot"><img src="img/3.png" alt="OptiCraft — menú"></figure>
-      <figure class="shot"><img src="img/1.png" alt="OptiCraft Heritage"><figcaption data-i18n="cap.early">Fase temprana</figcaption></figure>
-      <div class="shot" data-i18n="cap.soon">Próximamente</div>
-      <div class="shot" data-i18n="cap.soon">Próximamente</div>
-      <div class="shot" data-i18n="cap.soon">Próximamente</div>
-      <div class="shot" data-i18n="cap.soon">Próximamente</div>
+    <div class="carousel" id="carousel">
+      <div class="track">
+        <figure class="slide"><img src="img/shots/01.jpg" alt="" loading="eager"><figcaption data-i18n="shot.1">Menú principal de OptiCraft Heritage Edition</figcaption></figure>
+        <figure class="slide"><img src="img/shots/02.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.2">El letrero gigante de Minecraft en el mundo tutorial</figcaption></figure>
+        <figure class="slide"><img src="img/shots/03.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.3">Llegando a la aldea entre árboles y flores</figcaption></figure>
+        <figure class="slide"><img src="img/shots/04.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.4">La aldea vista desde la colina</figcaption></figure>
+        <figure class="slide"><img src="img/shots/05.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.5">La herrería y las casas de la aldea</figcaption></figure>
+        <figure class="slide"><img src="img/shots/06.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.6">Casas de madera, vallas y caminos de grava</figcaption></figure>
+        <figure class="slide"><img src="img/shots/07.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.7">La calle principal de la aldea</figcaption></figure>
+        <figure class="slide"><img src="img/shots/08.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.8">Un jugador con skin propia entre flores y vallas</figcaption></figure>
+        <figure class="slide"><img src="img/shots/09.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.9">Dentro de una casa: cama, antorcha y ventanas</figcaption></figure>
+        <figure class="slide"><img src="img/shots/10.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.10">El porche de madera junto al agua</figcaption></figure>
+        <figure class="slide"><img src="img/shots/11.jpg" alt="" loading="lazy"><figcaption data-i18n="shot.11">La biblioteca con vistas al lago</figcaption></figure>
+        <figure class="slide"><img src="img/3.png" alt="" loading="lazy"><figcaption data-i18n="shot.12">El menú principal en español</figcaption></figure>
+        <figure class="slide"><img src="img/1.png" alt="" loading="lazy"><figcaption data-i18n="shot.13">Fase temprana: el primer mundo en la Xbox</figcaption></figure>
+      </div>
+      <button class="nav prev" aria-label="&lt;">&lsaquo;</button>
+      <button class="nav next" aria-label="&gt;">&rsaquo;</button>
+      <div class="count"><span id="ci">1</span> / 13</div>
     </div>
-    <p style="margin-top:12px;font-size:14px;color:#9aa894" data-i18n="cap.note">Capturas reales del juego (fases tempranas); pronto más bonitas.</p>
+    <div class="dots"><button class="dot" aria-label="1"></button><button class="dot" aria-label="2"></button><button class="dot" aria-label="3"></button><button class="dot" aria-label="4"></button><button class="dot" aria-label="5"></button><button class="dot" aria-label="6"></button><button class="dot" aria-label="7"></button><button class="dot" aria-label="8"></button><button class="dot" aria-label="9"></button><button class="dot" aria-label="10"></button><button class="dot" aria-label="11"></button><button class="dot" aria-label="12"></button><button class="dot" aria-label="13"></button></div>
+    <p style="margin-top:12px;font-size:14px;color:#9aa894" data-i18n="cap.note">Capturas reales en el emulador, en el mundo tutorial (build 1.5.2).</p>
   </div></section>
 
   <section id="que-trae">
@@ -172,13 +197,15 @@
 <script>
 const I18N={
  es:{
+  "shot.12":"El menú principal en español","shot.13":"Fase temprana: el primer mundo en la Xbox",
+  "shot.1":"Menú principal de OptiCraft Heritage Edition","shot.2":"El letrero gigante de Minecraft en el mundo tutorial","shot.3":"Llegando a la aldea entre árboles y flores","shot.4":"La aldea vista desde la colina","shot.5":"La herrería y las casas de la aldea","shot.6":"Casas de madera, vallas y caminos de grava","shot.7":"La calle principal de la aldea","shot.8":"Un jugador con skin propia entre flores y vallas","shot.9":"Dentro de una casa: cama, antorcha y ventanas","shot.10":"El porche de madera junto al agua","shot.11":"La biblioteca con vistas al lago",
   "nav.progreso":"Progreso","nav.capturas":"Capturas","nav.quetrae":"Qué trae","nav.novedades":"Novedades","nav.estado":"Estado","nav.descargas":"Descargas","nav.donar":"♥ Donar",
   "hero.tagline":"HERITAGE EDITION · Xbox clásica · PS2 · PS3","hero.splash":"¡como si saliera en tu Xbox!",
   "btn.jugar":"Jugar / Descargar","menu.scroll":"▼ desliza para ver más","footer.fans":"Proyecto de fans · no afiliado a Mojang",
   "sec.prog.title":"Progreso del port","sec.prog.sub":"Xbox clásica · PS2 · PS3 — versiones 1.2.5 y 1.5.2",
   "state.playable":"Jugable","state.wip":"En marcha",
   "card.x152":"60 fps con niebla y nubes. Modo admin, chocobos, mods, texturas Modrinth.","card.x125":"Base estable, crafteo de consola, pantalla dividida.","card.ps":"Port en progreso; PS3 con SDK listo.",
-  "btn.verprog":"Ver progreso completo →","cap.note":"Capturas reales del juego (fases tempranas); pronto más bonitas.","cap.early":"Fase temprana","cap.soon":"Próximamente",
+  "btn.verprog":"Ver progreso completo →","cap.note":"Capturas reales en el emulador, en el mundo tutorial (build 1.5.2).","cap.early":"Fase temprana","cap.soon":"Próximamente",
   "feat.gameplay.t":"Jugabilidad","feat.gameplay.d":"Chocobos (ChocoCraft), mods (minimapa, Herobrine), combate 1.5.2, pociones, encantamientos, aldeanos y comercio, pantalla dividida.",
   "feat.online.t":"Online","feat.online.d":"Entra a servidores 1.12.2 por el traductor de protocolo. Descarga texturas desde Modrinth en la consola.",
   "feat.perf.t":"Rendimiento","feat.perf.d":"Chunks asíncronos, texturas animadas optimizadas, 60 fps de referencia en 1.5.2.",
@@ -189,13 +216,15 @@ const I18N={
   "footer.legal":"Proyecto de fans. No afiliado a Mojang ni a Microsoft. Minecraft es marca de Mojang AB."
  },
  en:{
+  "shot.12":"The main menu in Spanish","shot.13":"Early build: the first world on the Xbox",
+  "shot.1":"OptiCraft Heritage Edition main menu","shot.2":"The giant Minecraft sign in the tutorial world","shot.3":"Arriving at the village among trees and flowers","shot.4":"The village seen from the hill","shot.5":"The blacksmith and the village houses","shot.6":"Wooden houses, fences and gravel paths","shot.7":"The village main street","shot.8":"A player with a custom skin among flowers and fences","shot.9":"Inside a house: bed, torch and windows","shot.10":"The wooden porch by the water","shot.11":"The library overlooking the lake",
   "nav.progreso":"Progress","nav.capturas":"Screenshots","nav.quetrae":"Features","nav.novedades":"News","nav.estado":"Status","nav.descargas":"Downloads","nav.donar":"♥ Donate",
   "hero.tagline":"HERITAGE EDITION · Classic Xbox · PS2 · PS3","hero.splash":"like it launched on your Xbox!",
   "btn.jugar":"Play / Download","menu.scroll":"▼ scroll for more","footer.fans":"Fan project · not affiliated with Mojang",
   "sec.prog.title":"Port progress","sec.prog.sub":"Classic Xbox · PS2 · PS3 — versions 1.2.5 and 1.5.2",
   "state.playable":"Playable","state.wip":"In progress",
   "card.x152":"60 fps with fog and clouds. Admin mode, chocobos, mods, Modrinth textures.","card.x125":"Stable base, console crafting, split screen.","card.ps":"Port in progress; PS3 SDK ready.",
-  "btn.verprog":"See full progress →","cap.note":"Real in-game screenshots (early builds); prettier ones soon.","cap.early":"Early build","cap.soon":"Coming soon",
+  "btn.verprog":"See full progress →","cap.note":"Real screenshots in the emulator, in the tutorial world (1.5.2 build).","cap.early":"Early build","cap.soon":"Coming soon",
   "feat.gameplay.t":"Gameplay","feat.gameplay.d":"Chocobos (ChocoCraft), mods (minimap, Herobrine), 1.5.2 combat, potions, enchanting, villagers and trading, split screen.",
   "feat.online.t":"Online","feat.online.d":"Join 1.12.2 servers through the protocol translator. Download textures from Modrinth on the console.",
   "feat.perf.t":"Performance","feat.perf.d":"Async chunks, optimized animated textures, 60 fps target on 1.5.2.",
@@ -206,13 +235,15 @@ const I18N={
   "footer.legal":"Fan project. Not affiliated with Mojang or Microsoft. Minecraft is a trademark of Mojang AB."
  },
  pt:{
+  "shot.12":"O menu principal em espanhol","shot.13":"Fase inicial: o primeiro mundo no Xbox",
+  "shot.1":"Menu principal do OptiCraft Heritage Edition","shot.2":"A placa gigante do Minecraft no mundo tutorial","shot.3":"Chegando à vila entre árvores e flores","shot.4":"A vila vista da colina","shot.5":"O ferreiro e as casas da vila","shot.6":"Casas de madeira, cercas e caminhos de cascalho","shot.7":"A rua principal da vila","shot.8":"Um jogador com skin própria entre flores e cercas","shot.9":"Dentro de uma casa: cama, tocha e janelas","shot.10":"A varanda de madeira junto à água","shot.11":"A biblioteca com vista para o lago",
   "nav.progreso":"Progresso","nav.capturas":"Capturas","nav.quetrae":"Recursos","nav.novedades":"Novidades","nav.estado":"Estado","nav.descargas":"Downloads","nav.donar":"♥ Doar",
   "hero.tagline":"HERITAGE EDITION · Xbox clássico · PS2 · PS3","hero.splash":"como se saísse no seu Xbox!",
   "btn.jugar":"Jogar / Baixar","menu.scroll":"▼ deslize para ver mais","footer.fans":"Projeto de fãs · não afiliado à Mojang",
   "sec.prog.title":"Progresso do port","sec.prog.sub":"Xbox clássico · PS2 · PS3 — versões 1.2.5 e 1.5.2",
   "state.playable":"Jogável","state.wip":"Em andamento",
   "card.x152":"60 fps com névoa e nuvens. Modo admin, chocobos, mods, texturas Modrinth.","card.x125":"Base estável, craft de console, tela dividida.","card.ps":"Port em andamento; PS3 com SDK pronto.",
-  "btn.verprog":"Ver progresso completo →","cap.note":"Capturas reais do jogo (fases iniciais); em breve mais bonitas.","cap.early":"Fase inicial","cap.soon":"Em breve",
+  "btn.verprog":"Ver progresso completo →","cap.note":"Capturas reais no emulador, no mundo tutorial (build 1.5.2).","cap.early":"Fase inicial","cap.soon":"Em breve",
   "feat.gameplay.t":"Jogabilidade","feat.gameplay.d":"Chocobos (ChocoCraft), mods (minimapa, Herobrine), combate 1.5.2, poções, encantamentos, aldeões e comércio, tela dividida.",
   "feat.online.t":"Online","feat.online.d":"Entre em servidores 1.12.2 pelo tradutor de protocolo. Baixe texturas do Modrinth no console.",
   "feat.perf.t":"Desempenho","feat.perf.d":"Chunks assíncronos, texturas animadas otimizadas, 60 fps de referência no 1.5.2.",
@@ -236,6 +267,17 @@ document.querySelectorAll('.lang').forEach(function(b){b.addEventListener('click
 (function(){var l;try{l=localStorage.getItem('oc_lang');}catch(e){}
  if(!l){var n=(navigator.language||'es').slice(0,2);l=['es','en','pt'].indexOf(n)>=0?n:'es';}
  setLang(l);})();
+(function(){var c=document.getElementById('carousel');if(!c)return;
+ var t=c.querySelector('.track'),n=t.children.length,i=0,ds=document.querySelectorAll('.dots .dot'),ci=document.getElementById('ci'),timer;
+ function go(k){i=(k+n)%n;t.style.transform='translateX('+(-100*i)+'%)';ci.textContent=i+1;ds.forEach(function(d,j){d.classList.toggle('on',j===i);});}
+ function auto(){clearInterval(timer);timer=setInterval(function(){go(i+1);},6000);}
+ c.querySelector('.prev').addEventListener('click',function(){go(i-1);auto();});
+ c.querySelector('.next').addEventListener('click',function(){go(i+1);auto();});
+ ds.forEach(function(d,j){d.addEventListener('click',function(){go(j);auto();});});
+ var x0=null;c.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+ c.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>40){go(i+(dx<0?1:-1));auto();}x0=null;});
+ c.addEventListener('mouseenter',function(){clearInterval(timer);});c.addEventListener('mouseleave',auto);
+ go(0);auto();})();
 </script>
 </body>
 </html>
