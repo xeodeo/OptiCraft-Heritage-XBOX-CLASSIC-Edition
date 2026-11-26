@@ -38,3 +38,8 @@ Relacionado: [[legacy-lce-permitido]], [[que-es-de-cada-version]].
 **ChocoCraft:** no hay copias de 1.2.5/1.5.2; referencia = ChocoCraft4 (github.com/Mrbysco/ChocoCraft4, código MIT, texturas CC-BY-SA 4.0, citar) en `mcp-diff\chococraft4-ref\`. El usuario quiere los mods «descompilados y portados», no hechos a mano.
 
 **ChocoCraft real 1.7.10** (el usuario dijo usarlo aunque sea ARR, 22-11): jar de Modrinth descompilado en `mcp-diff\chococraft-1710\` (src + assets). Regla general del usuario: los mods se descompilan y se portan, no se rehacen a mano.
+
+26-11: **LCEReborn** (github.com/LCEReborn/LCEReborn, GPL-3, archivado 10-11-2026) = C++ reconstruido de la Wii U Edition
+1.13 (Aquatic). Bajado SOLO el código a `Desktop\Minecraft en xboox clasico\lce-wiiu-reborn\`. Útil como guía: menú de
+cohetes (ui/FireworksMenu, IUIScene_CraftingMenu), inventario y barra de salto del caballo, modelos de caballo/burro con
+cofre y estandartes (client/render). Para el menú de cohetes en 1.5.2 y para caballos/burros en la 1.6.4.

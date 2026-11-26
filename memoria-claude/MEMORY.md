@@ -45,3 +45,4 @@
 - [Capturas con autopilot](capturas-xemu-autopilot.md) — juego moviéndose solo: captura.ps1 + xemu122.ps1 + autopilot.txt; guía 129
 - [Repos de 3DS](repos-3ds-referencia.md) — mclib/Re-Craft-3DS para el 1.12.2 (121), mc3ds-modern, unistore (solo idea de tienda)
 - [Lanzador con Update](lanzador-update.md) — se actualiza solo desde la release 'ultima'; rama wifi-instalar; buzon 130
+- [Bot Minero](bot-minero.md) — AdminMiner: probado, sin commit en wt-build-152; plan de poner bloques en buzon 134

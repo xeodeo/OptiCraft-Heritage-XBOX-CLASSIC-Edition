@@ -5,7 +5,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
-  "model": "opus",
+  "model": "claude-opus-4-7",
   "hooks": {
     "SessionStart": [
       {
