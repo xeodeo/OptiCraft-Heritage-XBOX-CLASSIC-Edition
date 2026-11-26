@@ -1,6 +1,6 @@
 ---
 name: estado-actual
-description: "Start any session by reading buzon-xbox/PENDIENTES-TODO.md (22-11 20:45): good branches port152-int 6121e6c and opti30-erluza a20d430, in launcher but NOT uploaded"
+description: "26-11: consola = builds 24-11 12:38 (port152-int 69b94bc5 / opti30-erluza 4d28ed75 + arreglo redstone, ESP, dupe SIN COMMIT) + lanzador Update. Start any session by reading buzon-xbox/PENDIENTES-TODO.md (22-11 20:45): good branches port152-int 6121e6c and opti30-erluza a20d430, in launcher but NOT uploaded"
 metadata:
   node_type: memory
   type: project
