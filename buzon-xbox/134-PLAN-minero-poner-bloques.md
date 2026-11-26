@@ -51,3 +51,21 @@ Pieza que ya existe: el módulo **Build** pone bloques de verdad también en ser
 6. Probar igual que el 26-11: Paper local + `D:\minero.txt`; escenas: mena con lava al lado, río subterráneo, hueco
    que hay que cruzar. Medir menas/min, muertes, memoria libre, y que no rompa nada si no hay relleno.
 7. Después: llevarlo a la **1.2.5** (mismo modo admin) y a la **1.6.4**.
+
+## Hecho el 26-11 tarde (Claude) — SIN PROBAR, compilado 1.5.2 (normal + exp)
+- **Tapa líquidos con su propia piedra**: antes de romper la mena o un bloque del camino, si al lado (arriba o los
+  4 lados) hay lava/agua, pone un bloque de relleno haciendo clic en esa cara (`coverLiquidAround`,
+  `sendPlaceBlock`). Relleno de la barra rápida: tierra, **roca (la que va sacando)**, piedra, netherrack
+  (`findFillerSlot`). Con relleno ya no descarta menas con lava cerca; el A* cobra 20 por bloque a tapar (como
+  Baritone). Sin relleno se comporta como antes. Log: `covered liquid at (x,y,z) with slot N`.
+- **itemSaver**: no usa una herramienta con < 8 usos si hay otra que sirva.
+- **Agua (módulo Agua)**: sin empuje de corriente (`World::handleMaterialAcceleration`) y nado al doble
+  (`EntityLiving::moveFlying` 0.04). El Minero también ignora la corriente.
+- **NoFall con opción "Cubo de agua"** (modo Bucket de SalHack): cayendo rápido (motionY < -0.6) con suelo a 1-4
+  bloques, coge el cubo de agua de la barra, mira abajo y lo vacía; al tocar suelo lo recoge y vuelve al slot.
+  Para el server que aún hace daño con "Paquete" (anticheat que cuenta la caída él mismo).
+- Lo que tienen los clientes (SalHack): NoFall Packet/Anti/Bucket/Elytra; Jesus = nuestro Agua; Velocity NoPush =
+  sin empuje de agua; Speed `SpeedInWater`; Scaffold = clic en la cara opuesta de un vecino sólido (lo mismo que
+  usamos para tapar).
+- Falta: puentes/pilares (scaffold en el camino), rendirse rápido + lista negra permanente, contador `mined`,
+  pasarlo a 1.2.5.
