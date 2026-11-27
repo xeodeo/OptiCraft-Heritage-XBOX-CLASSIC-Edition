@@ -1,4 +1,6 @@
+- [Skill suprema opticraft](skill-opticraft.md) — CARGAR AL INICIO: repos, ramas, worktrees, buzón, consolas, scripts, mods, reglas
 - [Respuestas cortas en español](respuestas-cortas-espanol.md) — breve, sin inglés ni tablas largas
+- ["mal bien" suele ser CONFIRMADO](mal-bien-modismo.md) — no interpretarlo como fallo; ante la duda preguntar antes de tocar código
 - [Consola real: SSE2 y log por red](xbox-consola-real-sse2.md) — por qué fallaba en la Xbox real y cómo se prueba (UDP)
 - [Siempre dos XBE: 480 y 720p](xbox-720p-xbe.md) — default.xbe + OptiCraft_720p.xbe, el usuario juega en 720p
 - [Plan de optimización Xbox](xbox-plan-optimizacion.md) — rama xbox-unificada (async + OptiJuegos), tirones que quedan, arreglos 29-09

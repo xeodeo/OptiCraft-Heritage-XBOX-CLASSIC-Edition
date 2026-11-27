@@ -38,7 +38,7 @@ done
 cp /c/Users/xeodeo/Desktop/COMO-USAR-AGY.md "$AQUI/claude/" 2>/dev/null || true
 cp /c/Users/xeodeo/.claude/CLAUDE.md "$AQUI/claude/CLAUDE-global.md" 2>/dev/null || true
 cp /c/Users/xeodeo/.claude/settings.json "$AQUI/claude/settings.json" 2>/dev/null || true
-for s in agy orca-cli orchestration orca-computer-use re4-xbox ps3 graphify; do
+for s in agy orca-cli orchestration orca-computer-use re4-xbox ps3 graphify opticraft; do
   [ -e "/c/Users/xeodeo/.claude/skills/$s" ] && cp -rL "/c/Users/xeodeo/.claude/skills/$s" "$AQUI/claude/skills/"
 done
 
