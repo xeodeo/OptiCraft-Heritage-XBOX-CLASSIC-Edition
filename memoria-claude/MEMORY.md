@@ -46,3 +46,4 @@
 - [Repos de 3DS](repos-3ds-referencia.md) — mclib/Re-Craft-3DS para el 1.12.2 (121), mc3ds-modern, unistore (solo idea de tienda)
 - [Lanzador con Update](lanzador-update.md) — se actualiza solo desde la release 'ultima'; rama wifi-instalar; buzon 130
 - [Bot Minero](bot-minero.md) — AdminMiner: probado, sin commit en wt-build-152; plan de poner bloques en buzon 134
+- [PCSX2 y PS2 de prueba](pcsx2-prueba-ps2.md) — C:\RetroXeo\emulators\pcsx2 con BIOS; compilar PS2 1.5.2, pak, lanzar -elf

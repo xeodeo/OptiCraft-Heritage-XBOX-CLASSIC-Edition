@@ -69,3 +69,13 @@ Pieza que ya existe: el módulo **Build** pone bloques de verdad también en ser
   usamos para tapar).
 - Falta: puentes/pilares (scaffold en el camino), rendirse rápido + lista negra permanente, contador `mined`,
   pasarlo a 1.2.5.
+
+## 26-11 noche (Claude) — probado por el usuario en la real, con arreglos
+- Bot quieto/tirones: elegía una mena junto a líquido y el paso 5 la soltaba al momento (bucle). Arreglado
+  (`!m_canCover && touchesLiquid`).
+- Casi muere en lava: el server (anticheat) deshacía el bloque de relleno y el cliente ya lo había pintado → seguía
+  picando. Ahora: mira la cara 3 ticks, pone, espera 10 ticks (`m_coverWait`); si es la misma casilla otra vez alterna
+  con LiquidInteract (clic en el líquido, cara 1). Log `covered liquid ... (clicking the liquid)`.
+- Mena cercana: reevalúa cada 40 ticks; cambia si otra puntúa 6 menos; menas al aire -4.
+- Inventario lleno: mira montones de la caída de la mena (`isInventoryFull(p, targetOreId)`).
+- Agua coste 1.5 (el minero no sufre empuje).

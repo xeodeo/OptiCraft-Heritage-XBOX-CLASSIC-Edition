@@ -1,1 +1,1 @@
-{"version": "1.5.2", "estado": "por_probar", "area": "Faro", "nombre": "Faro: cobra el pago como en Java", "nota": "Cobra bien (probado). Textos encima de los iconos arreglado (b900220), como Java.", "ref": "92", "orden": 45}
+{"version": "1.5.2", "estado": "ok", "area": "Faro", "nombre": "Faro: cobra el pago como en Java", "nota": "Cobra bien (probado). Textos encima de los iconos arreglado (b900220), como Java. 26-11: el usuario confirma que cobra el pago como en Java 1.5.2.", "ref": "92", "orden": 45}

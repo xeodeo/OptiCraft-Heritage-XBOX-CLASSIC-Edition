@@ -14,3 +14,7 @@ módulo Build; plan y lo leído de Baritone en `buzon-xbox\134-PLAN-minero-poner
 
 **How to apply:** al probar en xemu, el jugador de pruebas puede estar muerto → solo A para reaparecer (NO arriba+A,
 que sale al menú); no teletransportar a una altura fija (se asfixia): usar `spreadplayers`. Ver [[repos-3ds-referencia]].
+
+26-11 noche: ya pone bloques (tapa lava/agua con roca, mira la cara, espera al server, LiquidInteract si lo deshacen),
+va a la mena más cercana, no esquiva el agua. El usuario lo probó en la real (mina; la lava casi lo mata ANTES del
+arreglo de mirar+esperar, revisar que ya no pase). Ojo: el NoFall "Paquete" funciona en el SMP: no tocarlo.

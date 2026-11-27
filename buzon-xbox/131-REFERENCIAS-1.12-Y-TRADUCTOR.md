@@ -50,3 +50,33 @@ observador y lógica 1.8-1.12.
   y skins desde la SD, mundos infinitos, altura 256, reasignar mando, updater desde GitHub.
 - Universal-Updater + UniStore (tienda de mods 3DS): índice JSON en GitHub, lista con iconos, buscar/ordenar, aviso de
   actualización, cola de descargas, herramienta de borrado → modelo para una "tienda de contenido" en nuestro lanzador.
+
+## 26-11: proyectos para subir hacia la 1.12 (elytras, shulker, encantamientos nuevos)
+- **MCP 1.12.2** (Java descompilado, como hicimos con la 1.5.2): fuente principal de elytras, shulker, Mending/
+  Frost Walker/Sweeping/curses, escudo, mano izquierda, observador.
+- **Cuberite** (C++, Apache, servidor hasta 1.12): física de elytra, shulker, observador, encantamientos, caballos ya
+  en C++ → lo más rápido de portar a nuestro motor.
+- **LCE TU19** (ya bajada, lce-tu19): contenido 1.6 (caballos, alfombras, heno, arcilla/cristal teñidos). Lo de 1.9+
+  no está ahí.
+- **minecraft-data / ViaBackwards**: tablas de ids y conversiones (traductor 340).
+- El juego de 3DS es Pocket: no se descompila como MCP; no sirve como fuente.
+- Orden: 1.6.4 (MCP+LCE) → lógica 1.8-1.12 desde MCP 1.12 + Cuberite.
+- Traductor 26-11: en 1.5.2 ya abren tolva/faro/yunque/encantar/pociones contra el server 1.12 (lapis y blaze
+  se ponen solos). Falta MC|ItemName (renombrar) y MC|Beacon (efecto del faro), aldeanos (MC|TrList).
+
+## 26-11: repaso de lo que el traductor 340 NO traduce (1.5.2)
+- Arreglado hoy: ventanas tolva/faro/yunque/encantar/pociones; **spawners** (salían cerdo: el mob va en el NBT
+  SpawnData, ahora → Packet132 acción 1 con id numérico).
+- Ojo: la red nativa de la 1.5.2 es la de 1.2.5 (paquetes 0-255 sin 55, 62, 63, 206-209). Lo que necesite esos
+  paquetes hay que añadirlo también en el cliente.
+- Pendiente, por utilidad:
+  1. **Mapas** (1.12 0x24 → nativo 131): el mapa del server sale vacío. Colores 1.12 → paleta 1.5.2.
+  2. **Aldeanos** (MC|TrList → 250) y **yunque renombrar / faro efecto** (cliente lo hace en local, no manda
+     MC|ItemName / MC|Beacon: tocar ContainerRepair/ContainerBeacon + traducir 250 → plugin message 0x09).
+  3. **Títulos / boss bar / marcador lateral / cabecera del tab** (0x48, 0x0C, 0x3B/0x42/0x44/0x45, 0x4A): nada se
+     ve; títulos y boss bar se pueden pasar al chat.
+  4. **Grietas al romper otros jugadores** (0x08) y **sonidos del server** (0x19/0x49) y **partículas** (0x22):
+     necesitan paquetes nativos nuevos (55/62/63).
+  5. Esqueleto wither sale esqueleto normal (falta el metadato tipo=1); mobs 1.6+ (caballos, llamas, osos) salen
+     vaca hasta la 1.6.4; shulker/vex/armor stand no salen.
+  6. Encantamientos 1.9+ (Reparación, Paso helado, Barrido, maldiciones) y elytra/escudo: no existen en 1.5.2.

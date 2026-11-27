@@ -41,3 +41,19 @@ Página de estado: `ESTADO-OPTICRAFT.html`. Ramas: `ESTADO-ACTUAL.md`.
 ## Wii / 3DS / PSP / PC
 - Vienen del proyecto original (OptiJuegos/erluza/ramide1); no los tocamos. Lo nuevo compila en PC; en Wii/3DS/PSP
   habría que hacer una auditoría como la de PS2 si algún día se quiere.
+
+## 26-11 noche: primera PS2 de la 1.5.2 actual (wt-build-152, sin probar)
+- Compila con `ps2-release` (cmake de VS + junction `wt-build-152\psdevwindows` → psdevwindows común). Arreglos:
+  ternario jstring en GuiSearchSkin, `#include "Minecraft.h"` en la rama no-Xbox de GuiTexturePackDownload, stub
+  `JavaNetwork::httpGetUrl` en JavaNetwork_ps2.cpp (el de la auditoría 106). ELF 7,67 MB, load_memory 8,55 MB
+  (auditoría 1.5.2: 7,54 MB).
+- assets.pak = sonidos/música/IRX PS2 del pak viejo (29-09) + `assets/` 1.5.2 de
+  `wt-152-codex\build\xbox-release\port152-data` (make_pak.py), 1640 entradas, 216 MB. Sonidos solo-1.5.2 no están
+  en ADPCM.
+- Copiado a `Desktop\OptiCraft PS2 prueba\OptiCraftHeritage` (copia vieja en `OptiCraftHeritage-viejo-29-09`).
+- No hay lanzador de PS2 (solo Xbox). Riesgos: RAM (32 MB) con mods 1.5.2, texturas > 256 px (logos legacy,
+  animaciones 16x512/1024).
+- 26-11: ARRANCA en PCSX2 (`C:\RetroXeo\emulators\pcsx2\pcsx2-qt.exe -fastboot -elf "<...>\OptiCraft.elf"`, BIOS
+  europea ya configurada, HostFs activo → lee assets.pak de la carpeta del ELF). El usuario jugó ~34 min sin cuelgue.
+  Log del emulador: `C:\RetroXeo\emulators\pcsx2\logs\emulog.txt`. Teclas: X=K, O=L, []=J, /\=I, Start=Enter,
+  Select=Retroceso, L1=Q R1=E L2=1 R2=3, stick izq WASD, stick der TFGH.
